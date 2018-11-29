@@ -412,6 +412,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('price_method',  $this->post('price_method'));
 	            $this->updateOption('item_status',  $this->post('item_status'));
 	            $this->updateOption('variation_field',  $this->post('variation_field'));
+	            $this->updateOption('variation_field_title',  $this->post('variation_field_title'));
 	            $this->updateOption('sell_by_pl',  $this->post('sell_by_pl'));
 
 
@@ -752,7 +753,7 @@ class WooAPI extends \PriorityAPI\API
 
 
 	        foreach($response_data['value'] as $item) {
-		        if ($item['MPARTNAME'] !== '-') {
+		        if ($item[$this->option('variation_field')] !== '-') {
 			        $attributes = [];
 			        if ($item['PARTUNSPECS_SUBFORM']) {
 				        foreach ($item['PARTUNSPECS_SUBFORM'] as $attr) {
@@ -761,14 +762,14 @@ class WooAPI extends \PriorityAPI\API
 			        }
 
 			        if ($attributes) {
-				        $parents[$item['MPARTNAME']] = [
-					        'sku'       => $item['MPARTNAME'],
+				        $parents[$item[$this->option('variation_field')]] = [
+					        'sku'       => $item[$this->option('variation_field')],
 					        //'crosssell' => $item['ROYL_SPECDES1'],
-					        'title'     => $item['MPARTDES'],
+					        'title'     => $item[$this->option('variation_field_title')],
 					        'stock'     => 'Y',
 					        'variation' => []
 				        ];
-				        $childrens[$item['MPARTNAME']][$item['PARTNAME']] = [
+				        $childrens[$item[$this->option('variation_field')]][$item['PARTNAME']] = [
 					        'sku'           => $item['PARTNAME'],
 					        'regular_price' => $item['VATPRICE'],
 					        'stock'         => $item['INVFLAG'],
@@ -1088,7 +1089,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME' => (string) $cust_number,
-            'CDES'     => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM'  => $order->get_order_number()
         ];
@@ -1544,7 +1545,8 @@ class WooAPI extends \PriorityAPI\API
     {
         $data = $this->getProductDataBySku($product->get_sku());
 
-        if ($data && $data !== 'no-selected') return $data['price_list_price'];
+	    if ($data && $data !== 'no-selected') return $data['price_list_price'];
+        //if ((!is_cart() && !is_checkout()) && $data && $data !== 'no-selected') return $data['price_list_price'];
         
         return $price;
     }
@@ -1602,7 +1604,7 @@ class WooAPI extends \PriorityAPI\API
 		}
 
 		if ( ! empty( $_POST['priority_customer_number'] ) ) {
-			update_user_meta( $user_id, 'priority_customer_number', intval( $_POST['priority_customer_number'] ) );
+			update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
 		}
 	}
 

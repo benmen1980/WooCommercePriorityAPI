@@ -42,12 +42,22 @@
                 </td>
                 <td>
                     <input id="p18aw-variation_field" type="text" name="variation_field" form="p18aw-settings" size="5" value="<?php echo $this->option('variation_field'); ?>">
+
                      We recommend to user MPARTNAME, ROYY_MODEL or one of the SPECS.
+
+
+                </td>
+                <td class="p18a-label">
+                    <label for="p18a-variation_field_title"><?php _e('Title ', 'p18a'); ?></label>
+                </td>
+                <td>
+                    <input id="p18aw-variation_field_title" type="text" name="variation_field_title" form="p18aw-settings" size="5" value="<?php echo $this->option('variation_field_title'); ?>">
+                    We recommend to user MPARTDES, ROYY_MODELDES or one of the SPECDES.
 
                 </td>
 
-
             </tr>
+
 
 
             <tr>
