@@ -10,16 +10,17 @@
     <div class="p18a-page-wrapper api-sync">
 
         <br><br>
-        <table class="p18a" style="max-width: 1200px;">
+        <table class="p18a" style="max-width: 300px;"  cellspacing="20">
 
             <tr>
-                <td><strong><?php _e('Sync', 'p18a'); ?></strong></td>
+                <td><strong><div style="width:200px"><?php _e('Sync', 'p18a'); ?></div></strong></td>
                 <td><strong><?php _e('Record in Transaction Log', 'p18a'); ?></strong></td>
                 <td><strong><?php _e('Sync after order', 'p18a'); ?></strong></td>
                 <td><strong><?php _e('Auto sync', 'p18a'); ?></strong></td>
                 <td><strong><?php _e('Last sync', 'p18a'); ?></strong></td>
                 <td><strong><?php _e('Manual sync', 'p18a'); ?></strong></td>
-                <td><strong><?php _e('Error Emails', 'p18a'); ?></strong></td>
+                <td><strong><?php _e('On Error mailing list', 'p18a'); ?></strong></td>
+                <td><span title="Use this column to overwrite the GET odata header, in order to use a custom filter."><strong><?php _e('Static odata header query', 'p18a'); ?></strong></span></td>
             </tr>
 
             <tr>
@@ -27,7 +28,7 @@
                     <?php _e('Items Priority > Web', 'p18a'); ?>
                 </td>
                 <td>
-                    <input type="checkbox" name="log_items_priority" form="p18aw-sync" value="1" <?php if($this->option('log_items_priority')) echo 'checked'; ?> />
+                    <input type="checkbox"  name="log_items_priority" form="p18aw-sync" value="1" <?php if($this->option('log_items_priority')) echo 'checked'; ?> />
                 </td>
                 <td></td>
                 <td>
@@ -51,7 +52,10 @@
                     <a href="#" class="button p18aw-sync" data-sync="sync_items_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_items_priority" form="p18aw-sync"><?=$this->option('email_error_sync_items_priority')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_items_priority" form="p18aw-sync"><?=$this->option('email_error_sync_items_priority')?></input>
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="static_odata_header_sync_items_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_priority')?></input>
                 </td>
             </tr>
 
@@ -84,7 +88,10 @@
                     <a href="#" class="button p18aw-sync" data-sync="sync_items_priority_variation"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_items_priority_variation" form="p18aw-sync"><?=$this->option('email_error_sync_items_priority_variation')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_items_priority_variation" form="p18aw-sync"><?=$this->option('email_error_sync_items_priority_variation')?></input>
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="static_odata_header_sync_items_priority_variation" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_priority_variation')?></input>
                 </td>
             </tr>
 
@@ -118,7 +125,10 @@
                     <a href="#" class="button p18aw-sync" data-sync="sync_items_web"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_items_web" form="p18aw-sync"><?=$this->option('email_error_sync_items_web')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_items_web" form="p18aw-sync"><?=$this->option('email_error_sync_items_web')?></input>
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="static_odata_header_sync_items_web" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_web')?></input>
                 </td>
             </tr>
 
@@ -151,7 +161,10 @@
                     <a href="#" class="button p18aw-sync" data-sync="sync_inventory_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_inventory_priority" form="p18aw-sync"><?=$this->option('email_error_sync_inventory_priority')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_inventory_priority" form="p18aw-sync"><?=$this->option('email_error_sync_inventory_priority')?></input>
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="static_odata_header_sync_inventory_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_inventory_priority')?></input>
                 </td>
             </tr>
 
@@ -185,12 +198,15 @@
                     <a href="#" class="button p18aw-sync" data-sync="sync_pricelist_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_pricelist_priority" form="p18aw-sync"><?=$this->option('email_error_sync_pricelist_priority')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_pricelist_priority" form="p18aw-sync"><?=$this->option('email_error_sync_pricelist_priority')?></input>
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="static_odata_header_sync_pricelist_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_pricelist_priority')?></input>
                 </td>
             </tr>
 
-
-
+            <tr><td>_______________________________</td></tr>
+            <!--  sync reciepts -->
             <tr>
                 <td class="p18a-label">
                     <?php _e('Receipts > Priority', 'p18a'); ?>
@@ -202,12 +218,7 @@
                     <input type="checkbox" name="sync_onorder_receipts" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_receipts')) echo 'checked'; ?> />
                 </td>
                 <td>
-                    <select name="auto_sync_receipts_priority" form="p18aw-sync">
-                        <option value="" <?php if( ! $this->option('auto_sync_receipts_priority')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
-                        <option value="hourly" <?php if($this->option('auto_sync_receipts_priority') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
-                        <option value="daily" <?php if($this->option('auto_sync_receipts_priority') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
-                        <option value="twicedaily" <?php if($this->option('auto_sync_receipts_priority') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
-                    </select>
+
                 </td>
                 <td data-sync-time="sync_receipts_priority">
                     <?php 
@@ -219,13 +230,45 @@
                     ?>
                 </td>
                 <td>
-                    <a href="#" class="button p18aw-sync" data-sync="sync_receipts_priority"><?php _e('Sync', 'p18a'); ?></a>
+
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_receipts_priority" form="p18aw-sync"><?=$this->option('email_error_sync_receipts_priority')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_receipts_priority" form="p18aw-sync"><?=$this->option('email_error_sync_receipts_priority')?></textarea>
                 </td>
             </tr>
 
+
+            <tr>
+
+                <!-- sync ainvoices -->
+                <td class="p18a-label">
+                    <?php _e('Sales Invoices > Priority', 'p18a'); ?><i><b>  beta</b></i>
+                </td>
+                <td>
+                    <input type="checkbox" name="log_ainvoices_priority" form="p18aw-sync" value="1" <?php if($this->option('log_ainvoices_priority')) echo 'checked'; ?> />
+                </td>
+                <td>
+                    <input type="checkbox" disabled name="sync_onorder_ainvoices" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_ainvoices')) echo 'checked'; ?> />
+                </td>
+                <td>
+
+                </td>
+                <td data-sync-time="sync_ainvoices_priority">
+			        <?php
+			        if ($timestamp = $this->option('ainvoices_priority_update', false)) {
+				        echo(date('d/m/Y H:i:s', $timestamp));
+			        } else {
+				        _e('Never', 'p18a');
+			        }
+			        ?>
+                </td>
+                <td>
+
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="email_error_sync_ainvoices_priority" form="p18aw-sync"><?=$this->option('email_error_sync_ainvoices_priority')?></input>
+                </td>
+            </tr>
 
             <tr>
                 <td class="p18a-label">
@@ -238,7 +281,7 @@
 
                 </td>
                 <td data-sync-time="sync_customers_web">
-                    <?php 
+                    <?php
                     if ($timestamp = $this->option('customers_web_update', false)) {
                         echo(date('d/m/Y H:i:s', $timestamp));
                     } else {
@@ -247,10 +290,10 @@
                     ?>
                 </td>
                 <td>
-                    <a href="#" class="button p18aw-sync" data-sync="sync_customers_web"><?php _e('Sync', 'p18a'); ?></a>
+
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_customers_web" form="p18aw-sync"><?=$this->option('email_error_sync_customers_web')?></textarea>
+                    <input type="text" style="width:300px" name="email_error_sync_customers_web" form="p18aw-sync"><?=$this->option('email_error_sync_customers_web')?></input>
                 </td>
             </tr>
         
@@ -262,7 +305,7 @@
                     <input type="checkbox" name="log_orders_web" form="p18aw-sync" value="1" <?php if($this->option('log_orders_web')) echo 'checked'; ?> />
                 </td>
                 <td>
-                    <textarea style="width: 250px; height: 70px;" name="email_error_sync_orders_web" form="p18aw-sync"><?=$this->option('email_error_sync_orders_web')?></textarea>
+                    <input type="text"  style="width:300px" name="email_error_sync_orders_web" form="p18aw-sync"><?=$this->option('email_error_sync_orders_web')?></input>
                 </td>
             </tr>
 
