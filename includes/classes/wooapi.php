@@ -654,8 +654,11 @@ class WooAPI extends \PriorityAPI\API
     public function syncItemsPriority()
     {
 
-       $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
-	  //  $response = $this->makeRequest('GET', 'LOGPART', [], $this->option('log_items_priority', true));
+
+       //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
+	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
+
+
 
 
         // check response status
@@ -665,12 +668,21 @@ class WooAPI extends \PriorityAPI\API
 
             foreach($response_data['value'] as $item) {
 
+                // add long text from Priority
+	            $content = '';
+                foreach($item['PARTTEXT_SUBFORM'] as $text){
+	                $content .= $text['TEXT'];
+                }
+                $content = str_replace("pdir","p dir",$content);
+                $cleancontent = explode("</style>",$content);
+                $post_content = $cleancontent[1];
                 $data = [
-                    'post_content' => '',
+                    'post_content' =>  $cleancontent[1],
                     'post_status'  => $this->option('item_status'),
                     'post_title'   => $item['PARTDES'],
                     'post_parent'  => '',
-                    'post_type'    => 'product'
+                    'post_type'    => 'product',
+
                 ];
 
                 // if product exsits, update
@@ -685,11 +697,14 @@ class WooAPI extends \PriorityAPI\API
 		                $wpdb->prepare(
 			                "
 							UPDATE $wpdb->posts
-							SET post_title = '%s'
+							SET post_title = '%s',
+							post_content = '%s'
 							WHERE ID = '%s'
 							",
 			                $item['PARTDES'],
-			                $id
+			                $post_content,
+			                 $id
+
 		                )
 	                );
 
