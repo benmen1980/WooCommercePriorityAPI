@@ -656,7 +656,7 @@ class WooAPI extends \PriorityAPI\API
 
 
        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
-	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
+	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=ROYY_PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
 
 
 
@@ -670,7 +670,7 @@ class WooAPI extends \PriorityAPI\API
 
                 // add long text from Priority
 	            $content = '';
-                foreach($item['PARTTEXT_SUBFORM'] as $text){
+                foreach($item['ROYY_PARTTEXT_SUBFORM'] as $text){
 	                $content .= $text['TEXT'];
                 }
                 $content = str_replace("pdir","p dir",$content);
