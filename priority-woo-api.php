@@ -63,6 +63,9 @@ register_deactivation_hook(P18AW_SELF, function(){
     
 });
 
+
+
+
 // hook up
 add_action('plugins_loaded', function(){
 
@@ -95,8 +98,4 @@ add_action('plugins_loaded', function(){
 });
 
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
-
-
-
-
 
