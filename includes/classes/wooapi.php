@@ -66,6 +66,7 @@ class WooAPI extends \PriorityAPI\API
 	    add_action( 'personal_options_update',array($this,'crf_update_profile_fields') );
 	    add_action( 'edit_user_profile_update',array($this,'crf_update_profile_fields' ));
 
+	    /* hide price for not registered user */
 	    add_action( 'init',array($this, 'bbloomer_hide_price_add_cart_not_logged_in') );
 
 
@@ -76,7 +77,7 @@ class WooAPI extends \PriorityAPI\API
         return is_admin() ? $this->backend(): $this->frontend();
     }
 
-
+    /* hode price for not registered user */
 	function bbloomer_hide_price_add_cart_not_logged_in() {
 		if ( !is_user_logged_in() and  $this->option('walkin_hide_price') ) {
 			remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
@@ -91,6 +92,9 @@ class WooAPI extends \PriorityAPI\API
 	function bbloomer_print_login_to_see() {
 		echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'theme_name') . '</a>';
 	}
+
+
+	
     /**
      * Frontend 
      *
