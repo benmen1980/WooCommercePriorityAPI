@@ -22,7 +22,14 @@
                     <input id="p18aw-sell_by_pl" type="checkbox" name="sell_by_pl" form="p18aw-settings" <?php if($this->option('sell_by_pl') == true){?> checked="checked" <?php } ?> />
                 </td>
             </tr>
-
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-walkin_hide_price"><?php _e('Hide price for non registered user ?', 'p18a'); ?></label>
+                </td>
+                <td>
+                    <input id="p18a-walkin_hide_price" type="checkbox" name="walkin_hide_price" form="p18aw-settings" <?php if($this->option('walkin_hide_price') == true){?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
 
             <tr>
                 <td class="p18a-label">
