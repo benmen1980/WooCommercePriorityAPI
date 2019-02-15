@@ -66,6 +66,8 @@ class WooAPI extends \PriorityAPI\API
 	    add_action( 'personal_options_update',array($this,'crf_update_profile_fields') );
 	    add_action( 'edit_user_profile_update',array($this,'crf_update_profile_fields' ));
 
+	    add_action( 'init',array($this, 'bbloomer_hide_price_add_cart_not_logged_in') );
+
 
     } 
 
@@ -75,6 +77,20 @@ class WooAPI extends \PriorityAPI\API
     }
 
 
+	function bbloomer_hide_price_add_cart_not_logged_in() {
+		if ( !is_user_logged_in() and  $this->option('walkin_hide_price') ) {
+			remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
+			remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
+			remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 10 );
+			remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10 );
+			add_action( 'woocommerce_single_product_summary',array($this,'bbloomer_print_login_to_see'), 31 );
+			add_action( 'woocommerce_after_shop_loop_item', array($this,'bbloomer_print_login_to_see'), 11 );
+		}
+	}
+
+	function bbloomer_print_login_to_see() {
+		echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'theme_name') . '</a>';
+	}
     /**
      * Frontend 
      *
@@ -414,6 +430,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('variation_field',  $this->post('variation_field'));
 	            $this->updateOption('variation_field_title',  $this->post('variation_field_title'));
 	            $this->updateOption('sell_by_pl',  $this->post('sell_by_pl'));
+	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
 
 
 
@@ -676,6 +693,11 @@ class WooAPI extends \PriorityAPI\API
                 $content = str_replace("pdir","p dir",$content);
                 $cleancontent = explode("</style>",$content);
                 $post_content = $cleancontent[1];
+
+                // download image
+
+
+
                 $data = [
                     'post_content' =>  $cleancontent[1],
                     'post_status'  => $this->option('item_status'),
