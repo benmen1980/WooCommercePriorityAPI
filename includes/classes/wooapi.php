@@ -17,7 +17,7 @@ class WooAPI extends \PriorityAPI\API
     private $basePriceCode = "בסיס";
     /**
     * PriorityAPI initialize
-    * 
+    *
     */
     public static function instance()
     {
@@ -70,7 +70,32 @@ class WooAPI extends \PriorityAPI\API
 	    add_action( 'init',array($this, 'bbloomer_hide_price_add_cart_not_logged_in') );
 
 
-    } 
+
+
+
+    }
+	// select
+	function misha_select_field( $checkout ){
+
+		// you can also add some custom HTML here
+
+		woocommerce_form_field( 'contactmethod', array(
+			'type'          => 'select', // text, textarea, select, radio, checkbox, password, about custom validation a little later
+			'required'	=> true, // actually this parameter just adds "*" to the field
+			'class'         => array('misha-field', 'form-row-wide'), // array only, read more about classes and styling in the previous step
+			'label'         => 'Preferred contact method',
+			'label_class'   => 'misha-label', // sometimes you need to customize labels, both string and arrays are supported
+			'options'	=> array( // options for <select> or <input type="radio" />
+				''		=> 'Please select', // empty values means that field is not selected
+				'By phone'	=> 'By phone', // 'value'=>'Name'
+				'By email'	=> 'By email'
+			)
+		), $checkout->get_value( 'contactmethod' ) );
+
+		// you can also add some custom HTML here
+
+
+	}
 
     public function run()
     {
@@ -89,6 +114,9 @@ class WooAPI extends \PriorityAPI\API
 		}
 	}
 
+
+
+
 	function bbloomer_print_login_to_see() {
 		echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'theme_name') . '</a>';
 	}
@@ -102,6 +130,9 @@ class WooAPI extends \PriorityAPI\API
     private function frontend() {
 	    // Sync customer and order data after order is proccessed
 	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+
+// add fields
+	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'misha_select_field') );
 
 	    // sync user to priority after registration
 	    add_action( 'user_register', [ $this, 'syncCustomer' ] );
@@ -291,7 +322,7 @@ class WooAPI extends \PriorityAPI\API
                 // list tables classes
                 include P18AW_CLASSES_DIR . 'pricelist.php';
                 include P18AW_CLASSES_DIR . 'productpricelist.php';
-
+	            include P18AW_CLASSES_DIR . 'sites.php';
                 add_menu_page(P18AW_PLUGIN_NAME, P18AW_PLUGIN_NAME, 'manage_options', P18AW_PLUGIN_ADMIN_URL, function(){ 
 
                     switch($this->get('tab')) {
@@ -323,6 +354,11 @@ class WooAPI extends \PriorityAPI\API
                             include P18AW_ADMIN_DIR . 'show_products.php';
 
                             break;
+                        case 'sites';
+
+	                        include P18AW_ADMIN_DIR . 'sites.php';
+
+	                        break;
 
                         default:
 
@@ -595,6 +631,17 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
+
+	            case 'sync_sites_priority':
+
+
+		            try {
+			            $this->syncSites();
+		            } catch(Exception $e) {
+			            exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+		            }
+
+		            break;
 
                 case 'sync_receipts_priority':
 
@@ -1394,6 +1441,64 @@ class WooAPI extends \PriorityAPI\API
 
     }
 
+    /* sync sites */
+	public function syncSites()
+	{
+		$response = $this->makeRequest('GET', 'CUSTOMERS?$expand=CUSTDESTS_SUBFORM', [], $this->option('log_sites_priority', true));
+
+		// check response status
+		if ($response['status']) {
+
+			// allow multisite
+			$blog_id =  get_current_blog_id();
+
+			// sites table
+			$table =  $GLOBALS['wpdb']->prefix . 'p18a_sites';
+
+			// delete all existing data from price list table
+			$GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+
+			// decode raw response
+			$data = json_decode($response['body_raw'], true);
+
+			$sites = [];
+
+			if (isset($data['value'])) {
+
+				foreach($data['value'] as $list)
+				{
+					// products price lists
+					foreach($list['CUSTDESTS_SUBFORM'] as $site) {
+
+						$GLOBALS['wpdb']->insert($table, [
+							'sitecode' => $site['CODE'],
+							'sitedesc' => $site['CODEDES'],
+							'customer_number' => $list['CUSTNAME'],
+							'address1' => $site['ADDRESS']
+						]);
+
+					}
+
+				}
+
+				// add timestamp
+				$this->updateOption('pricelist_priority_update', time());
+
+			}
+
+		} else {
+			/**
+			 * t149
+			 */
+			$this->sendEmailError(
+				$this->option('email_error_sync_pricelist_priority'),
+				'Error Sync Price Lists Priority',
+				$response['body']
+			);
+
+		}
+
+	}
 
     /**
      * Sync receipt from web to priority for given order id
@@ -1648,5 +1753,6 @@ class WooAPI extends \PriorityAPI\API
 			update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
 		}
 	}
+
 
 }
