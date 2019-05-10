@@ -18,6 +18,7 @@
                 <td class="p18a-label">
                     <label for="p18a-sell_by_pl"><?php _e('Show items from user\'s price list only ?', 'p18a'); ?></label>
                 </td>
+                <td></td>
                 <td>
                     <input id="p18aw-sell_by_pl" type="checkbox" name="sell_by_pl" form="p18aw-settings" <?php if($this->option('sell_by_pl') == true){?> checked="checked" <?php } ?> />
                 </td>
@@ -26,11 +27,31 @@
                 <td class="p18a-label">
                     <label for="p18a-walkin_hide_price"><?php _e('Hide price for non registered user ?', 'p18a'); ?></label>
                 </td>
+                <td></td>
                 <td>
                     <input id="p18a-walkin_hide_price" type="checkbox" name="walkin_hide_price" form="p18aw-settings" <?php if($this->option('walkin_hide_price') == true){?> checked="checked" <?php } ?> />
                 </td>
             </tr>
-
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-price_method"><?php _e('Sync Price include VAT ?', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-price_method" type="checkbox" name="price_method" form="p18aw-settings" <?php if($this->option('price_method') == true){?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-sites"><?php _e('Use Priority sites ?', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-sites" type="checkbox" name="sites" form="p18aw-settings" <?php if($this->option('sites') == true){?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
+        </table>
+        <table class="p18a">
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-walkin_number"><?php _e('Guest/Walk in Priority Customer Number', 'p18a'); ?></label>
@@ -67,14 +88,7 @@
 
 
 
-            <tr>
-                <td class="p18a-label">
-                    <label for="p18a-price_method"><?php _e('Sync Price include VAT ?', 'p18a'); ?></label>
-                </td>
-                <td>
-                    <input id="p18aw-price_method" type="checkbox" name="price_method" form="p18aw-settings" <?php if($this->option('price_method') == true){?> checked="checked" <?php } ?> />
-                </td>
-            </tr>
+
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-item_status"><?php _e('Product Default Status', 'p18a'); ?></label>
