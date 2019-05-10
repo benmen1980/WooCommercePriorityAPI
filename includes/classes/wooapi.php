@@ -89,17 +89,13 @@ class WooAPI extends \PriorityAPI\API
 	        );
 
 	        $sitelist = array( // options for <select> or <input type="radio" />
-		        '' => 'Please select', // empty values means that field is not selected
-		        //'By phone'	=> 'By phone', // 'value'=>'Name'
-		        // 'By email'	=> 'By email',
-		        //'By foo' => 'By foo',
+		        '' => 'Please select',
+		        
 	        );
-	        //$assoc = array_combine($data,$data);
+
 	        $finalsites = $sitelist;
 	        foreach ( $data as $site ) {
-
-		        $eacsite    = array( $site['sitecode'] => $site['sitedesc'] );
-		        $finalsites = array_merge( $finalsites, $eacsite );
+		       $finalsites +=  [$site['sitecode'] => str_replace('"', '', $site['sitedesc'])];
 	        }
 	        //$i = 0;
 	        //$site = array($data[$i]['sitecode'] => $data[$i]['sitedesc']);
