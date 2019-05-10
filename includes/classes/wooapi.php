@@ -74,27 +74,67 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-	// select
-	function misha_select_field( $checkout ){
+	// custom check out fields
+	function custom_checkout_fields( $checkout ){
 
-		// you can also add some custom HTML here
+		//  add site to check out form
+        if($this->option('sites') == true) {
+	        $option          = "priority_customer_number";
+	        $customer_number = get_user_option( $option );
+	        $data            = $GLOBALS['wpdb']->get_results( '
+            SELECT  sitecode,sitedesc
+            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_sites
+            where customer_number = ' . $customer_number,
+		        ARRAY_A
+	        );
 
-		woocommerce_form_field( 'contactmethod', array(
-			'type'          => 'select', // text, textarea, select, radio, checkbox, password, about custom validation a little later
-			'required'	=> true, // actually this parameter just adds "*" to the field
-			'class'         => array('misha-field', 'form-row-wide'), // array only, read more about classes and styling in the previous step
-			'label'         => 'Preferred contact method',
-			'label_class'   => 'misha-label', // sometimes you need to customize labels, both string and arrays are supported
-			'options'	=> array( // options for <select> or <input type="radio" />
-				''		=> 'Please select', // empty values means that field is not selected
-				'By phone'	=> 'By phone', // 'value'=>'Name'
-				'By email'	=> 'By email'
-			)
-		), $checkout->get_value( 'contactmethod' ) );
+	        $sitelist = array( // options for <select> or <input type="radio" />
+		        '' => 'Please select', // empty values means that field is not selected
+		        //'By phone'	=> 'By phone', // 'value'=>'Name'
+		        // 'By email'	=> 'By email',
+		        //'By foo' => 'By foo',
+	        );
+	        //$assoc = array_combine($data,$data);
+	        $finalsites = $sitelist;
+	        foreach ( $data as $site ) {
 
-		// you can also add some custom HTML here
+		        $eacsite    = array( $site['sitecode'] => $site['sitedesc'] );
+		        $finalsites = array_merge( $finalsites, $eacsite );
+	        }
+	        //$i = 0;
+	        //$site = array($data[$i]['sitecode'] => $data[$i]['sitedesc']);
+
+	        $sites = array(
+		        'type'        => 'select',
+		        // text, textarea, select, radio, checkbox, password, about custom validation a little later
+		        'required'    => true,
+		        // actually this parameter just adds "*" to the field
+		        'class'       => array( 'misha-field', 'form-row-wide' ),
+		        // array only, read more about classes and styling in the previous step
+		        'label'       => 'Priority ERP Order site ',
+		        'label_class' => 'misha-label',
+		        // sometimes you need to customize labels, both string and arrays are supported
+		        'options'     => $finalsites
+	        );
+	        woocommerce_form_field( 'site', $sites, $checkout->get_value( 'site' ) );
+        }
 
 
+
+	}
+
+
+	function my_custom_checkout_field_process() {
+		// Check if set, if its not set add an error.
+		if ( ! $_POST['site'] && $this->option('sites') == true )
+			wc_add_notice( __( 'Please enter site.' ), 'error' );
+	}
+
+
+	function my_custom_checkout_field_update_order_meta( $order_id ) {
+		if ( ! empty( $_POST['site'] ) && $this->option('sites') == true ) {
+			update_post_meta( $order_id, 'site', sanitize_text_field( $_POST['site'] ) );
+		}
 	}
 
     public function run()
@@ -131,8 +171,11 @@ class WooAPI extends \PriorityAPI\API
 	    // Sync customer and order data after order is proccessed
 	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
 
-// add fields
-	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'misha_select_field') );
+        // custom check out fields
+	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
+	    add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
+	    add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
+
 
 	    // sync user to priority after registration
 	    add_action( 'user_register', [ $this, 'syncCustomer' ] );
@@ -471,6 +514,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('variation_field_title',  $this->post('variation_field_title'));
 	            $this->updateOption('sell_by_pl',  $this->post('sell_by_pl'));
 	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
+	            $this->updateOption('sites',  $this->post('sites'));
 
 
 
@@ -1179,7 +1223,8 @@ class WooAPI extends \PriorityAPI\API
             'CUSTNAME' => (string) $cust_number,
             'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM'  => $order->get_order_number()
+            'BOOKNUM'  => $order->get_order_number(),
+            'SITECODE' => get_post_meta( $order->get_id(), 'site', true )
         ];
 
         $shipping_data = [
