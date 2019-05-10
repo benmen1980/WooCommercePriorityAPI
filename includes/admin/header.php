@@ -24,6 +24,11 @@
                 <?php _e('Price lists', 'p18a'); ?>
             </a>
         </li>
+        <li>
+            <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=sites'); ?>" class="<?php if($this->get('tab') == 'sites') echo 'active'; ?>">
+			    <?php _e('Sites', 'p18a'); ?>
+            </a>
+        </li>
         <?php if($this->get('tab') == 'show-products'): 
 
             $data = $this->getPriceListData(urldecode($_GET['pricelist']));
