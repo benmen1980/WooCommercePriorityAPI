@@ -13,7 +13,7 @@
 * Author URI: http://www.roi-holdings.com
 * Licence: GPLv2
 * Text Domain: p18a
-* Domain Path: languages  
+* Domain Path: /languages  
 * 
 */
 
@@ -89,6 +89,8 @@ add_action('plugins_loaded', function(){
 
         // and check for Woocommerce
         if (in_array('woocommerce/woocommerce.php', $plugins)) {
+            
+	    load_plugin_textdomain( 'p18a', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );	
 
             require P18AW_CLASSES_DIR . 'wooapi.php';
             
