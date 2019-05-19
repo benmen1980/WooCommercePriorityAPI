@@ -89,7 +89,7 @@ class WooAPI extends \PriorityAPI\API
 	        );
 
 	        $sitelist = array( // options for <select> or <input type="radio" />
-		        '' => 'Please select',
+		        '' => __('Please select','p18a'),
 		        
 	        );
 
@@ -107,7 +107,7 @@ class WooAPI extends \PriorityAPI\API
 		        // actually this parameter just adds "*" to the field
 		        'class'       => array( 'misha-field', 'form-row-wide' ),
 		        // array only, read more about classes and styling in the previous step
-		        'label'       => 'Priority ERP Order site ',
+		        'label'       => __('Priority ERP Order site ','p18a'),
 		        'label_class' => 'misha-label',
 		        // sometimes you need to customize labels, both string and arrays are supported
 		        'options'     => $finalsites
