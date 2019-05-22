@@ -1228,7 +1228,7 @@ class WooAPI extends \PriorityAPI\API
 
 	    foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
-	            'TEXT' => $comment,
+	             'TEXT' => '-'.$comment.'-',
                 ];
         }
 
