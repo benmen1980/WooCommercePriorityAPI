@@ -1222,7 +1222,17 @@ class WooAPI extends \PriorityAPI\API
             'BOOKNUM'  => $order->get_order_number(),
             'DCODE' => get_post_meta( $order->get_id(), 'site', true )
         ];
+	
+	    // order comments
+	    $order_comment_array = explode("\n", $order->get_customer_note());
 
+	    foreach($order_comment_array as $comment){
+            $data['ORDERSTEXT_SUBFORM'][] = [
+	            'TEXT' => $comment,
+                ];
+        }
+
+	// shipping
         $shipping_data = [
             'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'PHONENUM'    => $order->get_billing_phone(),
