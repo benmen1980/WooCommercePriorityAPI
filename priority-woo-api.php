@@ -85,7 +85,8 @@ add_action('plugins_loaded', function(){
     $plugins = get_option('active_plugins');
 
     // check for PriorityAPI
-    if (in_array('priority18-api/priority18-api.php', $plugins)) {
+    
+     if (in_array('PriorityAPI/priority18-api.php', $plugins)) {
 
         // and check for Woocommerce
         if (in_array('woocommerce/woocommerce.php', $plugins)) {
