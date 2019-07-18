@@ -1475,14 +1475,7 @@ class WooAPI extends \PriorityAPI\API
                     $tax_label = + $tax; // <== Here the line item tax label
                 }
 
-                // get meta
-                foreach($item->get_meta_data() as $meta) {
 
-                    if(isset($params[$meta->key])) {
-                        $parameters[$params[$meta->key]] = $meta->value;
-                    }
-
-                }
 
                 if ($product) {
 
@@ -1504,13 +1497,14 @@ class WooAPI extends \PriorityAPI\API
                         }
                     }
 
-
+	                $_product = wc_get_product($item->get_product_id());
+	                $quantity_price_coefficient = $item->get_quantity() >= 5 ? 0.9 : 1;
 
                     $data['SERVCONTITEMS_SUBFORM'][] = [
-                        'PARTNAME'         => $product->get_sku(),
+                        'PARTNAME'         => $_product->get_sku(),
                         'TQUANT'           => (int) $item->get_quantity(),
                         'WARDATEFINAL' => get_last_day_of_current_quarter('Y-m-t'),
-                        'SPECPRICE'            => (float) ($item->get_total() + $tax_label)*12,              // annual fee
+                        'SPECPRICE'            => (float) ($_product->get_sale_price() ? $_product->get_sale_price() : $_product->get_regular_price())*12*$quantity_price_coefficient,              // annual fee
                         'E129_VCLFORSUB_SUBFORM' => $cars
                     ];
                 }
@@ -1543,7 +1537,7 @@ class WooAPI extends \PriorityAPI\API
 	    // payment info
 	    $data['PAYMENTDEF_SUBFORM'] = [
 		    'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-		    'QPRICE'      => floatval($order->get_total()),
+		   // 'QPRICE'      => floatval($order->get_total()),
 		    'PAYACCOUNT'  => '',
 		    'PAYCODE'     => '',
 		    'PAYACCOUNT'  => $order_ccnumber,
@@ -1754,7 +1748,7 @@ class WooAPI extends \PriorityAPI\API
 		$order = new \WC_Order($order_id);
 
 		$data = [
-			'CUSTNAME' => ( ! $order->get_customer_id()) ? $this->option('walkin_number') : (string) $order->get_customer_id(),
+			'CUSTNAME' => (string) $order->get_order_number(),
 			//'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
 			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
 			'BOOKNUM' => $order->get_order_number(),
@@ -1784,7 +1778,7 @@ class WooAPI extends \PriorityAPI\API
 				$data['EINVOICEITEMS_SUBFORM'][] = [
 					'PARTNAME'         => $product->get_sku(),
 					'TQUANT'           => (int) $item->get_quantity(),
-					'PRICE'            => (float) ($item->get_total() + $tax_label)*12           // annual fee
+					'PRICE'            => (float) ($item->get_total() + $tax_label)           // annual fee
 
 				];
 			}
