@@ -1155,15 +1155,20 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncCustomer($id)
     {
-        // check user
-        if ($user = get_userdata($id)) {
+	    $order = new \WC_Order($id);
+
+
+
+
+
 
             $meta = get_user_meta($id);
 
             $json_request = json_encode([
-                'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
+                //'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
+	            'CUSTNAME'    => (string)$order->get_order_number(),
                 'CUSTDES'     => isset($meta['first_name'], $meta['last_name']) ? $meta['first_name'][0] . ' ' . $meta['last_name'][0] : '',
-                'EMAIL'       => $user->data->user_email,
+                'EMAIL'       => isset($meta['billing_email']) ? $meta['billing_email'][0] : '',
                 'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
                 'ADDRESS2'    => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
                 'STATEA'      => isset($meta['billing_city'])      ? $meta['billing_city'][0] : '',
@@ -1196,7 +1201,7 @@ class WooAPI extends \PriorityAPI\API
     
         }
 
-    }
+
 
 
     /**
@@ -1204,131 +1209,315 @@ class WooAPI extends \PriorityAPI\API
      *
      * @param [int] $id
      */
-    public function syncOrder($id)
+	public function syncOrder($id)
+	{
+		$order = new \WC_Order($id);
+
+		if ($order->get_customer_id()) {
+			$meta = get_user_meta($order->get_customer_id());
+			$cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
+		} else {
+			$cust_number = $this->option('walkin_number');
+		}
+
+		$data = [
+			'CUSTNAME' => (string) $cust_number,
+			'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
+			'BOOKNUM'  => $order->get_order_number(),
+			'DCODE' => get_post_meta( $order->get_id(), 'site', true )
+		];
+
+		// order comments
+		$order_comment_array = explode("\n", $order->get_customer_note());
+
+		foreach($order_comment_array as $comment){
+			$data['ORDERSTEXT_SUBFORM'][] = [
+				'TEXT' => '-'.$comment.'-',
+			];
+		}
+
+		// shipping
+		$shipping_data = [
+			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+			'PHONENUM'    => $order->get_billing_phone(),
+			'ADDRESS'     => $order->get_shipping_address_1(),
+			'STATE'       => $order->get_shipping_city(),
+			'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
+			'ZIP'         => $order->get_shipping_postcode(),
+		];
+
+		// add second address if entered
+		if ( ! empty($order->get_shipping_address_2())) {
+			$shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
+		}
+
+		$data['SHIPTO2_SUBFORM'] = $shipping_data;
+
+		// get shipping id
+		$shipping_method    = $order->get_shipping_methods();
+		$shipping_method    = array_shift($shipping_method);
+		$shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
+
+		// get parameters
+		$params = [];
+		/*
+				foreach(\CuttingArt\CTA::getParameters() as $parameter) {
+					$params[$parameter->name] = $parameter->priority_id;
+				}
+
+		*/
+
+		// get ordered items
+		foreach ($order->get_items() as $item) {
+
+			$product = $item->get_product();
+
+			$parameters = [];
+
+			// get tax
+			// Initializing variables
+			$tax_items_labels   = array(); // The tax labels by $rate Ids
+			$tax_label = 0.0 ; // The total VAT by order line
+			$taxes = $item->get_taxes();
+			// Loop through taxes array to get the right label
+			foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+				$tax_label = + $tax; // <== Here the line item tax label
+			}
+
+			// get meta
+			foreach($item->get_meta_data() as $meta) {
+
+				if(isset($params[$meta->key])) {
+					$parameters[$params[$meta->key]] = $meta->value;
+				}
+
+			}
+
+			if ($product) {
+
+				/*start T151*/
+				$new_data = [];
+
+				$item_meta = wc_get_order_item_meta($item->get_id(),'_tmcartepo_data');
+
+				if ($item_meta && is_array($item_meta)) {
+					foreach ($item_meta as $tm_item) {
+						$new_data[] = [
+							'SPEC' => addslashes($tm_item['name']),
+							'VALUE' => htmlspecialchars(addslashes($tm_item['value']))
+						];
+					}
+				}
+
+				/*end T151*/
+
+				$data['ORDERITEMS_SUBFORM'][] = [
+					'PARTNAME'         => $product->get_sku(),
+					'TQUANT'           => (int) $item->get_quantity(),
+					//'PRICE'            => (float) $item->get_total(),
+					'VATPRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
+					"REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
+
+				];
+			}
+
+		}
+
+		// shipiing rate
+
+		$data['ORDERITEMS_SUBFORM'][] = [
+			// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+			'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
+			'TQUANT'   => 1,
+			'VATPRICE' =>  floatval($order->get_shipping_total()),
+			"REMARK1" => "",
+
+		];
+
+		// credit guard detail
+
+		$order_ccnumber = $order->get_meta('_ccnumber');
+		$order_token = $order->get_meta('_creditguard_token');
+		$order_creditguard_expiration = $order->get_meta('_creditguard_expiration');
+		$order_creditguard_authorization = $order->get_meta('_creditguard_authorization');
+		$order_payments = $order->get_meta('_payments');
+		$order_first_payment = $order->get_meta('_first_payment');
+		$order_periodical_payment = $order->get_meta('_periodical_payment');
+		/* debuging
+		$order_ccnumber = '1234';
+		$order_token = '123456789';
+		$order_creditguard_expiration = '0124';
+		$order_creditguard_authorization = '09090909';
+		$order_payments = $order->get_meta('_payments');
+		$order_first_payment = $order->get_meta('_first_payment');
+		$order_periodical_payment = $order->get_meta('_periodical_payment');
+		*/
+
+
+		// payment info
+		$data['PAYMENTDEF_SUBFORM'] = [
+			'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+			'QPRICE'      => floatval($order->get_total()),
+			'PAYACCOUNT'  => '',
+			'PAYCODE'     => '',
+			'PAYACCOUNT'  => $order_ccnumber,
+			'VALIDMONTH'  => $order_creditguard_expiration,
+			'CCUID' => $order_token,
+			'CONFNUM' => $order_creditguard_authorization,
+			//'ROYY_NUMBEROFPAY' => $order_payments,
+			//'FIRSTPAY' => $order_first_payment,
+			//'ROYY_SECONDPAYMENT' => $order_periodical_payment
+
+		];
+
+		// HERE goes the condition to avoid the repetition
+		$post_done = get_post_meta( $order->get_id(), '_post_done', true);
+		if( empty($post_done) ) {
+
+			// make request
+			$response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $this->option('log_orders_web', true));
+
+			if (!$response['status']) {
+				/**
+				 * t149
+				 */
+				$this->sendEmailError(
+					$this->option('email_error_sync_orders_web'),
+					'Error Sync Orders',
+					$response['body']
+				);
+			}
+
+			// add timestamp
+			$this->updateOption('orders_web_update', time());
+
+
+		}
+	}
+    public function syncServiceContract($id) // DOCUMENTS_Z
     {
         $order = new \WC_Order($id);
 
-        if ($order->get_customer_id()) {
-            $meta = get_user_meta($order->get_customer_id());
-            $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
-        } else {
-            $cust_number = $this->option('walkin_number');
-        }
+        // sync customer
+        $meta = $order->get_meta();
+	    $json_request = json_encode([
+		    //'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
+		    'CUSTNAME'    => (string)$order->get_order_number(),
+		    'CUSTDES'     => $meta['billing_first_name'][0] . ' ' . $meta['billing_last_name'][0],
+		    'EMAIL'       => isset($meta['billing_email']) ? $meta['billing_email'][0] : '',
+		    'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
+		    'ADDRESS2'    => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
+		    'STATEA'      => isset($meta['billing_city'])      ? $meta['billing_city'][0] : '',
+		    'ZIP'         => isset($meta['billing_postcode'])  ? $meta['billing_postcode'][0] : '',
+		    'COUNTRYNAME' => isset($meta['billing_country'])   ? $this->countries[$meta['billing_country'][0]] : '',
+		    'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
+	    ]);
 
+	    $method = 'POST';
+
+	    $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
+
+	    // set priority customer id
+	    if ($response['status']) {
+		    //add_user_meta($id, '_priority_customer_number', $id, true);
+	    } else {
+
+		    $this->sendEmailError(
+			    $this->option('email_error_sync_customers_web'),
+			    'Error Sync Customers',
+			    $response['body']
+		    );
+
+	    }
+
+	    // add timestamp
+	    $this->updateOption('customers_web_update', time());
+
+        // end sync customer
+
+        // start sync service contract
         $data = [
-            'CUSTNAME' => (string) $cust_number,
-            'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-            'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM'  => $order->get_order_number(),
-            'DCODE' => get_post_meta( $order->get_id(), 'site', true )
+            'CUSTNAME' => (string) $order->get_order_number(),
+            //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'VALIDDATE'  => date('Y-m-d', strtotime("+3 days")),
+
+            'EXPIRYDATE'  => date('Y-m-d', mktime(0, 0, 0, 12, 31, 2031)),
+            'BOOKNUM'  => $order->get_order_number()
         ];
 	
 	    // order comments
 	    $order_comment_array = explode("\n", $order->get_customer_note());
 
 	    foreach($order_comment_array as $comment){
-            $data['ORDERSTEXT_SUBFORM'][] = [
+            $data['DOCUMENTSTEXT_SUBFORM'][] = [
 	             'TEXT' => '-'.$comment.'-',
                 ];
         }
 
-	// shipping
-        $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
-            'PHONENUM'    => $order->get_billing_phone(),
-            'ADDRESS'     => $order->get_shipping_address_1(),
-            'STATE'       => $order->get_shipping_city(),
-            'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
-            'ZIP'         => $order->get_shipping_postcode(),
-        ];
 
-        // add second address if entered
-        if ( ! empty($order->get_shipping_address_2())) {
-            $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
-        }
 
-        $data['SHIPTO2_SUBFORM'] = $shipping_data;
-
-        // get shipping id
-        $shipping_method    = $order->get_shipping_methods();
-        $shipping_method    = array_shift($shipping_method);
-        $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
-
-        // get parameters
-        $params = [];
-/*
-        foreach(\CuttingArt\CTA::getParameters() as $parameter) {
-            $params[$parameter->name] = $parameter->priority_id;
-        }
-
-*/
 
         // get ordered items
         foreach ($order->get_items() as $item) {
 
-            $product = $item->get_product();
+                $product = $item->get_product();
 
-            $parameters = [];
+                $parameters = [];
 
-	        // get tax
-	        // Initializing variables
-	        $tax_items_labels   = array(); // The tax labels by $rate Ids
-	        $tax_label = 0.0 ; // The total VAT by order line
-	        $taxes = $item->get_taxes();
-	        // Loop through taxes array to get the right label
-	        foreach( $taxes['subtotal'] as $rate_id => $tax ) {
-		        $tax_label = + $tax; // <== Here the line item tax label
-	        }
-
-            // get meta
-            foreach($item->get_meta_data() as $meta) {
-
-                if(isset($params[$meta->key])) {
-                    $parameters[$params[$meta->key]] = $meta->value;
+                // get tax
+                // Initializing variables
+                $tax_items_labels   = array(); // The tax labels by $rate Ids
+                $tax_label = 0.0 ; // The total VAT by order line
+                $taxes = $item->get_taxes();
+                // Loop through taxes array to get the right label
+                foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+                    $tax_label = + $tax; // <== Here the line item tax label
                 }
 
-            }
+                // get meta
+                foreach($item->get_meta_data() as $meta) {
 
-            if ($product) {
-
-                /*start T151*/
-                $new_data = [];
-
-                $item_meta = wc_get_order_item_meta($item->get_id(),'_tmcartepo_data');
-
-                if ($item_meta && is_array($item_meta)) {
-                    foreach ($item_meta as $tm_item) {
-                        $new_data[] = [
-                            'SPEC' => addslashes($tm_item['name']),
-                            'VALUE' => htmlspecialchars(addslashes($tm_item['value']))
-                        ];
+                    if(isset($params[$meta->key])) {
+                        $parameters[$params[$meta->key]] = $meta->value;
                     }
+
                 }
 
-                /*end T151*/
+                if ($product) {
 
-                $data['ORDERITEMS_SUBFORM'][] = [
-                    'PARTNAME'         => $product->get_sku(),
-                    'TQUANT'           => (int) $item->get_quantity(),
-                    //'PRICE'            => (float) $item->get_total(),
-                    'VATPRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
-                    "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
 
-                ];
+
+                    //$new_data = [];
+
+                    /* get the cars per item */
+
+                    $item_meta = wc_get_order_item_meta($item->get_id(),'_vehicles_data');
+
+                    if ($item_meta && is_array($item_meta)) {
+                        foreach ($item_meta as $tm_item) {
+                            $cars[] = [
+                                'VCLNUMBER' => addslashes($tm_item['vehicle_number']),
+                                'COLOR' => htmlspecialchars(addslashes($tm_item['vehicle_color'])),
+                                'MODEL' => htmlspecialchars(addslashes($tm_item['model']))
+                            ];
+                        }
+                    }
+
+
+
+                    $data['SERVCONTITEMS_SUBFORM'][] = [
+                        'PARTNAME'         => $product->get_sku(),
+                        'TQUANT'           => (int) $item->get_quantity(),
+                        'WARDATEFINAL' => get_last_day_of_current_quarter('Y-m-t'),
+                        'SPECPRICE'            => (float) ($item->get_total() + $tax_label)*12,              // annual fee
+                        'E129_VCLFORSUB_SUBFORM' => $cars
+                    ];
+                }
+
             }
-            
-        }
 
-        // shipiing rate
 
-        $data['ORDERITEMS_SUBFORM'][] = [
-           // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-            'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
-            'TQUANT'   => 1,
-            'VATPRICE' =>  floatval($order->get_shipping_total()),
-            "REMARK1" => "",
-      
-        ];
 
         // credit guard detail
 
@@ -1339,7 +1528,7 @@ class WooAPI extends \PriorityAPI\API
 	    $order_payments = $order->get_meta('_payments');
 	    $order_first_payment = $order->get_meta('_first_payment');
 	    $order_periodical_payment = $order->get_meta('_periodical_payment');
-	    /* debuging
+	    /*debuging
 		$order_ccnumber = '1234';
 		$order_token = '123456789';
 		$order_creditguard_expiration = '0124';
@@ -1347,7 +1536,8 @@ class WooAPI extends \PriorityAPI\API
 		$order_payments = $order->get_meta('_payments');
 		$order_first_payment = $order->get_meta('_first_payment');
 		$order_periodical_payment = $order->get_meta('_periodical_payment');
-		*/
+	    */
+
 
 
 	    // payment info
@@ -1371,7 +1561,7 @@ class WooAPI extends \PriorityAPI\API
 	    if( empty($post_done) ) {
 
         // make request
-        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $this->option('log_orders_web', true));
+        $response = $this->makeRequest('POST', 'DOCUMENTS_Z', ['body' => json_encode($data)], $this->option('log_orders_web', true));
 
         if (!$response['status']) {
             /**
@@ -1397,24 +1587,24 @@ class WooAPI extends \PriorityAPI\API
      *
      * @param [int] $order_id
      */
+
+
     public function syncDataAfterOrder($order_id)
     {
         // get order
-        $order = new \WC_Order($order_id);
+        //$order = new \WC_Order($order_id);
 
         // sync customer if it's signed in / registered
         // guest user will have id 0
-        if ($customer_id = $order->get_customer_id()) {
-            $this->syncCustomer($customer_id);
-        }
+       // if ($customer_id = $order->get_customer_id()) {
+        //    $this->syncCustomer($customer_id);
+        //}
 
-        // sync order
-        $this->syncOrder($order_id);
+        // sync service contract
+        $this->syncServiceContract($order_id);
+	    $this->syncOverTheCounterInvoice($order_id);
 
-        if($this->option('sync_onorder_receipts')) {
-            // sync receipts 
-            $this->syncReceipt($order_id);
-        }
+
 
     }
 
@@ -1556,6 +1746,109 @@ class WooAPI extends \PriorityAPI\API
      *
      * @param [int] $id order id
      */
+
+
+	public function syncOverTheCounterInvoice($order_id)
+	{
+
+		$order = new \WC_Order($order_id);
+
+		$data = [
+			'CUSTNAME' => ( ! $order->get_customer_id()) ? $this->option('walkin_number') : (string) $order->get_customer_id(),
+			//'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+			'BOOKNUM' => $order->get_order_number(),
+
+		];
+
+		// get ordered items
+		foreach ($order->get_items() as $item) {
+
+			$product = $item->get_product();
+
+			$parameters = [];
+
+			// get tax
+			// Initializing variables
+			$tax_items_labels   = array(); // The tax labels by $rate Ids
+			$tax_label = 0.0 ; // The total VAT by order line
+			$taxes = $item->get_taxes();
+			// Loop through taxes array to get the right label
+			foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+				$tax_label = + $tax; // <== Here the line item tax label
+			}
+
+
+			if ($product) {
+
+				$data['EINVOICEITEMS_SUBFORM'][] = [
+					'PARTNAME'         => $product->get_sku(),
+					'TQUANT'           => (int) $item->get_quantity(),
+					'PRICE'            => (float) ($item->get_total() + $tax_label)*12           // annual fee
+
+				];
+			}
+
+		}
+
+
+
+		// credit guard detail
+
+		$order_ccnumber = $order->get_meta('_ccnumber');
+		$order_token = $order->get_meta('_creditguard_token');
+		$order_creditguard_expiration = $order->get_meta('_creditguard_expiration');
+		$order_creditguard_authorization = $order->get_meta('_creditguard_authorization');
+		$order_payments = $order->get_meta('_payments');
+		$order_first_payment = $order->get_meta('_first_payment');
+		$order_periodical_payment = $order->get_meta('_periodical_payment');
+		//debuging
+		$order_ccnumber = '1234';
+		$order_token = '123456789';
+		$order_creditguard_expiration = '0124';
+		$order_creditguard_authorization = '09090909';
+		$order_payments = $order->get_meta('_payments');
+		$order_first_payment = $order->get_meta('_first_payment');
+		$order_periodical_payment = $order->get_meta('_periodical_payment');
+
+
+
+
+
+
+			// payment info
+			$data['EPAYMENT2_SUBFORM'][] = [
+                 'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+		    'QPRICE'      => floatval($order->get_total()),
+		    'PAYACCOUNT'  => '',
+		    'PAYCODE'     => '',
+		    'PAYACCOUNT'  => $order_ccnumber,
+		    'VALIDMONTH'  => $order_creditguard_expiration,
+		    'CCUID' => $order_token,
+		    'CONFNUM' => $order_creditguard_authorization,
+			];
+
+
+
+
+		// make request
+		$response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
+		if (!$response['status']) {
+			/**
+			 * t149
+			 */
+			$this->sendEmailError(
+				$this->option('email_error_sync_receipts_priority'),
+				'Error Sync Receipts',
+				$response['body']
+			);
+		}
+		// add timestamp
+		$this->updateOption('receipts_priority_update', time());
+
+	}
+
+
     public function syncReceipt($order_id)
     {
 
