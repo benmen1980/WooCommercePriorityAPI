@@ -1404,14 +1404,14 @@ class WooAPI extends \PriorityAPI\API
 	    $json_request = json_encode([
 		    //'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
 		    'CUSTNAME'    => (string)$order->get_order_number(),
-		    'CUSTDES'     => $meta['billing_first_name'][0] . ' ' . $meta['billing_last_name'][0],
-		    'EMAIL'       => isset($meta['billing_email']) ? $meta['billing_email'][0] : '',
-		    'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
-		    'ADDRESS2'    => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
-		    'STATEA'      => isset($meta['billing_city'])      ? $meta['billing_city'][0] : '',
-		    'ZIP'         => isset($meta['billing_postcode'])  ? $meta['billing_postcode'][0] : '',
-		    'COUNTRYNAME' => isset($meta['billing_country'])   ? $this->countries[$meta['billing_country'][0]] : '',
-		    'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
+		    'CUSTDES'     => $order->get_billing_first_name().' '.$order->get_billing_last_name(),
+		    'EMAIL'       => $order->get_billing_email(),
+		    'ADDRESS'     => $order->get_billing_address_1(),
+		    'ADDRESS2'    => $order->get_billing_address_2(),
+		 //   'STATEA'      => $order->get_billing_city(),
+		    'ZIP'         => $order->get_billing_postcode(),
+		 //   'COUNTRYNAME' => $order->get_billing_country(),
+		    'PHONE'       => $order->get_billing_phone(),
 	    ]);
 
 	    $method = 'POST';
