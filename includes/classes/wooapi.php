@@ -1216,38 +1216,58 @@ class WooAPI extends \PriorityAPI\API
         }
 
         $data = [
-            'CUSTNAME' => (string) $cust_number,
-            'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-            'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM'  => $order->get_order_number(),
-            'DCODE' => get_post_meta( $order->get_id(), 'site', true )
+            //'CUSTNAME' => (string) $cust_number,
+            'COMPANY'     => $order->get_billing_company(),
+            'EMAIL' => get_userdata($order->get_user_id())->user_email, // this is the users email not the billing email
+            'ORDDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
+            'WEBNUMBER'  => $order->get_order_number(),
+            'BILLINGADDRESS'  => $order->get_billing_address_1(),
+            'BILLINGADDRESS2'  => $order->get_billing_address_2(),
+            'BILLINCITY'  => $order->get_billing_city(),
+            'BILLINGZIP'  => $order->get_billing_postcode(),
+            'BILLINGCOUNTRY'  => $order->get_billing_country(),
+            'BILLINGSTATE'  => $order->get_billing_state(),
+            'BILLINGPHONE'  => $order->get_billing_phone(),
+            'BILLINEMAIL'  =>$order->get_billing_email(),
+            'SHIPPINGADDRESS'  => $order->get_shipping_address_1(),
+            'SHIPPINGADDRESS2'  => $order->get_shipping_address_2(),
+            'SHIPPINGCITY'  => $order->get_shipping_city(),
+            'SHIPPINGZIP'  => $order->get_shipping_postcode(),
+            'SHIPPINGCOUNTRY'  => $order->get_shipping_country(),
+            'SHIPPINGSTATE'  => $order->get_shipping_state(),
+            'SHIPPINGPHONE'  => '' ,
+            'SHIPPINGEMAIL'  => '',
+            'BILLINFNAME'  => $order->get_billing_first_name(),
+            'BILLINLNAME'  =>$order->get_billing_last_name(),
+            'SHIPPINGFNAME'  => $order->get_shipping_first_name(),
+            'SHIPPINGLNAME'  => $order->get_shipping_last_name()
         ];
 	
 	    // order comments
 	    $order_comment_array = explode("\n", $order->get_customer_note());
 
-	    foreach($order_comment_array as $comment){
+	   /* foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
 	             'TEXT' => '-'.$comment.'-',
                 ];
-        }
+        }*/
 
 	// shipping
-        $shipping_data = [
+       /* $shipping_data = [
             'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'PHONENUM'    => $order->get_billing_phone(),
             'ADDRESS'     => $order->get_shipping_address_1(),
             'STATE'       => $order->get_shipping_city(),
             'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
             'ZIP'         => $order->get_shipping_postcode(),
-        ];
+        ];*/
 
         // add second address if entered
-        if ( ! empty($order->get_shipping_address_2())) {
+        /*if ( ! empty($order->get_shipping_address_2())) {
             $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
-        }
+        }*/
 
-        $data['SHIPTO2_SUBFORM'] = $shipping_data;
+       // $data['SHIPTO2_SUBFORM'] = $shipping_data;
 
         // get shipping id
         $shipping_method    = $order->get_shipping_methods();
@@ -1307,12 +1327,12 @@ class WooAPI extends \PriorityAPI\API
 
                 /*end T151*/
 
-                $data['ORDERITEMS_SUBFORM'][] = [
-                    'PARTNAME'         => $product->get_sku(),
+                $data['OREN_ORDERITEMS_SUBFORM'][] = [
+                    'WEBPART'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     //'PRICE'            => (float) $item->get_total(),
-                    'VATPRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
-                    "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
+                    'PRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
+                   // "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
 
                 ];
             }
@@ -1321,17 +1341,16 @@ class WooAPI extends \PriorityAPI\API
 
         // shipiing rate
 
-        $data['ORDERITEMS_SUBFORM'][] = [
+       // $data['ORDERITEMS_SUBFORM'][] = [
            // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-            'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
-            'TQUANT'   => 1,
-            'VATPRICE' =>  floatval($order->get_shipping_total()),
-            "REMARK1" => "",
+         //   'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
+          //  'TQUANT'   => 1,
+           // 'VATPRICE' =>  floatval($order->get_shipping_total()),
+           // "REMARK1" => "",
       
-        ];
+     //   ];
 
-       
-        /* get credit guard meta
+        // credit guard detail
 
 	    $order_ccnumber = $order->get_meta('_ccnumber');
 	    $order_token = $order->get_meta('_creditguard_token');
@@ -1340,9 +1359,7 @@ class WooAPI extends \PriorityAPI\API
 	    $order_payments = $order->get_meta('_payments');
 	    $order_first_payment = $order->get_meta('_first_payment');
 	    $order_periodical_payment = $order->get_meta('_periodical_payment');
-	    */
-
-	    /* credit guard dummy data
+	    /* debuging
 		$order_ccnumber = '1234';
 		$order_token = '123456789';
 		$order_creditguard_expiration = '0124';
@@ -1350,97 +1367,31 @@ class WooAPI extends \PriorityAPI\API
 		$order_payments = $order->get_meta('_payments');
 		$order_first_payment = $order->get_meta('_first_payment');
 		$order_periodical_payment = $order->get_meta('_periodical_payment');
-	    */
-
-
-	    // pelecard dummy data
-        /*
-        $args =
-                   [
-	              'StatusCode' => '000',
-                    'ErrorMessage' => 'operation success',
-                    'TransactionId' => 'e19d3a85-4096-4d81-b028-bae50b2f4000',
-                    'ShvaResult' => '000',
-                    'AdditionalDetailsParamX' => '197',
-                    'Token' => '' ,
-                    'DebitApproveNumber' => '0080152',
-                    'ConfirmationKey' => '36eddfff0cb4124a9b52bbac34ab3d6f',
-                    'VoucherId' => '05-001-001',
-                    'TransactionPelecardId' => '504338834',
-                    'CardHolderID' => '040369662',
-                    'CardHolderName' => '' ,
-                    'CardHolderEmail' => '' ,
-                    'CardHolderPhone'  => '' ,
-                    'CardHolderAddress' => '' ,
-                    'CardHolderCity' => '' ,
-                    'CardHolderZipCode' => '' ,
-                    'CardHolderCountry' => '' ,
-                    'ShvaFileNumber' => '',
-                    'StationNumber' =>  '1',
-                    'Reciept' => '1',
-                    'JParam'  => '4',
-                    'CreditCardNumber' => '458003******1944',
-                    'CreditCardExpDate'  => '1119',
-                    'CreditCardCompanyClearer' => '6',
-                    'CreditCardCompanyIssuer' => '6',
-                    'CreditCardStarsDiscountTotal' => '0',
-                    'CreditType' => '1',
-                    'CreditCardAbroadCard' => '0',
-                    'DebitType' => '1',
-                    'DebitCode' => '50',
-                    'DebitTotal' => '261',
-                    'DebitCurrency' => '1',
-                    'TotalPayments' => '1',
-                    'FirstPaymentTotal' => '0',
-                    'FixedPaymentTotal' => '0',
-                    'CreditCardBrand' => '2',
-                    'CardHebrewName' => 'לאומי קארד',
-                    'ShvaOutput' => '0000000458003******194426000411191100000261 0000000060110150001008015200000000000000000005001001 ƒ˜€— ‰…€0 197',
-                    'ApprovedBy' => '1',
-                    'CallReason' => '0',
-                    'TransactionInitTime' => '24\/07\/2019 23:38:13',
-                    'TransactionUpdateTime' => '24\/07\/2019 23:39:08',
-                    'Remarks' => '',
-                    'BusinessNumber' => ''
-                ];
-
-	    $order->update_meta_data('_transaction_data',$args);
-	    $order->save();
-        */
-	    /* get meta pelecard
-
-        $order_cc_meta = $order->get_meta('_transaction_data');
-        $order_ccnumber = $order_cc_meta['CreditCardNumber'];
-  	    $order_token =  $order_cc_meta['Token'];
-	    $order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
-	    $order_cc_authorization = $order_cc_meta['ConfirmationKey'];
-
-        */
-
+		*/
 
 
 	    // payment info
-	    $data['PAYMENTDEF_SUBFORM'] = [
+	   /* $data['PAYMENTDEF_SUBFORM'] = [
 		    'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
 		    'QPRICE'      => floatval($order->get_total()),
 		    'PAYACCOUNT'  => '',
 		    'PAYCODE'     => '',
 		    'PAYACCOUNT'  => $order_ccnumber,
-		    'VALIDMONTH'  => $order_cc_expiration,
+		    'VALIDMONTH'  => $order_creditguard_expiration,
 		    'CCUID' => $order_token,
-		    'CONFNUM' => $order_cc_authorization,
+		    'CONFNUM' => $order_creditguard_authorization,
 		    //'ROYY_NUMBEROFPAY' => $order_payments,
 		    //'FIRSTPAY' => $order_first_payment,
 		    //'ROYY_SECONDPAYMENT' => $order_periodical_payment
 
-	    ];
+	    ];*/
 
 	    // HERE goes the condition to avoid the repetition
 	    $post_done = get_post_meta( $order->get_id(), '_post_done', true);
 	    if( empty($post_done) ) {
 
         // make request
-        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $this->option('log_orders_web', true));
+        $response = $this->makeRequest('POST', 'OREN_ORDERS', ['body' => json_encode($data)], $this->option('log_orders_web', true));
 
         if (!$response['status']) {
             /**
@@ -1620,122 +1571,6 @@ class WooAPI extends \PriorityAPI\API
 
 	}
 
-	
-	
-	
-	/* sync over the counter invoice EINVOICES */
-
-	public function syncOverTheCounterInvoice($order_id)
-	{
-
-		$order = new \WC_Order($order_id);
-
-		$data = [
-			'CUSTNAME' => (string) $order->get_order_number(),
-			//'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
-			'BOOKNUM' => $order->get_order_number(),
-
-		];
-
-		// get ordered items
-		foreach ($order->get_items() as $item) {
-
-			$product = $item->get_product();
-
-			$parameters = [];
-
-			// get tax
-			// Initializing variables
-			$tax_items_labels   = array(); // The tax labels by $rate Ids
-			$tax_label = 0.0 ; // The total VAT by order line
-			$taxes = $item->get_taxes();
-			// Loop through taxes array to get the right label
-			foreach( $taxes['subtotal'] as $rate_id => $tax ) {
-				$tax_label = + $tax; // <== Here the line item tax label
-			}
-
-
-			if ($product) {
-
-				$data['EINVOICEITEMS_SUBFORM'][] = [
-					'PARTNAME'         => $product->get_sku(),
-					'TQUANT'           => (int) $item->get_quantity(),
-					'TOTPRICE'            => round((float) ($item->get_total() + $tax_label) ,2),
-
-
-				];
-			}
-
-		}
-
-
-
-		/* credit guard detail
-
-		$order_ccnumber = $order->get_meta('_ccnumber');
-		$order_token = $order->get_meta('_creditguard_token');
-		$order_creditguard_expiration = $order->get_meta('_creditguard_expiration');
-		$order_creditguard_authorization = $order->get_meta('_creditguard_authorization');
-		$order_payments = $order->get_meta('_payments');
-		$order_first_payment = $order->get_meta('_first_payment');
-		$order_periodical_payment = $order->get_meta('_periodical_payment');
-		//debuging
-		$order_ccnumber = '1234';
-		$order_token = '123456789';
-		$order_creditguard_expiration = '0124';
-		$order_creditguard_authorization = '09090909';
-		$order_payments = $order->get_meta('_payments');
-		$order_first_payment = $order->get_meta('_first_payment');
-		$order_periodical_payment = $order->get_meta('_periodical_payment');
-
-		*/
-
-        // pelecard
-
-
-		$order_cc_meta = $order->get_meta('_transaction_data');
-		$order_ccnumber = $order_cc_meta['CreditCardNumber'];
-		$order_token =  $order_cc_meta['Token'];
-		$order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
-		$order_cc_authorization = $order_cc_meta['ConfirmationKey'];
-		$order_cc_qprice = $order_cc_meta['DebitTotal']/100;
-
-
-
-
-			// payment info
-			$data['EPAYMENT2_SUBFORM'][] = [
-                 'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-		    'QPRICE'      => floatval($order_cc_qprice), //floatval($order->get_total()),
-            'FIRSTPAY'      => floatval($order_cc_qprice), //floatval($order->get_total()),
-		    'PAYACCOUNT'  => '',
-		    'PAYCODE'     => '',
-		    'PAYACCOUNT'  => $order_ccnumber,
-		    'VALIDMONTH'  => $order_cc_expiration,
-		    'CCUID' => $order_token,
-		    'CONFNUM' => $order_cc_authorization,
-			];
-
-
-
-
-		// make request
-		$response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
-		if (!$response['status']) {
-			/**
-			 * t149
-			 */
-			$this->sendEmailError(
-				$this->option('email_error_sync_receipts_priority'),
-				'Error Sync Receipts',
-				$response['body']
-			);
-		}
-		// add timestamp
-		$this->updateOption('receipts_priority_update', time());
-
-	}
     /**
      * Sync receipt from web to priority for given order id
      *
