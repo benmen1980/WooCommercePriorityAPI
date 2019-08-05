@@ -1214,8 +1214,12 @@ class WooAPI extends \PriorityAPI\API
         } else {
             $cust_number = $this->option('walkin_number');
         }
+	    foreach ($order->get_items() as $item) {
+            $item_id = $item->get_id();
+            $os = wc_get_order_item_meta($item_id,'pa_operating-system');
 
-        $data = [
+	    }
+		    $data = [
             //'CUSTNAME' => (string) $cust_number,
             'COMPANY'     => $order->get_billing_company(),
             'EMAIL' => get_userdata($order->get_user_id())->user_email, // this is the users email not the billing email
@@ -1230,17 +1234,19 @@ class WooAPI extends \PriorityAPI\API
             'BILLINGPHONE'  => $order->get_billing_phone(),
             'BILLINEMAIL'  =>$order->get_billing_email(),
             'SHIPPINGADDRESS'  => $order->get_shipping_address_1(),
-            'SHIPPINGADDRESS2'  => $order->get_shipping_address_2(),
+            'SHIPPINGADDRESS2' => '',
             'SHIPPINGCITY'  => $order->get_shipping_city(),
             'SHIPPINGZIP'  => $order->get_shipping_postcode(),
             'SHIPPINGCOUNTRY'  => $order->get_shipping_country(),
             'SHIPPINGSTATE'  => $order->get_shipping_state(),
-            'SHIPPINGPHONE'  => '' ,
-            'SHIPPINGEMAIL'  => '',
+            'SHIPPINGPHONE'  => $order->get_meta('_shipping_phone'),
+            'SHIPPINGEMAIL'  => $order->get_meta('_shipping_email'),
             'BILLINFNAME'  => $order->get_billing_first_name(),
             'BILLINLNAME'  =>$order->get_billing_last_name(),
             'SHIPPINGFNAME'  => $order->get_shipping_first_name(),
-            'SHIPPINGLNAME'  => $order->get_shipping_last_name()
+            'SHIPPINGLNAME'  => $order->get_shipping_last_name(),
+            'QTY'  => $order->get_meta('_estimated_product_quantities'),
+            'OPERATINGSYSTEM' => $os
         ];
 	
 	    // order comments
@@ -1334,21 +1340,22 @@ class WooAPI extends \PriorityAPI\API
                     'PRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
                    // "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
 
+
                 ];
             }
             
         }
 
-        // shipiing rate
+        // shipping rate
 
-       // $data['ORDERITEMS_SUBFORM'][] = [
-           // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-         //   'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
-          //  'TQUANT'   => 1,
-           // 'VATPRICE' =>  floatval($order->get_shipping_total()),
-           // "REMARK1" => "",
+        $data['OREN_ORDERITEMS_SUBFORM'][] = [
+          'WEBPART' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+         // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
+          'TQUANT'   => 1,
+          'PRICE' =>  floatval($order->get_shipping_total()),
+          //"REMARK1" => "",
       
-     //   ];
+        ];
 
         // credit guard detail
 
@@ -1424,9 +1431,9 @@ class WooAPI extends \PriorityAPI\API
 
         // sync customer if it's signed in / registered
         // guest user will have id 0
-        if ($customer_id = $order->get_customer_id()) {
-            $this->syncCustomer($customer_id);
-        }
+        //if ($customer_id = $order->get_customer_id()) {
+        //    $this->syncCustomer($customer_id);
+        //}
 
         // sync order
         $this->syncOrder($order_id);
