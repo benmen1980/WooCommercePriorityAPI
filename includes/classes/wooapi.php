@@ -1108,7 +1108,7 @@ class WooAPI extends \PriorityAPI\API
     public function syncInventoryPriority()
     {
 
-        $response = $this->makeRequest('GET', 'LOGPART?$expand=LOGCOUNTERS_SUBFORM', [], $this->option('log_inventory_priority', true));
+         $response = $this->makeRequest('GET', 'LOGPART?$filter=ROYY_ISMOVE eq \'Y\'&$expand=LOGCOUNTERS_SUBFORM', [], $this->option('log_inventory_priority', true));
 
         // check response status
         if ($response['status']) {
