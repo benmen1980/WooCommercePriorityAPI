@@ -790,7 +790,7 @@ class WooAPI extends \PriorityAPI\API
 
 
                 $data = [
-                    'post_content' =>  $cleancontent[1],
+                      'post_content' =>  (is_null($cleancontent[1]) ? '' : $cleancontent[1]),
                     'post_status'  => $this->option('item_status'),
                     'post_title'   => $item['PARTDES'],
                     'post_parent'  => '',
