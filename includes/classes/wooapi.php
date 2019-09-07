@@ -1208,6 +1208,23 @@ class WooAPI extends \PriorityAPI\API
     {
         $order = new \WC_Order($id);
 
+        //  add data for unidress
+
+	    $user_id = $order->user_id;
+	    $customer_id =  get_user_meta($user_id,'user_customer')[0];
+	    $department_id =  get_user_meta($user_id,'user_department')[0];
+	    $branch_id =  get_user_meta($user_id,'user_branch')[0];
+
+	    $customer_name = get_the_title($customer_id);
+	    $priority_customer_number =  get_post_meta($customer_id)['priority_customer_number'][0];
+	    $customer_type = get_post_meta($customer_id)['customer_type'][0];
+	    $priority_dep_number = get_post_meta($department_id)['department_number'][0];
+	    $priority_branch_number = get_post_meta($branch_id)['branch_priority_number'][0];
+
+	    $order_shop_id = get_post_meta($id,'unidress_shipping')[0];
+	    $shop_address =  json_encode(get_post_meta($order_shop_id,'address' )[0]);
+	    //***********************
+
         if ($order->get_customer_id()) {
             $meta = get_user_meta($order->get_customer_id());
             $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
@@ -1216,11 +1233,13 @@ class WooAPI extends \PriorityAPI\API
         }
 
         $data = [
-            'CUSTNAME' => (string) $cust_number,
-            'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CUSTNAME' => $priority_customer_number,
+            //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM'  => $order->get_order_number(),
-            'DCODE' => get_post_meta( $order->get_id(), 'site', true )
+            'REFERENCE'  => $order->get_order_number(),
+            'DCODE' => $priority_dep_number, // this is the site in Priority
+            'DETAILS' => acf_get_post_title($department_id), // this is the site in Priority
+            'UNI_SCUSTNAME' => $priority_branch_number
         ];
 	
 	    // order comments
@@ -1234,10 +1253,11 @@ class WooAPI extends \PriorityAPI\API
 
 	// shipping
         $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CUSTDES'     => $customer_name,
             'PHONENUM'    => $order->get_billing_phone(),
-            'ADDRESS'     => $order->get_shipping_address_1(),
-            'STATE'       => $order->get_shipping_city(),
+            'ADDRESS'     => $shop_address,
+            'STATE'       => '.',
             'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
             'ZIP'         => $order->get_shipping_postcode(),
         ];
@@ -1310,25 +1330,29 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    //'PRICE'            => (float) $item->get_total(),
                     'VATPRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
+                    'UFLR_GROUP'           => '1',
+                    'UNI_ORDTYPE'           => '1',
+                    'DUEDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+                    'DOERLOGIN'           => 'israela',
+                    'UNI_EMPNAME' => '',
 
                 ];
             }
             
         }
 
-        // shipiing rate
+        //  unidress extra not inventory item as remark ARIZA SHEMIT
+        if($customer_type=='campaign') {
+	        $data['ORDERITEMS_SUBFORM'][] = [
+		        'PARTNAME'  => '59603',
+		        'TQUANT'    => 1,
+		        'VATPRICE'  => 0.0,
+		        "DOERLOGIN" => "marina",
 
-        $data['ORDERITEMS_SUBFORM'][] = [
-           // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-            'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
-            'TQUANT'   => 1,
-            'VATPRICE' =>  floatval($order->get_shipping_total()),
-            "REMARK1" => "",
-      
-        ];
+	        ];
+        }
 
        
         /* get credit guard meta
@@ -1420,7 +1444,7 @@ class WooAPI extends \PriorityAPI\API
 
 
 	    // payment info
-	    $data['PAYMENTDEF_SUBFORM'] = [
+	  /*  $data['PAYMENTDEF_SUBFORM'] = [
 		    'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
 		    'QPRICE'      => floatval($order->get_total()),
 		    'PAYACCOUNT'  => '',
@@ -1433,7 +1457,7 @@ class WooAPI extends \PriorityAPI\API
 		    //'FIRSTPAY' => $order_first_payment,
 		    //'ROYY_SECONDPAYMENT' => $order_periodical_payment
 
-	    ];
+	    ];*/
 
 	    // HERE goes the condition to avoid the repetition
 	    $post_done = get_post_meta( $order->get_id(), '_post_done', true);
