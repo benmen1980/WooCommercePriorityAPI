@@ -1211,6 +1211,8 @@ class WooAPI extends \PriorityAPI\API
         //  add data for unidress
 
 	    $user_id = $order->user_id;
+	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+
 	    $customer_id =  get_user_meta($user_id,'user_customer')[0];
 	    $department_id =  get_user_meta($user_id,'user_department')[0];
 	    $branch_id =  get_user_meta($user_id,'user_branch')[0];
@@ -1237,24 +1239,27 @@ class WooAPI extends \PriorityAPI\API
             //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'REFERENCE'  => $order->get_order_number(),
-            'DCODE' => $priority_dep_number, // this is the site in Priority
+            'DCODE' => 'web', // $priority_dep_number,  this is the site in Priority
             'DETAILS' => acf_get_post_title($department_id), // this is the site in Priority
             'UNI_SCUSTNAME' => $priority_branch_number
         ];
 	
 	    // order comments
 	    $order_comment_array = explode("\n", $order->get_customer_note());
-
+	    $text_foo = 'aaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaa 
+	                 aaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa 
+	                 aaaaaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa';
+	    $order_comment_array = explode("\n", $text_foo);
 	    foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
-	             'TEXT' => '-'.$comment.'-',
+	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
                 ];
         }
 
 	// shipping
         $shipping_data = [
             'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-            'CUSTDES'     => $customer_name,
+            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
             'ADDRESS'     => $shop_address,
             'STATE'       => '.',
@@ -1332,8 +1337,8 @@ class WooAPI extends \PriorityAPI\API
                     'TQUANT'           => (int) $item->get_quantity(),
                     'VATPRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
-                    'UFLR_GROUP'           => '1',
-                    'UNI_ORDTYPE'           => '1',
+                    'UFLR_GROUP'           => 1,
+                    'UNI_ORDTYPE'           => 'B',
                     'DUEDATE' => date('Y-m-d', strtotime($order->get_date_created())),
                     'DOERLOGIN'           => 'israela',
                     'UNI_EMPNAME' => '',
