@@ -1223,6 +1223,13 @@ class WooAPI extends \PriorityAPI\API
 	    $priority_dep_number = get_post_meta($department_id)['department_number'][0];
 	    $priority_branch_number = get_post_meta($branch_id)['branch_priority_number'][0];
 
+	    $user_department = get_user_meta($user_id,'user_department')[0];
+	    $active_campain = get_Post_meta($customer_id,'active_campaign')[0];
+	    $campaign_duedate = get_Post_meta($active_campain,'order_due_date')[0];
+	    $user = get_user_by( 'id', $user_id );
+	    $username = $user->user_login;
+
+
 	    $order_shop_id = get_post_meta($id,'unidress_shipping')[0];
 	    $shop_address =  json_encode(get_post_meta($order_shop_id,'address' )[0]);
 	    //***********************
@@ -1240,7 +1247,7 @@ class WooAPI extends \PriorityAPI\API
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'REFERENCE'  => $order->get_order_number(),
             'DCODE' => 'web', // $priority_dep_number,  this is the site in Priority
-            'DETAILS' => acf_get_post_title($department_id), // this is the site in Priority
+            'DETAILS' => $user_department,
             'UNI_SCUSTNAME' => $priority_branch_number
         ];
 	
@@ -1249,7 +1256,7 @@ class WooAPI extends \PriorityAPI\API
 	    $text_foo = 'aaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaa 
 	                 aaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa 
 	                 aaaaaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa';
-	    $order_comment_array = explode("\n", $text_foo);
+	   // $order_comment_array = explode("\n", $text_foo);
 	    foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
 	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
@@ -1259,7 +1266,7 @@ class WooAPI extends \PriorityAPI\API
 	// shipping
         $shipping_data = [
             'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+            'CUSTDES'     => $customer_name,  //$order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
             'ADDRESS'     => $shop_address,
             'STATE'       => '.',
@@ -1339,9 +1346,10 @@ class WooAPI extends \PriorityAPI\API
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     'UFLR_GROUP'           => 1,
                     'UNI_ORDTYPE'           => 'B',
-                    'DUEDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+                    'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                     'DOERLOGIN'           => 'israela',
-                    'UNI_EMPNAME' => '',
+                    'UNI_EMPNAME' => $username,
+	                'ORDERITEMS.UNI_WARHSNAME' => '40'
 
                 ];
             }
@@ -1355,6 +1363,9 @@ class WooAPI extends \PriorityAPI\API
 		        'TQUANT'    => 1,
 		        'VATPRICE'  => 0.0,
 		        "DOERLOGIN" => "marina",
+                "UFLR_GROUP" => 2,
+                "UNI_ORDTYPE" => 'B',
+		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
 
 	        ];
         }
