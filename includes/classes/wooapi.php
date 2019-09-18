@@ -1349,7 +1349,7 @@ class WooAPI extends \PriorityAPI\API
                     'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                     'DOERLOGIN'           => 'israela',
                     'UNI_EMPNAME' => $username,
-	                'ORDERITEMS.UNI_WARHSNAME' => '40'
+	                'UNI_WARHSNAME' => '40'
 
                 ];
             }
