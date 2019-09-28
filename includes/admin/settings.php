@@ -103,7 +103,18 @@
 
 
             </tr>
+             <tr>
+                <td class="p18a-label">
+                    <label for="p18a-prefix"><?php _e('Plugin prefix', 'p18a'); ?></label>
+                </td>
+                <td>
+                    <input id="p18aw-variation_field_title" type="text" name="prefix" form="p18aw-settings" size="5" value="<?php echo $this->option('prefix'); ?>">
+                    Prefix will be added to each order number and customer number posted to Priority ERP
 
+                </td>
+
+
+            </tr>
 
 
 
