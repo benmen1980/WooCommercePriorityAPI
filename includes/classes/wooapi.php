@@ -511,7 +511,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('sell_by_pl',  $this->post('sell_by_pl'));
 	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
 	            $this->updateOption('sites',  $this->post('sites'));
-
+		    $this->updateOption('prefix',  $this->post('prefix'));
 
 
 
