@@ -165,7 +165,9 @@ class WooAPI extends \PriorityAPI\API
      */
     private function frontend() {
 	    // Sync customer and order data after order is proccessed
-	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+        if($this->option('log_orders_web')) {
+	        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+        }
 
         // custom check out fields
 	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
@@ -562,6 +564,12 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
                 $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
 
+	            $this->updateOption('log_auto_post_orders_priority',                       $this->post('log_auto_post_orders_priority'));
+	            $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
+	            $this->updateOption('auto_sync_orders_priority',                $this->post('auto_sync_orders_priority'));
+
+
+
                 $this->notify('Sync settings saved');
             }
 
@@ -612,6 +620,48 @@ class WooAPI extends \PriorityAPI\API
 
         });
 
+        //  add Priority order status to orders page
+	    // ADDING A CUSTOM COLUMN TITLE TO ADMIN ORDER LIST
+	   add_filter( 'manage_edit-shop_order_columns',
+	    function($columns)
+	    {
+		    // Set "Actions" column after the new colum
+		    $action_column = $columns['order_actions']; // Set the title in a variable
+		    unset($columns['order_actions']); // remove  "Actions" column
+
+
+		    //add the new column "Status"
+		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+
+		    // Set back "Actions" column
+		    $columns['order_actions'] = $action_column;
+
+		    return $columns;
+	    });
+
+// ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
+	    add_action( 'manage_shop_order_posts_custom_column' ,
+	    function ( $column, $post_id )
+	    {
+
+		    // HERE get the data from your custom field (set the correct meta key below)
+		    $status = get_post_meta( $post_id, 'priority_status', true );
+		    if( empty($status)) $status = '';
+
+		    switch ( $column )
+		    {
+			    case 'order_priority_status' :
+				    echo '<span>'.$status.'</span>'; // display the data
+				    break;
+		    }
+	    },10,2);
+
+// MAKE 'PLATFORM' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
+	    add_filter( 'woocommerce_shop_order_search_fields',
+	    function ( $meta_keys ){
+		    $meta_keys[] = 'priority_status';
+		    return $meta_keys;
+	    }, 10, 1 );
         // ajax action for manual syncs
         add_action('wp_ajax_p18aw_request', function(){
 
@@ -623,6 +673,34 @@ class WooAPI extends \PriorityAPI\API
             // switch syncs
             switch($_POST['sync']) {
 
+                case 'auto_post_orders_priority':
+                    try{
+
+
+	                    $query = new \WC_Order_Query( array(
+		                    'limit' => 1000,
+		                    'orderby' => 'date',
+		                    'order' => 'DESC',
+		                    'return' => 'ids',
+		                    'priority_status' => 'NOT EXISTS',
+	                    ) );
+	                    $orders = $query->get_orders();
+	                    foreach ($orders as $id){
+		                    $order =wc_get_order($id);
+		                    $priority_status = $order->get_meta('priority_status');
+		                    if(!$priority_status){
+
+			                    $response = $this->syncOrder($id,$this->option('log_auto_post_orders_priority', true));
+
+
+		                    }
+
+	                    };
+	                    $this->updateOption('auto_post_orders_priority_update', time());
+                    }catch(Exception $e){
+	                    exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
+                    break;
                 case 'sync_items_priority':
 
                     try {
@@ -1204,7 +1282,7 @@ class WooAPI extends \PriorityAPI\API
      *
      * @param [int] $id
      */
-    public function syncOrder($id)
+    public function syncOrder($id,$log)
     {
         $order = new \WC_Order($id);
 
@@ -1320,15 +1398,16 @@ class WooAPI extends \PriorityAPI\API
         }
 
         // shipiing rate
+        if( $order->get_shipping_method()) {
+	        $data['ORDERITEMS_SUBFORM'][] = [
+		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_1', $order->get_shipping_method() ),
+		        'TQUANT'   => 1,
+		        'VATPRICE' => floatval( $order->get_shipping_total() ),
+		        "REMARK1"  => "",
 
-        $data['ORDERITEMS_SUBFORM'][] = [
-           // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-            'PARTNAME' => $this->option('shipping_' . $shipping_method_id.'_1', $order->get_shipping_method()),
-            'TQUANT'   => 1,
-            'VATPRICE' =>  floatval($order->get_shipping_total()),
-            "REMARK1" => "",
-      
-        ];
+	        ];
+        }
 
        
         /* get credit guard meta
@@ -1440,8 +1519,27 @@ class WooAPI extends \PriorityAPI\API
 	    if( empty($post_done) ) {
 
         // make request
-        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $this->option('log_orders_web', true));
+        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $log);
 
+        if ($response['code']<=201) {
+	        $body_array = json_decode($response["body"],true);
+
+	        $ord_status = $body_array["ORDSTATUSDES"];
+	        $ord_number = $body_array["ORDNAME"];
+	        $order->update_meta_data('priority_status',$ord_status);
+	        $order->update_meta_data('priority_ordnumber',$ord_number);
+	        $order->save();
+        }
+        if($response['code'] >= 400){
+	        $body_array = json_decode($response["body"],true);
+
+	        //$ord_status = $body_array["ORDSTATUSDES"];
+	       // $ord_number = $body_array["ORDNAME"];
+	        $order->update_meta_data('priority_status',$response["body"]);
+	       // $order->update_meta_data('priority_ordnumber',$ord_number);
+	        $order->save();
+        }
+        }
         if (!$response['status']) {
             /**
              * t149
@@ -1454,10 +1552,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
         // add timestamp
-        $this->updateOption('orders_web_update', time());
-
-
-        }
+    return $response;
     }
 
 
@@ -1478,7 +1573,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
         // sync order
-        $this->syncOrder($order_id);
+        $this->syncOrder($order_id,$this->option('log_orders_web', true));
 
         if($this->option('sync_onorder_receipts')) {
             // sync receipts 
@@ -1602,7 +1697,7 @@ class WooAPI extends \PriorityAPI\API
 				}
 
 				// add timestamp
-				$this->updateOption('pricelist_priority_update', time());
+				$this->updateOption('sites_priority_update', time());
 
 			}
 
