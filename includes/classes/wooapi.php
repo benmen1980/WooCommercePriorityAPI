@@ -1285,6 +1285,31 @@ class WooAPI extends \PriorityAPI\API
     public function syncOrder($id,$log)
     {
         $order = new \WC_Order($id);
+	 //  add data for unidress
+
+	    $user_id = $order->user_id;
+	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+
+	    $customer_id =  get_user_meta($user_id,'user_customer')[0];
+	    $department_id =  get_user_meta($user_id,'user_department')[0];
+	    $branch_id =  get_user_meta($user_id,'user_branch')[0];
+
+	    $customer_name = get_the_title($customer_id);
+	    $priority_customer_number =  get_post_meta($customer_id)['priority_customer_number'][0];
+	    $customer_type = get_post_meta($customer_id)['customer_type'][0];
+	    $priority_dep_number = get_post_meta($department_id)['department_number'][0];
+	    $priority_branch_number = get_post_meta($branch_id)['branch_priority_number'][0];
+
+	    $user_department = get_user_meta($user_id,'user_department')[0];
+	    $active_campain = get_Post_meta($customer_id,'active_campaign')[0];
+	    $campaign_duedate = get_Post_meta($active_campain,'order_due_date')[0];
+	    $user = get_user_by( 'id', $user_id );
+	    $username = $user->user_login;
+
+
+	    $order_shop_id = get_post_meta($id,'unidress_shipping')[0];
+	    $shop_address =  json_encode(get_post_meta($order_shop_id,'address' )[0]);
+	    //***********************
 
         if ($order->get_customer_id()) {
             $meta = get_user_meta($order->get_customer_id());
@@ -1294,28 +1319,34 @@ class WooAPI extends \PriorityAPI\API
         }
 
         $data = [
-            'CUSTNAME' => (string) $cust_number,
-            'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CUSTNAME' => $priority_customer_number,
+            //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM'  => $order->get_order_number(),
-            'DCODE' => get_post_meta( $order->get_id(), 'site', true )
+            'REFERENCE'  => $order->get_order_number(),
+            'DCODE' => 'web', // $priority_dep_number,  this is the site in Priority
+            'DETAILS' => $user_department,
+            'UNI_SCUSTNAME' => $priority_branch_number
         ];
 	
 	    // order comments
 	    $order_comment_array = explode("\n", $order->get_customer_note());
-
+	    $text_foo = 'aaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaa 
+	                 aaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa 
+	                 aaaaaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa';
+	   // $order_comment_array = explode("\n", $text_foo);
 	    foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
-	             'TEXT' => '-'.$comment.'-',
+	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
                 ];
         }
 
 	// shipping
         $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CUSTDES'     => $customer_name,  //$order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
-            'ADDRESS'     => $order->get_shipping_address_1(),
-            'STATE'       => $order->get_shipping_city(),
+            'ADDRESS'     => $shop_address,
+            'STATE'       => '.',
             'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
             'ZIP'         => $order->get_shipping_postcode(),
         ];
@@ -1388,23 +1419,30 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    //'PRICE'            => (float) $item->get_total(),
                     'VATPRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
+                    'UFLR_GROUP'           => 1,
+                    'UNI_ORDTYPE'           => 'B',
+                    'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+                    'DOERLOGIN'           => 'israela',
+                    'UNI_EMPNAME' => $username,
+	                'UNI_WARHSNAME' => '40'
 
                 ];
             }
             
         }
 
-        // shipiing rate
-        if( $order->get_shipping_method()) {
+        //  unidress extra not inventory item as remark ARIZA SHEMIT
+        if($customer_type=='campaign') {
 	        $data['ORDERITEMS_SUBFORM'][] = [
-		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_1', $order->get_shipping_method() ),
-		        'TQUANT'   => 1,
-		        'VATPRICE' => floatval( $order->get_shipping_total() ),
-		        "REMARK1"  => "",
+		        'PARTNAME'  => '59603',
+		        'TQUANT'    => 1,
+		        'VATPRICE'  => 0.0,
+		        "DOERLOGIN" => "marina",
+                "UFLR_GROUP" => 2,
+                "UNI_ORDTYPE" => 'B',
+		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
 
 	        ];
         }
@@ -1499,7 +1537,7 @@ class WooAPI extends \PriorityAPI\API
 
 
 	    // payment info
-	    $data['PAYMENTDEF_SUBFORM'] = [
+	  /*  $data['PAYMENTDEF_SUBFORM'] = [
 		    'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
 		    'QPRICE'      => floatval($order->get_total()),
 		    'PAYACCOUNT'  => '',
@@ -1512,7 +1550,7 @@ class WooAPI extends \PriorityAPI\API
 		    //'FIRSTPAY' => $order_first_payment,
 		    //'ROYY_SECONDPAYMENT' => $order_periodical_payment
 
-	    ];
+	    ];*/
 
 	    // HERE goes the condition to avoid the repetition
 	    $post_done = get_post_meta( $order->get_id(), '_post_done', true);
