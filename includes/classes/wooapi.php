@@ -1606,9 +1606,9 @@ class WooAPI extends \PriorityAPI\API
 
         // sync customer if it's signed in / registered
         // guest user will have id 0
-        if ($customer_id = $order->get_customer_id()) {
-            $this->syncCustomer($customer_id);
-        }
+       // if ($customer_id = $order->get_customer_id()) {
+       //     $this->syncCustomer($customer_id);
+       // }
 
         // sync order
         $this->syncOrder($order_id,$this->option('log_orders_web', true));
