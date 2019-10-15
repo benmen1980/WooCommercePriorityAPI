@@ -1419,7 +1419,7 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    'VATPRICE'            => (float) $item->get_total(), // if you are working without tax prices you need to modify this line Roy 7.10.18
+                    'PRICE'            => (float) $item->get_total(), // if you are working without tax prices you need to modify this line Roy 7.10.18
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     'UFLR_GROUP'           => 1,
                     'UNI_ORDTYPE'           => 'B',
@@ -1438,7 +1438,7 @@ class WooAPI extends \PriorityAPI\API
 	        $data['ORDERITEMS_SUBFORM'][] = [
 		        'PARTNAME'  => '59603',
 		        'TQUANT'    => 1,
-		        'VATPRICE'  => 0.0,
+		        'PRICE'  => 0.0,
 		        "DOERLOGIN" => "marina",
                 "UFLR_GROUP" => 2,
                 "UNI_ORDTYPE" => 'B',
