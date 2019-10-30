@@ -1239,7 +1239,7 @@ class WooAPI extends \PriorityAPI\API
             $meta = get_user_meta($id);
 
             $json_request = json_encode([
-                'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : $this->option('prefix').'-'.(string) $user->data->ID), // walkin customer or registered one
+                'CUSTNAME'    => (!empty($meta['priority_customer_number'][0])) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : $this->option('prefix').'-'.(string) $user->data->ID), // walkin customer or registered one
                 'CUSTDES'     => isset($meta['first_name'], $meta['last_name']) ? $meta['first_name'][0] . ' ' . $meta['last_name'][0] : '',
                 'EMAIL'       => $user->data->user_email,
                 'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
@@ -2080,7 +2080,7 @@ class WooAPI extends \PriorityAPI\API
 			return false;
 		}
 
-		if ( ! empty( $_POST['priority_customer_number'] ) ) {
+		if ( isset( $_POST['priority_customer_number'] ) ) {
 			update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
 		}
 	}
