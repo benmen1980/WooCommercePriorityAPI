@@ -863,7 +863,7 @@ class WooAPI extends \PriorityAPI\API
                 $cleancontent = explode("</style>",$content);
                 $post_content = $cleancontent[1];
 
-                // download image
+                
 
 
 
@@ -923,11 +923,13 @@ class WooAPI extends \PriorityAPI\API
 		
 	// sync image
                 $sku =  $item['PARTNAME'];
-	        $priority_image_path = $item['EXTFILENAME'];
-	        $images_url = 'http://devpri.roi-holdings.com:8080';
-	        $product_full_url = str_replace('../../system/mail',$images_url,$priority_image_path);
-	        $attach_id = download_attachment($sku,$product_full_url);
-	        set_post_thumbnail($id, $attach_id );
+                if(!empty($item['EXTFILENAME'])) {
+	                $priority_image_path = $item['EXTFILENAME'];
+	                $images_url          = 'http://devpri.roi-holdings.com:8080';
+	                $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
+	                $attach_id           = download_attachment( $sku, $product_full_url );
+	                set_post_thumbnail( $id, $attach_id );
+                }
             }
 
             // add timestamp
