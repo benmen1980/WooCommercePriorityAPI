@@ -11,9 +11,13 @@
     <div class="p18a-page-wrapper">
 
         <br>
-        <table class="p18a">
 
 
+        <!-- ------------------------------->
+
+        <table class="widefat"  cellspacing="0">
+
+            <tbody>
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-sell_by_pl"><?php _e('Show items from user\'s price list only ?', 'p18a'); ?></label>
@@ -38,7 +42,7 @@
                 </td>
                 <td></td>
                 <td>
-                    <input id="p18aw-price_method" type="checkbox" name="price_method" form="p18aw-settings" <?php if($this->option('price_method') == true){?> checked="checked" <?php } ?> />
+                    <input id="p18aw-price_method" size="35" type="checkbox" name="price_method" form="p18aw-settings" <?php if($this->option('price_method') == true){?> checked="checked" <?php } ?> />
                 </td>
             </tr>
             <tr>
@@ -50,30 +54,25 @@
                     <input id="p18aw-sites" type="checkbox" name="sites" form="p18aw-settings" <?php if($this->option('sites') == true){?> checked="checked" <?php } ?> />
                 </td>
             </tr>
+            </tbody>
         </table>
-        <table class="p18a">
+        <table  class="widefat fixed" cellspacing="0">
+            <col width="135">
+            <col width="300">
+            <col width="300">
+            <col width="300">
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-walkin_number"><?php _e('Guest/Walk in Priority Customer Number', 'p18a'); ?></label>
                 </td>
-                <td>
-                    <input id="p18aw-walkin_number" type="text" name="walkin_number" form="p18aw-settings" size="5" value="<?php echo $this->option('walkin_number'); ?>">
-                    Don't forget to check off the 'Change name' field in the Priority Customers form.
+                <td>&nbsp;
+                    <input id="p18aw-walkin_number"  width="48" type="text"  name="walkin_number" form="p18aw-settings"  value="<?php echo $this->option('walkin_number'); ?>">
+                    <h4>Don't forget to check off the 'Change name' field in the Priority Customers form.</h4>
                 </td>
 
 
             </tr>
-            <tr>
-                <td class="p18a-label">
-                    <label for="p18a-image_url"><?php _e('Product image URL', 'p18a'); ?></label>
-                </td>
-                <td>
-                    <input id="p18aw-image_url" type="text" name="image_url" form="p18aw-settings" size="5" value="<?php echo $this->option('image_url'); ?>">
-                    How to publish Priority's images ? check out the <a href="https://simplyct.co.il/wp-content/uploads/2019/10/publish_pictures.mp4?_=1">video</a>
-                </td>
 
-
-            </tr>
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-variation_field"><?php _e('Variation field in Priority', 'p18a'); ?></label>
@@ -81,24 +80,23 @@
                 <td>
                     <input id="p18aw-variation_field" type="text" name="variation_field" form="p18aw-settings" size="5" value="<?php echo $this->option('variation_field'); ?>">
 
-                     We recommend to user MPARTNAME, ROYY_MODEL or one of the SPECS.
+                    <h4>We recommend to user MPARTNAME, ROYY_MODEL or one of the SPECS.</h4>
 
 
                 </td>
+            </tr>
+            <tr>
                 <td class="p18a-label">
-                    <label for="p18a-variation_field_title"><?php _e('Title ', 'p18a'); ?></label>
+                    <label for="p18a-variation_field_title"><?php _e('Variation description ', 'p18a'); ?></label>
+
                 </td>
                 <td>
                     <input id="p18aw-variation_field_title" type="text" name="variation_field_title" form="p18aw-settings" size="5" value="<?php echo $this->option('variation_field_title'); ?>">
-                    We recommend to user MPARTDES, ROYY_MODELDES or one of the SPECDES.
+                    <h4>We recommend to user MPARTDES, ROYY_MODELDES or one of the SPECDES.</h4>
 
                 </td>
 
             </tr>
-
-
-
-
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-item_status"><?php _e('Product Default Status', 'p18a'); ?></label>
@@ -113,18 +111,7 @@
 
 
             </tr>
-             <tr>
-                <td class="p18a-label">
-                    <label for="p18a-prefix"><?php _e('Plugin prefix', 'p18a'); ?></label>
-                </td>
-                <td>
-                    <input id="p18aw-variation_field_title" type="text" name="prefix" form="p18aw-settings" size="5" value="<?php echo $this->option('prefix'); ?>">
-                    Prefix will be added to each order number and customer number posted to Priority ERP
 
-                </td>
-
-
-            </tr>
 
 
 
@@ -209,7 +196,26 @@
             <?php endforeach; ?>
 
         </table>
+        <table class="widefat fixed" cellspacing="0">
+            <tbody>
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-image_url"><?php _e('Product image URL', 'p18a'); ?></label>
+                </td>
+                <td>
+                    <input id="p18aw-image_url" type="text" name="image_url" form="p18aw-settings" size="5" value="<?php echo $this->option('image_url'); ?>">
+                    <h4>How to publish Priority's images ? check out the <a href="https://simplyct.co.il/wp-content/uploads/2019/10/publish_pictures.mp4?_=1">video</a></h4>
+                </td>
 
+                <td>
+                    <label for="p18a-update_image"><?php _e('Over write existing image ?', 'p18a'); ?></label>
+                    <input id="p18aw-sites" type="checkbox" name="update_image" form="p18aw-settings" <?php if($this->option('update_image') == true){?> checked="checked" <?php } ?> />
+                </td>
+                <td>                             </td>
+            </tr>
+
+        </table>
+        </tbody>
         <br>
 
         <input type="submit" class="button-primary" value="<?php _e('Save changes', 'p18a'); ?>" name="p18aw-save-settings" form="p18aw-settings" />
