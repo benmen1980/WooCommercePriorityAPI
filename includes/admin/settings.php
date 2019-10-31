@@ -63,7 +63,17 @@
 
 
             </tr>
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-image_url"><?php _e('Product image URL', 'p18a'); ?></label>
+                </td>
+                <td>
+                    <input id="p18aw-image_url" type="text" name="image_url" form="p18aw-settings" size="5" value="<?php echo $this->option('image_url'); ?>">
+                    How to publish Priority's images ? check out the <a href="https://simplyct.co.il/wp-content/uploads/2019/10/publish_pictures.mp4?_=1">video</a>
+                </td>
 
+
+            </tr>
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-variation_field"><?php _e('Variation field in Priority', 'p18a'); ?></label>
