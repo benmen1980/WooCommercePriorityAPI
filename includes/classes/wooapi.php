@@ -514,6 +514,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
 	            $this->updateOption('sites',  $this->post('sites'));
 		    $this->updateOption('prefix',  $this->post('prefix'));
+		    $this->updateOption('image_url',  $this->post('image_url'));
 
 
 
@@ -925,7 +926,7 @@ class WooAPI extends \PriorityAPI\API
                 $sku =  $item['PARTNAME'];
                 if(!empty($item['EXTFILENAME'])) {
 	                $priority_image_path = $item['EXTFILENAME'];
-	                $images_url          = 'http://devpri.roi-holdings.com:8080';
+	                $images_url = $this->option('image_url');
 	                $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
 	                $attach_id           = download_attachment( $sku, $product_full_url );
 	                set_post_thumbnail( $id, $attach_id );
