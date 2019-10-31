@@ -920,7 +920,14 @@ class WooAPI extends \PriorityAPI\API
                     update_post_meta($id, '_price',$pri_price );
                     update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
                 }
-
+		
+	// sync image
+                $sku =  $item['PARTNAME'];
+	        $priority_image_path = $item['EXTFILENAME'];
+	        $images_url = 'http://devpri.roi-holdings.com:8080';
+	        $product_full_url = str_replace('../../system/mail',$images_url,$priority_image_path);
+	        $attach_id = download_attachment($sku,$product_full_url);
+	        set_post_thumbnail($id, $attach_id );
             }
 
             // add timestamp
