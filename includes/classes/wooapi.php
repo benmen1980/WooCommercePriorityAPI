@@ -1251,12 +1251,12 @@ class WooAPI extends \PriorityAPI\API
 	
 	    // order comments
 	    $order_comment_array = explode("\n", $order->get_customer_note());
-
-	   /* foreach($order_comment_array as $comment){
-            $data['ORDERSTEXT_SUBFORM'][] = [
-	             'TEXT' => '-'.$comment.'-',
+	    
+	    foreach($order_comment_array as $comment){
+            $data['INTERNALDIALOGTEXT_SUBFORM'][] = [
+	             'TEXT' => ''.$comment.'',
                 ];
-        }*/
+        }
 
 	// shipping
        /* $shipping_data = [
