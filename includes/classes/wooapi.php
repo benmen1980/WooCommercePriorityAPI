@@ -1246,7 +1246,8 @@ class WooAPI extends \PriorityAPI\API
             'SHIPPINGFNAME'  => $order->get_shipping_first_name(),
             'SHIPPINGLNAME'  => $order->get_shipping_last_name(),
             'QTY'  => $order->get_meta('_estimated_product_quantities'),
-            'OPERATINGSYSTEM' => $os
+            'OPERATINGSYSTEM' => $os,
+            'ORDERLINK'=>$order->get_checkout_order_received_url()
         ];
 	
 	    // order comments
