@@ -842,7 +842,7 @@ class WooAPI extends \PriorityAPI\API
        // get the items simply by time stamp of today
 	    $stamp = mktime(0, 0, 0);
 	    $bod = date(DATE_ATOM,$stamp);
-	    $url_addition = 'CREATEDDATE ge '.$bod;
+	    $url_addition = 'UDATE ge '.$bod;
 	    if($this->option('variation_field')) {
 		    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
 	    }
