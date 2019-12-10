@@ -1344,32 +1344,14 @@ class WooAPI extends \PriorityAPI\API
     {
         $order = new \WC_Order($id);
 
-        //  add data for unidress
+        
 
 	    $user_id = $order->user_id;
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
-	    $customer_id =  get_user_meta($user_id,'user_customer')[0];
-	    $department_id =  get_user_meta($user_id,'user_department')[0];
-	    $branch_id =  get_user_meta($user_id,'user_branch')[0];
+	 
 
-	    $customer_name = get_the_title($customer_id);
-	    $priority_customer_number =  get_post_meta($customer_id)['priority_customer_number'][0];
-	    $customer_type = get_post_meta($customer_id)['customer_type'][0];
-	    $priority_dep_number = get_post_meta($department_id)['department_number'][0];
-	    $priority_branch_number = get_post_meta($branch_id)['branch_priority_number'][0];
-
-	    $user_department = get_user_meta($user_id,'user_department')[0];
-	    $active_campain = get_Post_meta($customer_id,'active_campaign')[0];
-	    $campaign_duedate = get_Post_meta($active_campain,'order_due_date')[0];
-	    $user = get_user_by( 'id', $user_id );
-	    $username = $user->user_login;
-
-
-	    $order_shop_id = get_post_meta($id,'unidress_shipping')[0];
-	    $shop_address = get_post_meta($order_shop_id,'address' )[0];
-
-	    //***********************
+	    
 
         if ($order->get_customer_id()) {
             $meta = get_user_meta($order->get_customer_id());
@@ -1385,15 +1367,11 @@ class WooAPI extends \PriorityAPI\API
             'REFERENCE'  => $order->get_order_number(),
             'DCODE' => 'web', // $priority_dep_number,  this is the site in Priority
             'DETAILS' => $user_department,
-            'UNI_SCUSTNAME' => $priority_branch_number
+           
         ];
 	
 	    // order comments
 	    $order_comment_array = explode("\n", $order->get_customer_note());
-	    $text_foo = 'aaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaa 
-	                 aaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa 
-	                 aaaaaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa';
-	   // $order_comment_array = explode("\n", $text_foo);
 	    foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
 	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
@@ -1406,7 +1384,7 @@ class WooAPI extends \PriorityAPI\API
 
         $shipping_data = [
             'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-            'CUSTDES'     => $customer_name,  //$order_user->user_firstname . ' ' . $order_user->user_lastname,
+            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
             'ADDRESS'     => $shop_address,
             'STATE'       => '.',
@@ -1428,12 +1406,7 @@ class WooAPI extends \PriorityAPI\API
 
         // get parameters
         $params = [];
-/*
-        foreach(\CuttingArt\CTA::getParameters() as $parameter) {
-            $params[$parameter->name] = $parameter->priority_id;
-        }
 
-*/
 
         // get ordered items
         foreach ($order->get_items() as $item) {
@@ -1483,32 +1456,13 @@ class WooAPI extends \PriorityAPI\API
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     'PRICE'            => (float) $item->get_total() ,  //  if you are working without tax prices you need to modify this line Roy 7.10.18
-                    "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
-                    'UFLR_GROUP'           => 1,
-                    'UNI_ORDTYPE'           => 'B',
-                    'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
-                    'DOERLOGIN'           => 'israela',
-                    'UNI_EMPNAME' => $username,
-	                'UNI_WARHSNAME' => '40'
-
+                    'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
+                    //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                 ];
             }
             
         }
 
-        //  unidress extra not inventory item as remark ARIZA SHEMIT
-        if($customer_type=='campaign') {
-	        $data['ORDERITEMS_SUBFORM'][] = [
-		        'PARTNAME'  => '59603',
-		        'TQUANT'    => 1,
-		        'VATPRICE'  => 0.0,
-		        "DOERLOGIN" => "marina",
-                "UFLR_GROUP" => 2,
-                "UNI_ORDTYPE" => 'B',
-		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
-
-	        ];
-        }
 
        
         /* get credit guard meta
