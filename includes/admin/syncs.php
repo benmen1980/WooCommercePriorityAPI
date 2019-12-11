@@ -276,6 +276,41 @@
                     <input type="text" style="width:300px" name="static_odata_header_auto_post_orders_priority" form="p18aw-sync"><?=$this->option('static_odata_header_auto_post_orders_priority')?></input>
                 </td>
             </tr>
+            <tr>
+                <td class="p18a-label">
+			        <?php _e('Auto Sync Order Status From Priority', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="log_sync_order_status_priority" form="p18aw-sync" value="1" <?php if($this->option('log_sync_order_status_priority')) echo 'checked'; ?> />
+                </td>
+                <td></td>
+                <td>
+                    <select name="auto_sync_order_status_priority" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('auto_sync_order_status_priority')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('auto_sync_order_status_priority') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('auto_sync_order_status_priority') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('auto_sync_order_status_priority') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
+                <td data-sync-time="auto_sync_order_status_priority">
+			        <?php
+			        if ($timestamp = $this->option('auto_sync_order_status_priority_update', false)) {
+				        echo(date('d/m/Y H:i:s', $timestamp));
+			        } else {
+				        _e('Never', 'p18a');
+			        }
+			        ?>
+                </td>
+                <td>
+                    <a href="#" class="button p18aw-sync" data-sync="auto_sync_order_status_priority"><?php _e('Sync', 'p18a'); ?></a>
+                </td>
+                <td>
+
+                </td>
+                <td>
+
+                </td>
+            </tr>
 
 
 
