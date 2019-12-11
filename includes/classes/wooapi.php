@@ -565,6 +565,10 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_orders_web',                       $this->post('log_orders_web'));
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
                 $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
+	            $this->updateOption('log_sync_order_status_priority',                $this->post('log_sync_order_status_priority'));
+	            $this->updateOption('auto_sync_order_status_priority',                $this->post('auto_sync_order_status_priority'));
+
+
 
 
 
@@ -785,6 +789,27 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
+
+                case 'auto_sync_order_status_priority':
+                    try {
+	                    $url_addition = 'ORDERS';
+	                    $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
+	                    $orders = json_decode($response['body'],true)['value'];
+	                    $output = '';
+	                    foreach ( $orders as $el ) {
+		                    $order_id = $el['BOOKNUM'];
+		                    $order = wc_get_order( $order_id );
+		                    $pri_status = $el['ORDSTATUSDES'];
+		                    if($order){
+			                    update_post_meta($order_id,'priority_status',$pri_status);
+			                    $output .= '<br>'.$order_id.' '.$pri_status.' ';
+		                    }
+	                    }
+	                    $this->updateOption('auto_sync_order_status_priority_update', time());
+
+                    }catch(Exception $e) {
+	                    exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
 
 
                 default: 
@@ -1361,12 +1386,12 @@ class WooAPI extends \PriorityAPI\API
         }
 
         $data = [
-            'CUSTNAME' => $priority_customer_number,
+            'CUSTNAME' => $cust_number,
             //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'REFERENCE'  => $order->get_order_number(),
-            'DCODE' => 'web', // $priority_dep_number,  this is the site in Priority
-            'DETAILS' => $user_department,
+            //'DCODE' => $priority_dep_number, // this is the site in Priority
+            //'DETAILS' => $user_department,
            
         ];
 	
@@ -1386,7 +1411,7 @@ class WooAPI extends \PriorityAPI\API
             'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
-            'ADDRESS'     => $shop_address,
+           // 'ADDRESS'     => $shop_address,
             'STATE'       => '.',
             'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
             'ZIP'         => $order->get_shipping_postcode(),
@@ -1574,7 +1599,7 @@ class WooAPI extends \PriorityAPI\API
 	    if( empty($post_done) ) {
 
         // make request
-        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $log);
+        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], true);
 
         if ($response['code']<=201) {
 	        $body_array = json_decode($response["body"],true);
