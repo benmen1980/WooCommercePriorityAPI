@@ -401,6 +401,12 @@ class WooAPI extends \PriorityAPI\API
 
 	                        break;
 
+	                    case 'post_order';
+
+		                    include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
+
+		                    break;
+
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -636,6 +642,10 @@ class WooAPI extends \PriorityAPI\API
 		    // Set back "Actions" column
 		    $columns['order_actions'] = $action_column;
 
+		    //add the new column "post to Priority"
+		    $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
+
+
 		    return $columns;
 	    });
 
@@ -652,6 +662,11 @@ class WooAPI extends \PriorityAPI\API
 		    {
 			    case 'order_priority_status' :
 				    echo '<span>'.$status.'</span>'; // display the data
+				    break;
+
+			    case 'order_post' :
+				    $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
+				    echo '<span><a href='.$url.'>Re Post</a></span>'; // display the data
 				    break;
 		    }
 	    },10,2);
