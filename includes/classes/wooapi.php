@@ -399,6 +399,18 @@ class WooAPI extends \PriorityAPI\API
 
 	                        break;
 
+	                    case 'post_order';
+
+		                    include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
+		                   /*
+		                    $order_id =  $_GET['ord'];
+		                   $response =  $this->syncOrder($order_id,'true');
+
+		                    echo var_dump($response);
+		                   */
+
+		                    break;
+
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -634,6 +646,10 @@ class WooAPI extends \PriorityAPI\API
 		    //add the new column "Status"
 		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
 
+		    //add the new column "post to Priority"
+		    $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
+
+
 		    // Set back "Actions" column
 		    $columns['order_actions'] = $action_column;
 
@@ -654,10 +670,15 @@ class WooAPI extends \PriorityAPI\API
 			    case 'order_priority_status' :
 				    echo '<span>'.$status.'</span>'; // display the data
 				    break;
+                // post order to API, using GET and
+                case 'order_post' :
+                    $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
+	                echo '<span><a href='.$url.'>Re Post</a></span>'; // display the data
+	                break;
 		    }
 	    },10,2);
 
-// MAKE 'PLATFORM' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
+// MAKE 'stauts' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
 	    add_filter( 'woocommerce_shop_order_search_fields',
 	    function ( $meta_keys ){
 		    $meta_keys[] = 'priority_status';
@@ -1368,10 +1389,9 @@ class WooAPI extends \PriorityAPI\API
     public function syncOrder($id)
     {
         $order = new \WC_Order($id);
-
-        
-
-	    $user_id = $order->user_id;
+	    $user = $order->get_user();
+	    $user_id = $order->get_user_id();
+	   // $user_id = $order->user_id;
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
 	 
@@ -1413,7 +1433,7 @@ class WooAPI extends \PriorityAPI\API
             'PHONENUM'    => $order->get_billing_phone(),
            // 'ADDRESS'     => $shop_address,
             'STATE'       => '.',
-            'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
+            //'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
             'ZIP'         => $order->get_shipping_postcode(),
         ];
 
