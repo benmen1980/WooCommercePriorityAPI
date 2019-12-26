@@ -42,7 +42,9 @@ class WooAPI extends \PriorityAPI\API
             'sync_items_web'                => 'syncItemsWeb',
             'sync_inventory_priority'       => 'syncInventoryPriority',
             'sync_pricelist_priority'       => 'syncPriceLists',
-            'sync_receipts_priority'        => 'syncReceipts'
+            'sync_receipts_priority'        => 'syncReceipts',
+            'sync_orders_priority'          => 'syncOrders',
+            'sync_order_status_priority' => 'syncPriorityOrderStatus'
         ];
 
         foreach ($syncs as $hook => $action) {
@@ -165,8 +167,9 @@ class WooAPI extends \PriorityAPI\API
      */
     private function frontend() {
 	    // Sync customer and order data after order is proccessed
-	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
-
+        if($this->option('post_order_checkout')) {
+	        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+        }
         // custom check out fields
 	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
 	    add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
@@ -574,11 +577,14 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_customers_web',                    $this->post('log_customers_web'));
                 $this->updateOption('email_error_sync_customers_web',       $this->post('email_error_sync_customers_web'));
                 $this->updateOption('log_shipping_methods',                 $this->post('log_shipping_methods'));
-                $this->updateOption('log_orders_web',                       $this->post('log_orders_web'));
+                $this->updateOption('post_order_checkout',                  $this->post('post_order_checkout'));
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
                 $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
-	            $this->updateOption('log_sync_order_status_priority',                $this->post('log_sync_order_status_priority'));
-	            $this->updateOption('auto_sync_order_status_priority',                $this->post('auto_sync_order_status_priority'));
+	            $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
+	            $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
+
+                $this->updateOption('auto_sync_orders_priority',                $this->post('auto_sync_orders_priority'));
+	            $this->updateOption('log_auto_post_orders_priority',       $this->post('log_auto_post_orders_priority'));
 
 
 
@@ -697,8 +703,8 @@ class WooAPI extends \PriorityAPI\API
             switch($_POST['sync']) {
 		 case 'auto_post_orders_priority':
                     try{
-
-
+                        $this->syncOrders();
+                        /*
 	                    $query = new \WC_Order_Query( array(
 		                    'limit' => 1000,
 		                    'orderby' => 'date',
@@ -717,8 +723,9 @@ class WooAPI extends \PriorityAPI\API
 
 		                    }
 
-	                    };
-	                    $this->updateOption('auto_post_orders_priority_update', time());
+	                    };*/
+	                    //$this->updateOption('auto_post_orders_priority_update', time());
+
                     }catch(Exception $e){
 	                    exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -813,6 +820,9 @@ class WooAPI extends \PriorityAPI\API
 
                 case 'auto_sync_order_status_priority':
                     try {
+
+                        $this->syncPriorityOrderStatus();
+                    /*
 	                    $url_addition = 'ORDERS';
 	                    $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
 	                    $orders = json_decode($response['body'],true)['value'];
@@ -827,7 +837,7 @@ class WooAPI extends \PriorityAPI\API
 		                    }
 	                    }
 	                    $this->updateOption('auto_sync_order_status_priority_update', time());
-
+                            */
                     }catch(Exception $e) {
 	                    exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -1380,12 +1390,50 @@ class WooAPI extends \PriorityAPI\API
 
     }
 
+    public function syncPriorityOrderStatus(){
+	    $url_addition = 'ORDERS';
+	    $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
+	    $orders = json_decode($response['body'],true)['value'];
+	    $output = '';
+	    foreach ( $orders as $el ) {
+		    $order_id = $el['BOOKNUM'];
+		    $order = wc_get_order( $order_id );
+		    $pri_status = $el['ORDSTATUSDES'];
+		    if($order){
+			    update_post_meta($order_id,'priority_status',$pri_status);
+			    $output .= '<br>'.$order_id.' '.$pri_status.' ';
+		    }
+	    }
+	    $this->updateOption('auto_sync_order_status_priority_update', time());
+    }
+    public function syncOrders(){
+	    $query = new \WC_Order_Query( array(
+		    'limit' => 1000,
+		    'orderby' => 'date',
+		    'order' => 'DESC',
+		    'return' => 'ids',
+		    'priority_status' => 'NOT EXISTS',
+	    ) );
+	    $orders = $query->get_orders();
+	    foreach ($orders as $id){
+		    $order =wc_get_order($id);
+		    $priority_status = $order->get_meta('priority_status');
+		    if(!$priority_status){
 
-    /**
-     * Sync order by id
-     *
-     * @param [int] $id
-     */
+			    $response = $this->syncOrder($id,$this->option('log_auto_post_orders_priority', true));
+
+
+		    }
+
+	    };
+	    $this->updateOption('auto_post_orders_priority_update', time());
+    }
+
+	/**
+	 * Sync order by id
+	 *
+	 * @param [int] $id
+	 */
     public function syncOrder($id)
     {
         $order = new \WC_Order($id);
