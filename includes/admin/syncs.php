@@ -409,10 +409,10 @@
         
             <tr>
                 <td class="p18a-label">
-                    <?php _e('Orders Web > Priority', 'p18a'); ?>
+                    <?php _e('Post Order > Priority on check out', 'p18a'); ?>
                 </td>
                 <td colspan="5">
-                    <input type="checkbox" name="log_orders_web" form="p18aw-sync" value="1" <?php if($this->option('log_orders_web')) echo 'checked'; ?> />
+                    <input type="checkbox" name="post_order_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_order_checkout')) echo 'checked'; ?> />
                 </td>
                 <td>
                     <input type="text"  style="width:300px" name="email_error_sync_orders_web" form="p18aw-sync"><?=$this->option('email_error_sync_orders_web')?></input>
