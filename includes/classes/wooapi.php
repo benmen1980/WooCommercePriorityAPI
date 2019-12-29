@@ -1307,7 +1307,7 @@ class WooAPI extends \PriorityAPI\API
 			$priority_status = $order->get_meta('priority_status');
 			if(!$priority_status){
 
-				$response = $this->syncOrder($id,$this->option('log_auto_post_orders_priority', true));
+				$response = $this->syncOrder($id);
 
 
 			}
