@@ -42,7 +42,9 @@ class WooAPI extends \PriorityAPI\API
             'sync_items_web'                => 'syncItemsWeb',
             'sync_inventory_priority'       => 'syncInventoryPriority',
             'sync_pricelist_priority'       => 'syncPriceLists',
-            'sync_receipts_priority'        => 'syncReceipts'
+            'sync_receipts_priority'        => 'syncReceipts',
+            'sync_orders_priority'          => 'syncOrders',
+            'sync_order_status_priority' => 'syncPriorityOrderStatus'
         ];
 
         foreach ($syncs as $hook => $action) {
@@ -690,8 +692,8 @@ class WooAPI extends \PriorityAPI\API
 
                 case 'auto_post_orders_priority':
                     try{
-
-
+	                    $this->syncOrders();
+                        /*
 	                    $query = new \WC_Order_Query( array(
 		                    'limit' => 1000,
 		                    'orderby' => 'date',
@@ -712,6 +714,7 @@ class WooAPI extends \PriorityAPI\API
 
 	                    };
 	                    $this->updateOption('auto_post_orders_priority_update', time());
+	                    */
                     }catch(Exception $e){
 	                    exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -1290,14 +1293,35 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
+	public function syncOrders(){
+		$query = new \WC_Order_Query( array(
+			'limit' => 1000,
+			'orderby' => 'date',
+			'order' => 'DESC',
+			'return' => 'ids',
+			'priority_status' => 'NOT EXISTS',
+		) );
+		$orders = $query->get_orders();
+		foreach ($orders as $id){
+			$order =wc_get_order($id);
+			$priority_status = $order->get_meta('priority_status');
+			if(!$priority_status){
 
+				$response = $this->syncOrder($id,$this->option('log_auto_post_orders_priority', true));
+
+
+			}
+
+		};
+		$this->updateOption('auto_post_orders_priority_update', time());
+	}
 
     /**
      * Sync order by id
      *
      * @param [int] $id
      */
-    public function syncOrder($id,$log)
+    public function syncOrder($id)
     {
         $order = new \WC_Order($id);
 	 //  add data for unidress
@@ -1572,7 +1596,8 @@ class WooAPI extends \PriorityAPI\API
 	    if( empty($post_done) ) {
 
         // make request
-        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], $log);
+        $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)],
+	        $this->option('log_auto_post_orders_priority', true));
 
         if ($response['code']<=201) {
 	        $body_array = json_decode($response["body"],true);
