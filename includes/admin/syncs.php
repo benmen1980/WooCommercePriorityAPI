@@ -343,6 +343,8 @@
                 <td>
                     <input type="text" style="width:300px" name="email_error_sync_ainvoices_priority" form="p18aw-sync"><?=$this->option('email_error_sync_ainvoices_priority')?></input>
                 </td>
+
+
             </tr>
 
             <tr>
