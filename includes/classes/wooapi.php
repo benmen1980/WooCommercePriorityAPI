@@ -527,6 +527,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
 	            $this->updateOption('sites',  $this->post('sites'));
 	            $this->updateOption('update_image',  $this->post('update_image'));
+		    $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
 
 
 
