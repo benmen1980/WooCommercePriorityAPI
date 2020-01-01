@@ -19,7 +19,7 @@
                 <td><strong><?php _e('Auto sync', 'p18a'); ?></strong></td>
                 <td><strong><?php _e('Last sync', 'p18a'); ?></strong></td>
                 <td><strong><?php _e('Manual sync', 'p18a'); ?></strong></td>
-                <td><strong><?php _e('On Error mailing list', 'p18a'); ?></strong></td>
+
                 <td><span title="Use this column to overwrite the GET odata header, in order to use a custom filter."><strong><?php _e('Static odata header query', 'p18a'); ?></strong></span></td>
             </tr>
 
@@ -51,9 +51,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="sync_items_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_sync_items_priority" form="p18aw-sync"><?=$this->option('email_error_sync_items_priority')?></input>
-                </td>
+
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_sync_items_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_priority')?></input>
                 </td>
@@ -87,9 +85,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="sync_items_priority_variation"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_sync_items_priority_variation" form="p18aw-sync"><?=$this->option('email_error_sync_items_priority_variation')?></input>
-                </td>
+
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_sync_items_priority_variation" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_priority_variation')?></input>
                 </td>
@@ -124,9 +120,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="sync_items_web"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_sync_items_web" form="p18aw-sync"><?=$this->option('email_error_sync_items_web')?></input>
-                </td>
+
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_sync_items_web" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_web')?></input>
                 </td>
@@ -160,9 +154,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="sync_inventory_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_sync_inventory_priority" form="p18aw-sync"><?=$this->option('email_error_sync_inventory_priority')?></input>
-                </td>
+
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_sync_inventory_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_inventory_priority')?></input>
                 </td>
@@ -197,9 +189,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="sync_pricelist_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_sync_pricelist_priority" form="p18aw-sync"><?=$this->option('email_error_sync_pricelist_priority')?></input>
-                </td>
+
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_sync_pricelist_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_pricelist_priority')?></input>
                 </td>
@@ -233,9 +223,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="sync_sites_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_sync_sites_priority" form="p18aw-sync"><?=$this->option('email_error_sync_sites_priority')?></input>
-                </td>
+
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_sync_sites_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_sites_priority')?></input>
                 </td>
@@ -269,9 +257,7 @@
                 <td>
                     <a href="#" class="button p18aw-sync" data-sync="auto_post_orders_priority"><?php _e('Sync', 'p18a'); ?></a>
                 </td>
-                <td>
-                    <input type="text" style="width:300px" name="email_error_auto_post_orders_priority" form="p18aw-sync"><?=$this->option('email_error_auto_post_orders_priority')?></input>
-                </td>
+               
                 <td>
                     <input type="text" style="width:300px" name="static_odata_header_auto_post_orders_priority" form="p18aw-sync"><?=$this->option('static_odata_header_auto_post_orders_priority')?></input>
                 </td>
