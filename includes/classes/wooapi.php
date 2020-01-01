@@ -72,7 +72,7 @@ class WooAPI extends \PriorityAPI\API
 	    add_action( 'init',array($this, 'bbloomer_hide_price_add_cart_not_logged_in') );
 
 
-
+	    include P18AW_ADMIN_DIR.'download_file.php';
 
 
     }
@@ -526,7 +526,6 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('sell_by_pl',  $this->post('sell_by_pl'));
 	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
 	            $this->updateOption('sites',  $this->post('sites'));
-	            $this->updateOption('image_url',  $this->post('image_url'));
 	            $this->updateOption('update_image',  $this->post('update_image'));
 
 
@@ -917,15 +916,17 @@ class WooAPI extends \PriorityAPI\API
 
                 // add long text from Priority
 	            $content = '';
-                foreach($item['PARTTEXT_SUBFORM'] as $text){
-	                $content .= $text['TEXT'];
-                }
-                $content = str_replace("pdir","p dir",$content);
-                $cleancontent = explode("</style>",$content);
+	            $post_content = '';
+	            if(isset($item['PARTTEXT_SUBFORM']) ) {
+		            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
+			            $content .= $text['TEXT'];
+		            }
+		            $content = str_replace("pdir","p dir",$content);
+		            $cleancontent = explode("</style>",$content);
 
-                $post_content = $cleancontent[1];
+		            $post_content = $cleancontent[1];
+	            }
 
-                // download image
 
 
 
@@ -1032,7 +1033,7 @@ class WooAPI extends \PriorityAPI\API
 	                $priority_image_path = $item['EXTFILENAME'];
 	                $images_url =  'https://'. $this->option('url').'/primail';
 	                $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
-	                include P18AW_ADMIN_DIR.'download_file.php';
+
 	                $attach_id           = download_attachment( $sku, $product_full_url );
 	                set_post_thumbnail( $id, $attach_id );
                 }
