@@ -1027,11 +1027,12 @@ class WooAPI extends \PriorityAPI\API
                 // sync image
                 $sku =  $item['PARTNAME'];
                 $is_has_image = get_the_post_thumbnail_url($id);
-                if(!empty($item['EXTFILENAME']) && !empty($this->option('image_url'))
+                if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
 	                $priority_image_path = $item['EXTFILENAME'];
-	                $images_url = $this->option('image_url');
+	                $images_url =  'https://'. $this->option('url').'/primail';
 	                $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
+	                include P18AW_ADMIN_DIR.'download_file.php';
 	                $attach_id           = download_attachment( $sku, $product_full_url );
 	                set_post_thumbnail( $id, $attach_id );
                 }
