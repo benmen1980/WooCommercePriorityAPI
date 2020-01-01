@@ -527,7 +527,8 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
 	            $this->updateOption('sites',  $this->post('sites'));
 	            $this->updateOption('update_image',  $this->post('update_image'));
-		    $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
+	            $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
+
 
 
 
@@ -1482,9 +1483,11 @@ class WooAPI extends \PriorityAPI\API
             'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
-           // 'ADDRESS'     => $shop_address,
-            'STATE'       => '.',
-            //'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
+            'EMAIL'       => $order->get_billing_email(),
+            'CELLPHONE'   => $order->get_billing_phone(),
+            'ADDRESS'     => $order->get_billing_address_1(),
+            'ADDRESS2'    => $order->get_billing_address_2(),
+            'STATE'       => $order->get_billing_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
 
