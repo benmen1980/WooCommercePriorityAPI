@@ -1222,6 +1222,7 @@ class WooAPI extends \PriorityAPI\API
 		    $data = [
             //'CUSTNAME' => (string) $cust_number,
             'COMPANY'     => $order->get_billing_company(),
+	    'COMPANY2'     => $order->get_shipping_company(),
             'EMAIL' => get_userdata($order->get_user_id())->user_email, // this is the users email not the billing email
             'ORDDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'WEBNUMBER'  => $order->get_order_number(),
@@ -1338,7 +1339,7 @@ class WooAPI extends \PriorityAPI\API
                     'WEBPART'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     //'PRICE'            => (float) $item->get_total(),
-                    'PRICE'            => (float) $item->get_total() + $tax_label, // if you are working without tax prices you need to modify this line Roy 7.10.18
+                  'PRICE'            => (float) $item->get_subtotal()/ $item->get_quantity() + $tax_label, 
                    // "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
 
 
