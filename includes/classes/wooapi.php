@@ -399,6 +399,12 @@ class WooAPI extends \PriorityAPI\API
 
 	                        break;
 
+	                    case 'post_order';
+
+		                    include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
+
+		                    break;
+
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -564,6 +570,52 @@ class WooAPI extends \PriorityAPI\API
 
                 $this->notify('Sync settings saved');
             }
+
+	        //  add Priority order status to orders page
+	        // ADDING A CUSTOM COLUMN TITLE TO ADMIN ORDER LIST
+	        add_filter( 'manage_edit-shop_order_columns',
+		        function($columns)
+		        {
+			        // Set "Actions" column after the new colum
+			        $action_column = $columns['order_actions']; // Set the title in a variable
+			        unset($columns['order_actions']); // remove  "Actions" column
+
+
+			        //add the new column "Status"
+			      //  $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+
+			        // Set back "Actions" column
+			        //$columns['order_actions'] = $action_column;
+
+			        //add the new column "post to Priority"
+			        $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
+
+
+			        return $columns;
+		        });
+
+
+            // ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
+	        add_action( 'manage_shop_order_posts_custom_column' ,
+		        function ( $column, $post_id )
+		        {
+
+			        // HERE get the data from your custom field (set the correct meta key below)
+			        $status = get_post_meta( $post_id, 'priority_status', true );
+			        if( empty($status)) $status = '';
+
+			        switch ( $column )
+			        {
+				        case 'order_priority_status' :
+					        echo '<span>'.$status.'</span>'; // display the data
+					        break;
+
+				        case 'order_post' :
+					        $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
+					        echo '<span><a href='.$url.'>Re Post</a></span>'; // display the data
+					        break;
+			        }
+		        },10,2);
 
 
             // attach price list
@@ -753,8 +805,10 @@ class WooAPI extends \PriorityAPI\API
         });
 
 
-    }  
- 
+    }
+
+
+
 
     /**
      * sync items from priority
@@ -1422,6 +1476,8 @@ class WooAPI extends \PriorityAPI\API
 
 
         }
+
+	    return $response;
     }
 
 
