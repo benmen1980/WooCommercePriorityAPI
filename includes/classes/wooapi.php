@@ -1223,7 +1223,7 @@ class WooAPI extends \PriorityAPI\API
             //'CUSTNAME' => (string) $cust_number,
             'COMPANY'     => $order->get_billing_company(),
 	    'COMPANY2'     => $order->get_shipping_company(),
-            'EMAIL' => get_userdata($order->get_user_id())->user_email, // this is the users email not the billing email
+          //  'EMAIL' => get_userdata($order->get_user_id())->user_email, // this is the users email not the billing email
             'ORDDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'WEBNUMBER'  => $order->get_order_number(),
             'BILLINGADDRESS'  => $order->get_billing_address_1(),
