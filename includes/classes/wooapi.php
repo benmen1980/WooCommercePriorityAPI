@@ -1364,7 +1364,10 @@ class WooAPI extends \PriorityAPI\API
             'REFERENCE'  => $order->get_order_number(),
             'DCODE' => 'web', // $priority_dep_number,  this is the site in Priority
             'DETAILS' => $user_department,
-            'UNI_SCUSTNAME' => $priority_branch_number
+            'UNI_SCUSTNAME' => $priority_branch_number,
+	    'UNI_ORDTYPE'           => 'B',
+            'UNI_DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+	     'UFLR_ORDERRCVCODE':'8'
         ];
 	
 	    // order comments
@@ -1458,7 +1461,7 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    'PRICE'            => (float) $item->get_total(), // if you are working without tax prices you need to modify this line Roy 7.10.18
+                    'PRICE'            => (float) $item->get_total()/ $item->get_quantity(),
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     'UFLR_GROUP'           => 1,
                     'UNI_ORDTYPE'           => 'B',
