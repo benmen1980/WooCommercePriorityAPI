@@ -1367,7 +1367,7 @@ class WooAPI extends \PriorityAPI\API
             'UNI_SCUSTNAME' => $priority_branch_number,
 	    'UNI_ORDTYPE'           => 'B',
             'UNI_DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
-	     'UFLR_ORDERRCVCODE':'8'
+	     'UFLR_ORDERRCVCODE' => '8'
         ];
 	
 	    // order comments
