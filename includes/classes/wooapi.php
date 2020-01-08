@@ -1397,7 +1397,7 @@ class WooAPI extends \PriorityAPI\API
                     'WEBPART'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     //'PRICE'            => (float) $item->get_total(),
-                  'PRICE'            => (float) $item->get_subtotal()/ $item->get_quantity() + $tax_label, 
+                  'PRICE'            => (float) $item->get_subtotal()/ $item->get_quantity(), 
                    // "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
 
 
