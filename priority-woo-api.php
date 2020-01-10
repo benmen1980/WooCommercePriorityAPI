@@ -52,7 +52,6 @@ register_activation_hook(P18AW_SELF, function(){
 
     /* sites */
 	$table = $GLOBALS['wpdb']->prefix . 'p18a_sites';
-
 	$sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
@@ -62,10 +61,17 @@ register_activation_hook(P18AW_SELF, function(){
         address1 VARCHAR(80),
         PRIMARY KEY  (id)
     )";
-
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    
     dbDelta($sql);
+
+    /* vat customers */
+	$table_name = $GLOBALS['wpdb']->prefix . 'p18a_customers';
+	$sql =   'CREATE TABLE '.$table_name.' (
+	ID int(11) UNIQUE AUTO_INCREMENT,
+    custnumber varchar(255) UNIQUE NOT NULL,
+    vatnumber varchar(255) UNIQUE NOT NULL
+    )';
+	dbDelta( $sql );
 
 });
 
@@ -73,6 +79,7 @@ register_activation_hook(P18AW_SELF, function(){
 register_deactivation_hook(P18AW_SELF, function(){
 
     # $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
+	#$GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_customers;');
     
 });
 
@@ -81,6 +88,9 @@ register_deactivation_hook(P18AW_SELF, function(){
 
 // hook up
 add_action('plugins_loaded', function(){
+
+
+	add_shortcode('simply_get_order_meta','simply_get_order_meta');
 
     $plugins = get_option('active_plugins');
 
@@ -115,3 +125,6 @@ add_action('plugins_loaded', function(){
 
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
 
+add_shortcode('order_meta',function(){
+	echo '<pre>'.json_encode(get_post_meta(1212)).'</pre>';
+});
