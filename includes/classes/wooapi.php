@@ -177,7 +177,7 @@ class WooAPI extends \PriorityAPI\API
 
 
 	    // sync user to priority after registration
-	    add_action( 'user_register', [ $this, 'syncCustomer' ] );
+	    //add_action( 'user_register', [ $this, 'syncCustomer' ] );
 
 
 	    if ( $this->option( 'sell_by_pl' ) == true ) {
@@ -1349,32 +1349,35 @@ class WooAPI extends \PriorityAPI\API
      *
      * @param [int] $id
      */
-    public function syncCustomer($id)
+    public function syncCustomer($order_id)
     {
         // check user
-        if ($user = get_userdata($id)) {
 
-            $meta = get_user_meta($id);
+
+            $meta = get_post_meta($order_id);
 
             $json_request = json_encode([
-                'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
-                'CUSTDES'     => isset($meta['first_name'], $meta['last_name']) ? $meta['first_name'][0] . ' ' . $meta['last_name'][0] : '',
-                'EMAIL'       => $user->data->user_email,
-                'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
-                'ADDRESS2'    => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
-                'STATEA'      => isset($meta['billing_city'])      ? $meta['billing_city'][0] : '',
-                'ZIP'         => isset($meta['billing_postcode'])  ? $meta['billing_postcode'][0] : '',
-                'COUNTRYNAME' => isset($meta['billing_country'])   ? $this->countries[$meta['billing_country'][0]] : '',
-                'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
+                //'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
+                'CUSTDES'     => $meta['_billing_first_name'][0] . ' ' . $meta['_billing_last_name'][0],
+                'EMAIL'       => $meta['_billing_email'][0],
+                'ADDRESS'     => isset($meta['_billing_address_1']) ? $meta['_billing_address_1'][0] : '',
+                'ADDRESS2'    => isset($meta['_billing_address_2']) ? $meta['_billing_address_2'][0] : '',
+                'STATEA'      => isset($meta['_billing_city'])      ? $meta['_billing_city'][0] : '',
+                'ZIP'         => isset($meta['_billing_postcode'])  ? $meta['_billing_postcode'][0] : '',
+                'COUNTRYNAME' => isset($meta['_billing_country'])   ? $this->countries[$meta['_billing_country'][0]] : '',
+                'PHONE'       => isset($meta['_billing_phone'])     ? $meta['_billing_phone'][0] : '',
             ]);
     
-            $method = isset($meta['_priority_customer_number']) ? 'PATCH' : 'POST';
+            $method = 'POST';
     
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
 
             // set priority customer id
             if ($response['status']) {
-                add_user_meta($id, '_priority_customer_number', $id, true); 
+                //add_user_meta($id, '_priority_customer_number', $id, true);
+	            $res_customer = json_decode($response['body'],true);
+
+		            $prioirty_customer_number = $res_customer['CUSTNAME'];
             } else {
                 /**
                  * t149
@@ -1389,10 +1392,12 @@ class WooAPI extends \PriorityAPI\API
     
             // add timestamp
             $this->updateOption('customers_web_update', time());
-    
-        }
 
+            return $prioirty_customer_number;
+    
     }
+
+
 
     public function syncPriorityOrderStatus(){
 	    $url_addition = 'ORDERS';
@@ -1433,6 +1438,24 @@ class WooAPI extends \PriorityAPI\API
 	    $this->updateOption('auto_post_orders_priority_update', time());
     }
 
+    function insert_customer($vatnumber,$custnumber){
+	    global $wpdb;
+	    $table = $wpdb->prefix.'p18a_customers';
+	    $data = array('vatnumber' => $vatnumber, 'custnumber' => $custnumber);
+	    $format = array('%s','%s');
+	    $wpdb->insert($table,$data,$format);
+    }
+	function get_cust_by_vatnumber($vatnumber){
+		global $wpdb;
+		$result = $wpdb->get_results ( '
+		SELECT custnumber FROM  '.$wpdb->prefix.'p18a_customers
+		WHERE vatnumber = '.$vatnumber.'
+	    ');
+
+		$custname =  $result[0]->custnumber;
+		return $custname;
+	}
+
 	/**
 	 * Sync order by id
 	 *
@@ -1441,25 +1464,32 @@ class WooAPI extends \PriorityAPI\API
     public function syncOrder($id)
     {
         $order = new \WC_Order($id);
+
+        // sync customer if vat assign and customer not exists
+	    $vatnumber = get_post_meta($id,'_shipping_company',true);
+	    $customer_number =$this->get_cust_by_vatnumber($vatnumber);
+
+	    if (!empty($vatnumber)&& empty($customer_number)) {
+		    $customer_number = $this->syncCustomer($id);
+		    // insert data to table
+            $this->insert_customer($vatnumber,$customer_number);
+	    }
+	    if (empty($vatnumber)) {
+		    $customer_number = $this->option('walkin_number');
+	    }
+
+
+
 	    $user = $order->get_user();
 	    $user_id = $order->get_user_id();
-	   // $user_id = $order->user_id;
+	    // $user_id = $order->user_id;
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
-	 
 
-	    
-
-        if ($order->get_customer_id()) {
-            $meta = get_user_meta($order->get_customer_id());
-            $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
-        } else {
-            $cust_number = $this->option('walkin_number');
-        }
 
         $data = [
-            'CUSTNAME' => $cust_number,
-            //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CUSTNAME' => $customer_number,
+            'CDES'     => !empty($vatnumber) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM'  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
@@ -1719,12 +1749,6 @@ class WooAPI extends \PriorityAPI\API
     {
         // get order
         $order = new \WC_Order($order_id);
-
-        // sync customer if it's signed in / registered
-        // guest user will have id 0
-        if ($customer_id = $order->get_customer_id()) {
-            $this->syncCustomer($customer_id);
-        }
 
         // sync order
         $this->syncOrder($order_id);
