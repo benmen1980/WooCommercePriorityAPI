@@ -1491,6 +1491,9 @@ class WooAPI extends \PriorityAPI\API
             'CUSTNAME' => $customer_number,
             'CDES'     => !empty($vatnumber) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
+            'DUEDATE'  => date('Y-m-d', strtotime($order->get_meta('shipping_delivery_date'))),
+          
+          
             'BOOKNUM'  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
@@ -1679,11 +1682,20 @@ class WooAPI extends \PriorityAPI\API
 	    $order_cc_authorization = $order_cc_meta['ConfirmationKey'];
 
         */
+      
+      /* get meta payplus - this data need to be maniplulated from payplus plugin see line 409 */
+
+        $order_ccnumber = $order->get_meta('simply_ccuid');
+  	    $order_token =  $order->get_meta('simply_token');
+	    $order_cc_expiration =  $order->get_meta('simply_cc_date');
+	    $order_cc_authorization = $order->get_meta('simply_cc_auth_number');
+
+        
 
 
 
 	    // payment info
-	  /*  $data['PAYMENTDEF_SUBFORM'] = [
+	    $data['PAYMENTDEF_SUBFORM'] = [
 		    'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
 		    'QPRICE'      => floatval($order->get_total()),
 		    'PAYACCOUNT'  => '',
@@ -1696,7 +1708,7 @@ class WooAPI extends \PriorityAPI\API
 		    //'FIRSTPAY' => $order_first_payment,
 		    //'ROYY_SECONDPAYMENT' => $order_periodical_payment
 
-	    ];*/
+	    ];
 
 	    // HERE goes the condition to avoid the repetition
 	    $post_done = get_post_meta( $order->get_id(), '_post_done', true);
