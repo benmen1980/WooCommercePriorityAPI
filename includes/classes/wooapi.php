@@ -1562,6 +1562,16 @@ class WooAPI extends \PriorityAPI\API
             
         }
 
+	 // shipiing rate
+        if( $order->get_shipping_method()) {
+	        $data['ORDERITEMS_SUBFORM'][] = [
+		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_1', $order->get_shipping_method() ),
+		        'TQUANT'   => 1,
+		        'VATPRICE' => floatval( $order->get_shipping_total() ),
+		        "REMARK1"  => "",
+	        ];
+        }
 
        
         /* get credit guard meta
