@@ -1366,6 +1366,7 @@ class WooAPI extends \PriorityAPI\API
                 'ZIP'         => isset($meta['_billing_postcode'])  ? $meta['_billing_postcode'][0] : '',
                 'COUNTRYNAME' => isset($meta['_billing_country'])   ? $this->countries[$meta['_billing_country'][0]] : '',
                 'PHONE'       => isset($meta['_billing_phone'])     ? $meta['_billing_phone'][0] : '',
+		 'WTAXNUM'     => $vatnumber, 
             ]);
     
             $method = 'POST';
