@@ -1370,7 +1370,7 @@ class WooAPI extends \PriorityAPI\API
     
             $method = 'POST';
     
-            $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
+            $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request],true);
 
             // set priority customer id
             if ($response['status']) {
@@ -1587,12 +1587,23 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    'PRICE'            => (float) $item->get_total() ,  //  if you are working without tax prices you need to modify this line Roy 7.10.18
+                  //  'PRICE'            => (float) $item->get_total() ,  //  if you are working without tax prices you need to modify this line Roy 7.10.18
+                  'VATPRICE'            => (float) $item->get_total() + $tax_label,
                     'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                 ];
             }
             
+        }
+		 // shipiing rate
+        if( $order->get_shipping_method()) {
+	        $data['ORDERITEMS_SUBFORM'][] = [
+		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_1', $order->get_shipping_method() ),
+		        'TQUANT'   => 1,
+		        'VATPRICE' => floatval( $order->get_shipping_total() ),
+		        "REMARK1"  => "",
+	        ];
         }
 
 
