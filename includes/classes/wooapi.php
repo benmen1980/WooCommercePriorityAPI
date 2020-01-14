@@ -1295,11 +1295,14 @@ class WooAPI extends \PriorityAPI\API
     }
 	public function syncOrders(){
 		$query = new \WC_Order_Query( array(
-			'limit' => 1000,
+			'limit' => get_option('posts_per_page'),
+			//'limit' => 1000,
 			'orderby' => 'date',
 			'order' => 'DESC',
 			'return' => 'ids',
-			'priority_status' => 'NOT EXISTS',
+			'meta_key'     => 'priority_status', // The postmeta key field
+			'meta_compare' => 'NOT EXISTS', // The comparison argument
+
 		) );
 		$orders = $query->get_orders();
 		foreach ($orders as $id){
