@@ -1470,8 +1470,8 @@ class WooAPI extends \PriorityAPI\API
                     'UNI_ORDTYPE'           => 'B',
                     'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                     'DOERLOGIN'           => 'israela',
-                    'UNI_EMPNAME' => $username,
-	                'UNI_WARHSNAME' => '40'
+		    'UNI_EMPNAME' => $username.'/'.$priority_branch_number,
+	            'UNI_WARHSNAME' => '40'
 
                 ];
             }
