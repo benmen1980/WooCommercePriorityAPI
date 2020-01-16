@@ -1268,10 +1268,12 @@ class WooAPI extends \PriorityAPI\API
         } else {
             $cust_number = $this->option('walkin_number');
         }
+	    $os = null;
 	    foreach ($order->get_items() as $item) {
-            $item_id = $item->get_id();
-            $os = wc_get_order_item_meta($item_id,'pa_operating-system');
-
+            	$item_id = $item->get_id();
+            	if(isEmpty($os)){
+	            $os = wc_get_order_item_meta($item_id,'pa_operating-system');
+                }
 	    }
 		    $data = [
             //'CUSTNAME' => (string) $cust_number,
