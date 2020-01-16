@@ -1395,7 +1395,7 @@ class WooAPI extends \PriorityAPI\API
     }
 
     public function syncPriorityOrderStatus(){
-	    $url_addition = 'ORDERS';
+	    $url_addition = 'ORDERS?$filter=BOOKNUM ne \'\'';
 	    $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
 	    $orders = json_decode($response['body'],true)['value'];
 	    $output = '';
