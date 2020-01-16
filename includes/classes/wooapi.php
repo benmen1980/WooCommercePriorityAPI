@@ -1303,8 +1303,14 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncInventoryPriority()
     {
-
-         $response = $this->makeRequest('GET', 'LOGPART?$filter=ROYY_ISMOVE eq \'Y\'&$expand=LOGCOUNTERS_SUBFORM', [], $this->option('log_inventory_priority', true));
+	// get the items simply by time stamp of today
+    	$stamp = mktime(0, 0, 0);
+    	$bod = date(DATE_ATOM,$stamp);
+    	$url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
+    	if($this->option('variation_field')) {
+	    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
+    	}
+    	$response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM', [], $this->option('log_inventory_priority', true));
 
         // check response status
         if ($response['status']) {
