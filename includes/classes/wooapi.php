@@ -1271,7 +1271,7 @@ class WooAPI extends \PriorityAPI\API
 	    $os = null;
 	    foreach ($order->get_items() as $item) {
             	$item_id = $item->get_id();
-            	if(isEmpty($os)){
+            	if(empty($os)){
 	            $os = wc_get_order_item_meta($item_id,'pa_operating-system');
                 }
 	    }
