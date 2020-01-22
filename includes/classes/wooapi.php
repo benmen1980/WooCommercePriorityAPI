@@ -1401,7 +1401,11 @@ class WooAPI extends \PriorityAPI\API
     }
 
     public function syncPriorityOrderStatus(){
-	    $url_addition = 'ORDERS?$filter=BOOKNUM ne \'\'';
+	    $url_addition =  'ORDERS?$filter=BOOKNUM ne \'\'  and ';
+	    $date = date('Y-m-d');
+	    $prev_date = date('Y-m-d', strtotime($date .' -10 day'));
+	    $url_addition .= 'CURDATE ge '.$prev_date;
+	    
 	    $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
 	    $orders = json_decode($response['body'],true)['value'];
 	    $output = '';
