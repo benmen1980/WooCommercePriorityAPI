@@ -413,6 +413,13 @@ class WooAPI extends \PriorityAPI\API
 		                   */
 
 		                    break;
+			    
+			    case 'order_meta';
+
+		                    var_dump(get_post_meta($_GET['ord']));
+
+
+		                    break;
 
                         default:
 
