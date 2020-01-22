@@ -1326,7 +1326,31 @@ class WooAPI extends \PriorityAPI\API
 
             foreach($data['value'] as $item) {
 
-                if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
+	 // if product exsits, update
+
+	            $args = array(
+		            'post_type'		=>	'product',
+		            'meta_query'	=>	array(
+			            array(
+				            'key'       => '_sku',
+				            'value'	=>	$item['PARTNAME']
+			            )
+		            )
+	            );
+	            $my_query = new \WP_Query( $args );
+	            if ( $my_query->have_posts() ) {
+		            while ( $my_query->have_posts() ) {
+			            $my_query->the_post();
+			            $product_id = get_the_ID();
+
+
+		            }
+	            }else{
+		            $product_id = 0;
+	            }
+		    
+                //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
+	     if(!$id == 0){
                     update_post_meta($id, '_sku', $item['PARTNAME']);
                     update_post_meta($id, '_stock', $item['LOGCOUNTERS_SUBFORM'][0]['DIFF']);
 
