@@ -1015,10 +1015,10 @@ class WooAPI extends \PriorityAPI\API
 	            $out_of_stock_staus = 'outofstock';
 
                 // 1. Updating the stock quantity
-	            update_post_meta($id, '_stock', 0);
+	          //  update_post_meta($id, '_stock', 0);
 
                 // 2. Updating the stock quantity
-	            update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
+	           // update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
 
                 // 3. Updating post term relationship
 	            wp_set_post_terms( $id, 'outofstock', 'product_visibility', true );
