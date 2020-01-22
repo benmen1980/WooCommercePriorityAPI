@@ -1350,14 +1350,14 @@ class WooAPI extends \PriorityAPI\API
 	            }
 		    
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
-	     if(!$id == 0){
-                    update_post_meta($id, '_sku', $item['PARTNAME']);
-                    update_post_meta($id, '_stock', $item['LOGCOUNTERS_SUBFORM'][0]['DIFF']);
+	     if(!$product_id == 0){
+                    update_post_meta($product_id, '_sku', $item['PARTNAME']);
+                    update_post_meta($product_id, '_stock', $item['LOGCOUNTERS_SUBFORM'][0]['DIFF']);
 
                     if (intval($item['LOGCOUNTERS_SUBFORM'][0]['DIFF']) > 0) {
-                        update_post_meta($id, '_stock_status', 'instock');
+                        update_post_meta($product_id, '_stock_status', 'instock');
                     } else {
-                        update_post_meta($id, '_stock_status', 'outofstock');
+                        update_post_meta($product_id, '_stock_status', 'outofstock');
                     }
                 }
                 
