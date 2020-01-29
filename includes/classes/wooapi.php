@@ -411,6 +411,13 @@ class WooAPI extends \PriorityAPI\API
 
 		                    echo var_dump($response);
 		                   */
+						   
+						     break;
+
+							case 'order_meta';
+
+		                    var_dump(get_post_meta($_GET['ord']));
+
 
 		                    break;
 
@@ -1355,6 +1362,7 @@ class WooAPI extends \PriorityAPI\API
 
 
             $meta = get_post_meta($order_id);
+         	$vatnumber = get_post_meta($order_id,'_shipping_company',true);
 
             $json_request = json_encode([
                 //'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
@@ -1366,7 +1374,7 @@ class WooAPI extends \PriorityAPI\API
                 'ZIP'         => isset($meta['_billing_postcode'])  ? $meta['_billing_postcode'][0] : '',
                 'COUNTRYNAME' => isset($meta['_billing_country'])   ? $this->countries[$meta['_billing_country'][0]] : '',
                 'PHONE'       => isset($meta['_billing_phone'])     ? $meta['_billing_phone'][0] : '',
-		 'WTAXNUM'     => $vatnumber, 
+                'WTAXNUM'     => $vatnumber, 
             ]);
     
             $method = 'POST';
@@ -1496,9 +1504,11 @@ class WooAPI extends \PriorityAPI\API
           
           
             'BOOKNUM'  => $order->get_order_number(),
-            //'DCODE' => $priority_dep_number, // this is the site in Priority
-            //'DETAILS' => $user_department,
-           
+            'ELMU_STARTTIME'         => $order->get_meta('shipping_delivery_time'),
+            //'ELIT_CELLPHONE'       => $order->get_meta('_shipping_phone'),
+            //'ELMU_EMAL'              => $order->get_billing_email(),
+            'PAYCODE'                => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+            'ELIT_FULLADDRESS'       => $order->get_billing_address_1().' '.$order->get_billing_address_2().' '.$order->get_billing_city(),
         ];
 	
 	    // order comments
@@ -1540,11 +1550,24 @@ class WooAPI extends \PriorityAPI\API
         // get parameters
         $params = [];
 
+	    // shipiing rate
+	    if( $order->get_shipping_method()) {
+		    $data['ORDERITEMS_SUBFORM'][] = [
+
+			    'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
+			    'PDES'     => 'הזמנת משלוח - אתר - '.' '.$shipping_method['name'].' '.$order->get_billing_city(),
+                'TQUANT'   => 1,
+			    'VATPRICE' => floatval( $order->get_shipping_total() ),
+			    "REMARK1"  => "",
+		    ];
+	    }
 
         // get ordered items
         foreach ($order->get_items() as $item) {
 
             $product = $item->get_product();
+
+
 
             $parameters = [];
 
@@ -1587,25 +1610,30 @@ class WooAPI extends \PriorityAPI\API
 
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
+                    'VATPRICE'            => (float) $item->get_total() + $tax_label,
                     'TQUANT'           => (int) $item->get_quantity(),
                   //  'PRICE'            => (float) $item->get_total() ,  //  if you are working without tax prices you need to modify this line Roy 7.10.18
-                  'VATPRICE'            => (float) $item->get_total() + $tax_label,
+
                     'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                 ];
             }
             
         }
-		 // shipiing rate
-        if( $order->get_shipping_method()) {
-	        $data['ORDERITEMS_SUBFORM'][] = [
-		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
-		        'TQUANT'   => 1,
-		        'VATPRICE' => floatval( $order->get_shipping_total() ),
-		        "REMARK1"  => "",
-	        ];
-        }
+
+        // add value card
+/*
+	    if( !empty($order->get_meta('valuecard_transaction_log'))) {
+	        $value_part = '000';
+	        $value_price = 59.00;
+		    $data['ORDERITEMS_SUBFORM'][] = [
+			    'PARTNAME' => $value_part,
+			    'VATPRICE' => $value_price,
+                'TQUANT'   => -1,
+			    "REMARK1"  => "",
+		    ];
+	    }*/
+
 
 
        
