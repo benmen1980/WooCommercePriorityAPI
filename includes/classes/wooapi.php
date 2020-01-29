@@ -1622,17 +1622,17 @@ class WooAPI extends \PriorityAPI\API
         }
 
         // add value card
-/*
+
 	    if( !empty($order->get_meta('valuecard_transaction_log'))) {
 	        $value_part = '000';
 	        $value_price = 59.00;
 		    $data['ORDERITEMS_SUBFORM'][] = [
 			    'PARTNAME' => $value_part,
-			    'VATPRICE' => $value_price,
+			    'VPRICE' => $value_price,
                 'TQUANT'   => -1,
 			    "REMARK1"  => "",
 		    ];
-	    }*/
+	    }
 
 
 
