@@ -1624,15 +1624,17 @@ class WooAPI extends \PriorityAPI\API
         // add value card
 
 	    if( !empty($order->get_meta('valuecard_transaction_log'))) {
-	        $value_part = '000';
-	        $value_price = 59.00;
+	        $value_part = 'MUN-024-0548';
+	        $meta_array = get_post_meta($order->get_id(),'valuecard_transaction_log',true);
+	        $value_price = 1.17 *  $meta_array[0]['VCMUser']->pointToConsume; // this is according to Asaf
 		    $data['ORDERITEMS_SUBFORM'][] = [
 			    'PARTNAME' => $value_part,
-			    'VPRICE' => $value_price,
+			    'VPRICE' => $value_price ,
                 'TQUANT'   => -1,
 			    "REMARK1"  => "",
 		    ];
 	    }
+
 
 
 
