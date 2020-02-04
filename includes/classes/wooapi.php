@@ -1503,7 +1503,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME' => $cust_number,
-            //'CDES'     => ($meta['priority_customer_number']) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CDES'     => ($order->get_customer_id()) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM'  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
