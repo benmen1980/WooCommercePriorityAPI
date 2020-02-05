@@ -1294,10 +1294,23 @@ class WooAPI extends \PriorityAPI\API
 
     }
 	public function syncOrders(){
+		
+		// Users query
+		$user_ids = (array) get_users([
+			'role'       => 'customer',
+			'number'     => - 1,
+			'fields'     => 'ID',
+			'meta_key'     => 'priority_customer_number',
+			'meta_value'   => $this->option('walkin_number'),
+			'meta_compare' => '=',
+		]);
+		
+		
 		$query = new \WC_Order_Query( array(
 			'limit' => get_option('posts_per_page'),
 			//'limit' => 1000,
 			'orderby' => 'date',
+			'customer_id' => $user_ids,
 			'order' => 'DESC',
 			'return' => 'ids',
 			'meta_key'     => 'priority_status', // The postmeta key field
