@@ -38,8 +38,29 @@ class ProductPriceList extends \WP_List_Table
 
         // get product id
         foreach($products as $product) {
+	        // if product exsits, update
 
-            if ($id = wc_get_product_id_by_sku($product['product_sku'])) {
+	        $args = array(
+		        'post_type'		=>	'product',
+		        'meta_query'	=>	array(
+			        array(
+				        'key'       => '_sku',
+				        'value'	=>	$product['product_sku']
+			        )
+		        )
+	        );
+	        $my_query = new \WP_Query( $args );
+	        if ( $my_query->have_posts() ) {
+		        while ( $my_query->have_posts() ) {
+			        $my_query->the_post();
+			        $id = get_the_ID();
+
+
+		        }
+	        }else{
+		        $id = 0;
+	        }
+            if ($id != 0  /*$id = wc_get_product_id_by_sku($product['product_sku'])*/) {
 
                 $ids[] = $id;
 
