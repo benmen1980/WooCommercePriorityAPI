@@ -229,6 +229,40 @@
                 </td>
             </tr>
 
+	     <tr>
+                <td class="p18a-label">
+			        <?php _e('Customer\'s Products, Priority > Web', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="log_c_products_priority" form="p18aw-sync" value="1" <?php if($this->option('log_c_products_priority')) echo 'checked'; ?> />
+                </td>
+                <td></td>
+                <td>
+                    <select name="auto_sync_c_products_priority" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('auto_sync_c_products_priority')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('auto_sync_c_products_priority') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('auto_sync_c_products_priority') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('auto_sync_c_products_priority') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
+                <td data-sync-time="sync_c_products_priority">
+			        <?php
+			        if ($timestamp = $this->option('c_products_priority_update', false)) {
+				        echo(date('d/m/Y H:i:s', $timestamp));
+			        } else {
+				        _e('Never', 'p18a');
+			        }
+			        ?>
+                </td>
+                <td>
+                    <a href="#" class="button p18aw-sync" data-sync="sync_c_products_priority"><?php _e('Sync', 'p18a'); ?></a>
+                </td>
+
+                <td>
+                    <input type="text" style="width:300px" name="static_odata_header_sync_c_products_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_c_products_priority')?></input>
+                </td>
+            </tr>
+
             <tr>
                 <td class="p18a-label">
 			        <?php _e('Auto Sync Orders To Priority', 'p18a'); ?>
