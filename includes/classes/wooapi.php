@@ -588,13 +588,17 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('post_order_checkout',                  $this->post('post_order_checkout'));
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
                 $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
-	            $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
-	            $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
+	        $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
+	        $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
 
-                $this->updateOption('auto_sync_orders_priority',                $this->post('auto_sync_orders_priority'));
-	            $this->updateOption('log_auto_post_orders_priority',       $this->post('log_auto_post_orders_priority'));
+                $this->updateOption('auto_sync_orders_priority',            $this->post('auto_sync_orders_priority'));
+	        $this->updateOption('log_auto_post_orders_priority',        $this->post('log_auto_post_orders_priority'));
 
+	        $this->updateOption('auto_sync_sites_priority',  $this->post('auto_sync_sites_priority'));
+	        $this->updateOption('log_sites_priority',  $this->post('log_sites_priority'));
 
+		$this->updateOption('auto_sync_c_products_priority',  $this->post('auto_sync_c_products_priority'));
+		$this->updateOption('log_c_products_priority',  $this->post('log_c_products_priority'));
 
 
 
