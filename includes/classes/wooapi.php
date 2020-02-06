@@ -364,8 +364,10 @@ class WooAPI extends \PriorityAPI\API
                 // list tables classes
                 include P18AW_CLASSES_DIR . 'pricelist.php';
                 include P18AW_CLASSES_DIR . 'productpricelist.php';
-	            include P18AW_CLASSES_DIR . 'sites.php';
-                add_menu_page(P18AW_PLUGIN_NAME, P18AW_PLUGIN_NAME, 'manage_options', P18AW_PLUGIN_ADMIN_URL, function(){ 
+	        include P18AW_CLASSES_DIR . 'sites.php';
+		include P18AW_CLASSES_DIR . 'customersProducts.php';
+                
+		add_menu_page(P18AW_PLUGIN_NAME, P18AW_PLUGIN_NAME, 'manage_options', P18AW_PLUGIN_ADMIN_URL, function(){ 
 
                     switch($this->get('tab')) {
 
@@ -413,13 +415,13 @@ class WooAPI extends \PriorityAPI\API
 		                   */
 
 		                    break;
-			    
+			   
 			    case 'order_meta';
-
 		                    var_dump(get_post_meta($_GET['ord']));
-
-
 		                    break;
+			   case 'customersProducts';		
+				include P18AW_ADMIN_DIR . 'CustomersProducts.php';
+				break;
 
                         default:
 
