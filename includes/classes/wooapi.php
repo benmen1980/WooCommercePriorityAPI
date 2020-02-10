@@ -1501,7 +1501,7 @@ class WooAPI extends \PriorityAPI\API
             'CDES'     => !empty($vatnumber) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'DUEDATE'  => date('Y-m-d', strtotime($order->get_meta('m_delivery_date'))),
-          
+            'PAYCODE'  => '42',
           
             'BOOKNUM'  => $order->get_order_number(),
             'ELMU_STARTTIME'         => $order->get_meta('m_delivery_time'),
