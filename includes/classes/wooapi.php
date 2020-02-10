@@ -1508,10 +1508,10 @@ class WooAPI extends \PriorityAPI\API
             //'ELIT_CELLPHONE'       => $order->get_meta('_shipping_phone'),
             //'ELMU_EMAL'              => $order->get_billing_email(),
             'PAYCODE'                => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-            'ELIT_FULLADDRESS'       => $order->get_shipping_address_1().' '.$order->get_shipping_address_2().' '.$order->get_billing_city(),
 	    'ELMU_FLOOR'            => $order->get_meta('m_floor'),
             'ELIT_HOUSENUM'            => $order->get_meta('m_room'),
-	     'ELIT_CITYNAME'            => $order->get_meta('billing_city '),
+	    'ELIT_CITYNAME'            => $order->get_meta('billing_city '),
+	    'ELIT_FULLADDRESS'       => $order->get_shipping_address_1().' '.$order->get_shipping_address_2().' '.$order->get_billing_city(),
         ];
 	
 	    // order comments
