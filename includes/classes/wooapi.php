@@ -1494,7 +1494,15 @@ class WooAPI extends \PriorityAPI\API
 	    // $user_id = $order->user_id;
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
+        /* get meta payplus - this data need to be maniplulated from payplus plugin see line 409 */
 
+            $order_ccnumber = $order->get_meta('simply_ccuid');
+  	    $order_token =  $order->get_meta('simply_token');
+	    $order_cc_expiration =  $order->get_meta('simply_cc_date');
+	    $order_cc_authorization = $order->get_meta('simply_cc_auth_number');
+            $order_cc_number_of_payments = $order->get_meta('simply_cc_payments');
+      
+        // **********
 
         $data = [
             'CUSTNAME' => $customer_number,
@@ -1729,12 +1737,7 @@ class WooAPI extends \PriorityAPI\API
 
         */
       
-      /* get meta payplus - this data need to be maniplulated from payplus plugin see line 409 */
-
-        $order_ccnumber = $order->get_meta('simply_ccuid');
-  	    $order_token =  $order->get_meta('simply_token');
-	    $order_cc_expiration =  $order->get_meta('simply_cc_date');
-	    $order_cc_authorization = $order->get_meta('simply_cc_auth_number');
+  
 
         
 
