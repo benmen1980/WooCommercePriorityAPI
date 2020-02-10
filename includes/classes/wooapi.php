@@ -1558,7 +1558,7 @@ class WooAPI extends \PriorityAPI\API
 		    $data['ORDERITEMS_SUBFORM'][] = [
 
 			    'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
-			    'PDES'     => 'הזמנת משלוח - אתר - '.' '.$shipping_method['name'].' '.$order->get_billing_city(),
+			    'PDES'     => 'הזמנת משלוח - אתר - '.$order->get_billing_city(),
                 'TQUANT'   => 1,
 			    'VATPRICE' => floatval( $order->get_shipping_total() ),
 			    "REMARK1"  => "",
