@@ -408,6 +408,12 @@ class WooAPI extends \PriorityAPI\API
 		                    include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
 
 		                    break;
+			    case 'order_meta';
+		                  
+			              
+			          var_dump(get_post_meta($_GET['ord']));
+			                 
+		                    break;
 
                         default:
 
@@ -1473,6 +1479,16 @@ class WooAPI extends \PriorityAPI\API
                 }
 
                 /*end T151*/
+		    
+		/* get the warehouse of the item in collection */
+	            $item_warehouse ='40';
+             	    $parent_id = $item['product_id'];
+	            $user_kit = get_user_meta($user_id,'user_kit',true);
+	            $item_data = get_post_meta($active_campain,'product_option')['0'][$user_kit][$parent_id];
+	            if(!empty($item_data['warehouse'])){
+		            $item_warehouse = $item_data['warehouse'];
+                }
+		    
 
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
