@@ -415,8 +415,11 @@ class WooAPI extends \PriorityAPI\API
 						     break;
 
 							case 'order_meta';
-
-		                    var_dump(get_post_meta($_GET['ord']));
+							
+                        	//var_dump(get_post_meta($_GET['ord'],'m_delivery_date'));
+                        // echo get_post_meta($_GET['ord'],'m_delivery_date')[0];
+                        //echo get_the_date('Y-m-d', $_GET['ord']);
+		                   var_dump(get_post_meta($_GET['ord']));
 
 
 		                    break;
@@ -1494,13 +1497,14 @@ class WooAPI extends \PriorityAPI\API
 	    // $user_id = $order->user_id;
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
-        /* get meta payplus - this data need to be maniplulated from payplus plugin see line 409 */
+		 /* get meta payplus - this data need to be maniplulated from payplus plugin see line 409 */
 
-            $order_ccnumber = $order->get_meta('simply_ccuid');
+        $order_ccnumber = $order->get_meta('simply_ccuid');
   	    $order_token =  $order->get_meta('simply_token');
 	    $order_cc_expiration =  $order->get_meta('simply_cc_date');
 	    $order_cc_authorization = $order->get_meta('simply_cc_auth_number');
-            $order_cc_number_of_payments = $order->get_meta('simply_cc_payments');
+        $order_cc_number_of_payments = $order->get_meta('simply_cc_payments')[0];
+        $paycode = $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method());
       
         // **********
 
@@ -1509,17 +1513,20 @@ class WooAPI extends \PriorityAPI\API
             'CDES'     => !empty($vatnumber) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'DUEDATE'  => date('Y-m-d', strtotime($order->get_meta('m_delivery_date'))),
-            'PAYCODE'  => '42',
+        //  'DUEDATE'  => get_post_meta($id,'m_delivery_date')[0],
+          
+           
           
             'BOOKNUM'  => $order->get_order_number(),
             'ELMU_STARTTIME'         => $order->get_meta('m_delivery_time'),
             //'ELIT_CELLPHONE'       => $order->get_meta('_shipping_phone'),
-            //'ELMU_EMAL'              => $order->get_billing_email(),
-            'PAYCODE'                => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-	    'ELMU_FLOOR'            => $order->get_meta('m_floor'),
+            //'ELMU_EMAL'           => $order->get_billing_email(),
+            //'PAYCODE'             => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+            'PAYCODE'               => $paycode == '42' ? ($order_cc_number_of_payments != '01' ? '45' : '42') : $paycode,
+            'ELMU_FLOOR'            => $order->get_meta('m_floor'),
             'ELIT_HOUSENUM'            => $order->get_meta('m_room'),
-	    'ELIT_CITYNAME'            => $order->get_meta('billing_city '),
-	    'ELIT_FULLADDRESS'       => $order->get_shipping_address_1().' '.$order->get_shipping_address_2().' '.$order->get_billing_city(),
+            'ELIT_CITYNAME'            => $order->get_meta('billing_city '),
+           'ELIT_FULLADDRESS'       => $order->get_meta('complete_shipping_address'),
         ];
 	
 	    // order comments
@@ -1558,6 +1565,9 @@ class WooAPI extends \PriorityAPI\API
         $shipping_method    = array_shift($shipping_method);
         $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
 
+        $pname = $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() );
+        $pdes_test = ($pname == 'MUN-030-12' ? '' : 'הזמנת משלוח - אתר - ');
+        
         // get parameters
         $params = [];
 
@@ -1566,7 +1576,7 @@ class WooAPI extends \PriorityAPI\API
 		    $data['ORDERITEMS_SUBFORM'][] = [
 
 			    'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
-			    'PDES'     => 'הזמנת משלוח - אתר - '.$order->get_billing_city(),
+			    'PDES'     => $pname == 'MUN-030-12' ? 'פיק אפ' : $pdes_test.$order->get_billing_city(),
                 'TQUANT'   => 1,
 			    'VATPRICE' => floatval( $order->get_shipping_total() ),
 			    "REMARK1"  => "",
@@ -1632,7 +1642,7 @@ class WooAPI extends \PriorityAPI\API
             
         }
 
-       // add value card
+            // add value card
 
 	    $meta_array = get_post_meta($order->get_id(),'valuecard_transaction_log',true);
 	    $value_price = 1.17 *  $meta_array[0]['VCMUser']->pointToConsume; // this is according to Asaf
@@ -1642,7 +1652,7 @@ class WooAPI extends \PriorityAPI\API
 	        $data['ORDERITEMS_SUBFORM'][] = [
 			    'PARTNAME' => $value_part,
 			    'VPRICE' => $value_price ,
-			   'TQUANT'   => -1,
+                'TQUANT'   => -1,
 			    "REMARK1"  => "",
 		    ];
 	    }
@@ -1737,7 +1747,13 @@ class WooAPI extends \PriorityAPI\API
 
         */
       
-  
+      /* get meta payplus - this data need to be maniplulated from payplus plugin see line 409 */
+
+        $order_ccnumber = $order->get_meta('simply_ccuid');
+  	    $order_token =  $order->get_meta('simply_token');
+	    $order_cc_expiration =  $order->get_meta('simply_cc_date');
+	    $order_cc_authorization = $order->get_meta('simply_cc_auth_number');
+        $order_cc_number_of_payments = $order->get_meta('simply_cc_payments');
 
         
 
