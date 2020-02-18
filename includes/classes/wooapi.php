@@ -408,11 +408,8 @@ class WooAPI extends \PriorityAPI\API
 		                    include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
 
 		                    break;
-			    case 'order_meta';
-		                  
-			              
-			          var_dump(get_post_meta($_GET['ord']));
-			                 
+		                 case 'order_meta';
+		                    var_dump(get_post_meta($_GET['ord']));
 		                    break;
 
                         default:
@@ -1300,8 +1297,8 @@ class WooAPI extends \PriorityAPI\API
 
     }
 	public function syncOrders(){
-		
-		// Users query
+	    
+	    // Users query
 		$user_ids = (array) get_users([
 			'role'       => 'customer',
 			'number'     => - 1,
@@ -1389,7 +1386,7 @@ class WooAPI extends \PriorityAPI\API
             'UNI_SCUSTNAME' => $priority_branch_number,
 	    'UNI_ORDTYPE'           => 'B',
             'UNI_DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
-	     'UFLR_ORDERRCVCODE' => '8'
+	     'UFLR_ORDERRCVCODE'=>'8'
         ];
 	
 	    // order comments
@@ -1398,11 +1395,11 @@ class WooAPI extends \PriorityAPI\API
 	                 aaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa 
 	                 aaaaaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa';
 	   // $order_comment_array = explode("\n", $text_foo);
-	    foreach($order_comment_array as $comment){
+	   /* foreach($order_comment_array as $comment){
             $data['ORDERSTEXT_SUBFORM'][] = [
 	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
                 ];
-        }
+        }*/
 
 	// shipping
         $shipping_data = [
@@ -1479,28 +1476,29 @@ class WooAPI extends \PriorityAPI\API
                 }
 
                 /*end T151*/
-		    
-		/* get the warehouse of the item in collection */
+                
+                /* get the warehouse of the item in collection */
 	            $item_warehouse ='40';
-             	    $parent_id = $item['product_id'];
-	            $user_kit = get_user_meta($user_id,'user_kit',true);
-	            $item_data = get_post_meta($active_campain,'product_option')['0'][$user_kit][$parent_id];
+         	    $parent_id = $item['product_id'];
+                $user_kit = get_user_meta($user_id,'user_kit',true);
+                $item_data = get_post_meta($active_campain,'product_option')['0'][$user_kit][$parent_id];
 	            if(!empty($item_data['warehouse'])){
 		            $item_warehouse = $item_data['warehouse'];
                 }
-		    
+                
 
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     'PRICE'            => (float) $item->get_total()/ $item->get_quantity(),
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
-                    'UFLR_GROUP'           => 1,
+                    'UFLR_GROUP'           => (int)$item_warehouse,
                     'UNI_ORDTYPE'           => 'B',
                     'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                     'DOERLOGIN'           => 'israela',
-		    'UNI_EMPNAME' => $username.'/'.$priority_branch_number,
-	            'UNI_WARHSNAME' => '40'
+                    'UNI_EMPNAME' => $username.'/'.$priority_branch_number,
+	                'UNI_WARHSNAME' => $item_warehouse
+	                
 
                 ];
             }
@@ -1514,7 +1512,7 @@ class WooAPI extends \PriorityAPI\API
 		        'TQUANT'    => 1,
 		        'PRICE'  => 0.0,
 		        "DOERLOGIN" => "marina",
-                "UFLR_GROUP" => 2,
+                "UFLR_GROUP" => 99,
                 "UNI_ORDTYPE" => 'B',
 		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
 
