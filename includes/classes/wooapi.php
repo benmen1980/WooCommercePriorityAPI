@@ -1522,7 +1522,7 @@ class WooAPI extends \PriorityAPI\API
             //'ELIT_CELLPHONE'       => $order->get_meta('_shipping_phone'),
             //'ELMU_EMAL'           => $order->get_billing_email(),
             //'PAYCODE'             => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-            'PAYCODE'               => $paycode == '42' ? ($order_cc_number_of_payments != '01' ? '45' : '42') : $paycode,
+            'PAYCODE'               => $paycode == '16' ? ($order_cc_number_of_payments != '01' ? '45' : '42') : $paycode,
             'ELMU_FLOOR'            => $order->get_meta('m_floor'),
             'ELIT_HOUSENUM'            => $order->get_meta('m_room'),
             'ELIT_CITYNAME'            => $order->get_meta('billing_city '),
