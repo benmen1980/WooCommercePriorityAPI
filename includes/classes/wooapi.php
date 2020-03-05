@@ -1626,7 +1626,9 @@ class WooAPI extends \PriorityAPI\API
 
 	    // HERE goes the condition to avoid the repetition
 	    $post_done = get_post_meta( $order->get_id(), '_post_done', true);
-	    if( empty($post_done) ) {
+	  
+	    if( empty($post_done)&& get_post_meta($active_campain,'shipping_allow')[0] != 'on') {
+	    //if( empty($post_done) ) {
 
         // make request
         $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)],
