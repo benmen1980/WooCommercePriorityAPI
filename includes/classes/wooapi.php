@@ -165,7 +165,9 @@ class WooAPI extends \PriorityAPI\API
      */
     private function frontend() {
 	    // Sync customer and order data after order is proccessed
-	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+//	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+        add_action( 'woocommerce_paypal_express_checkout_valid_ipn_request', [ $this, 'syncDataAfterOrder' ] );
+      
 
         // custom check out fields
 	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
@@ -1488,25 +1490,25 @@ class WooAPI extends \PriorityAPI\API
      *
      * @param [int] $order_id
      */
-    public function syncDataAfterOrder($order_id)
+    public function syncDataAfterOrder($formdata)
     {
-        // get order
-        $order = new \WC_Order($order_id);
 
-        // sync customer if it's signed in / registered
-        // guest user will have id 0
-        //if ($customer_id = $order->get_customer_id()) {
-        //    $this->syncCustomer($customer_id);
-        //}
+        if (! empty( $formdata['invoice'] ) && ! empty($formdata['custom'])) {
 
-        // sync order
-        $this->syncOrder($order_id);
+            if ($formdata['payment_status'] == 'Completed') {
 
-        if($this->option('sync_onorder_receipts')) {
-            // sync receipts 
-            $this->syncReceipt($order_id);
+                $order_data = json_decode(str_replace('\"', '"', $formdata['custom']));
+                $order_id = $order_data->order_id;
+
+                // sync order
+                $this->syncOrder($order_id);
+
+                if($this->option('sync_onorder_receipts')) {
+                    // sync receipts
+                    $this->syncReceipt($order_id);
+                }
+            }
         }
-
     }
 
 
