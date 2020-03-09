@@ -1367,6 +1367,9 @@ class WooAPI extends \PriorityAPI\API
 
 	    $order_shop_id = get_post_meta($id,'unidress_shipping')[0];
 	    $shop_address =  get_post_meta($order_shop_id,'address' )[0];
+	     if(!isset(get_post_meta($order_shop_id,'address' )[0])){
+		    	$shop_address =  get_post_meta($branch_id,'branch_address' )[0];
+        		}
 	    //***********************
 
         if ($order->get_customer_id()) {
