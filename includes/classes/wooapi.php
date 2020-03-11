@@ -1367,9 +1367,14 @@ class WooAPI extends \PriorityAPI\API
 
 	    $order_shop_id = get_post_meta($id,'unidress_shipping')[0];
 	    $shop_address =  get_post_meta($order_shop_id,'address' )[0];
+	    $contact_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+	    $contact_phone_number = $order->get_billing_phone();
+	    
 	     if(!isset(get_post_meta($order_shop_id,'address' )[0])){
-		    	$shop_address =  get_post_meta($branch_id,'branch_address' )[0];
-        		}
+	  	$shop_address =  get_post_meta($branch_id,'branch_address' )[0];
+	     	$contact_name =  get_post_meta($branch_id,'contact_name' )[0];
+		$contact_phone_number = get_post_meta($branch_id,'contact_phone_number' )[0];
+             }
 	    //***********************
 
         if ($order->get_customer_id()) {
@@ -1406,9 +1411,9 @@ class WooAPI extends \PriorityAPI\API
 
 	// shipping
         $shipping_data = [
-            'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'NAME'        => $contact_name,
             'CUSTDES'     => $customer_name,  //$order_user->user_firstname . ' ' . $order_user->user_lastname,
-            'PHONENUM'    => $order->get_billing_phone(),
+            'PHONENUM'    => $contact_phone_number,
             'ADDRESS'     => $shop_address,
             'STATE'       => '.',
             'COUNTRYNAME' => $this->countries[$order->get_shipping_country()],
