@@ -1482,8 +1482,27 @@ class WooAPI extends \PriorityAPI\API
                         ];
                     }
                 }
+				/* set the kit price in case by points */
+                if($is_budget_by_points) {
 
-                /*end T151*/
+	                $price = $product->get_regular_price();;
+	                $order_item = $item['product_id'];
+	                foreach ( $campain_kits as $key => $value ) {
+		                if ( $key == $user_kit[0] ) {
+			                foreach ( $value as $product_id => $product_option ) {
+				                if ( $order_item === $product_id ) {
+					                $price = $product_option->price;
+				                }
+
+			                }
+		                } else {
+
+		                }
+	                }
+                }else{
+	                $price = (float) $item->get_total()/ $item->get_quantity();
+                }
+                
                 
                 /* get the warehouse of the item in collection */
 	            $item_warehouse ='40';
@@ -1498,7 +1517,7 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    'PRICE'            => (float) $item->get_total()/ $item->get_quantity(),
+                    'PRICE'            => $price,
                     "REMARK1"          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     'UFLR_GROUP'           => (int)$item_warehouse,
                     'UNI_ORDTYPE'           => 'B',
