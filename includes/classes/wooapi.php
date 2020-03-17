@@ -1490,7 +1490,7 @@ class WooAPI extends \PriorityAPI\API
 	                foreach ( $campain_kits as $key => $value ) {
 		                if ( $key == $user_kit[0] ) {
 			                foreach ( $value as $product_id => $product_option ) {
-				                if ( $order_item === $product_id ) {
+				                  if ( $order_item === $product_id && !is_null($product_option->price)) {
 					                $price = $product_option->price;
 				                }
 
