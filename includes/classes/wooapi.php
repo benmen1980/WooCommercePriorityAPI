@@ -1360,7 +1360,24 @@ class WooAPI extends \PriorityAPI\API
 
 	    $user_department = get_user_meta($user_id,'user_department')[0];
 	    $active_campain = get_Post_meta($customer_id,'active_campaign')[0];
+	    
+	    /* get the due date */
 	    $campaign_duedate = get_Post_meta($active_campain,'order_due_date')[0];
+	    $order_date =  new \DateTime($order->order_date);
+	    $no_of_days_to_due_date = (int)get_post_meta($active_campain,'no_of_days_to_due_date')[0];
+	    $order_duedate = $order_date;
+	    $order_duedate->modify('+'.$no_of_days_to_due_date.' days');
+	    $dayOfWeek = date('w',strtotime($order_duedate->format('Y-m-d')));
+	    if($dayOfWeek == 5){
+		    $order_duedate->modify('+2 days');
+	    }
+	    if($dayOfWeek == 6){
+		    $order_duedate->modify('+1 days');
+	    }
+	    if($no_of_days_to_due_date!=0){
+		    $campaign_duedate = $order_duedate->format('Y-m-d');
+	    }
+            /**/
 	    $user = get_user_by( 'id', $user_id );
 	    $username = $user->user_login;
 
