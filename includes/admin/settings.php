@@ -18,6 +18,7 @@
         <table class="widefat"  cellspacing="0">
 
             <tbody>
+
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-sell_by_pl"><?php _e('Show items from user\'s price list only ?', 'p18a'); ?></label>
@@ -61,6 +62,15 @@
             <col width="300">
             <col width="300">
             <col width="300">
+
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-mailing_list_field"><?php _e('On error mailing list', 'p18a'); ?></label>
+                </td>
+                <td>
+                    <input id="p18aw-mailing_list_field" type="text" name="mailing_list_field" form="p18aw-settings" size="5" value="<?php echo $this->option('mailing_list_field'); ?>">
+                </td>
+            </tr>
             <tr>
                 <td class="p18a-label">
                     <label for="p18a-walkin_number"><?php _e('Guest/Walk in Priority Customer Number', 'p18a'); ?></label>
@@ -199,20 +209,16 @@
         <table class="widefat fixed" cellspacing="0">
             <tbody>
             <tr>
-                <td class="p18a-label">
-                    <label for="p18a-image_url"><?php _e('Product image URL', 'p18a'); ?></label>
-                </td>
-                <td>
-                    <input id="p18aw-image_url" type="text" name="image_url" form="p18aw-settings" size="5" value="<?php echo $this->option('image_url'); ?>">
-                    <h4>How to publish Priority's images ? check out the <a href="https://simplyct.co.il/wp-content/uploads/2019/10/publish_pictures.mp4?_=1">video</a></h4>
-                </td>
+
 
                 <td>
-                    <label for="p18a-update_image"><?php _e('Over write existing image ?', 'p18a'); ?></label>
+                    <label for="p18a-update_image"><?php _e('Over write existing images ?', 'p18a'); ?></label>
                     <input id="p18aw-sites" type="checkbox" name="update_image" form="p18aw-settings" <?php if($this->option('update_image') == true){?> checked="checked" <?php } ?> />
                 </td>
                 <td>                             </td>
             </tr>
+            <tr>
+
 
         </table>
         </tbody>
