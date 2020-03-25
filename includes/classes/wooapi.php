@@ -1524,6 +1524,18 @@ class WooAPI extends \PriorityAPI\API
 	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
                 ];
         }
+	    
+	   // billing customer details
+        $customer_data = [
+          
+            'PHONE'    => $order->get_billing_phone(),
+            'EMAIL'       => $order->get_billing_email(),
+            'ADRS'        => $order->get_billing_address_1(),
+            'ADRS2'       => $order->get_billing_address_2(),
+            'STATEA'      => $order->get_billing_city(),
+            'ZIP'         => $order->get_shipping_postcode(),
+        ];
+        $data['ORDERSCONT_SUBFORM'][] = $customer_data;
 
 	// shipping
 
