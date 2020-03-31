@@ -1766,7 +1766,7 @@ class WooAPI extends \PriorityAPI\API
 	        $order->save();
         }
         }
-        if (!$response['status']) {
+        if (!$response['status']||$response['code'] >= 400) {
             /**
              * t149
              */
