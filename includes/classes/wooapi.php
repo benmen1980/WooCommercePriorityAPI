@@ -1071,6 +1071,63 @@ class WooAPI extends \PriorityAPI\API
         }return $response;
     }
 
+public function simply_sync_product_attachemtns(){
+	/*
+	 * the function pull the urls from Priority, 
+	 * then check if the file already exists as attachemnt in WP
+	 * if is not exists, will download and attache
+	 * if exists, will pass but will keep the file attached
+	 * any file that exists in WP and not exists in Priority will remain
+	 * the function ignore other file extensions
+	 * you cant anyway attach files that are not images
+	 */
+	$allowed_sufix = ['jpg','jpeg','png'];
+	$response = PriorityWoocommerceAPI\WooAPI::instance()->makeRequest('GET','LOGPART?$filter=EXTFILEFLAG eq \'Y\'
+																	&$select=PARTNAME
+																	&$expand=PARTEXTFILE_SUBFORM');
+	$response_data = json_decode($response['body_raw'], true);
+	foreach($response_data['value'] as $item) {
+		$sku =  $item['PARTNAME'];
+		$main_attach_id = [];
+		$attachments = [$main_attach_id];
+		$product_id = wc_get_product_id_by_sku($sku);
+		$product = new WC_Product($product_id);
+		$product_media = $product->get_gallery_image_ids();
+		foreach ( $item['PARTEXTFILE_SUBFORM'] as $attachment ) {
+			$file_path = $attachment['EXTFILENAME'];
+			$file_info = pathinfo( $file_path );
+			$file_name = $file_info['basename'];
+			$file_ext  = $file_info['extension'];
+			if (array_search( $file_ext, $allowed_sufix, false )!==false ) {
+				$is_existing_file = false;
+				foreach ( $product_media as $id ) {
+					$title = get_the_title( $id );
+					if ( strpos( $title, $file_name ) !== false ) {
+						$is_existing_file = true;
+						array_push( $attachments, $id );
+						continue;
+					} else {
+					}
+				};
+				// if is a new file, download from Priority and push to array
+				if ( $is_existing_file !== true ) {
+					$images_url =  'https://'. PriorityWoocommerceAPI\WooAPI::instance()->option('url').'/primail';
+					$priority_image_path = $file_path;
+					$product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
+					$thumb_id           = download_attachment( $sku, $product_full_url );
+					array_push( $attachments, $thumb_id );
+				};
+			}
+		};
+		//  add here merge to files that exists in wp and not exists in the response from API
+		$image_id_array = array_merge($product_media, $attachments);
+		// https://stackoverflow.com/questions/43521429/add-multiple-images-to-woocommerce-product
+		update_post_meta($product_id, '_product_image_gallery', implode(',',$image_id_array));
+
+	}
+}
+
+	
     /**
      * sync items width variation from priority
      */
