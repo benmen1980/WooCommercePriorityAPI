@@ -1071,7 +1071,7 @@ class WooAPI extends \PriorityAPI\API
         }return $response;
     }
 
-public function simply_sync_product_attachemtns(){
+public function sync_product_attachemtns(){
 	/*
 	 * the function pull the urls from Priority, 
 	 * then check if the file already exists as attachemnt in WP
