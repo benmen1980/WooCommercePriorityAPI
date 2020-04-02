@@ -8,7 +8,7 @@
 * Plugin Name: Priority Woocommerce API 
 * Plugin URI: http://www.roi-holdings.com
 * Description: Priority Woocommerce API extension
-* Version: 1.1
+* Version: 1.05
 * Author: Roi Holdings
 * Author URI: http://www.roi-holdings.com
 * Licence: GPLv2
