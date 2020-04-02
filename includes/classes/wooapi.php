@@ -1041,6 +1041,9 @@ class WooAPI extends \PriorityAPI\API
                     update_post_meta($id, '_regular_price', $pri_price);
                     update_post_meta($id, '_price',$pri_price );
                     update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
+		    // update categories
+                    $terms = [$item['SPEC1'],$item['SPEC2'],$item['SPEC3'],$item['SPEC4'],$item['SPEC5']];
+		    wp_set_object_terms($id,$terms,'product_cat');
                 }
                 // sync image
                 $sku =  $item['PARTNAME'];
