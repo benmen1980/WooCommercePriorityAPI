@@ -8,7 +8,8 @@ function download_attachment($sku, $attachment_url){
 		$image_data = file_get_contents($attachment_url);
 		$path_parts = pathinfo($attachment_url);
 		$ext = $path_parts['extension'];
-		$filename = $sku . '_' . rand(10000, 99999) .'.'.$ext;
+		//$filename = $sku . '_' . rand(10000, 99999) .'.'.$ext;
+		$filename = $sku . '_' .$path_parts['basename'];
 		//$filename = $post_id . '_image.jpg';
 		if (wp_mkdir_p($upload_dir['path'])) {
 			$file = $upload_dir['path'] . '/' . $filename;
