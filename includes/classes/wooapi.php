@@ -1881,22 +1881,24 @@ public function sync_product_attachemtns(){
      */
     public function syncDataAfterOrder($order_id)
     {
-        // get order
-        $order = new \WC_Order($order_id);
+	if(empty(get_post_meta($order_id,'priority_status',false)[0])){
+		// get order
+		$order = new \WC_Order($order_id);
 
-        // sync customer if it's signed in / registered
-        // guest user will have id 0
-        if ($customer_id = $order->get_customer_id()) {
-            $this->syncCustomer($customer_id);
-        }
+		// sync customer if it's signed in / registered
+		// guest user will have id 0
+		if ($customer_id = $order->get_customer_id()) {
+		    $this->syncCustomer($customer_id);
+		}
 
-        // sync order
-        $this->syncOrder($order_id);
+		// sync order
+		$this->syncOrder($order_id);
 
-        if($this->option('sync_onorder_receipts')) {
-            // sync receipts 
-            $this->syncReceipt($order_id);
-        }
+		if($this->option('sync_onorder_receipts')) {
+		    // sync receipts 
+		    $this->syncReceipt($order_id);
+		}
+	 }
 
     }
 
