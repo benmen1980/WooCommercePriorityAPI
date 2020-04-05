@@ -1097,8 +1097,27 @@ public function sync_product_attachemtns(){
 			$sku =  $item['PARTNAME'];
 			$main_attach_id = [];
 			$attachments = [$main_attach_id];
-			$product_id = wc_get_product_id_by_sku($sku);
+			//$product_id = wc_get_product_id_by_sku($sku);
 			$product = new \WC_Product($product_id);
+			$args = array(
+				'post_type'		=>	'product',
+				'meta_query'	=>	array(
+					array(
+						'key'       => '_sku',
+						'value'	=>	$item['PARTNAME']
+					)
+				)
+			);
+			$my_query = new \WP_Query( $args );
+			if ( $my_query->have_posts() ) {
+				while ( $my_query->have_posts() ) {
+					$my_query->the_post();
+					$product_id = get_the_ID();
+				}
+			}else{
+				$product_id = 0;
+			}
+			//**********
 			$product_media = $product->get_gallery_image_ids();
 			echo 'Starting process for file: '.$sku.'<br>';
 			echo 'Product media: <br>';
