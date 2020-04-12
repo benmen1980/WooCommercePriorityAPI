@@ -166,14 +166,12 @@ class WooAPI extends \PriorityAPI\API
      *
      */
     private function frontend() {
-	    // Sync customer and order data after order is proccessed
-        if($this->option('post_order_checkout')) {
-	        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
-        }
+	// Sync customer and order data after order is proccessed
+        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
         // custom check out fields
-	    add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
-	    add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
-	    add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
+	add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
+	add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
+	add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
 
 
 	    // sync user to priority after registration
@@ -1892,10 +1890,14 @@ public function sync_product_attachemtns(){
 		if ($customer_id = $order->get_customer_id()) {
 		    $this->syncCustomer($customer_id);
 		}
-
 		// sync order
-		$this->syncOrder($order_id);
-
+		if($this->option('post_order_checkout')) {
+			$this->syncOrder( $order_id );
+		}
+		// sync OTC
+		if($this->option('post_einvoices_checkout')) {
+			$this->syncOverTheCounterInvoice( $order_id );
+		}
 		if($this->option('sync_onorder_receipts')) {
 		    // sync receipts 
 		    $this->syncReceipt($order_id);
@@ -2153,11 +2155,150 @@ public function sync_product_attachemtns(){
 		$this->updateOption('receipts_priority_update', time());
 
 	}
-    /**
-     * Sync receipt from web to priority for given order id
-     *
-     * @param [int] $id order id
-     */
+  
+public function syncOverTheCounterInvoice($order_id,$log)
+	{
+		$order = new \WC_Order($order_id);
+		$user = $order->get_user();
+		$user_id = $order->get_user_id();
+		$order_user = get_userdata($user_id); //$user_id is passed as a parameter
+		if ($order->get_customer_id()) {
+			$meta = get_user_meta($order->get_customer_id());
+			$cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
+		} else {
+			$cust_number = $this->option('walkin_number');
+		}
+		$data = [
+			'CUSTNAME'  => $cust_number,
+			'CDES'      => ($order->get_customer_id()) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+			'BOOKNUM' => $order->get_order_number(),
+
+		];
+
+		// order comments
+		$order_comment_array = explode("\n", $order->get_customer_note());
+		foreach($order_comment_array as $comment){
+			$data['PINVOICESTEXT_SUBFORM'][] = [
+				'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
+			];
+		}
+		// shipping
+		$shipping_data = [
+			'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+			'PHONENUM'    => $order->get_billing_phone(),
+			'EMAIL'       => $order->get_billing_email(),
+			'CELLPHONE'   => $order->get_billing_phone(),
+			'ADDRESS'     => $order->get_billing_address_1(),
+			'ADDRESS2'    => $order->get_billing_address_2(),
+			'STATE'       => $order->get_billing_city(),
+			'ZIP'         => $order->get_shipping_postcode(),
+		];
+
+		// add second address if entered
+		if ( ! empty($order->get_shipping_address_2())) {
+			$shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
+		}
+
+		$data['SHIPTO2_SUBFORM'] = $shipping_data;
+		// get ordered items
+        foreach ($order->get_items() as $item) {
+
+			$product = $item->get_product();
+
+			$parameters = [];
+
+			// get tax
+			// Initializing variables
+			$tax_items_labels   = array(); // The tax labels by $rate Ids
+			$tax_label = 0.0 ; // The total VAT by order line
+			$taxes = $item->get_taxes();
+			// Loop through taxes array to get the right label
+			foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+				$tax_label = + $tax; // <== Here the line item tax label
+			}
+
+
+			if ($product) {
+
+				$data['EINVOICEITEMS_SUBFORM'][] = [
+					'PARTNAME'         => $product->get_sku(),
+					'TQUANT'           => (int) $item->get_quantity(),
+					'TOTPRICE'            => round((float) ($item->get_total() + $tax_label) ,2),
+
+
+				];
+			}
+
+		}
+
+
+
+		// pelecard
+		$order_ccnumber = '';
+		$order_token =  '';
+		$order_cc_expiration = '';
+		$order_cc_authorization = '';
+		$order_cc_qprice = 0.0;
+		/*
+		$order_cc_meta = $order->get_meta('_transaction_data');
+		$order_ccnumber = $order_cc_meta['CreditCardNumber'];
+		$order_token =  $order_cc_meta['Token'];
+		$order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
+		$order_cc_authorization = $order_cc_meta['ConfirmationKey'];
+		$order_cc_qprice = $order_cc_meta['DebitTotal']/100;
+		*/
+		// payment info
+		$data['EPAYMENT2_SUBFORM'][] = [
+			'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+			'QPRICE'      => floatval($order_cc_qprice), //floatval($order->get_total()),
+			'FIRSTPAY'      => floatval($order_cc_qprice), //floatval($order->get_total()),
+			'PAYACCOUNT'  => '',
+			'PAYCODE'     => '',
+			'PAYACCOUNT'  => $order_ccnumber,
+			'VALIDMONTH'  => $order_cc_expiration,
+			'CCUID' => $order_token,
+			'CONFNUM' => $order_cc_authorization,
+		];
+		// make request
+		$response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
+		if ($response['code']<=201) {
+			$body_array = json_decode($response["body"],true);
+
+			$ord_status = $body_array["STATDES"];
+			$ord_number = $body_array["IVNUM"];
+			$order->update_meta_data('priority_status',$ord_status);
+			$order->update_meta_data('priority_ordnumber',$ord_number);
+			$order->save();
+		}
+		if($response['code'] >= 400){
+			$body_array = json_decode($response["body"],true);
+
+			//$ord_status = $body_array["ORDSTATUSDES"];
+			// $ord_number = $body_array["ORDNAME"];
+			$order->update_meta_data('priority_status',$response["body"]);
+			// $order->update_meta_data('priority_ordnumber',$ord_number);
+			$order->save();
+		}
+		if (!$response['status']) {
+			/**
+			 * t149
+			 */
+			$this->sendEmailError(
+				$this->option('email_error_sync_einvoices_web'),
+				'Error Sync OTC invoice',
+				$response['body']
+			);
+		}
+
+
+		return $response;
+
+
+
+	}
+	
     public function syncReceipt($order_id)
     {
 
