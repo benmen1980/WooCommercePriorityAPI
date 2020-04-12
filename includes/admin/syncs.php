@@ -372,7 +372,7 @@
 
                 <!-- sync ainvoices -->
                 <td class="p18a-label">
-                    <?php _e('Sales Invoices > Priority', 'p18a'); ?><i><b>  beta</b></i>
+                    <?php _e('Sales Invoices > Priority', 'p18a'); ?>
                 </td>
                 <td>
                     <input type="checkbox" name="log_ainvoices_priority" form="p18aw-sync" value="1" <?php if($this->option('log_ainvoices_priority')) echo 'checked'; ?> />
@@ -429,13 +429,24 @@
         
             <tr>
                 <td class="p18a-label">
-                    <?php _e('Post Order > Priority on check out', 'p18a'); ?>
+                    <?php _e('Post Order > Priority on check out', 'p18a'); ?><i><b>  beta</b></i>
                 </td>
                 <td colspan="5">
-                    <input type="checkbox" name="post_order_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_order_checkout')) echo 'checked'; ?> />
+                        <input type="checkbox" name="post_order_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_order_checkout')) echo 'checked'; ?> />
                 </td>
                 <td>
                     <input type="text"  style="width:300px" name="email_error_sync_orders_web" form="p18aw-sync"><?=$this->option('email_error_sync_orders_web')?></input>
+                </td>
+            </tr>
+	    <tr>
+                <td class="p18a-label">
+			        <?php _e('Post Order > Priority OTC Invoice on check out', 'p18a'); ?><i><b>  beta</b></i>
+                </td>
+                <td colspan="5">
+                    <input type="checkbox" name="post_einvoices_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_einvoices_checkout')) echo 'checked'; ?> />
+                </td>
+                <td>
+                    <input type="text"  style="width:300px" name="email_error_sync_einvoices_web" form="p18aw-sync" value="<?=$this->option('email_error_sync_einvoices_web')?>">
                 </td>
             </tr>
 
