@@ -603,6 +603,8 @@ class WooAPI extends \PriorityAPI\API
 
 		$this->updateOption('auto_sync_c_products_priority',  $this->post('auto_sync_c_products_priority'));
 		$this->updateOption('log_c_products_priority',  $this->post('log_c_products_priority'));
+	        $this->updateOption('post_einvoices_checkout',                  $this->post('post_einvoices_checkout'));
+		$this->updateOption('email_error_sync_einvoices_web',          $this->post('email_error_sync_einvoices_web'));
 
 
 
