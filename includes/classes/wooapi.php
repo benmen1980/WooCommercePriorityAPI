@@ -1565,6 +1565,31 @@ class WooAPI extends \PriorityAPI\API
 
 	        ];
         }
+	  // unidress extra simple option 
+      $simple_option = $item['Simple Option'];
+      if(!empty($simple_option)){
+        $data['ORDERITEMS_SUBFORM'][] = [
+		        'PARTNAME'  => '33791',
+		        'TQUANT'    => 1,
+		        'PRICE'  => 0.0,
+		        "DOERLOGIN" => "israela",
+                "UFLR_GROUP" => 97,
+                "UNI_ORDTYPE" => 'B',
+		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+
+	        ];
+        $data['ORDERITEMS_SUBFORM'][] = [
+		        'PARTNAME'  => '000',
+          		'PARTDES' => $simple_option,
+		        'TQUANT'    => 1,
+		        'PRICE'  => 0.0,
+		        "DOERLOGIN" => "israela",
+                "UFLR_GROUP" => 96,
+                "UNI_ORDTYPE" => 'B',
+		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+
+	        ];
+      }
 
        
         /* get credit guard meta
