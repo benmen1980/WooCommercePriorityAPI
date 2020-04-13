@@ -1549,23 +1549,7 @@ class WooAPI extends \PriorityAPI\API
 
                 ];
             }
-            
-        }
-
-        //  unidress extra not inventory item as remark ARIZA SHEMIT
-        if($customer_type=='campaign') {
-	        $data['ORDERITEMS_SUBFORM'][] = [
-		        'PARTNAME'  => '59603',
-		        'TQUANT'    => 1,
-		        'PRICE'  => 0.0,
-		        "DOERLOGIN" => "marina",
-                "UFLR_GROUP" => 99,
-                "UNI_ORDTYPE" => 'B',
-		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
-
-	        ];
-        }
-	  // unidress extra simple option 
+		 // unidress extra simple option 
       $simple_option = $item['Simple Option'];
       if(!empty($simple_option)){
         $data['ORDERITEMS_SUBFORM'][] = [
@@ -1591,6 +1575,23 @@ class WooAPI extends \PriorityAPI\API
 	        ];
       }
 
+            
+}
+
+        //  unidress extra not inventory item as remark ARIZA SHEMIT
+        if($customer_type=='campaign') {
+	        $data['ORDERITEMS_SUBFORM'][] = [
+		        'PARTNAME'  => '59603',
+		        'TQUANT'    => 1,
+		        'PRICE'  => 0.0,
+		        "DOERLOGIN" => "marina",
+                "UFLR_GROUP" => 99,
+                "UNI_ORDTYPE" => 'B',
+		        'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+
+	        ];
+        }
+	 
        
         /* get credit guard meta
 
