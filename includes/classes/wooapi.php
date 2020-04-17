@@ -1591,6 +1591,25 @@ class WooAPI extends \PriorityAPI\API
 
 	        ];
         }
+	// Get shipping fee
+                $shipping_total = 0;
+                foreach( $order->get_items('fee') as $item_id => $item_fee ){
+                  // The fee name
+                  $fee_name = $item_fee->get_name();
+                  // The fee total amount
+                  if('Shipping Price'==$fee_name){
+                    $shipping_total = $item_fee->get_total();
+                  }                         
+                }
+      // shipiing rate
+		if( $shipping_total <> 0 ) {
+			$data['ORDERITEMS_SUBFORM'][] = [
+				'PARTNAME' => '000',
+				'TQUANT'   => 1,
+				'PRICE' => $shipping_total
+			];
+		}
+        
 	 
        
         /* get credit guard meta
