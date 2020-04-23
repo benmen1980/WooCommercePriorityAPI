@@ -1564,7 +1564,7 @@ class WooAPI extends \PriorityAPI\API
 	        ];
         $data['ORDERITEMS_SUBFORM'][] = [
 		        'PARTNAME'  => '000',
-          		'PARTDES' => $simple_option,
+          		'PDES' => $simple_option,
 		        'TQUANT'    => 1,
 		        'PRICE'  => 0.0,
 		        "DOERLOGIN" => "israela",
