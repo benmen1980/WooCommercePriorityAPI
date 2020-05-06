@@ -666,6 +666,7 @@ class WooAPI extends \PriorityAPI\API
 		    // HERE get the data from your custom field (set the correct meta key below)
 		    $status = get_post_meta( $post_id, 'priority_status', true );
 		    if( empty($status)) $status = '';
+		    if( empty($order_number)) $order_number = '';
 
 		    switch ( $column )
 		    {
