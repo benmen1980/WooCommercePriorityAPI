@@ -685,13 +685,19 @@ class WooAPI extends \PriorityAPI\API
 
 		    // HERE get the data from your custom field (set the correct meta key below)
 		    $status = get_post_meta( $post_id, 'priority_status', true );
-		    if( empty($status)) $status = '';
+		    $order_number = get_post_meta( $post_id, 'priority_ordnumber', true );
+				if( empty($status)) $status = '';
+				if(strlen($status) > 15) $status = '<div class="tooltip">Error<span class="tooltiptext">'.$status.'</span></div>';
+				if( empty($order_number)) $order_number = '';
 
 		    switch ( $column )
 		    {
 			    case 'order_priority_status' :
-				    echo '<span>'.$status.'</span>'; // display the data
+				    echo $status;
 				    break;
+			    case 'order_priority_number' :
+						echo '<span>'.$order_number.'</span>'; // display the data
+						break;
                 // post order to API, using GET and
                 case 'order_post' :
                     $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
@@ -704,6 +710,7 @@ class WooAPI extends \PriorityAPI\API
 	    add_filter( 'woocommerce_shop_order_search_fields',
 	    function ( $meta_keys ){
 		    $meta_keys[] = 'priority_status';
+		    $meta_keys[] = 'priority_ordnumber';
 		    return $meta_keys;
 	    }, 10, 1 );
 	    
