@@ -643,6 +643,10 @@ class WooAPI extends \PriorityAPI\API
 
 		    //add the new column "Status"
 		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+		    
+		    //add the new column "Priority Order"
+			$columns['order_priority_number'] = '<span>'.__( 'Priority Number','woocommerce').'</span>'; // title
+
 
 		    // Set back "Actions" column
 		    $columns['order_actions'] = $action_column;
@@ -668,6 +672,10 @@ class WooAPI extends \PriorityAPI\API
 			    case 'order_priority_status' :
 				    echo '<span>'.$status.'</span>'; // display the data
 				    break;
+				    
+			    case 'order_priority_number' :
+						echo '<span>'.$order_number.'</span>'; // display the data
+						break;
 
 			    case 'order_post' :
 				    $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
@@ -680,6 +688,7 @@ class WooAPI extends \PriorityAPI\API
 	    add_filter( 'woocommerce_shop_order_search_fields',
 	    function ( $meta_keys ){
 		    $meta_keys[] = 'priority_status';
+		    $meta_keys[] = 'priority_ordnumber';
 		    return $meta_keys;
 	    }, 10, 1 );
         // ajax action for manual syncs
