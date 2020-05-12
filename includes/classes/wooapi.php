@@ -415,7 +415,12 @@ class WooAPI extends \PriorityAPI\API
 		                    break;
 			   
 			    case 'order_meta';
-		                    var_dump(get_post_meta($_GET['ord']));
+		                $id = $_GET['ord'];
+				$order = new \WC_Order($id);
+                        	$data = get_post_meta($id);
+				highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+
+
 		                    break;
 			   case 'customersProducts';		
 				include P18AW_ADMIN_DIR . 'CustomersProducts.php';
