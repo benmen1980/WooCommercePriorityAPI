@@ -166,7 +166,8 @@ class WooAPI extends \PriorityAPI\API
     private function frontend() {
 	    // Sync customer and order data after order is proccessed
 //	    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
-        add_action( 'woocommerce_paypal_express_checkout_valid_ipn_request', [ $this, 'syncDataAfterOrder' ] );
+        // PayPal Express - woocommerce_paypal_express_checkout_valid_ipn_request
+        add_action( 'valid-paypal-standard-ipn-request', [ $this, 'syncDataAfterOrder' ] );
       
 
         // custom check out fields
@@ -406,6 +407,16 @@ class WooAPI extends \PriorityAPI\API
 		                    include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
 
 		                    break;
+                        case 'order_meta';
+
+							$id = $_GET['ord'];
+							$order = new \WC_Order($id);
+                        	$data = get_post_meta($id);
+							highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+
+
+							break;
+
 
                         default:
 
@@ -1306,7 +1317,11 @@ class WooAPI extends \PriorityAPI\API
             'SHIPPINGLNAME'  => $order->get_shipping_last_name(),
             'QTY'  => $order->get_meta('_estimated_product_quantities'),
             'OPERATINGSYSTEM' => $os,
-            'ORDERLINK'=>$order->get_checkout_order_received_url()
+            'ORDERLINK'=>$order->get_checkout_order_received_url(),
+            'WTAXNUM'  => $order->get_meta('_billing_company_reg_number'),
+            'ORDTOTAL'  => (float)$order->get_total()
+            
+            
         ];
 	
 	    // order comments
