@@ -1,4 +1,7 @@
-<?php defined('ABSPATH') or die('No direct script access!'); ?>
+<?php defined('ABSPATH') or die('No direct script access!'); 
+$format = 'm/d/Y H:i:s';
+$format2 = 'd/m/Y H:i:s';
+?>
 
 <form id="p18aw-sync" name="p18aw-sync" method="post" action="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=syncs'); ?>">
     <?php wp_nonce_field('save-sync', 'p18aw-nonce'); ?>
@@ -42,7 +45,7 @@
                 <td data-sync-time="sync_items_priority">
                     <?php 
                     if ($timestamp = $this->option('items_priority_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                         echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
@@ -76,7 +79,7 @@
                 <td data-sync-time="sync_items_priority_variation">
                     <?php
                     if ($timestamp = $this->option('items_priority_variation_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                          echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
@@ -111,7 +114,7 @@
                 <td data-sync-time="sync_items_web">
                     <?php 
                     if ($timestamp = $this->option('items_web_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                          echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
@@ -145,7 +148,7 @@
                 <td data-sync-time="sync_inventory_priority">
                     <?php 
                     if ($timestamp = $this->option('inventory_priority_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                         echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
@@ -180,7 +183,7 @@
                 <td data-sync-time="sync_pricelist_priority">
                     <?php 
                     if ($timestamp = $this->option('pricelist_priority_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                         echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
@@ -214,7 +217,7 @@
                 <td data-sync-time="sync_sites_priority">
 			        <?php
 			        if ($timestamp = $this->option('sites_priority_update', false)) {
-				        echo(date('d/m/Y H:i:s', $timestamp));
+				          echo(get_date_from_gmt(date($format, $timestamp),$format2));
 			        } else {
 				        _e('Never', 'p18a');
 			        }
@@ -248,7 +251,7 @@
                 <td data-sync-time="sync_c_products_priority">
 			        <?php
 			        if ($timestamp = $this->option('c_products_priority_update', false)) {
-				        echo(date('d/m/Y H:i:s', $timestamp));
+				          echo(get_date_from_gmt(date($format, $timestamp),$format2));
 			        } else {
 				        _e('Never', 'p18a');
 			        }
@@ -282,7 +285,7 @@
                 <td data-sync-time="auto_post_orders_priority">
 			        <?php
 			        if ($timestamp = $this->option('auto_post_orders_priority_update', false)) {
-				        echo(date('d/m/Y H:i:s', $timestamp));
+				          echo(get_date_from_gmt(date($format, $timestamp),$format2));
 			        } else {
 				        _e('Never', 'p18a');
 			        }
@@ -315,7 +318,7 @@
                 <td data-sync-time="auto_sync_order_status_priority">
 			        <?php
 			        if ($timestamp = $this->option('auto_sync_order_status_priority_update', false)) {
-				        echo(date('d/m/Y H:i:s', $timestamp));
+				          echo(get_date_from_gmt(date($format, $timestamp),$format2));
 			        } else {
 				        _e('Never', 'p18a');
 			        }
@@ -353,7 +356,7 @@
                 <td data-sync-time="sync_receipts_priority">
                     <?php 
                     if ($timestamp = $this->option('receipts_priority_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                         echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
@@ -386,7 +389,7 @@
                 <td data-sync-time="sync_ainvoices_priority">
 			        <?php
 			        if ($timestamp = $this->option('ainvoices_priority_update', false)) {
-				        echo(date('d/m/Y H:i:s', $timestamp));
+				          echo(get_date_from_gmt(date($format, $timestamp),$format2));
 			        } else {
 				        _e('Never', 'p18a');
 			        }
@@ -413,7 +416,7 @@
                 <td data-sync-time="sync_customers_web">
                     <?php
                     if ($timestamp = $this->option('customers_web_update', false)) {
-                        echo(date('d/m/Y H:i:s', $timestamp));
+                          echo(get_date_from_gmt(date($format, $timestamp),$format2));
                     } else {
                         _e('Never', 'p18a');
                     }
