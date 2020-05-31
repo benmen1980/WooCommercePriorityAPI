@@ -1128,6 +1128,7 @@ public function sync_product_attachemtns(){
 				}
 			}else{
 				$product_id = 0;
+				continue;
 			}
 			//**********
 			$product_media = $product->get_gallery_image_ids();
