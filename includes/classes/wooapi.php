@@ -1424,7 +1424,15 @@ class WooAPI extends \PriorityAPI\API
             }
             
         }
-
+	// cart discount
+	    if( get_post_meta($id,'_cart_discount')[0]) {
+		    $data['OREN_ORDERITEMS_SUBFORM'][] = [
+			    // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+			    'WEBPART' => 'Discount',
+			    'PRICE' => -1.0 * floatval( get_post_meta($id,'_cart_discount')[0] ),
+			    'TQUANT'   => -1,
+		    ];
+	    }
         // shipping rate
 
         $data['OREN_ORDERITEMS_SUBFORM'][] = [
