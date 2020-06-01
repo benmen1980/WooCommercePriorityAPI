@@ -1728,8 +1728,17 @@ public function sync_product_attachemtns(){
             }
             
         }
+	 // cart discount
+	    if( get_post_meta($id,'_cart_discount')[0]) {
+		    $data['ORDERITEMS_SUBFORM'][] = [
+			    // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+			    'PARTNAME' => '000',
+			    'VATPRICE' => -1*floatval( get_post_meta($id,'_cart_discount')[0] ),
+			    'TQUANT'   => -1,
 
-	 // shipiing rate
+		    ];
+	    }
+	 // shipping rate
         if( $order->get_shipping_method()) {
 	        $data['ORDERITEMS_SUBFORM'][] = [
 		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
