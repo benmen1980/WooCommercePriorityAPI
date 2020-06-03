@@ -1088,8 +1088,43 @@ class WooAPI extends \PriorityAPI\API
         }return $response;
     }
 
+	
+public function simply_posts_where( $where, $query ) {
+		global $wpdb;
+		// Check if our custom argument has been set on current query.
+		if ( $query->get( 'filename' ) ) {
+			$filename = $query->get( 'filename' );
+			// Add WHERE clause to SQL query.
+			$where .= " AND $wpdb->posts.post_title LIKE '".$filename."'";
+		}
+		return $where;
+}
+public function simply_check_file_exists($file_name){
+		add_filter( 'posts_where', array($this,'simply_posts_where'), 10, 2 );
+		$args = array(
+			'post_type'  => 'attachment',
+			'posts_per_page' => '-1',
+			'post_status' => 'any',
+			'filename'         => $file_name,
+		);
+		$the_query = new \WP_Query( $args);
+		remove_filter( 'posts_where', array($this,'simply_posts_where'), 10 );
+// The Loop
+		if ( $the_query->have_posts() ) {
+			while ( $the_query->have_posts() ) {
+				$the_query->the_post();
+				return  get_the_ID();
+			}
+
+		} else {
+			// no posts found
+			return false;
+		}
+}
+	
+	
 public function sync_product_attachemtns(){
-		/*
+		 /*
 		 * the function pull the urls from Priority,
 		 * then check if the file already exists as attachemnt in WP
 		 * if is not exists, will download and attache
@@ -1101,16 +1136,16 @@ public function sync_product_attachemtns(){
 
 		ob_start();
 		$allowed_sufix = ['jpg','jpeg','png'];
-		$response = $this->makeRequest('GET','LOGPART?$filter=EXTFILEFLAG eq \'Y\'
-																		&$select=PARTNAME
-																		&$expand=PARTEXTFILE_SUBFORM');
+		$response = $this->makeRequest('GET','LOGPART?$filter=EXTFILEFLAG eq \'Y\' &$select=PARTNAME&$expand=PARTEXTFILE_SUBFORM');
+
+
 		$response_data = json_decode($response['body_raw'], true);
 		foreach($response_data['value'] as $item) {
 			$sku =  $item['PARTNAME'];
 			$main_attach_id = [];
 			$attachments = [$main_attach_id];
 			//$product_id = wc_get_product_id_by_sku($sku);
-			$product = new \WC_Product($product_id);
+
 			$args = array(
 				'post_type'		=>	'product',
 				'meta_query'	=>	array(
@@ -1122,19 +1157,17 @@ public function sync_product_attachemtns(){
 			);
 			$my_query = new \WP_Query( $args );
 			if ( $my_query->have_posts() ) {
-				while ( $my_query->have_posts() ) {
-					$my_query->the_post();
-					$product_id = get_the_ID();
-				}
+				$my_query->the_post();
+                $product_id = get_the_ID();
 			}else{
 				$product_id = 0;
 				continue;
 			}
 			//**********
+			$product = new \WC_Product($product_id);
 			$product_media = $product->get_gallery_image_ids();
-			echo 'Starting process for file: '.$sku.'<br>';
-			echo 'Product media: <br>';
-			var_dump($product_media);
+			echo 'Starting process for product '.$sku.'<br>';
+
 			foreach ( $item['PARTEXTFILE_SUBFORM'] as $attachment ) {
 				$file_path = $attachment['EXTFILENAME'];
 				$file_info = pathinfo( $file_path );
@@ -1142,23 +1175,21 @@ public function sync_product_attachemtns(){
 				$file_ext  = $file_info['extension'];
 				if (array_search( $file_ext, $allowed_sufix, false )!==false ) {
 					$is_existing_file = false;
-					foreach ( $product_media as $id ) {
-						$title = get_the_title( $id );
-						if ( strpos( $title, $file_name ) !== false ) {
-						    echo $file_path . 'exists in '. $title.'<br>';
-							$is_existing_file = true;
-							array_push( $attachments, $id );
-							continue;
-						} else {
-						}
-					};
+					// check if the item exists in media
+					$id = $this->simply_check_file_exists($file_name);
+					if($id){
+						echo $file_path . ' already exists in media, add to product... <br>';
+						$is_existing_file = true;
+						array_push( $attachments, $id );
+						continue;
+					}
 					// if is a new file, download from Priority and push to array
 					if ( $is_existing_file !== true ) {
 						$images_url =  'https://'. $this->option('url').'/primail';
-						echo 'File not exsits, downloading from '.$images_url,'<br>';
+						echo 'File '.$file_path.' not exsits, downloading from '.$images_url,'<br>';
 						$priority_image_path = $file_path;
 						$product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
-						$thumb_id           = download_attachment( $sku, $product_full_url );
+					 	$thumb_id = download_attachment( $sku, $product_full_url );
 						array_push( $attachments, $thumb_id );
 					};
 				}
@@ -1166,7 +1197,7 @@ public function sync_product_attachemtns(){
 			//  add here merge to files that exists in wp and not exists in the response from API
 			$image_id_array = array_merge($product_media, $attachments);
 			// https://stackoverflow.com/questions/43521429/add-multiple-images-to-woocommerce-product
-			update_post_meta($product_id, '_product_image_gallery', implode(',',$image_id_array));
+			update_post_meta($product_id, '_product_image_gallery',$image_id_array);
 
 		}
 		$output_string = ob_get_contents();
