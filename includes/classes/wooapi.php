@@ -1176,7 +1176,9 @@ public function sync_product_attachemtns(){
 				if (array_search( $file_ext, $allowed_sufix, false )!==false ) {
 					$is_existing_file = false;
 					// check if the item exists in media
-					$id = $this->simply_check_file_exists($file_name);
+					//$id = $this->simply_check_file_exists($file_name);
+					 global $wpdb;
+	            			$id = $wpdb->get_var( "SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_name' AND meta_key = '_wp_attached_file'" );
 					if($id){
 						echo $file_path . ' already exists in media, add to product... <br>';
 						$is_existing_file = true;
