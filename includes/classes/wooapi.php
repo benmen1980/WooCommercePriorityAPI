@@ -1065,8 +1065,17 @@ class WooAPI extends \PriorityAPI\API
 	                $priority_image_path = $item['EXTFILENAME'];
 	                $images_url =  'https://'. $this->option('url').'/primail';
 	                $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
-
-	                $attach_id           = download_attachment( $sku, $product_full_url );
+	                $file_path = $item['EXTFILENAME'];
+		        $file_info = pathinfo( $file_path );
+		        $file_name = $file_info['basename'];
+			$file_ext  = $file_info['extension'];
+                  	$file_array = explod('.',$file_name);
+			global $wpdb;
+	                $attach_id = $wpdb->get_var( "SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_array[0]%' AND meta_key = '_wp_attached_file'" );
+	                if($attach_id){
+                   		 }else{
+                    			$attach_id           = download_attachment( $sku, $product_full_url );
+                    			}
 	                set_post_thumbnail( $id, $attach_id );
                 }
 
