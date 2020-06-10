@@ -1207,8 +1207,9 @@ public function sync_product_attachemtns(){
 			};
 			//  add here merge to files that exists in wp and not exists in the response from API
 			$image_id_array = array_merge($product_media, $attachments);
+			$comma_array = implode(",",$image_id_array);
 			// https://stackoverflow.com/questions/43521429/add-multiple-images-to-woocommerce-product
-			update_post_meta($product_id, '_product_image_gallery',$image_id_array);
+			update_post_meta($product_id, '_product_image_gallery',$comma_array);
 
 		}
 		$output_string = ob_get_contents();
