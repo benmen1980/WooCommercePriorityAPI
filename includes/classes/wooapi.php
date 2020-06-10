@@ -1665,12 +1665,12 @@ public function sync_product_attachemtns(){
         ];
 	
 	    // order comments
-	    $order_comment_array = explode("\n", $order->get_customer_note());
-	    foreach($order_comment_array as $comment){
-            $data['ORDERSTEXT_SUBFORM'][] = [
-	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
+	    
+	    
+            $data['ORDERSTEXT_SUBFORM'] = [
+		    'TEXT' =>$order->get_customer_note(),
                 ];
-        }
+        
 	    
 	   // billing customer details
         $customer_data = [
