@@ -1366,6 +1366,12 @@ class WooAPI extends \PriorityAPI\API
 
 	    $customer_name = get_the_title($customer_id);
 	    $priority_customer_number =  get_post_meta($customer_id)['priority_customer_number'][0];
+	    // post Priority customer number per branch 
+            $branch_priority_customer_number =  get_post_meta($branch_id)['branch_priority_cstmer_number'][0];
+            if (!empty($branch_priority_customer_number)) {
+            	$priority_customer_number = $branch_priority_customer_number;
+            }
+            /***/
 	    $customer_type = get_post_meta($customer_id)['customer_type'][0];
 	    $priority_dep_number = get_post_meta($department_id)['department_number'][0];
 	    $priority_branch_number = get_post_meta($branch_id)['branch_priority_number'][0];
