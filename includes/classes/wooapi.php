@@ -470,16 +470,29 @@ class WooAPI extends \PriorityAPI\API
 
                 switch ($name) {
 
-                    case 'priority_customer':
-
+                   case 'priority_customer':;
+                        global $wpdb;
 
                         $meta = get_user_meta($user_id, 'priority_customer_number');
+                        // user customer id
+                        $user_customer = get_user_meta($user_id, 'user_customer', true);
 
-                        if ( ! empty($meta)) {
-                            return $meta[0];
+                        // get branch number
+                        $branch_number = $wpdb->get_results('SELECT b.ID, b.post_title FROM wp_postmeta a INNER JOIN wp_posts b on a.post_id = b.ID WHERE a.meta_value = ' . $user_customer . ' and a.meta_key = "branch_customer" ');
+
+                        if ($branch_number[0]->ID != '') {
+                            $brach_cust_priority_number = get_post_meta($branch_number[0]->ID, 'branch_priority_cstmer_number', true);
+                        }
+
+                        // get priority customer number from branch
+                        $priority_number = ($brach_cust_priority_number != '') ? $brach_cust_priority_number : $meta[0];
+
+                        if (!empty($priority_number)) {
+                            return $priority_number;
                         }
 
                         break;
+
 
                     
                     case 'priority_price_list':
