@@ -37,6 +37,7 @@ define('P18AW_PLUGIN_ADMIN_URL' , sanitize_title(P18AW_PLUGIN_NAME));
 
 register_activation_hook(P18AW_SELF, function(){
 
+    global $wp_rewrite;
     $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists'; 
          
     $sql = "CREATE TABLE $table (
@@ -49,6 +50,12 @@ register_activation_hook(P18AW_SELF, function(){
         price_list_price DECIMAL(6,2), 
         PRIMARY KEY  (id)
     )";
+
+    /* This is used add the endpoint and menu item in woocommerce account menu. */
+    add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
+
+    /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
+    $wp_rewrite->flush_rules( false );
 	
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	dbDelta($sql);
