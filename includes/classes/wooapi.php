@@ -166,9 +166,58 @@ class WooAPI extends \PriorityAPI\API
      *
      */
     private function frontend() {
+	
+		/* Hook to fetch the API result. */
+    	add_action('p18a_request_front', function(){
+        	
+            $additionalurl = "OBLIGO?\$select=ORD_DEBIT,DOC_DEBIT,ACC_DEBIT,CHEQUE_DEBIT,CREDIT,MAX_CREDIT,CREDIT_REST,OBLIGO,MAX_OBLIGO,OBLIGO_REST&\$filter=CUSTNAME eq '000168'";
+            
+            $response = $this->makeRequest("GET", $additionalurl, $args, true);
+            $data = json_decode($response['body']);
+            echo "<table>";
+            foreach ($data->value as $key => $value){
+            	foreach ($value as $key1 => $value1){
+                	echo "<tr>";
+                	echo "<td>".$key1."</td><td>".$value1."</td>";
+                 echo "</tr>";
+         		}
+            }
+            echo "</table>";
+
+        });
+
+        /* This is used add the endpoint and menu item in woocommerce account menu. */
+        add_action('init', function() {
+            add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
+        });
+
+        add_filter('woocommerce_account_menu_items', function($items) {
+            
+            $items['obligo'] = __('obligo', 'woo');
+            
+            return $items;
+        });
+
+        /* This is the function which will show the data on the frontend. */
+        add_action('woocommerce_account_obligo_endpoint', function() {
+
+             ?>
+
+            <div class="woocommerce-MyAccount-content">
+
+                <p>Obligo</p>
+                <?php do_action('p18a_request_front');?>
+
+            </div>
+
+            <?php
+            
+        });
+
 	// Sync customer and order data after order is proccessed
-        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
-        // custom check out fields
+
+    add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
+    // custom check out fields
 	add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
 	add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
 	add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
