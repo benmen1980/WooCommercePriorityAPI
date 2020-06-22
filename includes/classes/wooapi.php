@@ -168,10 +168,10 @@ class WooAPI extends \PriorityAPI\API
     private function frontend() {
 	
 		/* Hook to fetch the API result. */
-    	add_action('p18a_request_front', function(){
+    	add_action('p18a_request_front_obligo', function(){
         	
-            $additionalurl = "OBLIGO?\$select=ORD_DEBIT,DOC_DEBIT,ACC_DEBIT,CHEQUE_DEBIT,CREDIT,MAX_CREDIT,CREDIT_REST,OBLIGO,MAX_OBLIGO,OBLIGO_REST&\$filter=CUSTNAME eq '000168'";
-            
+            $additionalurl = 'OBLIGO?$select=ORD_DEBIT,DOC_DEBIT,ACC_DEBIT,CHEQUE_DEBIT,CREDIT,MAX_CREDIT,CREDIT_REST,OBLIGO,MAX_OBLIGO,OBLIGO_REST&$filter=CUSTNAME eq \'000168\'';
+            $args=[];
             $response = $this->makeRequest("GET", $additionalurl, $args, true);
             $data = json_decode($response['body']);
             echo "<table>";
@@ -206,7 +206,7 @@ class WooAPI extends \PriorityAPI\API
             <div class="woocommerce-MyAccount-content">
 
                 <p>Obligo</p>
-                <?php do_action('p18a_request_front');?>
+                <?php do_action('p18a_request_front_obligo');?>
 
             </div>
 
