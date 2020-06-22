@@ -170,19 +170,35 @@ class WooAPI extends \PriorityAPI\API
 		/* Hook to fetch the API result. */
     	add_action('p18a_request_front_obligo', function(){
         	
-            $additionalurl = 'OBLIGO?$select=ORD_DEBIT,DOC_DEBIT,ACC_DEBIT,CHEQUE_DEBIT,CREDIT,MAX_CREDIT,CREDIT_REST,OBLIGO,MAX_OBLIGO,OBLIGO_REST&$filter=CUSTNAME eq \'000168\'';
+            $additionalurl = 'OBLIGO?&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'02\'';
             $args=[];
             $response = $this->makeRequest("GET", $additionalurl, $args, true);
             $data = json_decode($response['body']);
-            echo "<table>";
-            foreach ($data->value as $key => $value){
-            	foreach ($value as $key1 => $value1){
-                	echo "<tr>";
-                	echo "<td>".$key1."</td><td>".$value1."</td>";
-                 echo "</tr>";
-         		}
-            }
-            echo "</table>";
+            if(!empty($data->value)){
+                echo "<table>";
+	                foreach ($data->value[0] as $key => $value){
+	                	if($key=='OBLIGO_FNCITEMS_SUBFORM'){
+	                		continue;
+	                	}
+		                echo "<tr>";
+		                echo "<td>".$key."</td><td>".$value."</td>";
+		                echo "</tr>";
+	             	}	
+	                echo "</table>";
+	                echo "<table style='width:100%'> <tr>";
+	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM[0] as $key => $value) {
+	                	echo "<th>".$key."</th>";
+	                }
+	                echo "</tr>";
+	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value) {
+	                	echo "<tr>";
+	                	foreach ($value as $Fkey => $Fvalue) {
+	                		echo "<td>".$Fvalue."</td>";
+	                	}
+	                	echo "</tr>";
+	                }
+	                echo "</table>";
+            	}
 
         });
 
