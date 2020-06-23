@@ -170,10 +170,12 @@ class WooAPI extends \PriorityAPI\API
 		/* Hook to fetch the API result. */
     	add_action('p18a_request_front_obligo', function(){
         	
+        	global $woocommerce;
             $additionalurl = 'OBLIGO?&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'02\'';
             $args=[];
             $response = $this->makeRequest("GET", $additionalurl, $args, true);
             $data = json_decode($response['body']);
+            
             if(!empty($data->value)){
                 echo "<table>";
 	                foreach ($data->value[0] as $key => $value){
@@ -186,10 +188,14 @@ class WooAPI extends \PriorityAPI\API
 	             	}	
 	                echo "</table>";
 	                echo "<table> <tr>";
-	                echo "<th>BALDATE</th> <th>FNCNUM</th> <th>IVNUM</th> <th>DETAILS</th> <th>SUM1</th>";
+	                echo "<th></th><th>BALDATE</th> <th>FNCNUM</th> <th>IVNUM</th> <th>DETAILS</th> <th>SUM1</th>";
 	                echo "</tr>";
+	                
+    				$items = $woocommerce->cart->get_cart();
+    				$cartcheck=empty($items)? '':'disabled';
 	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value) {
 	                	echo "<tr>";
+	                	echo "<td><input name='obligo_check' type='checkbox' $cartcheck></td>";
 	                	foreach ($value as $Fkey => $Fvalue) {
 	                		if($Fkey=='BALDATE' || $Fkey=='FNCNUM' || $Fkey=='IVNUM' || $Fkey=='DETAILS' || $Fkey=='SUM1')
 	                		echo "<td>".$Fvalue."</td>";
@@ -198,7 +204,6 @@ class WooAPI extends \PriorityAPI\API
 	                }
 	                echo "</table>";
             	}
-
         });
 
         /* This is used add the endpoint and menu item in woocommerce account menu. */
