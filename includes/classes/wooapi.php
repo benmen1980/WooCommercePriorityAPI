@@ -185,14 +185,13 @@ class WooAPI extends \PriorityAPI\API
 		                echo "</tr>";
 	             	}	
 	                echo "</table>";
-	                echo "<table style='width:100%'> <tr>";
-	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM[0] as $key => $value) {
-	                	echo "<th>".$key."</th>";
-	                }
+	                echo "<table> <tr>";
+	                echo "<th>BALDATE</th> <th>FNCNUM</th> <th>IVNUM</th> <th>DETAILS</th> <th>SUM1</th>";
 	                echo "</tr>";
 	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value) {
 	                	echo "<tr>";
 	                	foreach ($value as $Fkey => $Fvalue) {
+	                		if($Fkey=='BALDATE' || $Fkey=='FNCNUM' || $Fkey=='IVNUM' || $Fkey=='DETAILS' || $Fkey=='SUM1')
 	                		echo "<td>".$Fvalue."</td>";
 	                	}
 	                	echo "</tr>";
