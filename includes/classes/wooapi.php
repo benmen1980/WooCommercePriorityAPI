@@ -1023,6 +1023,7 @@ class WooAPI extends \PriorityAPI\API
 
 	            $args = array(
 		            'post_type'		=>	'product',
+			    'post_status' => 'any',
 		            'meta_query'	=>	array(
 			            array(
 				            'key'       => '_sku',
@@ -1533,6 +1534,7 @@ public function sync_product_attachemtns(){
 
 	            $args = array(
 		            'post_type'		=>	'product',
+			    'post_status' => 'any',
 		            'meta_query'	=>	array(
 			            array(
 				            'key'       => '_sku',
