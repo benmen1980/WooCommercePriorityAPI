@@ -168,22 +168,42 @@ class WooAPI extends \PriorityAPI\API
     private function frontend() {
 	
 		/* Hook to fetch the API result. */
-    	add_action('p18a_request_front', function(){
+    	add_action('p18a_request_front_obligo', function(){
         	
-            $additionalurl = "OBLIGO?\$select=ORD_DEBIT,DOC_DEBIT,ACC_DEBIT,CHEQUE_DEBIT,CREDIT,MAX_CREDIT,CREDIT_REST,OBLIGO,MAX_OBLIGO,OBLIGO_REST&\$filter=CUSTNAME eq '000168'";
-            
+        	global $woocommerce;
+            $additionalurl = 'OBLIGO?&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'02\'';
+            $args=[];
             $response = $this->makeRequest("GET", $additionalurl, $args, true);
             $data = json_decode($response['body']);
-            echo "<table>";
-            foreach ($data->value as $key => $value){
-            	foreach ($value as $key1 => $value1){
-                	echo "<tr>";
-                	echo "<td>".$key1."</td><td>".$value1."</td>";
-                 echo "</tr>";
-         		}
-            }
-            echo "</table>";
-
+            
+            if(!empty($data->value)){
+                echo "<table>";
+	                foreach ($data->value[0] as $key => $value){
+	                	if($key=='OBLIGO_FNCITEMS_SUBFORM'){
+	                		continue;
+	                	}
+		                echo "<tr>";
+		                echo "<td>".$key."</td><td>".$value."</td>";
+		                echo "</tr>";
+	             	}	
+	                echo "</table>";
+	                echo "<table> <tr>";
+	                echo "<th></th><th>BALDATE</th> <th>FNCNUM</th> <th>IVNUM</th> <th>DETAILS</th> <th>SUM1</th>";
+	                echo "</tr>";
+	                
+    				$items = $woocommerce->cart->get_cart();
+    				$cartcheck=empty($items)? '':'disabled';
+	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value) {
+	                	echo "<tr>";
+	                	echo "<td><input name='obligo_check' type='checkbox' $cartcheck></td>";
+	                	foreach ($value as $Fkey => $Fvalue) {
+	                		if($Fkey=='BALDATE' || $Fkey=='FNCNUM' || $Fkey=='IVNUM' || $Fkey=='DETAILS' || $Fkey=='SUM1')
+	                		echo "<td>".$Fvalue."</td>";
+	                	}
+	                	echo "</tr>";
+	                }
+	                echo "</table>";
+            	}
         });
 
         /* This is used add the endpoint and menu item in woocommerce account menu. */
@@ -206,7 +226,7 @@ class WooAPI extends \PriorityAPI\API
             <div class="woocommerce-MyAccount-content">
 
                 <p>Obligo</p>
-                <?php do_action('p18a_request_front');?>
+                <?php do_action('p18a_request_front_obligo');?>
 
             </div>
 
