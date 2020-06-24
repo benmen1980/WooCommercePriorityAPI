@@ -187,28 +187,40 @@ class WooAPI extends \PriorityAPI\API
 		                echo "</tr>";
 	             	}	
 	                echo "</table>";
+	                echo "<form action='".esc_url( admin_url('admin-post.php') )."?action=my_action_obligo' method='post'>";
+	                echo '<input type="hidden" name="action" value="my_action_obligo" />';
+	                echo "<button type='submit' id='obligoSubmit' style='float: right;' disabled> Open Payment </button>";
+	                echo "</form>";
 	                echo "<table> <tr>";
 	                echo "<th></th><th>BALDATE</th> <th>FNCNUM</th> <th>IVNUM</th> <th>DETAILS</th> <th>SUM1</th>";
 	                echo "</tr>";
-	                
+	                global $woocommerce;
     				$items = $woocommerce->cart->get_cart();
     				$cartcheck=empty($items)? '':'disabled';
 	                foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value) {
 	                	echo "<tr>";
-	                	echo "<td><input name='obligo_check' type='checkbox' $cartcheck></td>";
+	                	echo "<td><input type='checkbox' class='obligo_checkbox' $cartcheck></td>";
 	                	foreach ($value as $Fkey => $Fvalue) {
-	                		if($Fkey=='BALDATE' || $Fkey=='FNCNUM' || $Fkey=='IVNUM' || $Fkey=='DETAILS' || $Fkey=='SUM1')
-	                		echo "<td>".$Fvalue."</td>";
+	                		if($Fkey=='BALDATE' || $Fkey=='FNCNUM' || $Fkey=='IVNUM' || $Fkey=='DETAILS' || $Fkey=='SUM1'){
+	                			if($Fkey=='BALDATE'){
+	                				$timestamp = strtotime($Fvalue);
+	                				echo "<td>". date('d/m/y', $timestamp) ."</td>";
+	                			}else{
+	                				echo "<td>".$Fvalue."</td>";
+	                			}
+	                		}
 	                	}
 	                	echo "</tr>";
 	                }
 	                echo "</table>";
+	               
             	}
         });
 
         /* This is used add the endpoint and menu item in woocommerce account menu. */
         add_action('init', function() {
             add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
+            wp_enqueue_script( 'my_custom_script',  P18AW_ASSET_URL . 'frontend.js',['jquery']);
         });
 
         add_filter('woocommerce_account_menu_items', function($items) {
