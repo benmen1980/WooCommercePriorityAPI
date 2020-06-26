@@ -171,7 +171,11 @@ class WooAPI extends \PriorityAPI\API
     	add_action('p18a_request_front_obligo', function(){
         	
         	global $woocommerce;
-            $additionalurl = 'OBLIGO?&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'02\'';
+        	/* Get Priority Number of a User */ 
+        	$current_user = wp_get_current_user();
+            $priority_customer_number=get_user_meta($current_user->ID,'priority_customer_number',true);
+
+            $additionalurl = 'OBLIGO?&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \''.$priority_customer_number.'\'';
             $args=[];
             $response = $this->makeRequest("GET", $additionalurl, $args, true);
             $data = json_decode($response['body']);
