@@ -741,6 +741,12 @@ class WooAPI extends \PriorityAPI\API
 
 		    //add the new column "Status"
 		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+		    
+		    // add the "Priority order number"
+		    $columns['order_priority_number'] = '<span>'.__( 'Priority Order','woocommerce').'</span>'; // title
+		    //add the new column "Priority Customer Number"
+		    $columns['customer_number'] = '<span>'.__( 'Priority Customer Number','woocommerce').'</span>'; // title
+		    
 
 		    //add the new column "post to Priority"
 		    $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
@@ -758,6 +764,11 @@ class WooAPI extends \PriorityAPI\API
 	    {
 
 		    // HERE get the data from your custom field (set the correct meta key below)
+		     $order = wc_get_order( $post_id );
+		    $user = $order->get_user();
+	            update_post_meta($post_id,'priority_customer_number',get_user_meta($user->ID,'priority_customer_number',true));
+		    $customer_number = get_post_meta( $post_id, 'priority_customer_number', true );
+
 		    $status = get_post_meta( $post_id, 'priority_status', true );
 		    $order_number = get_post_meta( $post_id, 'priority_ordnumber', true );
 				if( empty($status)) $status = '';
@@ -772,6 +783,9 @@ class WooAPI extends \PriorityAPI\API
 			    case 'order_priority_number' :
 						echo '<span>'.$order_number.'</span>'; // display the data
 						break;
+                	    case 'customer_number' :
+	                                        echo '<span>'.$customer_number.'</span>'; // display the data
+	                                        break;
                 // post order to API, using GET and
                 case 'order_post' :
                     $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
@@ -785,6 +799,7 @@ class WooAPI extends \PriorityAPI\API
 	    function ( $meta_keys ){
 		    $meta_keys[] = 'priority_status';
 		    $meta_keys[] = 'priority_ordnumber';
+		     $meta_keys[] = 'priority_customer_number';
 		    return $meta_keys;
 	    }, 10, 1 );
 	    
