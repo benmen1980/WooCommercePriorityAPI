@@ -287,7 +287,7 @@ class WooAPI extends \PriorityAPI\API
 			
 			
             add_action('init', function() {
-                add_rewrite_endpoint('Obligo', EP_ROOT | EP_PAGES);
+                add_rewrite_endpoint('obligo', EP_ROOT | EP_PAGES);
             });
 
             add_action( 'wp_enqueue_scripts', function(){
