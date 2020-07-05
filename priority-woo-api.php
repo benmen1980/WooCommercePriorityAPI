@@ -105,6 +105,10 @@ add_action('plugins_loaded', function(){
             require P18AW_CLASSES_DIR . 'wooapi.php';
             
             WooAPI::instance()->run();
+		
+	    require P18AW_CLASSES_DIR . 'obligo.php';
+
+	        \obligo::instance()->run();
 
         } else {
             add_action('admin_notices', function(){
