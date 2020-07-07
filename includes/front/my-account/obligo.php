@@ -47,7 +47,7 @@ class Obligo extends \PriorityAPI\API{
 		register_activation_hook( __FILE__, 'my_custom_flush_rewrite_rules' );
 		register_deactivation_hook( __FILE__, 'my_custom_flush_rewrite_rules' );
 		add_filter('woocommerce_account_menu_items', function($items) {
-			$items['obligo'] = __('Obligo', 'woo');
+			$items['obligo'] = __('Obligo', 'p18w');
 			return $items;
 		});
 
@@ -57,7 +57,7 @@ class Obligo extends \PriorityAPI\API{
 
 			<div class="woocommerce-MyAccount-content-obligo">
 
-				<p>Obligo</p>
+				<p><?php _e('Obligo', 'p18w'); ?></p>
 				<?php
 				$foo = 2;
 				do_action('p18a_request_front_obligo');?>
@@ -141,17 +141,17 @@ class Obligo extends \PriorityAPI\API{
 				continue;
 			}
 			echo "<tr>";
-			echo "<td>" . $key . "</td><td>" . $value . "</td>";
+			echo "<td>" .__($key,'p18w')."</td><td>".__($value,'p18w')."</td>";
 			echo "</tr>";
 		}
 		echo "</table>";
 		echo "<form id='simply-obligo' action='' method='post'>";
 
 		echo '<input type="hidden" name="action" value="my_action_obligo" />';
-		echo "<button type='submit' name='obligoSubmit' id='obligoSubmit' style='float: right;' disabled> Open Payment </button>";
+		echo "<button type='submit' name='obligoSubmit' id='obligoSubmit' style='float: right;' disabled>".__('Open Payment','p18w')."</button>";
 
 		echo "<table> <tr>";
-		echo "<th></th><th>BALDATE</th> <th>FNCNUM</th> <th>IVNUM</th> <th>DETAILS</th> <th>SUM1</th>";
+		echo "<th></th><th>".esc_html__('BALDATE','p18w')."</th> <th>".esc_html__('FNCNUM','p18w')."</th> <th>".esc_html__('IVNUM','p18w')."</th> <th>".esc_html__('DETAILS','p18w')."</th> <th>".esc_html__('SUM1','p18w')."</th>";
 		echo "</tr>";
 		global $woocommerce;
 		$items     = $woocommerce->cart->get_cart();
@@ -182,18 +182,7 @@ class Obligo extends \PriorityAPI\API{
 		}
 		echo "</table>";
 		echo "</form>";
-		if ( isset( $_POST['obligoSubmit'] ) ) {
-			$obligo_chk = $_POST['obligo_chk_sum'];
-			$ivnums = $_POST['obligo_chk_ivnum'];
-			foreach ( $obligo_chk as $key => $value ) {
-				if(isset($_POST['obligo_chk-'.$key])){
-					$cart_item_data = [];
-					$cart_item_data['_other_options']['product-price'] = $value ;
-					$cart_item_data['_other_options']['product-ivnum'] = $ivnums[$key] ;
-					$cart           = WC()->cart->add_to_cart( 3048, 1, null, null, $cart_item_data );
-				}
-			}
-		}
+
 	}
 	return 'Recipet opened...';
 }
