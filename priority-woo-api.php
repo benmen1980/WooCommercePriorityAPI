@@ -29,6 +29,7 @@ define('P18AW_ASSET_URL'     , trailingslashit(P18AW_URI)    . 'assets/');
 define('P18AW_INCLUDES_DIR'  , trailingslashit(P18AW_DIR)    . 'includes/');
 define('P18AW_CLASSES_DIR'   , trailingslashit(P18AW_DIR)    . 'includes/classes/');
 define('P18AW_ADMIN_DIR'     , trailingslashit(P18AW_DIR)    . 'includes/admin/');
+define('P18AW_FRONT_DIR'     , trailingslashit(P18AW_DIR)    . 'includes/front/');
 
 // define plugin name and plugin admin url
 define('P18AW_PLUGIN_NAME'      , 'Priority WooCommerce API');
@@ -106,7 +107,7 @@ add_action('plugins_loaded', function(){
             
             WooAPI::instance()->run();
 		
-	    require P18AW_CLASSES_DIR . 'obligo.php';
+	   require P18AW_FRONT_DIR.'my-account\obligo.php';
 
 	        \obligo::instance()->run();
 
