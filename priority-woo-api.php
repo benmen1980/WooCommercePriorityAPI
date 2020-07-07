@@ -107,6 +107,14 @@ add_action('plugins_loaded', function(){
             
             WooAPI::instance()->run();
 
+	        // load obligo
+	        if(WooAPI::instance()->option('obligo')){
+				 require P18AW_FRONT_DIR.'my-account\obligo.php';
+				 \obligo::instance()->run();
+			 }
+	        /*require P18AW_FRONT_DIR.'my-account\obligo.php';
+	        \obligo::instance()->run();*/
+
 
         } else {
             add_action('admin_notices', function(){
