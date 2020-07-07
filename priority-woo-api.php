@@ -12,7 +12,7 @@
 * Author: Roi Holdings
 * Author URI: http://www.roi-holdings.com
 * Licence: GPLv2
-* Text Domain: p18a
+* Text Domain: p18w
 * Domain Path: /languages  
 * 
 */
@@ -101,13 +101,13 @@ add_action('plugins_loaded', function(){
         // and check for Woocommerce
         if (in_array('woocommerce/woocommerce.php', $plugins)) {
             
-	    load_plugin_textdomain( 'p18a', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );	
+	    load_plugin_textdomain( 'p18w', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
 
             require P18AW_CLASSES_DIR . 'wooapi.php';
             
             WooAPI::instance()->run();
-		
-	  
+
+
         } else {
             add_action('admin_notices', function(){
                 printf('<div class="notice notice-error"><p>%s</p></div>', __('In order to use Priority WooCommerce API extension, WooCommerce must be activated', 'p18a'));
