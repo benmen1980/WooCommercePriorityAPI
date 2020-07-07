@@ -107,10 +107,7 @@ add_action('plugins_loaded', function(){
             
             WooAPI::instance()->run();
 		
-	   require P18AW_FRONT_DIR.'my-account\obligo.php';
-
-	        \obligo::instance()->run();
-
+	  
         } else {
             add_action('admin_notices', function(){
                 printf('<div class="notice notice-error"><p>%s</p></div>', __('In order to use Priority WooCommerce API extension, WooCommerce must be activated', 'p18a'));
