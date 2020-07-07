@@ -138,6 +138,7 @@ class WooAPI extends \PriorityAPI\API
     public function run()
     {
         return is_admin() ? $this->backend(): $this->frontend();
+
     }
 
     /* hode price for not registered user */
@@ -166,8 +167,13 @@ class WooAPI extends \PriorityAPI\API
      *
      */
     private function frontend() {
-	    //frontenf test point
+    //frontenf test point
 
+    // load obligo
+    if($this->option('obligo')){
+        require P18AW_FRONT_DIR.'my-account\obligo.php';
+        \obligo::instance()->run();
+    }
 
 	// Sync customer and order data after order is proccessed
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
@@ -545,6 +551,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('sites',  $this->post('sites'));
 	            $this->updateOption('update_image',  $this->post('update_image'));
 	            $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
+	            $this->updateOption('obligo',  $this->post('obligo'));
 
 
 
