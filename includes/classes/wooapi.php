@@ -356,7 +356,7 @@ class WooAPI extends \PriorityAPI\API
     private function backend()
     {    
         // load language
-        load_plugin_textdomain('p18a', false, plugin_basename(P18AW_DIR) . '/languages');
+       // load_plugin_textdomain('p18w', false, plugin_basename(P18AW_DIR) . '/languages');
         // init admin
         add_action('init', function(){
 
