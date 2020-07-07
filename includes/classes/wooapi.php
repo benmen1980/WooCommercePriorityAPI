@@ -170,10 +170,10 @@ class WooAPI extends \PriorityAPI\API
     //frontenf test point
 
     // load obligo
-    if($this->option('obligo')){
+   /*if($this->option('obligo')){
         require P18AW_FRONT_DIR.'my-account\obligo.php';
         \obligo::instance()->run();
-    }
+    }*/
 
 	// Sync customer and order data after order is proccessed
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
