@@ -407,6 +407,32 @@ class WooAPI extends \PriorityAPI\API
 							$order = new \WC_Order($id);
 							var_dump($order->get_items());
                             break;
+				    
+			 case 'update_user_budget';
+                            $username = $_GET['username'];
+                            $new_budget = $_GET['budget'];
+							$user = get_user_by('login',$username);
+							echo '<br><br>';
+	                        if(empty($user)){
+	                            echo 'There is no user matching the name '.$username;
+	                            return;
+                            }
+	                        if(!is_numeric($new_budget)){
+		                        echo 'The value '.$new_budget.' is not a valid number';
+		                        return;
+                            }
+	                        $current_budget = get_user_meta($user->ID,'user_budget_limits');
+
+	                        $campaign_id =  key($current_budget[0]);
+	                        $kit_id = key($current_budget[0][$campaign_id]);
+	                        $new_budget_limits = array();
+	                        $new_budget_limits[$campaign_id][$kit_id] = $new_budget;
+	                        update_user_meta($user->ID, 'user_budget_limits', $new_budget_limits);
+	                        //var_dump(get_user_meta($user->ID));
+                            echo 'New budget of '.$new_budget.' been update to user '.$username;
+
+
+                            break;
 
                         default:
 
