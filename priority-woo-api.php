@@ -115,6 +115,9 @@ add_action('plugins_loaded', function(){
 			 }
 	        /*require P18AW_FRONT_DIR.'my-account\obligo.php';
 	        \obligo::instance()->run();*/
+            require P18AW_CLASSES_DIR . 'priority_orders_excel.php';
+
+            \priority_orders_excel::instance()->run();
 
 
         } else {
