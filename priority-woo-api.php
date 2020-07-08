@@ -54,6 +54,7 @@ register_activation_hook(P18AW_SELF, function(){
 
     /* This is used add the endpoint and menu item in woocommerce account menu. */
     add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
+    add_rewrite_endpoint( 'priority-orders', EP_ROOT | EP_PAGES );
 
     /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
     $wp_rewrite->flush_rules( false );
