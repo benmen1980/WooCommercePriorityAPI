@@ -67,10 +67,10 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		
 		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel' target='_blank' style='display: block; width: 115px; height: 45px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
 		echo "<table>";
-		echo "<tr><td>CURDATE</td><td>ORDNAME</td><td>BOOKNUM</td><td>QUANT</td><td>QPRICE</td><td>PERCENT</td><td>DISPRICE</td><td>VAT</td><td>TOTPRICE</td></tr>";
+		echo "<tr><td>Date</td><td>Order Name</td><td>BOOK Number</td><td>Quantity</td><td>Price</td><td>Percentage</td><td>Discounted Price</td><td>VAT</td><td>Total Price</td></tr>";
 		foreach ($data->value as $key => $value) {
 			
-			echo "<tr><td>".$value->CURDATE."</td><td>".$value->ORDNAME."</td><td>".$value->BOOKNUM."</td><td>".$value->QUANT."</td><td>".$value->QPRICE."</td><td>".$value->PERCENT."</td><td>".$value->DISPRICE."</td><td>".$value->VAT."</td><td>".$value->TOTPRICE."</td></tr>";
+			echo "<tr><td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->BOOKNUM."</td><td>".$value->QUANT."</td><td>".$value->QPRICE."</td><td>".$value->PERCENT."</td><td>".$value->DISPRICE."</td><td>".$value->VAT."</td><td>".$value->TOTPRICE."</td></tr>";
 
 		}
 		echo "</table>";
@@ -86,6 +86,8 @@ class Priority_orders_excel extends \PriorityAPI\API{
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
 		$f = fopen('php://output', 'w');
+		$array=array('Date','Order Name','BOOK Number','Quantity','Price','Percentage','Discounted Price','VAT','Total Price');
+		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
 			fputcsv($f, $array);
