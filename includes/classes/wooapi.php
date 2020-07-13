@@ -124,8 +124,10 @@ class WooAPI extends \PriorityAPI\API
 
 	function my_custom_checkout_field_process() {
 		// Check if set, if its not set add an error.
-		if ( ! $_POST['site'] && $this->option('sites') == true )
-			wc_add_notice( __( 'Please enter site.' ), 'error' );
+		if(isset($_POST['site'])){
+			if ( ! $_POST['site'] && $this->option('sites') == true )
+				wc_add_notice( __( 'Please enter site.' ), 'error' );
+        }
 	}
 
 
@@ -1647,6 +1649,10 @@ public function sync_product_attachemtns(){
 	 */
     public function syncOrder($id)
     {
+	    $session = WC()->session->get('session_vars');
+	    if($session['ordertype']=='Recipe'){
+	        return;
+        }
         $order = new \WC_Order($id);
 	    $user = $order->get_user();
 	    $user_id = $order->get_user_id();
@@ -1977,6 +1983,11 @@ public function sync_product_attachemtns(){
 		    $this->syncReceipt($order_id);
 		}
 	 }
+	// sync payments
+	    $session = WC()->session->get('session_vars');
+	    if($session['ordertype']=='Recipe') {
+	        $this->syncPayment($order_id);
+	    }
 
     }
 
@@ -2309,6 +2320,63 @@ public function syncOverTheCounterInvoice($order_id,$log)
         $this->updateOption('receipts_priority_update', time());
         
     }
+	public function syncPayment($order_id)
+	{
+
+		$order = new \WC_Order($order_id);
+		$priority_customer_number = get_user_meta( $order->get_customer_id(), 'priority_customer_number', true );
+		$data = [
+			'CUSTNAME' => $priority_customer_number,
+			'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+			'BOOKNUM' => $order->get_order_number(),
+
+		];
+
+		// cash payment
+		if(strtolower($order->get_payment_method()) == 'cod') {
+
+			$data['CASHPAYMENT'] = floatval($order->get_total());
+
+		} else {
+
+			// payment info
+			$data['TPAYMENT2_SUBFORM'][] = [
+				'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+				'QPRICE'      => floatval($order->get_total()),
+				'PAYACCOUNT'  => '',
+				'PAYCODE'     => ''
+			];
+
+		}
+
+		foreach ($order->get_items() as $item) {
+            $ivnum = $item->get_meta('product-ivnum');
+			$data['TFNCITEMS_SUBFORM'][] = [
+				'CREDIT'    => (float) $item->get_total(),
+				'FNCIREF1'  =>  $ivnum
+			];
+		}
+
+
+
+		// make request
+		$response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
+		if (!$response['status']) {
+			/**
+			 * t149
+			 */
+			$this->sendEmailError(
+				$this->option('email_error_sync_receipts_priority'),
+				'Error Sync Receipts',
+				$response['body']
+			);
+		}
+		// add timestamp
+		$this->updateOption('receipts_priority_update', time());
+
+	}
+
 
 
     /**
