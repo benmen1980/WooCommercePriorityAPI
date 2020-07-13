@@ -1293,7 +1293,7 @@ class WooAPI extends \PriorityAPI\API
 	    'COMPANY2'     => $order->get_shipping_company(),
           //  'EMAIL' => get_userdata($order->get_user_id())->user_email, // this is the users email not the billing email
             'ORDDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'WEBNUMBER'  => 'TEST'.$order->get_order_number(),
+            'WEBNUMBER'  => $order->get_order_number(),
             'BILLINGADDRESS'  => $order->get_billing_address_1(),
             'BILLINGADDRESS2'  => $order->get_billing_address_2(),
             'BILLINCITY'  => $order->get_billing_city(),
@@ -1421,7 +1421,15 @@ class WooAPI extends \PriorityAPI\API
             }
             
         }
-
+		 // cart discount
+	    if( get_post_meta($id,'_cart_discount')[0]) {
+		    $data['OREN_ORDERITEMS_SUBFORM'][] = [
+			    // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+			    'WEBPART' => 'Discount',
+			    'PRICE' =>  floatval( get_post_meta($id,'_cart_discount')[0] ),
+			    'TQUANT'   => -1,
+		    ];
+	    }
         // shipping rate
 
         $data['OREN_ORDERITEMS_SUBFORM'][] = [
