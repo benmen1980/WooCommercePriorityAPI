@@ -67,6 +67,13 @@ class Obligo extends \PriorityAPI\API{
 			<?php
 
 		});
+
+		// menu manipulation
+		add_filter('wp_nav_menu_items', [$this,'add_search_form'], 999, 999);
+		add_action( 'woocommerce_check_cart_items', [$this,'skyverge_empty_cart_notice']);
+
+		// update order item by cart item data
+		add_action( 'woocommerce_checkout_create_order_line_item', [$this,'custom_field_update_order_item_meta'], 20, 4 );
 	}
 	/****** add same item with different price to cart *********/
 	/*****************************************/
@@ -82,18 +89,27 @@ class Obligo extends \PriorityAPI\API{
         );
 	}
 	public function my_action() {
+
 		$data = $_POST['data'];
 		array_shift($data);
+		$response = true;
 		foreach ( $data as $key => $value ) {
 		        $arr= explode('#',$value['name']);
 				$cart_item_data = [];
 				$cart_item_data['_other_options']['product-price'] = $arr[0] ;
 				$cart_item_data['_other_options']['product-ivnum'] = $arr[1] ;
-				$cart           = WC()->cart->add_to_cart( 3048, 1, null, null, $cart_item_data );
+				$product_id = wc_get_product_id_by_sku('PAYMENT');
+				$cart           = WC()->cart->add_to_cart( $product_id, 1, null, null, $cart_item_data );
                 if(!$cart){
                     $response = false;
                 }
 		}
+		if($response){
+			WC()->session->set(
+				'session_vars',
+				array(
+					'ordertype' => 'Recipe'));
+        }
 		$data = [$response];
 		wp_send_json_success($data);
 
@@ -187,4 +203,38 @@ class Obligo extends \PriorityAPI\API{
 	return 'Recipet opened...';
 }
 
+	function add_search_form($items, $args) {
+		$session = WC()->session->get('session_vars');
+        if($session['ordertype']=='Recipe'){
+	        $items .= '<li class="menu-item">'
+	                  . '<p><span style="color: #0000ff;"><em>Recipe</em></span></p>'
+
+	                  . '</li>';
+        }
+		return $items;
+	}
+
+	function skyverge_empty_cart_notice() {
+
+		if ( WC()->cart->get_cart_contents_count() == 0 ) {
+			WC()->session->set(
+				'session_vars',
+				array(
+					'ordertype' => ''));
+		}
+
+	}
+	function custom_field_update_order_item_meta( $item, $cart_item_key, $values, $order ) {
+		if ( ! isset( $values['_other_options'] ) )
+			return;
+
+		$custom_data = $values['_other_options'];
+		$ivnum = $custom_data['product-ivnum'];
+		if ( $ivnum )
+			$item->update_meta_data( __('product-ivnum'), $ivnum );
+
+		//return $cart_item_data;
+	}
 }
+
+
