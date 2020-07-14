@@ -116,7 +116,7 @@ class Obligo extends \PriorityAPI\API{
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
 	function split_product_individual_cart_items( $cart_item_data, $product_id ){
-		if($_POST['obligoSubmit']){
+		if(isset($_POST['obligoSubmit'])){
 	    $unique_cart_item_key = uniqid();
 		$cart_item_data['unique_key'] = $unique_cart_item_key;
 		//$cart_item_data['_other_options']['product-price'] = rand(1,22) ;
@@ -125,8 +125,10 @@ class Obligo extends \PriorityAPI\API{
 	}
 	function add_custom_price( $cart_object ) {
 		foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
-			$custom_price = $cart_item['_other_options']['product-price']; // This will be your custom price
-			$cart_item['data']->set_price($custom_price);
+			if(isset($cart_item['_other_options'])){
+				$custom_price = $cart_item['_other_options']['product-price']; // This will be your custom price
+				$cart_item['data']->set_price($custom_price);
+            }
 		}
 	}
 	function render_custom_data_on_cart_checkout( $cart_data, $cart_item = null ) {
