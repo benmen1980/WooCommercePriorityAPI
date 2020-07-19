@@ -1649,10 +1649,12 @@ public function sync_product_attachemtns(){
 	 */
     public function syncOrder($id)
     {
+	    if(isset(WC()->session)){
 	    $session = WC()->session->get('session_vars');
-	    if($session['ordertype']=='Recipe'){
-	        return;
-        }
+	        if($session['ordertype']=='Recipe'){
+		   return;
+            }
+	}
         $order = new \WC_Order($id);
 	    $user = $order->get_user();
 	    $user_id = $order->get_user_id();
