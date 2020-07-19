@@ -1570,13 +1570,13 @@ public function sync_product_attachemtns(){
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
             ]);
     
-            $method = isset($meta['_priority_customer_number']) ? 'PATCH' : 'POST';
+            $method = isset($meta['priority_customer_number']) ? 'PATCH' : 'POST';
     
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
 
             // set priority customer id
             if ($response['status']) {
-                add_user_meta($id, '_priority_customer_number', $id, true); 
+                add_user_meta($id, 'priority_customer_number', $id, true); 
             } else {
                 /**
                  * t149
