@@ -1560,7 +1560,7 @@ public function sync_product_attachemtns(){
 
             $json_request = json_encode([
                 'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
-                'CUSTDES'     => isset($meta['first_name'], $meta['last_name']) ? $meta['first_name'][0] . ' ' . $meta['last_name'][0] : '',
+                'CUSTDES'     => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
                 'EMAIL'       => $user->data->user_email,
                 'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
                 'ADDRESS2'    => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
@@ -1969,9 +1969,9 @@ public function sync_product_attachemtns(){
 
 		// sync customer if it's signed in / registered
 		// guest user will have id 0
-		if ($customer_id = $order->get_customer_id()) {
+		/*if ($customer_id = $order->get_customer_id()) {
 		    $this->syncCustomer($customer_id);
-		}
+		}*/
 		// sync order
 		if($this->option('post_order_checkout')) {
 			$this->syncOrder( $order_id );
