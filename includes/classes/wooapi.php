@@ -1551,15 +1551,15 @@ public function sync_product_attachemtns(){
      *
      * @param [int] $id
      */
-    public function syncCustomer($id)
+       public function syncCustomer($id)
     {
         // check user
         if ($user = get_userdata($id)) {
 
             $meta = get_user_meta($id);
-
+            $priority_customer_number = 'WEB-'.(string) $user->data->ID;
             $json_request = json_encode([
-                'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
+                'CUSTNAME'    => $priority_customer_number,
                 'CUSTDES'     => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
                 'EMAIL'       => $user->data->user_email,
                 'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
@@ -1576,7 +1576,7 @@ public function sync_product_attachemtns(){
 
             // set priority customer id
             if ($response['status']) {
-                add_user_meta($id, 'priority_customer_number', $id, true); 
+                update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
             } else {
                 /**
                  * t149
