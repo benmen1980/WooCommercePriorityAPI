@@ -187,6 +187,7 @@ class WooAPI extends \PriorityAPI\API
 
 	    // sync user to priority after registration
 	    add_action( 'user_register', [ $this, 'syncCustomer' ] );
+	    add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ] );
 
 
 	    if ( $this->option( 'sell_by_pl' ) == true ) {
