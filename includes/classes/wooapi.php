@@ -685,6 +685,9 @@ class WooAPI extends \PriorityAPI\API
 
 		    //add the new column "Status"
 		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+		    
+		    // add the Priority order number
+		    $columns['order_priority_number'] = '<span>'.__( 'Priority Order','woocommerce').'</span>'; // title
 
 		    //add the new column "post to Priority"
 		    $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
