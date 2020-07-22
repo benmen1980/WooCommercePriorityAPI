@@ -1707,14 +1707,14 @@ public function sync_product_attachemtns(){
         // shop address debug
 
         $shipping_data = [
-            'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
             'EMAIL'       => $order->get_billing_email(),
             'CELLPHONE'   => $order->get_billing_phone(),
-            'ADDRESS'     => $order->get_billing_address_1(),
-            'ADDRESS2'    => $order->get_billing_address_2(),
-            'STATE'       => $order->get_billing_city(),
+            'ADDRESS'     => $order->get_shipping_address_1(),
+            'ADDRESS2'    => $order->get_shipping_address_2(),
+            'STATE'       => $order->get_shipping_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
 
