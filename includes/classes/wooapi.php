@@ -1088,7 +1088,7 @@ class WooAPI extends \PriorityAPI\API
 		        $file_info = pathinfo( $file_path );
 		        $file_name = $file_info['basename'];
 			$file_ext  = $file_info['extension'];
-                  	$file_array = explod('.',$file_name);
+                  	$file_array = explode('.',$file_name);
 			global $wpdb;
 	                $attach_id = $wpdb->get_var( "SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_array[0]%' AND meta_key = '_wp_attached_file'" );
 	                if($attach_id){
