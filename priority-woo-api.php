@@ -112,8 +112,7 @@ add_action('plugins_loaded', function(){
 				 require P18AW_FRONT_DIR.'my-account\obligo.php';
 				 \obligo::instance()->run();
 			 }
-	        /*require P18AW_FRONT_DIR.'my-account\obligo.php';
-	        \obligo::instance()->run();*/
+	        require P18AW_ADMIN_DIR.'packs.php';
 
 
         } else {
