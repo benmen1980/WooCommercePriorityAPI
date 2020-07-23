@@ -440,6 +440,9 @@ class WooAPI extends \PriorityAPI\API
 			case 'sync_attachments';
 				include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
 				break;
+		        case 'packs';
+				$this->syncPacksPriority();
+				break;
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -1548,7 +1551,44 @@ public function sync_product_attachemtns(){
         }
 
     }
+public function syncPacksPriority()
+	{
+		// get the items simply by time stamp of today
+		$stamp = mktime(0, 0, 0);
+		$bod = date(DATE_ATOM,$stamp);
+        $url_addition = 'LOGPART?$select=PARTNAME&$filter=ITAI_INKATALOG eq \'Y\'&$expand=PARTPACK_SUBFORM';
+		$response = $this->makeRequest('GET', $url_addition, [],  true);
+		// check response status
+		if ($response['status']) {
+			$data = json_decode($response['body_raw'], true);
+			foreach($data['value'] as $item) {
+				// if product exsits, update
+				$args = array(
+					'post_type'		=>	'product',
+					'meta_query'	=>	array(
+						array(
+							'key'       => '_sku',
+							'value'	=>	$item['PARTNAME']
+						)
+					)
+				);
+				$my_query = new \WP_Query( $args );
+				if ( $my_query->have_posts() ) {
+					while ( $my_query->have_posts() ) {
+						$my_query->the_post();
+						$product_id = get_the_ID();
+					}
+				}else{
+					$product_id = 0;
+				}
 
+				//if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
+				if(!$product_id == 0){
+					update_post_meta($product_id, 'packs', $item['PARTPACK_SUBFORM']);
+			        }
+                }
+	    }
+    }
 
     /**
      * sync Customer by given ID
