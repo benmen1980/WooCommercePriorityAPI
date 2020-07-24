@@ -109,7 +109,7 @@ add_action('plugins_loaded', function(){
 
 	        // load obligo
 	        if(WooAPI::instance()->option('obligo')){
-				 require P18AW_FRONT_DIR.'my-account\obligo.php';
+				 require P18AW_FRONT_DIR.'my-account/obligo.php';
 				 \obligo::instance()->run();
 			 }
 	        require P18AW_ADMIN_DIR.'packs.php';
