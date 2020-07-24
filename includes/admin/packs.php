@@ -91,7 +91,7 @@ add_action( 'woocommerce_before_add_to_cart_form', 'action_woocommerce_before_ad
 add_action( 'wp_enqueue_scripts', 'my_theme_scripts' );
 function my_theme_scripts(){
 	if( is_product() ) {
-		wp_enqueue_script('crm_js', get_stylesheet_directory_uri().'/assets/js/crm.js',
-			array('jquery'),filemtime(get_stylesheet_directory() . '/assets/js/crm.js'),true);
+		wp_enqueue_script('packs_js', P18AW_ASSET_URL.'packs.js',
+			array('jquery'),true);
 	}
 }
