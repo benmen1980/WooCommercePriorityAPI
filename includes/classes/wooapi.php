@@ -124,8 +124,10 @@ class WooAPI extends \PriorityAPI\API
 
 	function my_custom_checkout_field_process() {
 		// Check if set, if its not set add an error.
-		if ( ! $_POST['site'] && $this->option('sites') == true )
-			wc_add_notice( __( 'Please enter site.' ), 'error' );
+		if(isset($_POST['site'])){
+			if ( ! $_POST['site'] && $this->option('sites') == true )
+				wc_add_notice( __( 'Please enter site.' ), 'error' );
+        }
 	}
 
 
@@ -185,6 +187,7 @@ class WooAPI extends \PriorityAPI\API
 
 	    // sync user to priority after registration
 	    add_action( 'user_register', [ $this, 'syncCustomer' ] );
+	    add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ] );
 
 
 	    if ( $this->option( 'sell_by_pl' ) == true ) {
@@ -437,6 +440,9 @@ class WooAPI extends \PriorityAPI\API
 			case 'sync_attachments';
 				include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
 				break;
+		        case 'packs';
+				$this->syncPacksPriority();
+				break;
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -682,6 +688,9 @@ class WooAPI extends \PriorityAPI\API
 
 		    //add the new column "Status"
 		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+		    
+		    // add the Priority order number
+		    $columns['order_priority_number'] = '<span>'.__( 'Priority Order','woocommerce').'</span>'; // title
 
 		    //add the new column "post to Priority"
 		    $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
@@ -1079,7 +1088,7 @@ class WooAPI extends \PriorityAPI\API
 		        $file_info = pathinfo( $file_path );
 		        $file_name = $file_info['basename'];
 			$file_ext  = $file_info['extension'];
-                  	$file_array = explod('.',$file_name);
+                  	$file_array = explode('.',$file_name);
 			global $wpdb;
 	                $attach_id = $wpdb->get_var( "SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_array[0]%' AND meta_key = '_wp_attached_file'" );
 	                if($attach_id){
@@ -1542,23 +1551,60 @@ public function sync_product_attachemtns(){
         }
 
     }
+public function syncPacksPriority()
+	{
+		// get the items simply by time stamp of today
+		$stamp = mktime(0, 0, 0);
+		$bod = date(DATE_ATOM,$stamp);
+        $url_addition = 'LOGPART?$select=PARTNAME&$filter=ITAI_INKATALOG eq \'Y\'&$expand=PARTPACK_SUBFORM';
+		$response = $this->makeRequest('GET', $url_addition, [],  true);
+		// check response status
+		if ($response['status']) {
+			$data = json_decode($response['body_raw'], true);
+			foreach($data['value'] as $item) {
+				// if product exsits, update
+				$args = array(
+					'post_type'		=>	'product',
+					'meta_query'	=>	array(
+						array(
+							'key'       => '_sku',
+							'value'	=>	$item['PARTNAME']
+						)
+					)
+				);
+				$my_query = new \WP_Query( $args );
+				if ( $my_query->have_posts() ) {
+					while ( $my_query->have_posts() ) {
+						$my_query->the_post();
+						$product_id = get_the_ID();
+					}
+				}else{
+					$product_id = 0;
+				}
 
+				//if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
+				if(!$product_id == 0){
+					update_post_meta($product_id, 'packs', $item['PARTPACK_SUBFORM']);
+			        }
+                }
+	    }
+    }
 
     /**
      * sync Customer by given ID
      *
      * @param [int] $id
      */
-    public function syncCustomer($id)
+       public function syncCustomer($id)
     {
         // check user
         if ($user = get_userdata($id)) {
 
             $meta = get_user_meta($id);
-
+            $priority_customer_number = 'WEB-'.(string) $user->data->ID;
             $json_request = json_encode([
-                'CUSTNAME'    => ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : (($user->data->ID == 0) ? $this->option('walkin_number') : (string) $user->data->ID), // walkin customer or registered one
-                'CUSTDES'     => isset($meta['first_name'], $meta['last_name']) ? $meta['first_name'][0] . ' ' . $meta['last_name'][0] : '',
+                'CUSTNAME'    => $priority_customer_number,
+                'CUSTDES'     => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
                 'EMAIL'       => $user->data->user_email,
                 'ADDRESS'     => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
                 'ADDRESS2'    => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
@@ -1568,13 +1614,13 @@ public function sync_product_attachemtns(){
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
             ]);
     
-            $method = isset($meta['_priority_customer_number']) ? 'PATCH' : 'POST';
+            $method = isset($meta['priority_customer_number']) ? 'PATCH' : 'POST';
     
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
 
             // set priority customer id
             if ($response['status']) {
-                add_user_meta($id, '_priority_customer_number', $id, true); 
+                update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
             } else {
                 /**
                  * t149
@@ -1647,6 +1693,12 @@ public function sync_product_attachemtns(){
 	 */
     public function syncOrder($id)
     {
+	    if(isset(WC()->session)){
+	    $session = WC()->session->get('session_vars');
+	        if($session['ordertype']=='Recipe'){
+		   return;
+            }
+	}
         $order = new \WC_Order($id);
 	    $user = $order->get_user();
 	    $user_id = $order->get_user_id();
@@ -1674,13 +1726,9 @@ public function sync_product_attachemtns(){
            
         ];
 	
-	    // order comments
-	    $order_comment_array = explode("\n", $order->get_customer_note());
-	    foreach($order_comment_array as $comment){
-            $data['ORDERSTEXT_SUBFORM'][] = [
-	             'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
-                ];
-        }
+// order comments
+      $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+	
 	    
 	   // billing customer details
         $customer_data = [
@@ -1699,14 +1747,14 @@ public function sync_product_attachemtns(){
         // shop address debug
 
         $shipping_data = [
-            'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
             'EMAIL'       => $order->get_billing_email(),
             'CELLPHONE'   => $order->get_billing_phone(),
-            'ADDRESS'     => $order->get_billing_address_1(),
-            'ADDRESS2'    => $order->get_billing_address_2(),
-            'STATE'       => $order->get_billing_city(),
+            'ADDRESS'     => $order->get_shipping_address_1(),
+            'ADDRESS2'    => $order->get_shipping_address_2(),
+            'STATE'       => $order->get_shipping_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
 
@@ -1961,9 +2009,9 @@ public function sync_product_attachemtns(){
 
 		// sync customer if it's signed in / registered
 		// guest user will have id 0
-		if ($customer_id = $order->get_customer_id()) {
+		/*if ($customer_id = $order->get_customer_id()) {
 		    $this->syncCustomer($customer_id);
-		}
+		}*/
 		// sync order
 		if($this->option('post_order_checkout')) {
 			$this->syncOrder( $order_id );
@@ -1977,6 +2025,11 @@ public function sync_product_attachemtns(){
 		    $this->syncReceipt($order_id);
 		}
 	 }
+	// sync payments
+	    $session = WC()->session->get('session_vars');
+	    if($session['ordertype']=='Recipe') {
+	        $this->syncPayment($order_id);
+	    }
 
     }
 
@@ -2148,14 +2201,14 @@ public function syncOverTheCounterInvoice($order_id,$log)
 		}
 		// shipping
 		$shipping_data = [
-			'NAME'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
 			'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
 			'PHONENUM'    => $order->get_billing_phone(),
 			'EMAIL'       => $order->get_billing_email(),
 			'CELLPHONE'   => $order->get_billing_phone(),
-			'ADDRESS'     => $order->get_billing_address_1(),
-			'ADDRESS2'    => $order->get_billing_address_2(),
-			'STATE'       => $order->get_billing_city(),
+			'ADDRESS'     => $order->get_shipping_address_1(),
+			'ADDRESS2'    => $order->get_shipping_address_2(),
+			'STATE'       => $order->get_shipping_city(),
 			'ZIP'         => $order->get_shipping_postcode(),
 		];
 
@@ -2309,6 +2362,63 @@ public function syncOverTheCounterInvoice($order_id,$log)
         $this->updateOption('receipts_priority_update', time());
         
     }
+	public function syncPayment($order_id)
+	{
+
+		$order = new \WC_Order($order_id);
+		$priority_customer_number = get_user_meta( $order->get_customer_id(), 'priority_customer_number', true );
+		$data = [
+			'CUSTNAME' => $priority_customer_number,
+			'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+			'BOOKNUM' => $order->get_order_number(),
+
+		];
+
+		// cash payment
+		if(strtolower($order->get_payment_method()) == 'cod') {
+
+			$data['CASHPAYMENT'] = floatval($order->get_total());
+
+		} else {
+
+			// payment info
+			$data['TPAYMENT2_SUBFORM'][] = [
+				'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+				'QPRICE'      => floatval($order->get_total()),
+				'PAYACCOUNT'  => '',
+				'PAYCODE'     => ''
+			];
+
+		}
+
+		foreach ($order->get_items() as $item) {
+            $ivnum = $item->get_meta('product-ivnum');
+			$data['TFNCITEMS_SUBFORM'][] = [
+				'CREDIT'    => (float) $item->get_total(),
+				'FNCIREF1'  =>  $ivnum
+			];
+		}
+
+
+
+		// make request
+		$response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
+		if (!$response['status']) {
+			/**
+			 * t149
+			 */
+			$this->sendEmailError(
+				$this->option('email_error_sync_receipts_priority'),
+				'Error Sync Receipts',
+				$response['body']
+			);
+		}
+		// add timestamp
+		$this->updateOption('receipts_priority_update', time());
+
+	}
+
 
 
     /**
