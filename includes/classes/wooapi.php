@@ -1727,7 +1727,11 @@ public function syncPacksPriority()
         ];
 	
 // order comments
-      $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+	     // for Priority version 19.1
+	     $data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()]; 
+	     // for Priority version 20.0
+	     //  $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+	    
 	
 	    
 	   // billing customer details
