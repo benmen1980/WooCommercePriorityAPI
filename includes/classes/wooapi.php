@@ -2260,8 +2260,7 @@ public function syncOverTheCounterInvoice($order_id)
 				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 				'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
 				'TQUANT'   => 1,
-				'VATPRICE' => floatval( $order->get_shipping_total() ),
-				"REMARK1"  => "",
+				'TOTPRICE' => floatval( $order->get_shipping_total() )
 			];
 		}
 
