@@ -2176,7 +2176,7 @@ public function syncPacksPriority()
 	/* sync over the counter invoice EINVOICES */
 
   
-public function syncOverTheCounterInvoice($order_id,$log)
+public function syncOverTheCounterInvoice($order_id)
 	{
 		$order = new \WC_Order($order_id);
 		$user = $order->get_user();
@@ -2195,14 +2195,11 @@ public function syncOverTheCounterInvoice($order_id,$log)
 			'BOOKNUM' => $order->get_order_number(),
 
 		];
-
 		// order comments
-		$order_comment_array = explode("\n", $order->get_customer_note());
-		foreach($order_comment_array as $comment){
-			$data['PINVOICESTEXT_SUBFORM'][] = [
-				'TEXT' =>preg_replace('/(\v|\s)+/', ' ',$comment),
-			];
-		}
+          		 // version 20.0
+			//$data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
+			// version 19.1
+			$data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
 		// shipping
 		$shipping_data = [
 			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
