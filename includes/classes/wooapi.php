@@ -1483,7 +1483,8 @@ public function sync_product_attachemtns(){
     public function syncInventoryPriority()
     {
 	// get the items simply by time stamp of today
-    	$stamp = mktime(0, 0, 0);
+    	$daysback = 1; // change days back to get inventory of prev days
+	$stamp = mktime(1 - $daysback, 0, 0);
     	$bod = date(DATE_ATOM,$stamp);
     	$url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
     	if($this->option('variation_field')) {
