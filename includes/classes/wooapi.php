@@ -1528,7 +1528,7 @@ public function sync_product_attachemtns(){
                     // get the stock by part availability
                     $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
                     // get the stock by specific warehouse
-                    $wh_name = 'add youwarehouse name here';
+                    $wh_name = 'TEST';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
                         if($wh_stock['WARHSNAME'] == $wh_name)
@@ -1716,6 +1716,7 @@ public function syncPacksPriority()
 	    $user_id = $order->get_user_id();
 	   // $user_id = $order->user_id;
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+	    $discount_type = 'additional_line'; // header , in_line , additional_line
 
 	 
 
@@ -1737,12 +1738,12 @@ public function syncPacksPriority()
             //'DETAILS' => $user_department,
            
         ];
-	
+
 // order comments
 	     // for Priority version 19.1
-	     $data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()]; 
+	     //$data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
 	     // for Priority version 20.0
-	     //  $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+	     $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
 	    
 	
 	    
@@ -1831,25 +1832,35 @@ public function syncPacksPriority()
                         ];
                     }
                 }
-
-                /*end T151*/
-
+                $line_before_discount = (float)$item->get_subtotal();
+                $line_tax = (float)$item->get_subtotal_tax();
+                $line_after_discount  = (float)$item->get_total();
+                $discount = ($line_before_discount - $line_after_discount)/$line_before_discount * 100.0;
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    'PRICE'            => (float) $item->get_total() ,  //  if you are working without tax prices you need to modify this line Roy 7.10.18
+                    'PRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int) $item->get_quantity() : 0.0,
+                    'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
                     'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                 ];
+                if($discount_type != 'in_line'){
+	              $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM'])-1]['VATPRICE' ]= $line_before_discount + $line_tax;
+                }
             }
             
         }
-	 // cart discount
-	    if( get_post_meta($id,'_cart_discount')[0]) {
+	    // cart discount
+	    $cart_discount = floatval($order->get_discount_total());
+        $cart_discount_tax = floatval($order->get_discount_tax());
+	    $order_total = floatval($order->get_total());
+	    if('header' == $discount_type){
+		    $data['PERCENT'] = $discount;
+	    } elseif($discount_type == 'additional_line'){
 		    $data['ORDERITEMS_SUBFORM'][] = [
 			    // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 			    'PARTNAME' => '000',
-			    'VATPRICE' => -1*floatval( get_post_meta($id,'_cart_discount')[0] ),
+			    'VATPRICE' => -1* floatval( $cart_discount + $cart_discount_tax),
 			    'TQUANT'   => -1,
 
 		    ];
