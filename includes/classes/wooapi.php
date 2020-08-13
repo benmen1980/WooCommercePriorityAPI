@@ -1525,9 +1525,20 @@ public function sync_product_attachemtns(){
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
 	     if(!$product_id == 0){
                     update_post_meta($product_id, '_sku', $item['PARTNAME']);
-                    update_post_meta($product_id, '_stock', $item['LOGCOUNTERS_SUBFORM'][0]['DIFF']);
+                    // get the stock by part availability
+                    $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
+                    // get the stock by specific warehouse
+                    $wh_name = 'add youwarehouse name here';
+                    $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
+                    foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
+                        if($wh_stock['WARHSNAME'] == $wh_name)
+                        $stock = $wh_stock['TBALANCE'] - $orders > 0 ?  $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
+                    }
 
-                    if (intval($item['LOGCOUNTERS_SUBFORM'][0]['DIFF']) > 0) {
+
+                    update_post_meta($product_id, '_stock', $stock);
+
+                    if (intval($stock) > 0) {
                         update_post_meta($product_id, '_stock_status', 'instock');
                     } else {
                         update_post_meta($product_id, '_stock_status', 'outofstock');
