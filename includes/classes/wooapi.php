@@ -1718,10 +1718,6 @@ public function syncPacksPriority()
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 	    $discount_type = 'additional_line'; // header , in_line , additional_line
 
-	 
-
-	    
-
         if ($order->get_customer_id()) {
             $meta = get_user_meta($order->get_customer_id());
             $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
@@ -1738,6 +1734,14 @@ public function syncPacksPriority()
             //'DETAILS' => $user_department,
            
         ];
+	    // cart discount header
+	    $cart_discount = floatval($order->get_total_discount());
+	    $cart_discount_tax = floatval($order->get_discount_tax());
+	    $order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
+	    $order_discount = ($cart_discount/$order_total) * 100.0;
+	    if('header' == $discount_type){
+		    $data['PERCENT'] = $order_discount;
+	    }
 
 // order comments
 	     // for Priority version 19.1
@@ -1850,17 +1854,13 @@ public function syncPacksPriority()
             }
             
         }
-	    // cart discount
-	    $cart_discount = floatval($order->get_discount_total());
-        $cart_discount_tax = floatval($order->get_discount_tax());
-	    $order_total = floatval($order->get_total());
-	    if('header' == $discount_type){
-		    $data['PERCENT'] = $discount;
-	    } elseif($discount_type == 'additional_line'){
+	    // additional line cart discount
+        if($discount_type == 'additional_line'){
 		    $data['ORDERITEMS_SUBFORM'][] = [
 			    // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 			    'PARTNAME' => '000',
-			    'VATPRICE' => -1* floatval( $cart_discount + $cart_discount_tax),
+			   // 'VATPRICE' => -1* floatval( $cart_discount + $cart_discount_tax),
+			    'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
 			    'TQUANT'   => -1,
 
 		    ];
@@ -1871,7 +1871,7 @@ public function syncPacksPriority()
 		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
 		        'TQUANT'   => 1,
-		        'VATPRICE' => floatval( $order->get_shipping_total() ),
+		        'VATPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax()),
 		        "REMARK1"  => "",
 	        ];
         }
