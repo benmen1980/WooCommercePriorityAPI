@@ -1490,7 +1490,7 @@ public function sync_product_attachemtns(){
     	if($this->option('variation_field')) {
 	    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
     	}
-    	$response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM', [], $this->option('log_inventory_priority', true));
+    	$response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', true));
 
         // check response status
         if ($response['status']) {
