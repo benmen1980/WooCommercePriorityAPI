@@ -2055,10 +2055,13 @@ public function syncPacksPriority()
 	// sync payments
 	    $session = WC()->session->get('session_vars');
 	    if($session['ordertype']=='Recipe') {
-	        $this->syncPayment($order_id);
+		    $optional = array(
+			    "custname" => $session['custname']
+		    );
+	        $this->syncPayment($order_id,$optional);
 	    }
-
     }
+
 
 
     /**
@@ -2398,14 +2401,17 @@ public function syncOverTheCounterInvoice($order_id)
         $this->updateOption('receipts_priority_update', time());
         
     }
-	public function syncPayment($order_id)
+	public function syncPayment($order_id,$optional)
 	{
 
 		$order = new \WC_Order($order_id);
 		$priority_customer_number = get_user_meta( $order->get_customer_id(), 'priority_customer_number', true );
+		if(!empty($optional['custname'])){
+			$priority_customer_number = $optional['custname'];
+        }
 		$data = [
 			'CUSTNAME' => $priority_customer_number,
-			'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+		      //'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
 			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
 			'BOOKNUM' => $order->get_order_number(),
 
