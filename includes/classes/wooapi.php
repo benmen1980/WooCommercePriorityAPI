@@ -2442,6 +2442,26 @@ public function syncOverTheCounterInvoice($order_id)
 			];
 		}
 
+		// order comments
+		// for Priority version 19.1
+		//$data['TINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
+		// for Priority version 20.0
+		$data['TINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+
+
+
+		// billing customer details
+		$customer_data = [
+
+			'PHONE'    => $order->get_billing_phone(),
+			'EMAIL'       => $order->get_billing_email(),
+			'ADRS'        => $order->get_billing_address_1(),
+			'ADRS2'       => $order->get_billing_address_2(),
+			'ADRS3'       => $order->get_billing_first_name().' '.$order->get_billing_last_name(),
+			'STATEA'      => $order->get_billing_city(),
+			'ZIP'         => $order->get_billing_postcode(),
+		];
+		$data['TINVOICESCONT_SUBFORM'][] = $customer_data;
 
 
 		// make request
