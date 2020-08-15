@@ -135,7 +135,10 @@ class Obligo extends \PriorityAPI\API{
 		    WC()->session->set(
 			    'session_vars',
 			    array(
-				    'ordertype' => 'Recipe'));
+				    'ordertype' => 'Recipe',
+                 		    'custname'  => isset($_GET['custname']) ? $_GET['custname'] : null
+                                 )
+		    );
 		    return $cart_item_data;
 	    }
     }
