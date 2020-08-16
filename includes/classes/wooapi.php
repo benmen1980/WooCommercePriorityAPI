@@ -1556,7 +1556,7 @@ class WooAPI extends \PriorityAPI\API
                         } else { }
                     }
                 } else {
-                    $price = (float)$item->get_total() / $item->get_quantity();
+                    $price = (float)$item->get_subtotal() / $item->get_quantity();
                 }
 
 
