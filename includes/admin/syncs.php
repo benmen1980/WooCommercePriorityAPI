@@ -345,11 +345,12 @@ $format2 = 'd/m/Y H:i:s';
                     <?php _e('Receipts > Priority', 'p18a'); ?>
                 </td>
                 <td>
-                    <input type="checkbox" name="log_receipts_priority" form="p18aw-sync" value="1" <?php if($this->option('log_receipts_priority')) echo 'checked'; ?> />
-                </td>
-                <td>
                     <input type="checkbox" name="sync_onorder_receipts" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_receipts')) echo 'checked'; ?> />
                 </td>
+		<td>
+               
+                </td>
+                
                 <td>
 
                 </td>
