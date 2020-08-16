@@ -2573,9 +2573,18 @@ public function syncOverTheCounterInvoice($order_id)
     {
 
         $order = new \WC_Order($order_id);
+	    
+	    $user_id = $order->get_user_id();
+	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+	    if ($order->get_customer_id()) {
+		    $meta = get_user_meta($order->get_customer_id());
+		    $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
+	    } else {
+		    $cust_number = $this->option('walkin_number');
+	    }
 
         $data = [
-            'CUSTNAME' => ( ! $order->get_customer_id()) ? $this->option('walkin_number') : (string) $order->get_customer_id(),
+            'CUSTNAME' => $cust_number,
             'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM' => $order->get_order_number(),
