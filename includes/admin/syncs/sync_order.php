@@ -14,21 +14,41 @@ if(isset($_GET['ord'])){
 	$order_id =  $_GET['ord'];
 	// sync order
 	if($this->option('post_order_checkout')) {
-		$response = $this->syncOrder( $order_id );
+		$response_order = $this->syncOrder( $order_id );
 	}
 	// sync OTC
 	if($this->option('post_einvoices_checkout')) {
-		$response = $this->syncOverTheCounterInvoice( $order_id );
+		$response_otc = $this->syncOverTheCounterInvoice( $order_id );
 	}
+	// sync ainvoices
+	if($this->option('sync_onorder_ainvoices')) {
+		$response_aiv = $this->syncAinvoice($order_id);
+	}
+	// sync reciepe
 	if($this->option('sync_onorder_receipts')) {
-		// sync receipts
-		$response = $this->syncReceipt($order_id);
+		$response_rec = $this->syncReceipt($order_id);
 	}
+
 	echo '<h2>'.__('Request','woocommerce').'</h2>';
-	print_r($response['args']['body']);
+	print_r($response_order['args']['body']);
+	echo '<br><br>';
+	print_r($response_otc['args']['body']);
+	echo '<br><br>';
+	print_r($response_aiv['args']['body']);
+	echo '<br><br>';
+	print_r($response_rec['args']['body']);
+
+
 
 	echo '<h2>'.__('Response','woocommerce').'</h2>';
-	print_r($response['body']);
+	print_r($response_order['body']);
+	echo '<br><br>';
+	print_r($response_otc['body']);
+	echo '<br><br>';
+	print_r($response_aiv['body']);
+	echo '<br><br>';
+	print_r($response_rec['body']);
+	echo '<br><br>';
 
 	echo '<br><br><br><h2>'.__('Refresh this page to re post again','woocommerce').'</h2>';
 
