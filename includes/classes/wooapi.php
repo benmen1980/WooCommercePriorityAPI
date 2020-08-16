@@ -2249,7 +2249,7 @@ public function syncAinvoice($id)
 
 // order comments
 		// for Priority version 19.1
-		//$data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
+		//$data['PINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
 		// for Priority version 20.0
 		$data['PINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
 
