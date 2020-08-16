@@ -611,6 +611,8 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('post_order_checkout',                  $this->post('post_order_checkout'));
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
                 $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
+		$this->updateOption('sync_onorder_ainvoices',                $this->post('sync_onorder_ainvoices'));
+	        $this->updateOption('email_error_sync_ainvoices_priority',                $this->post('email_error_sync_ainvoices_priority'));
 	        $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
 	        $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
 
@@ -2047,8 +2049,12 @@ public function syncPacksPriority()
 		if($this->option('post_einvoices_checkout')) {
 			$this->syncOverTheCounterInvoice( $order_id );
 		}
+		// sync Ainvoices
+		if($this->option('sync_onorder_ainvoices')) {
+			$this->syncAinvoice($order_id);
+		}
+		// sync receipts
 		if($this->option('sync_onorder_receipts')) {
-		    // sync receipts 
 		    $this->syncReceipt($order_id);
 		}
 	 }
@@ -2201,7 +2207,217 @@ public function syncPacksPriority()
 	
 	/* sync over the counter invoice EINVOICES */
 
-  
+public function syncAinvoice($id)
+	{
+		if(isset(WC()->session)){
+			$session = WC()->session->get('session_vars');
+			if($session['ordertype']=='Recipe'){
+				return;
+			}
+		}
+		$order = new \WC_Order($id);
+		$user = $order->get_user();
+		$user_id = $order->get_user_id();
+		// $user_id = $order->user_id;
+		$order_user = get_userdata($user_id); //$user_id is passed as a parameter
+		$discount_type = 'additional_line'; // header , in_line , additional_line
+
+		if ($order->get_customer_id()) {
+			$meta = get_user_meta($order->get_customer_id());
+			$cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
+		} else {
+			$cust_number = $this->option('walkin_number');
+		}
+
+		$data = [
+			'CUSTNAME' => $cust_number,
+			'CDES'     => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+			'IVDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
+			'BOOKNUM'  => $order->get_order_number(),
+			//'DCODE' => $priority_dep_number, // this is the site in Priority
+			//'DETAILS' => $user_department,
+
+		];
+		// cart discount header
+		$cart_discount = floatval($order->get_total_discount());
+		$cart_discount_tax = floatval($order->get_discount_tax());
+		$order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
+		$order_discount = ($cart_discount/$order_total) * 100.0;
+		if('header' == $discount_type){
+			$data['PERCENT'] = $order_discount;
+		}
+
+// order comments
+		// for Priority version 19.1
+		//$data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
+		// for Priority version 20.0
+		$data['PINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+
+
+
+		// billing customer details
+		$customer_data = [
+
+			'PHONE'    => $order->get_billing_phone(),
+			'EMAIL'       => $order->get_billing_email(),
+			'ADRS'        => $order->get_billing_address_1(),
+			'ADRS2'       => $order->get_billing_address_2(),
+			'STATEA'      => $order->get_billing_city(),
+			'ZIP'         => $order->get_shipping_postcode(),
+		];
+		$data['AINVOICESCONT_SUBFORM'][] = $customer_data;
+
+		// shipping
+
+		// shop address debug
+
+		$shipping_data = [
+			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+			'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+			'PHONENUM'    => $order->get_billing_phone(),
+			'EMAIL'       => $order->get_billing_email(),
+			'CELLPHONE'   => $order->get_billing_phone(),
+			'ADDRESS'     => $order->get_shipping_address_1(),
+			'ADDRESS2'    => $order->get_shipping_address_2(),
+			'STATE'       => $order->get_shipping_city(),
+			'ZIP'         => $order->get_shipping_postcode(),
+		];
+
+		// add second address if entered
+		if ( ! empty($order->get_shipping_address_2())) {
+			$shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
+		}
+
+		$data['SHIPTO2_SUBFORM'] = $shipping_data;
+
+		// get shipping id
+		$shipping_method    = $order->get_shipping_methods();
+		$shipping_method    = array_shift($shipping_method);
+		$shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
+
+		// get parameters
+		$params = [];
+
+
+		// get ordered items
+		foreach ($order->get_items() as $item) {
+
+			$product = $item->get_product();
+
+			$parameters = [];
+
+			// get tax
+			// Initializing variables
+			$tax_items_labels   = array(); // The tax labels by $rate Ids
+			$tax_label = 0.0 ; // The total VAT by order line
+			$taxes = $item->get_taxes();
+			// Loop through taxes array to get the right label
+			foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+				$tax_label = + $tax; // <== Here the line item tax label
+			}
+
+			// get meta
+			foreach($item->get_meta_data() as $meta) {
+
+				if(isset($params[$meta->key])) {
+					$parameters[$params[$meta->key]] = $meta->value;
+				}
+
+			}
+
+			if ($product) {
+
+				/*start T151*/
+				$new_data = [];
+
+				$item_meta = wc_get_order_item_meta($item->get_id(),'_tmcartepo_data');
+
+				if ($item_meta && is_array($item_meta)) {
+					foreach ($item_meta as $tm_item) {
+						$new_data[] = [
+							'SPEC' => addslashes($tm_item['name']),
+							'VALUE' => htmlspecialchars(addslashes($tm_item['value']))
+						];
+					}
+				}
+				$line_before_discount = (float)$item->get_subtotal();
+				$line_tax = (float)$item->get_subtotal_tax();
+				$line_after_discount  = (float)$item->get_total();
+				$discount = ($line_before_discount - $line_after_discount)/$line_before_discount * 100.0;
+				$data['AINVOICEITEMS_SUBFORM'][] = [
+					'PARTNAME'         => $product->get_sku(),
+					'TQUANT'           => (int) $item->get_quantity(),
+					'PRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int) $item->get_quantity() : 0.0,
+					'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
+				];
+				if($discount_type != 'in_line'){
+					$data['AINVOICEITEMS_SUBFORM'][sizeof($data['AINVOICEITEMS_SUBFORM'])-1]['TOTPRICE' ]= $line_before_discount + $line_tax;
+				}
+			}
+
+		}
+		// additional line cart discount
+		if($discount_type == 'additional_line'){
+			$data['AINVOICEITEMS_SUBFORM'][] = [
+				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+				'PARTNAME' => '000',
+				// 'VATPRICE' => -1* floatval( $cart_discount + $cart_discount_tax),
+				'TOTPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+				'TQUANT'   => -1,
+
+			];
+		}
+		// shipping rate
+		if( $order->get_shipping_method()) {
+			$data['AINVOICEITEMS_SUBFORM'][] = [
+				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+				'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
+				'TQUANT'   => 1,
+				'TOTPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax()),
+				"REMARK1"  => "",
+			];
+		}
+
+		// HERE goes the condition to avoid the repetition
+		$post_done = get_post_meta( $order->get_id(), '_post_done', true);
+		if( empty($post_done) ) {
+
+			// make request
+			$response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
+
+			if ($response['code']<=201) {
+				$body_array = json_decode($response["body"],true);
+
+				$ord_status = $body_array["STATDES"];
+				$ord_number = $body_array["IVNUM"];
+				$order->update_meta_data('priority_status',$ord_status);
+				$order->update_meta_data('priority_ordnumber',$ord_number);
+				$order->save();
+			}
+			if($response['code'] >= 400){
+				$body_array = json_decode($response["body"],true);
+
+				//$ord_status = $body_array["ORDSTATUSDES"];
+				// $ord_number = $body_array["ORDNAME"];
+				$order->update_meta_data('priority_status',$response["body"]);
+				// $order->update_meta_data('priority_ordnumber',$ord_number);
+				$order->save();
+			}
+		}
+		if (!$response['status']||$response['code'] >= 400) {
+			/**
+			 * t149
+			 */
+			$this->sendEmailError(
+				$this->option('email_error_sync_ainvoices_priority'),
+				'Error Sync Sales Invoice',
+				$response['body']
+			);
+		}
+
+		// add timestamp
+		return $response;
+	}
 public function syncOverTheCounterInvoice($order_id)
 	{
 		$order = new \WC_Order($order_id);
