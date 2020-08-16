@@ -377,15 +377,11 @@ $format2 = 'd/m/Y H:i:s';
                 <td class="p18a-label">
                     <?php _e('Sales Invoices > Priority', 'p18a'); ?>
                 </td>
-                <td>
-                    <input type="checkbox" name="log_ainvoices_priority" form="p18aw-sync" value="1" <?php if($this->option('log_ainvoices_priority')) echo 'checked'; ?> />
+               <td>
+                    <input type="checkbox"  name="sync_onorder_ainvoices" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_ainvoices')) echo 'checked'; ?> />
                 </td>
-                <td>
-                    <input type="checkbox" disabled name="sync_onorder_ainvoices" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_ainvoices')) echo 'checked'; ?> />
-                </td>
-                <td>
-
-                </td>
+                <td></td>
+                <td></td>
                 <td data-sync-time="sync_ainvoices_priority">
 			        <?php
 			        if ($timestamp = $this->option('ainvoices_priority_update', false)) {
