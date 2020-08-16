@@ -2373,8 +2373,7 @@ public function syncAinvoice($id)
 				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 				'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
 				'TQUANT'   => 1,
-				'TOTPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax()),
-				"REMARK1"  => "",
+				'TOTPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax())
 			];
 		}
 
