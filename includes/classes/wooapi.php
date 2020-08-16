@@ -2614,7 +2614,8 @@ public function syncOverTheCounterInvoice($order_id)
         }
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
-        
+          return $response;
+	    
     }
 	public function syncPayment($order_id,$optional)
 	{
