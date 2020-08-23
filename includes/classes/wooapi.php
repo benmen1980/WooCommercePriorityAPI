@@ -1732,6 +1732,7 @@ public function syncPacksPriority()
             'CDES'     => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM'  => $order->get_order_number(),
+            'ORDSTATUSDES' => 'מאושרת לבצוע'
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
            
@@ -1998,6 +1999,8 @@ public function syncPacksPriority()
 	        $order->update_meta_data('priority_status',$ord_status);
 	        $order->update_meta_data('priority_ordnumber',$ord_number);
 	        $order->save();
+
+	        $this->syncOverTheCounterInvoice($id);
         }
         if($response['code'] >= 400){
 	        $body_array = json_decode($response["body"],true);
@@ -2420,6 +2423,7 @@ public function syncAinvoice($id)
 public function syncOverTheCounterInvoice($order_id)
 	{
 		$order = new \WC_Order($order_id);
+		$ord_number = $order->get_meta('priority_ordnumber',true);
 		$user = $order->get_user();
 		$user_id = $order->get_user_id();
 		$order_user = get_userdata($user_id); //$user_id is passed as a parameter
@@ -2430,17 +2434,18 @@ public function syncOverTheCounterInvoice($order_id)
 			$cust_number = $this->option('walkin_number');
 		}
 		$data = [
-			'CUSTNAME'  => $cust_number,
-			'CDES'      => ($order->get_customer_id()) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
-			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
-			'BOOKNUM' => $order->get_order_number(),
+			//'CUSTNAME'  => $cust_number,
+		//	'CDES'      => ($order->get_customer_id()) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+		//	'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
+		//	'BOOKNUM' => $order->get_order_number(),
+            'ORDNAME'  => $ord_number ,
 
 		];
 		// order comments
           		 // version 20.0
-			//$data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
+			$data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
 			// version 19.1
-			$data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
+			//$data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
 		// shipping
 		$shipping_data = [
 			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
