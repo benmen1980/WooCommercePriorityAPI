@@ -689,10 +689,23 @@ class WooAPI extends \PriorityAPI\API
 
 
 		    //add the new column "Status"
-		    $columns['order_priority_status'] = '<span>'.__( 'Priority Status','woocommerce').'</span>'; // title
+		    $columns['priority_order_status'] = '<span>'.__( 'Priority Order Status','woocommerce').'</span>'; // title
 		    
 		    // add the Priority order number
-		    $columns['order_priority_number'] = '<span>'.__( 'Priority Order','woocommerce').'</span>'; // title
+		    $columns['priority_order_number'] = '<span>'.__( 'Priority Order','woocommerce').'</span>'; // title
+
+		    //add the new column "Status"
+		    $columns['priority_invoice_status'] = '<span>'.__( 'Priority Invoice Status','woocommerce').'</span>'; // title
+
+		    // add the Priority invoice number
+		    $columns['priority_invoice_number'] = '<span>'.__( 'Priority Invoice','woocommerce').'</span>'; // title
+
+		    //add the new column "Status"
+		    $columns['priority_recipe_status'] = '<span>'.__( 'Priority Recipe Status','woocommerce').'</span>'; // title
+
+		    // add the Priority recipe number
+		    $columns['priority_recipe_number'] = '<span>'.__( 'Priority Recipe','woocommerce').'</span>'; // title
+
 
 		    //add the new column "post to Priority"
 		    $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
@@ -710,20 +723,48 @@ class WooAPI extends \PriorityAPI\API
 	    {
 
 		    // HERE get the data from your custom field (set the correct meta key below)
-		    $status = get_post_meta( $post_id, 'priority_status', true );
-		    $order_number = get_post_meta( $post_id, 'priority_ordnumber', true );
-				if( empty($status)) $status = '';
-				if(strlen($status) > 15) $status = '<div class="tooltip">Error<span class="tooltiptext">'.$status.'</span></div>';
+		    $order_status = get_post_meta( $post_id, 'priority_order_status', true );
+		    $order_number = get_post_meta( $post_id, 'priority_order_number', true );
+				if( empty($order_status)) $order_status = '';
+				if(strlen($order_status) > 15) $order_status = '<div class="tooltip">Error<span class="tooltiptext">'.$order_status.'</span></div>';
 				if( empty($order_number)) $order_number = '';
+            // invoice or OTC
+		    $invoice_status = get_post_meta( $post_id, 'priority_invoice_status', true );
+		    $invoice_number = get_post_meta( $post_id, 'priority_invoice_number', true );
+		    if( empty($invoice_status)) $invoice_status = '';
+		    if(strlen($invoice_status) > 15) $invoice_status = '<div class="tooltip">Error<span class="tooltiptext">'.$invoice_status.'</span></div>';
+		    if( empty($invoice_number)) $invoice_number = '';
+
+            // recipe
+		    $recipe_status = get_post_meta( $post_id, 'priority_recipe_status', true );
+		    $recipe_number = get_post_meta( $post_id, 'priority_recipe_number', true );
+		    if( empty($recipe_status)) $recipe_status = '';
+		    if(strlen($recipe_status) > 15) $recipe_status = '<div class="tooltip">Error<span class="tooltiptext">'.$recipe_status.'</span></div>';
+		    if( empty($recipe_number)) $recipe_number = '';
 
 		    switch ( $column )
 		    {
-			    case 'order_priority_status' :
-				    echo $status;
+		        // order
+			    case 'priority_order_status' :
+				    echo $order_status;
 				    break;
-			    case 'order_priority_number' :
+			    case 'priority_order_number' :
 						echo '<span>'.$order_number.'</span>'; // display the data
 						break;
+			    // invoice
+			    case 'priority_invoice_status' :
+				    echo $invoice_status;
+				    break;
+			    case 'priority_invoice_number' :
+				    echo '<span>'.$invoice_number.'</span>'; // display the data
+				    break;
+			    // reciept
+			    case 'priority_recipe_status' :
+				    echo $recipe_status;
+				    break;
+			    case 'priority_recipe_number' :
+				    echo '<span>'.$recipe_number.'</span>'; // display the data
+				    break;
                 // post order to API, using GET and
                 case 'order_post' :
                     $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
@@ -735,8 +776,12 @@ class WooAPI extends \PriorityAPI\API
 // MAKE 'stauts' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
 	    add_filter( 'woocommerce_shop_order_search_fields',
 	    function ( $meta_keys ){
-		    $meta_keys[] = 'priority_status';
-		    $meta_keys[] = 'priority_ordnumber';
+		    $meta_keys[] = 'priority_order_status';
+		    $meta_keys[] = 'priority_order_number';
+		    $meta_keys[] = 'priority_invoice_status';
+		    $meta_keys[] = 'priority_invoice_number';
+		    $meta_keys[] = 'priority_recipe_status';
+		    $meta_keys[] = 'priority_recipe_number';
 		    return $meta_keys;
 	    }, 10, 1 );
 	    
@@ -1995,8 +2040,8 @@ public function syncPacksPriority()
 
 	        $ord_status = $body_array["ORDSTATUSDES"];
 	        $ord_number = $body_array["ORDNAME"];
-	        $order->update_meta_data('priority_status',$ord_status);
-	        $order->update_meta_data('priority_ordnumber',$ord_number);
+	        $order->update_meta_data('priority_order_status',$ord_status);
+	        $order->update_meta_data('priority_order_number',$ord_number);
 	        $order->save();
         }
         if($response['code'] >= 400){
@@ -2389,8 +2434,8 @@ public function syncAinvoice($id)
 
 				$ord_status = $body_array["STATDES"];
 				$ord_number = $body_array["IVNUM"];
-				$order->update_meta_data('priority_status',$ord_status);
-				$order->update_meta_data('priority_ordnumber',$ord_number);
+				$order->update_meta_data('priority_invoice_status',$ord_status);
+				$order->update_meta_data('priority_invoice_number',$ord_number);
 				$order->save();
 			}
 			if($response['code'] >= 400){
@@ -2398,7 +2443,7 @@ public function syncAinvoice($id)
 
 				//$ord_status = $body_array["ORDSTATUSDES"];
 				// $ord_number = $body_array["ORDNAME"];
-				$order->update_meta_data('priority_status',$response["body"]);
+				$order->update_meta_data('priority_invoice_status',$response["body"]);
 				// $order->update_meta_data('priority_ordnumber',$ord_number);
 				$order->save();
 			}
@@ -2538,8 +2583,8 @@ public function syncOverTheCounterInvoice($order_id)
 
 			$ord_status = $body_array["STATDES"];
 			$ord_number = $body_array["IVNUM"];
-			$order->update_meta_data('priority_status',$ord_status);
-			$order->update_meta_data('priority_ordnumber',$ord_number);
+			$order->update_meta_data('priority_invoice_status',$ord_status);
+			$order->update_meta_data('priority_invoice_number',$ord_number);
 			$order->save();
 		}
 		if($response['code'] >= 400){
@@ -2547,7 +2592,7 @@ public function syncOverTheCounterInvoice($order_id)
 
 			//$ord_status = $body_array["ORDSTATUSDES"];
 			// $ord_number = $body_array["ORDNAME"];
-			$order->update_meta_data('priority_status',$response["body"]);
+			$order->update_meta_data('priority_invoice_status',$response["body"]);
 			// $order->update_meta_data('priority_ordnumber',$ord_number);
 			$order->save();
 		}
@@ -2611,16 +2656,34 @@ public function syncOverTheCounterInvoice($order_id)
 
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
-        if (!$response['status']) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                $this->option('email_error_sync_receipts_priority'),
-                'Error Sync Receipts',
-                $response['body']
-            );
-        }
+	    if ($response['code']<=201) {
+		    $body_array = json_decode($response["body"],true);
+
+		    $ord_status = $body_array["STATDES"];
+		    $ord_number = $body_array["IVNUM"];
+		    $order->update_meta_data('priority_recipe_status',$ord_status);
+		    $order->update_meta_data('priority_recipe_number',$ord_number);
+		    $order->save();
+	    }
+	    if($response['code'] >= 400){
+		    $body_array = json_decode($response["body"],true);
+
+		    //$ord_status = $body_array["ORDSTATUSDES"];
+		    // $ord_number = $body_array["ORDNAME"];
+		    $order->update_meta_data('priority_recipe_status',$response["body"]);
+		    // $order->update_meta_data('priority_ordnumber',$ord_number);
+		    $order->save();
+	    }
+	    if (!$response['status']) {
+		    /**
+		     * t149
+		     */
+		    $this->sendEmailError(
+			    $this->option('email_error_sync_einvoices_web'),
+			    'Error Sync OTC invoice',
+			    $response['body']
+		    );
+	    }
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
           return $response;
