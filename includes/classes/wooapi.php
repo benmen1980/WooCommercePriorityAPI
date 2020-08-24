@@ -1840,13 +1840,17 @@ public function syncPacksPriority()
 
         $data = [
             'CUSTNAME' => $cust_number,
-            'CDES'     => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM'  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
            
         ];
+        // CDES
+        if(empty($order->get_customer_id())){
+            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        }
+
 	    // cart discount header
 	    $cart_discount = floatval($order->get_total_discount());
 	    $cart_discount_tax = floatval($order->get_discount_tax());
@@ -2340,13 +2344,16 @@ public function syncAinvoice($id)
 
 		$data = [
 			'CUSTNAME' => $cust_number,
-			'CDES'     => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
 			'IVDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
 			'BOOKNUM'  => $order->get_order_number(),
 			//'DCODE' => $priority_dep_number, // this is the site in Priority
 			//'DETAILS' => $user_department,
 
 		];
+        // CDES
+        if(empty($order->get_customer_id())){
+            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        }
 		// cart discount header
 		$cart_discount = floatval($order->get_total_discount());
 		$cart_discount_tax = floatval($order->get_discount_tax());
@@ -2540,11 +2547,15 @@ public function syncOverTheCounterInvoice($order_id)
 		}
 		$data = [
 			'CUSTNAME'  => $cust_number,
-			'CDES'      => ($order->get_customer_id()) ? '' : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
 			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
 			'BOOKNUM' => $order->get_order_number(),
 
 		];
+        // CDES
+        if(empty($order->get_customer_id())){
+            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        }
+
 		// order comments
           		 // version 20.0
 			//$data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
@@ -2694,12 +2705,14 @@ public function syncOverTheCounterInvoice($order_id)
 
         $data = [
             'CUSTNAME' => $cust_number,
-            'CDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             'BOOKNUM' => $order->get_order_number(),
 
         ];
-
+        // CDES
+        if(empty($order->get_customer_id())){
+            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        }
         // cash payment
         if(strtolower($order->get_payment_method()) == 'cod') {
 
