@@ -1968,11 +1968,9 @@ public function syncPacksPriority()
             
         }
 	    // additional line cart discount
-        if($discount_type == 'additional_line'){
+        if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
 		    $data['ORDERITEMS_SUBFORM'][] = [
-			    // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-			    'PARTNAME' => '000',
-			   // 'VATPRICE' => -1* floatval( $cart_discount + $cart_discount_tax),
+			    'PARTNAME' => '000', // change to other item
 			    'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
 			    'TQUANT'   => -1,
 
