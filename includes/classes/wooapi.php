@@ -1700,9 +1700,11 @@ public function syncPacksPriority()
     }
 
     public function syncPriorityOrderStatus(){
+
+           // orders
 	    $url_addition =  'ORDERS?$filter=BOOKNUM ne \'\'  and ';
 	    $date = date('Y-m-d');
-	    $prev_date = date('Y-m-d', strtotime($date .' -10 day'));
+	    $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
 	    $url_addition .= 'CURDATE ge '.$prev_date;
 	    
 	    $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
@@ -1713,12 +1715,76 @@ public function syncPacksPriority()
 		    $order = wc_get_order( $order_id );
 		    $pri_status = $el['ORDSTATUSDES'];
 		    if($order){
-			    update_post_meta($order_id,'priority_status',$pri_status);
+			    update_post_meta($order_id,'priority_order_status',$pri_status);
 			    $output .= '<br>'.$order_id.' '.$pri_status.' ';
 		    }
 	    }
+	    // invoice
+        $url_addition =  'AINVOICES?$filter=BOOKNUM ne \'\'  and ';
+        $date = date('Y-m-d');
+        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $url_addition .= 'IVDATE ge '.$prev_date;
+
+        $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
+        $orders = json_decode($response['body'],true)['value'];
+        $output = '';
+        foreach ( $orders as $el ) {
+            $order_id = $el['BOOKNUM'];
+            $ivnum = $el['IVNUM'];
+            $order = wc_get_order( $order_id );
+            $pri_status = $el['STATDES'];
+            if($order){
+                update_post_meta($order_id,'priority_invoice_status',$pri_status);
+                update_post_meta($order_id,'priority_invoice_number',$ivnum);
+                $output .= '<br>'.$order_id.' '.$pri_status.' ';
+            }
+        }
+        // OTC
+        $url_addition =  'EINVOICES?$filter=BOOKNUM ne \'\'  and ';
+        $date = date('Y-m-d');
+        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $url_addition .= 'IVDATE ge '.$prev_date;
+
+        $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
+        $orders = json_decode($response['body'],true)['value'];
+        $output = '';
+        foreach ( $orders as $el ) {
+            $order_id = $el['BOOKNUM'];
+            $ivnum = $el['IVNUM'];
+            $order = wc_get_order( $order_id );
+            $pri_status = $el['STATDES'];
+            if($order){
+                update_post_meta($order_id,'priority_invoice_status',$pri_status);
+                update_post_meta($order_id,'priority_invoice_number',$ivnum);
+                $output .= '<br>'.$order_id.' '.$pri_status.' ';
+            }
+        }
+        // recipe
+        $url_addition =  'TINVOICES?$filter=BOOKNUM ne \'\'  and ';
+        $date = date('Y-m-d');
+        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $url_addition .= 'IVDATE ge '.$prev_date;
+
+        $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
+        $orders = json_decode($response['body'],true)['value'];
+        $output = '';
+        foreach ( $orders as $el ) {
+            $order_id = $el['BOOKNUM'];
+            $order = wc_get_order( $order_id );
+            $ivnum = $el['IVNUM'];
+            $pri_status = $el['STATDES'];
+            if($order){
+                update_post_meta($order_id,'priority_recipe_status',$pri_status);
+                update_post_meta($order_id,'priority_recipe_number',$ivnum);
+                $output .= '<br>'.$order_id.' '.$pri_status.' ';
+            }
+        }
+        // end
 	    $this->updateOption('auto_sync_order_status_priority_update', time());
     }
+
+
+
     public function syncOrders(){
 	    $query = new \WC_Order_Query( array(
 		    //'limit' => get_option('posts_per_page'),
