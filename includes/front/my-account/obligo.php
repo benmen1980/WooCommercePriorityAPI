@@ -28,6 +28,8 @@ class Obligo extends \PriorityAPI\API{
 		add_filter( 'woocommerce_add_cart_item_data',[$this,'split_product_individual_cart_items'], 10, 2 );
 		if(isset($_GET['simplypay'])){
 			add_filter( 'wc_add_to_cart_message_html', [$this,'remove_add_to_cart_message']);
+            // remove this if you want to allow adding paymnets to cart with different iv or price
+            add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
         }
 		add_filter( 'woocommerce_add_cart_item_data',[$this,'simplypay'], 10, 2 );
 		add_action( 'woocommerce_before_calculate_totals', [$this,'add_custom_price']);
@@ -127,7 +129,7 @@ class Obligo extends \PriorityAPI\API{
 
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
-	// simply pay module
+	// simply simply module
     function simplypay(){
 	    if(isset($_GET['simplypay'])){
 		    $cart_item_data['_other_options']['product-price'] = $_GET['price'] ;
@@ -146,8 +148,16 @@ class Obligo extends \PriorityAPI\API{
 		return '';
 	}
 
+    function simply_custom_add_to_cart_before( $cart_item_data ) {
 
-    // end any pay
+        global $woocommerce;
+        $woocommerce->cart->empty_cart();
+
+        // Do nothing with the data and return
+        return true;
+    }
+
+    // end simply pay
 	function split_product_individual_cart_items( $cart_item_data, $product_id ){
 		if(isset($_POST['obligoSubmit'])){
 	    $unique_cart_item_key = uniqid();
