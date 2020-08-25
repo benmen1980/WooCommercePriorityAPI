@@ -2830,17 +2830,33 @@ public function syncOverTheCounterInvoice($order_id)
 
 
 		// make request
-		$response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
-		if (!$response['status']) {
-			/**
-			 * t149
-			 */
-			$this->sendEmailError(
-				$this->option('email_error_sync_receipts_priority'),
-				'Error Sync Receipts',
-				$response['body']
-			);
-		}
+		$response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)],true);
+        if ($response['code']<=201) {
+           /*
+            $body_array = json_decode($response["body"],true);
+
+            $ord_status = $body_array["STATDES"];
+            $ord_number = $body_array["IVNUM"];
+            $order->update_meta_data('priority_invoice_status',$ord_status);
+            $order->update_meta_data('priority_invoice_number',$ord_number);
+            $order->save();
+           */
+        }
+        if($response['code'] >= 400){
+            $body_array = json_decode($response["body"],true);
+            $this->sendEmailError(
+                $this->option('email_error_sync_einvoices_web'),
+                'Error Sync payment',
+                $response['body']
+            );
+        }
+        if (!$response['status']) {
+                $this->sendEmailError(
+                $this->option('email_error_sync_einvoices_web'),
+                'Error Sync payment',
+                $response['body']
+            );
+        }
 		// add timestamp
 		$this->updateOption('receipts_priority_update', time());
 
