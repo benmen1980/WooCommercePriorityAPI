@@ -2781,6 +2781,12 @@ public function syncOverTheCounterInvoice($order_id)
 			'BOOKNUM' => $order->get_order_number(),
 
 		];
+		
+		// currency
+        	if (class_exists('WOOCS')) {
+            		global $WOOCS;
+            		$data['CODE'] = $WOOCS->current_currency;
+        	}
 
 		// cash payment
 		if(strtolower($order->get_payment_method()) == 'cod') {
