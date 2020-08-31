@@ -170,6 +170,18 @@ class Obligo extends \PriorityAPI\API{
 		foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 			if(isset($cart_item['_other_options'])){
 				$custom_price = $cart_item['_other_options']['product-price']; // This will be your custom price
+				// currency
+			        if (class_exists('WOOCS')) {
+                                	global $WOOCS;
+                                	if ($WOOCS->is_multiple_allowed) {
+                                		$currrent = $WOOCS->current_currency;
+                                		if ($currrent != $WOOCS->default_currency) {
+                            				$currencies = $WOOCS->get_currencies();
+                            				$rate = $currencies[$currrent]['rate'];
+                            				$custom_price = $custom_price / $rate;
+						}
+					}
+				}
 				$cart_item['data']->set_price($custom_price);
             }
 		}
