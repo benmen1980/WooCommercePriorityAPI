@@ -2625,19 +2625,28 @@ public function syncOverTheCounterInvoice($order_id)
 			];
 		}
 
-		// pelecard
+		
 		$order_ccnumber = '';
 		$order_token =  '';
 		$order_cc_expiration = '';
 		$order_cc_authorization = '';
 		$order_cc_qprice = 0.0;
+		
 		/*
+		pelecard
 		$order_cc_meta = $order->get_meta('_transaction_data');
 		$order_ccnumber = $order_cc_meta['CreditCardNumber'];
 		$order_token =  $order_cc_meta['Token'];
 		$order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
 		$order_cc_authorization = $order_cc_meta['ConfirmationKey'];
 		$order_cc_qprice = $order_cc_meta['DebitTotal']/100;
+		*/
+		/* tranzilla
+		$order_ccnumber = $order->get_meta('_transaction_data');;
+		$order_token =  $order->get_meta('_cardToken');;
+		$order_cc_expiration = $order->get_meta('_cardExp');;
+		$order_cc_authorization = $order->get_meta('_authNumber');;
+		$order_cc_qprice = floatval($order->get_total());
 		*/
 		// payment info
 		$data['EPAYMENT2_SUBFORM'][] = [
