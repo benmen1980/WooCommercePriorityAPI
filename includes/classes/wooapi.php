@@ -2473,7 +2473,7 @@ public function syncAinvoice($id)
 
 		}
 		// additional line cart discount
-		if($discount_type == 'additional_line'){
+		if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
 			$data['AINVOICEITEMS_SUBFORM'][] = [
 				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 				'PARTNAME' => '000',
