@@ -186,8 +186,10 @@ class WooAPI extends \PriorityAPI\API
 
 
 	    // sync user to priority after registration
-	    add_action( 'user_register', [ $this, 'syncCustomer' ] );
-	    add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ] );
+        if ( $this->option( 'post_customers' ) == true ) {
+	        add_action( 'user_register', [ $this, 'syncCustomer' ] );
+	        add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ] );
+        }
 
 
 	    if ( $this->option( 'sell_by_pl' ) == true ) {
@@ -605,7 +607,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_receipts_priority',                $this->post('log_receipts_priority'));
                 $this->updateOption('auto_sync_receipts_priority',          $this->post('auto_sync_receipts_priority'));
                 $this->updateOption('email_error_sync_receipts_priority',   $this->post('email_error_sync_receipts_priority'));
-                $this->updateOption('log_customers_web',                    $this->post('log_customers_web'));
+                $this->updateOption('post_customers',                    $this->post('post_customers'));
                 $this->updateOption('email_error_sync_customers_web',       $this->post('email_error_sync_customers_web'));
                 $this->updateOption('log_shipping_methods',                 $this->post('log_shipping_methods'));
                 $this->updateOption('post_order_checkout',                  $this->post('post_order_checkout'));
@@ -896,7 +898,7 @@ class WooAPI extends \PriorityAPI\API
 
                     break;
 
-                case 'sync_customers_web':
+                case 'post_customers':
                 
                     try {
                         
@@ -1677,9 +1679,10 @@ public function syncPacksPriority()
     
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
 
+            update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
             // set priority customer id
             if ($response['status']) {
-                update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
+
             } else {
                 /**
                  * t149
@@ -1693,7 +1696,7 @@ public function syncPacksPriority()
             }
     
             // add timestamp
-            $this->updateOption('customers_web_update', time());
+            $this->updateOption('post_customers', time());
     
         }
 
@@ -1784,6 +1787,15 @@ public function syncPacksPriority()
     }
 
 
+    public function getPriorityCustomer($order){
+        if ($order->get_customer_id()) {
+            $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
+            $cust_number = !empty($cust_number) ? $cust_number : $this->option('walkin_number');
+        } else {
+            $cust_number = $this->option('walkin_number');
+        }
+        return $cust_number;
+    }
 
     public function syncOrders(){
 	    $query = new \WC_Order_Query( array(
@@ -1831,12 +1843,7 @@ public function syncPacksPriority()
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 	    $discount_type = 'additional_line'; // header , in_line , additional_line
 
-        if ($order->get_customer_id()) {
-            $meta = get_user_meta($order->get_customer_id());
-            $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
-        } else {
-            $cust_number = $this->option('walkin_number');
-        }
+        $cust_number = $this->getPriorityCustomer($order);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -2335,12 +2342,7 @@ public function syncAinvoice($id)
 		$order_user = get_userdata($user_id); //$user_id is passed as a parameter
 		$discount_type = 'additional_line'; // header , in_line , additional_line
 
-		if ($order->get_customer_id()) {
-			$meta = get_user_meta($order->get_customer_id());
-			$cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
-		} else {
-			$cust_number = $this->option('walkin_number');
-		}
+        $cust_number = $this->getPriorityCustomer($order);
 
 		$data = [
 			'CUSTNAME' => $cust_number,
@@ -2473,7 +2475,8 @@ public function syncAinvoice($id)
 
 		}
 		// additional line cart discount
-		if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
+    if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
+    //if($discount_type == 'additional_line'){
 			$data['AINVOICEITEMS_SUBFORM'][] = [
 				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 				'PARTNAME' => '000',
@@ -2539,12 +2542,7 @@ public function syncOverTheCounterInvoice($order_id)
 		$user = $order->get_user();
 		$user_id = $order->get_user_id();
 		$order_user = get_userdata($user_id); //$user_id is passed as a parameter
-		if ($order->get_customer_id()) {
-			$meta = get_user_meta($order->get_customer_id());
-			$cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
-		} else {
-			$cust_number = $this->option('walkin_number');
-		}
+        $cust_number = $this->getPriorityCustomer($order);
 		$data = [
 			'CUSTNAME'  => $cust_number,
 			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
@@ -2705,13 +2703,7 @@ public function syncOverTheCounterInvoice($order_id)
 	    
 	    $user_id = $order->get_user_id();
 	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-	    if ($order->get_customer_id()) {
-		    $meta = get_user_meta($order->get_customer_id());
-		    $cust_number = ($meta['priority_customer_number']) ? $meta['priority_customer_number'][0] : $this->option('walkin_number');
-	    } else {
-		    $cust_number = $this->option('walkin_number');
-	    }
-
+        $cust_number = $this->getPriorityCustomer($order);
         $data = [
             'CUSTNAME' => $cust_number,
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
