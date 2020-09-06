@@ -405,7 +405,7 @@ $format2 = 'd/m/Y H:i:s';
 					<?php _e('Customers Web > Priority', 'p18a'); ?>
 				</td>
 				<td>
-					<input type="checkbox" name="log_customers_web" form="p18aw-sync" value="1" <?php if($this->option('log_customers_web')) echo 'checked'; ?> />
+					<input type="checkbox" name="post_customers" form="p18aw-sync" value="1" <?php if($this->option('post_customers')) echo 'checked'; ?> />
 				</td>
 				<td colspan="2">
 
