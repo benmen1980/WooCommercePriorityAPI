@@ -549,17 +549,18 @@ class WooAPI extends \PriorityAPI\API
             // save settings
             if ($this->post('p18aw-save-settings') && wp_verify_nonce($this->post('p18aw-nonce'), 'save-settings')) {
 
-                $this->updateOption('walkin_number',  $this->post('walkin_number'));
-	            $this->updateOption('price_method',  $this->post('price_method'));
-	            $this->updateOption('item_status',  $this->post('item_status'));
-	            $this->updateOption('variation_field',  $this->post('variation_field'));
+                $this->updateOption('walkin_number',       $this->post('walkin_number'));
+	            $this->updateOption('price_method',        $this->post('price_method'));
+	            $this->updateOption('item_status',         $this->post('item_status'));
+	            $this->updateOption('variation_field',     $this->post('variation_field'));
 	            $this->updateOption('variation_field_title',  $this->post('variation_field_title'));
-	            $this->updateOption('sell_by_pl',  $this->post('sell_by_pl'));
-	            $this->updateOption('walkin_hide_price',  $this->post('walkin_hide_price'));
-	            $this->updateOption('sites',  $this->post('sites'));
-	            $this->updateOption('update_image',  $this->post('update_image'));
+	            $this->updateOption('sell_by_pl',          $this->post('sell_by_pl'));
+	            $this->updateOption('walkin_hide_price',   $this->post('walkin_hide_price'));
+	            $this->updateOption('sites',               $this->post('sites'));
+	            $this->updateOption('update_image',        $this->post('update_image'));
 	            $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
-	            $this->updateOption('obligo',  $this->post('obligo'));
+	            $this->updateOption('obligo',              $this->post('obligo'));
+                $this->updateOption('priority-version',    $this->post('priority-version'));
 
 
 
@@ -613,21 +614,20 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('post_order_checkout',                  $this->post('post_order_checkout'));
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
                 $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
-		$this->updateOption('sync_onorder_ainvoices',                $this->post('sync_onorder_ainvoices'));
-	        $this->updateOption('email_error_sync_ainvoices_priority',                $this->post('email_error_sync_ainvoices_priority'));
-	        $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
-	        $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
-
+		        $this->updateOption('sync_onorder_ainvoices',               $this->post('sync_onorder_ainvoices'));
+	            $this->updateOption('email_error_sync_ainvoices_priority',  $this->post('email_error_sync_ainvoices_priority'));
+	            $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
+	            $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
                 $this->updateOption('auto_sync_orders_priority',            $this->post('auto_sync_orders_priority'));
-	        $this->updateOption('log_auto_post_orders_priority',        $this->post('log_auto_post_orders_priority'));
+	            $this->updateOption('log_auto_post_orders_priority',        $this->post('log_auto_post_orders_priority'));
+	            $this->updateOption('auto_sync_sites_priority',             $this->post('auto_sync_sites_priority'));
+	            $this->updateOption('log_sites_priority',                   $this->post('log_sites_priority'));
+		        $this->updateOption('auto_sync_c_products_priority',        $this->post('auto_sync_c_products_priority'));
+		        $this->updateOption('log_c_products_priority',              $this->post('log_c_products_priority'));
+	            $this->updateOption('post_einvoices_checkout',              $this->post('post_einvoices_checkout'));
+		        $this->updateOption('email_error_sync_einvoices_web',       $this->post('email_error_sync_einvoices_web'));
 
-	        $this->updateOption('auto_sync_sites_priority',  $this->post('auto_sync_sites_priority'));
-	        $this->updateOption('log_sites_priority',  $this->post('log_sites_priority'));
 
-		$this->updateOption('auto_sync_c_products_priority',  $this->post('auto_sync_c_products_priority'));
-		$this->updateOption('log_c_products_priority',  $this->post('log_c_products_priority'));
-	        $this->updateOption('post_einvoices_checkout',                  $this->post('post_einvoices_checkout'));
-		$this->updateOption('email_error_sync_einvoices_web',          $this->post('email_error_sync_einvoices_web'));
 
 
 
@@ -1868,10 +1868,16 @@ public function syncPacksPriority()
 	    }
 
 // order comments
-	     // for Priority version 19.1
-	     //$data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
-	     // for Priority version 20.0
-	     $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+        $priority_version = (float)$this->option('priority-version');
+        if($priority_version>19.1){
+            // for Priority version 20.0
+            $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+        }else{
+            // for Priority version 19.1
+            $data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
+
+        }
+
 	    
 	
 	    
@@ -2366,11 +2372,16 @@ public function syncAinvoice($id)
 		}
 
 // order comments
-		// for Priority version 19.1
-		//$data['PINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
-		// for Priority version 20.0
-		$data['PINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
-
+    $priority_version = (float)$this->option('priority-version');
+    if($priority_version>19.1){
+            // for Priority version 20.0
+            $data['PINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+        }else{
+            // for Priority version 19.1
+            $data['PINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
+        }   
+		
+		
 
 
 		// billing customer details
@@ -2555,10 +2566,16 @@ public function syncOverTheCounterInvoice($order_id)
         }
 
 		// order comments
-          		 // version 20.0
-			//$data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
-			// version 19.1
-			$data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
+        $priority_version = (float)$this->option('priority-version');
+        if($priority_version>19.1){
+            // version 20.0
+            $data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
+        }else{
+            // version 19.1
+            $data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
+        }
+          	
+		
 		// shipping
 		$shipping_data = [
 			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
@@ -2815,10 +2832,16 @@ public function syncOverTheCounterInvoice($order_id)
 		}
 
 		// order comments
-		// for Priority version 19.1
-		//$data['TINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
-		// for Priority version 20.0
-		$data['TINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+        $priority_version = (float)$this->option('priority-version');
+        if($priority_version>19.1) {
+            // for Priority version 20.0
+            $data['TINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+        }else{
+            // for Priority version 19.1
+            $data['TINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];    
+        }
+		
+		
 
 
 
