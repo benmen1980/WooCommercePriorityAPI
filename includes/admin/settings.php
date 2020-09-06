@@ -76,14 +76,6 @@
 
             <tr>
                 <td class="p18a-label">
-                    <label for="priority-version"><?php _e('Priority Version', 'p18a'); ?></label>
-                </td>
-                <td>
-                    <input id="priority-version" type="number" step="any" name="priority-version" form="p18aw-settings" size="5" value="<?php echo $this->option('priority-version'); ?>">
-                </td>
-            </tr>
-            <tr>
-                <td class="p18a-label">
                     <label for="p18a-mailing_list_field"><?php _e('On error mailing list', 'p18a'); ?></label>
                 </td>
                 <td>
