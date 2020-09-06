@@ -560,7 +560,7 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('update_image',        $this->post('update_image'));
 	            $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
 	            $this->updateOption('obligo',              $this->post('obligo'));
-                $this->updateOption('priority-version',    $this->post('priority-version'));
+
 
 
 
@@ -2379,9 +2379,9 @@ public function syncAinvoice($id)
         }else{
             // for Priority version 19.1
             $data['PINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
-        }   
-		
-		
+        }
+
+
 
 
 		// billing customer details
@@ -2574,8 +2574,8 @@ public function syncOverTheCounterInvoice($order_id)
             // version 19.1
             $data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
         }
-          	
-		
+
+
 		// shipping
 		$shipping_data = [
 			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
@@ -2838,10 +2838,10 @@ public function syncOverTheCounterInvoice($order_id)
             $data['TINVOICESTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
         }else{
             // for Priority version 19.1
-            $data['TINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];    
+            $data['TINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
         }
-		
-		
+
+
 
 
 
