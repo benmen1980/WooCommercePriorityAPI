@@ -68,7 +68,7 @@ function bloomer_woocommerce_quantity_changes( $args, $product ) {
 function action_woocommerce_before_add_to_cart_button(  ) {
 	global $product;
 	$id = $product->get_id();
-	$packs = get_post_meta( $id, 'packs', true );
+	$packs = get_post_meta( $id, 'pri_packs', true );
 	if(!empty($packs)) {
 		?>
 		<label for="cars"><?php _e( 'Choose a pack:', 'storefront' ); ?></label>
@@ -91,7 +91,6 @@ add_action( 'woocommerce_before_add_to_cart_form', 'action_woocommerce_before_ad
 add_action( 'wp_enqueue_scripts', 'my_theme_scripts' );
 function my_theme_scripts(){
 	if( is_product() ) {
-		wp_enqueue_script('packs_js', P18AW_ASSET_URL.'packs.js',
-			array('jquery'),true);
+		//wp_enqueue_script('packs_js', P18AW_ASSET_URL.'packs.js',array('jquery'),true);
 	}
 }
