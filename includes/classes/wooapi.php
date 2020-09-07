@@ -1551,7 +1551,7 @@ public function sync_product_attachemtns(){
 	 // if product exsits, update
 
 	            $args = array(
-		            'post_type'		=>	 array('product', 'product_variation'),
+		            'post_type'		=>	'product',
 		            'meta_query'	=>	array(
 			            array(
 				            'key'       => '_sku',
@@ -1645,7 +1645,7 @@ public function syncPacksPriority()
 
 				//if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
 				if(!$product_id == 0){
-					update_post_meta($product_id, 'packs', $item['PARTPACK_SUBFORM']);
+					update_post_meta($product_id, 'pri_packs', $item['PARTPACK_SUBFORM']);
 			        }
                 }
 	    }
@@ -1854,7 +1854,7 @@ public function syncPacksPriority()
            
         ];
         // CDES
-         if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+        if(empty($order->get_customer_id())){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
@@ -2359,7 +2359,7 @@ public function syncAinvoice($id)
 
 		];
         // CDES
-         if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 		// cart discount header
@@ -2561,7 +2561,7 @@ public function syncOverTheCounterInvoice($order_id)
 
 		];
         // CDES
-         if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+        if(empty($order->get_customer_id())){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
@@ -2664,17 +2664,19 @@ public function syncOverTheCounterInvoice($order_id)
 		$order_cc_qprice = floatval($order->get_total());
 		*/
 		// payment info
-		$data['EPAYMENT2_SUBFORM'][] = [
-			'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-			'QPRICE'      => floatval($order_cc_qprice), //floatval($order->get_total()),
-			'FIRSTPAY'      => floatval($order_cc_qprice), //floatval($order->get_total()),
-			'PAYACCOUNT'  => '',
-			'PAYCODE'     => '',
-			'PAYACCOUNT'  => substr($order_ccnumber,strlen($order_ccnumber) -4,4),
-			'VALIDMONTH'  => $order_cc_expiration,
-			'CCUID' => $order_token,
-			'CONFNUM' => $order_cc_authorization,
-		];
+        if($order->get_total()>0.0) {
+            $data['EPAYMENT2_SUBFORM'][] = [
+                'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+                'QPRICE' => floatval($order_cc_qprice), //floatval($order->get_total()),
+                'FIRSTPAY' => floatval($order_cc_qprice), //floatval($order->get_total()),
+                'PAYACCOUNT' => '',
+                'PAYCODE' => '',
+                'PAYACCOUNT' => substr($order_ccnumber, strlen($order_ccnumber) - 4, 4),
+                'VALIDMONTH' => $order_cc_expiration,
+                'CCUID' => $order_token,
+                'CONFNUM' => $order_cc_authorization,
+            ];
+        }
 		// make request
 		$response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
 		if ($response['code']<=201) {
@@ -2728,7 +2730,7 @@ public function syncOverTheCounterInvoice($order_id)
 
         ];
         // CDES
-         if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+        if(empty($order->get_customer_id())){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
         // cash payment
