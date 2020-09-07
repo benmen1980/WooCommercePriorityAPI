@@ -1551,7 +1551,7 @@ public function sync_product_attachemtns(){
 	 // if product exsits, update
 
 	            $args = array(
-		            'post_type'		=>	'product',
+		            'post_type'      => array('product', 'product_variation'),
 		            'meta_query'	=>	array(
 			            array(
 				            'key'       => '_sku',
