@@ -437,7 +437,7 @@ class WooAPI extends \PriorityAPI\API
 
 		                    break;
 			   case 'customersProducts';		
-				include P18AW_ADMIN_DIR . 'CustomersProducts.php';
+				include P18AW_ADMIN_DIR . 'customersProducts.php';
 				break;
 			case 'sync_attachments';
 				include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
