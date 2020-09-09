@@ -85,8 +85,10 @@ function action_woocommerce_before_add_to_cart_button(  ) {
 	}
 };
 
-// add the action
+// add the action product page
 add_action( 'woocommerce_before_add_to_cart_form', 'action_woocommerce_before_add_to_cart_button', 10, 0 );
+//  add the action shop page
+//add_action( 'woocommerce_shop_loop_item_title', 'action_woocommerce_before_add_to_cart_button' );
 
 add_action( 'wp_enqueue_scripts', 'my_theme_scripts' );
 function my_theme_scripts(){
@@ -94,3 +96,14 @@ function my_theme_scripts(){
 		//wp_enqueue_script('packs_js', P18AW_ASSET_URL.'packs.js',array('jquery'),true);
 	}
 }
+add_filter( 'woocommerce_quantity_input_args', 'jk_woocommerce_quantity_input_args', 10, 2 ); // Simple products
+function jk_woocommerce_quantity_input_args( $args, $product ) {
+    if ( ! is_cart() ) {
+        $args['input_value']    = 0;
+        $args['min_value']    = 0;
+        $packs = get_post_meta( $product->get_id(), 'pri_packs', true );
+        $args['step']    = $packs[0]['PACKQUANT'];  // need to get the steps of the first pack
+    }
+    return $args;
+}
+
