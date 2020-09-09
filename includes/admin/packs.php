@@ -15,7 +15,7 @@ function woo_add_custom_general_fields() {
 		<label for="custom_field_type"><?php echo __( 'Packs', 'p18a' ); ?></label>
 		<span class="wrap">
 		<?php
-		$packs = get_post_meta( $post->ID, 'packs', true );
+		$packs = get_post_meta( $post->ID, 'pri_packs', true );
 		if(!empty($packs)){
 			foreach($packs as $pack){
 				echo $pack['PACKNAME'].' '.$pack['PACKQUANT'].'<br>';
