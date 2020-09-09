@@ -1854,7 +1854,7 @@ public function syncPacksPriority()
            
         ];
         // CDES
-        if(empty($order->get_customer_id())){
+          if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
@@ -2561,7 +2561,7 @@ public function syncOverTheCounterInvoice($order_id)
 
 		];
         // CDES
-        if(empty($order->get_customer_id())){
+          if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
@@ -2730,7 +2730,7 @@ public function syncOverTheCounterInvoice($order_id)
 
         ];
         // CDES
-        if(empty($order->get_customer_id())){
+          if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
         // cash payment
