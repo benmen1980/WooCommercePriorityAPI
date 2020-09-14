@@ -428,6 +428,7 @@ class WooAPI extends \PriorityAPI\API
 	                        $new_budget_limits = array();
 	                        $new_budget_limits[$campaign_id][$kit_id] = $new_budget;
 	                        update_user_meta($user->ID, 'user_budget_limits', $new_budget_limits);
+			        delete_user_meta($user->ID,'user_limits');
 	                        //var_dump(get_user_meta($user->ID));
                             echo 'New budget of '.$new_budget.' been update to user '.$username;
 
