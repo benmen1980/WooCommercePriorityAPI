@@ -2161,7 +2161,8 @@ public function syncPacksPriority()
 	if(empty(get_post_meta($order_id,'priority_status',false)[0])){
 		// get order
 		$order = new \WC_Order($order_id);
-
+		// avoid repetition
+        	$order->update_meta_data('priority_status','Processing');
 		// sync customer if it's signed in / registered
 		// guest user will have id 0
 		/*if ($customer_id = $order->get_customer_id()) {
