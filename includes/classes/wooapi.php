@@ -2648,7 +2648,7 @@ public function syncOverTheCounterInvoice($order_id)
 		$order_token =  '';
 		$order_cc_expiration = '';
 		$order_cc_authorization = '';
-		$order_cc_qprice = 0.0;
+		$order_cc_qprice =$order->get_total();
 		
 		/*
 		pelecard
