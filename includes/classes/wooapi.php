@@ -2578,7 +2578,20 @@ public function syncOverTheCounterInvoice($order_id)
             $data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
         }
 
+		
+		// billing customer details
+		$customer_data = [
 
+			'PHONE'    => $order->get_billing_phone(),
+			'EMAIL'       => $order->get_billing_email(),
+			'ADRS'        => $order->get_billing_address_1(),
+			'ADRS2'       => $order->get_billing_address_2(),
+			'STATEA'      => $order->get_billing_city(),
+			'ZIP'         => $order->get_shipping_postcode(),
+		];
+		$data['EINVOICESCONT_SUBFORM'][] = $customer_data;
+	
+	
 		// shipping
 		$shipping_data = [
 			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
