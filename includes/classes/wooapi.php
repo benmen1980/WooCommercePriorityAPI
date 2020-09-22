@@ -30,6 +30,8 @@ class WooAPI extends \PriorityAPI\API
  
     private function __construct()
     {
+
+
         // get countries
         $this->countries = include(P18AW_INCLUDES_DIR . 'countries.php');
 
@@ -179,7 +181,6 @@ class WooAPI extends \PriorityAPI\API
 
 	// Sync customer and order data after order is proccessed
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
-        add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ] );
         // custom check out fields
 	add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
 	add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
@@ -989,29 +990,49 @@ class WooAPI extends \PriorityAPI\API
     public function syncItemsPriority()
     {
 
+        /* another one
+        $attr_name2 = 'Hight';
+        $attr_slug2 = 'hight';
+        $attr_value2 = 'Low';
+        $attribute_id = wc_create_attribute(
+            array(
+                'name'         => $attr_slug2,
+                'slug'         => $attr_slug2,
+                'type'         => 'select',
+                'order_by'     => 'menu_order',
+                'has_archives' => 0,
+            )
+        );
+        wp_set_object_terms($id, $attr_value2, 'pa_'.$attr_slug2 , true);
+        $thedata['pa_'.$attr_slug2] =  array(
+        'name' => 'pa_'.$attr_slug2,
+        'value' => '',
+        'is_visible' => '1',
+        'is_taxonomy' => '1'
+        );
+        update_post_meta($id, '_product_attributes', $thedata);
+        */
+
+
+
+        /**/
+
+
+
 
        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
        // get the items simply by time stamp of today
-	    $stamp = mktime(0, 0, 0);
+        $daysback = 10; // change days back to get inventory of prev days
+	    $stamp = mktime(0 - $daysback, 0, 0);
 	    $bod = date(DATE_ATOM,$stamp);
-	    $url_addition = 'UDATE ge '.$bod;
-	    if($this->option('variation_field')) {
-		    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
-	    }
-	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.urlencode($url_addition),[], $this->option('log_items_priority', true));
-
-
-
-
-
+	    //$url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\' and PARTNAME eq \'00260\' &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+        $url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\'  &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition,[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
-
             $response_data = json_decode($response['body_raw'], true);
-
             foreach($response_data['value'] as $item) {
-
                 // add long text from Priority
 	            $content = '';
 	            $post_content = '';
@@ -1021,13 +1042,8 @@ class WooAPI extends \PriorityAPI\API
 		            }
 		            $content = str_replace("pdir","p dir",$content);
 		            $cleancontent = explode("</style>",$content);
-
 		            $post_content = $cleancontent[1];
 	            }
-
-
-
-
                 $data = [
 	                'post_author' => 1,
                       'post_content' =>  (isset($cleancontent[1]) ?  $cleancontent[1] : 'no content'),
@@ -1078,7 +1094,7 @@ class WooAPI extends \PriorityAPI\API
 							post_content = '%s'
 							WHERE ID = '%s'
 							",
-			                $item['PARTDES'],
+			               $item['PARTDES'],
 			               $post_content,
 			                 $id
 
@@ -1120,11 +1136,39 @@ class WooAPI extends \PriorityAPI\API
                 if ($id) {
                     update_post_meta($id, '_sku', $item['PARTNAME']);
                     update_post_meta($id, '_regular_price', $pri_price);
-                    update_post_meta($id, '_price',$pri_price );
+                    update_post_meta($id, '_price', $pri_price);
                     update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
-		    // update categories
-                    $terms = [$item['SPEC1'],$item['SPEC2'],$item['SPEC3'],$item['SPEC4'],$item['SPEC5']];
-		    wp_set_object_terms($id,$terms,'product_cat');
+                    // update categories
+                    $terms = [$item['SPEC3'], $item['SPEC4']];
+
+                    foreach ($item['SOF_PARTCATEGORIES_SUBFORM'] as $category) {
+                        array_push($terms, $category['CATEGORYDES']);
+                    }
+                    wp_set_object_terms($id, $terms, 'product_cat');
+                    // update attributes
+                    unset($thedata);
+                    foreach ($item['PARTUNSPECS_SUBFORM'] as $attribute) {
+                        $attr_name = $attribute['SPECDES'];
+                        $attr_slug = $attribute['SPECNAME'];
+                        $attr_value = $attribute['VALUE'];
+                        $attribute_id = wc_create_attribute(
+                            array(
+                                'name'         => $attr_name,
+                                'slug'         => $attr_slug,
+                                'type'         => 'select',
+                                'order_by'     => 'menu_order',
+                                'has_archives' => 0,
+                            )
+                        );
+                        wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
+                        $thedata['pa_'.$attr_slug] = array(
+                            'name' => 'pa_'.$attr_slug,
+                            'value' => '',
+                            'is_visible' => '1',
+                            'is_taxonomy' => '1'
+                        );
+                        update_post_meta($id, '_product_attributes', $thedata);
+                    }
                 }
                 // sync image
                 $sku =  $item['PARTNAME'];
@@ -1133,7 +1177,7 @@ class WooAPI extends \PriorityAPI\API
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
 	                $priority_image_path = $item['EXTFILENAME'];
 	                $images_url =  'https://'. $this->option('url').'/primail';
-	                $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
+	                $product_full_url    = str_replace( '..\..\system\mail', $images_url, $priority_image_path );
 	                $file_path = $item['EXTFILENAME'];
 		        $file_info = pathinfo( $file_path );
 		        $file_name = $file_info['basename'];
@@ -1166,6 +1210,41 @@ class WooAPI extends \PriorityAPI\API
         }return $response;
     }
 
+public function create_product_attribute( $label_name ){
+    global $wpdb;
+
+    $slug = sanitize_title( $label_name );
+
+    if ( strlen( $slug ) >= 28 ) {
+        return new WP_Error( 'invalid_product_attribute_slug_too_long', sprintf( __( 'Name "%s" is too long (28 characters max). Shorten it, please.', 'woocommerce' ), $slug ), array( 'status' => 400 ) );
+    } elseif ( wc_check_if_attribute_name_is_reserved( $slug ) ) {
+        return new WP_Error( 'invalid_product_attribute_slug_reserved_name', sprintf( __( 'Name "%s" is not allowed because it is a reserved term. Change it, please.', 'woocommerce' ), $slug ), array( 'status' => 400 ) );
+    } elseif ( taxonomy_exists( wc_attribute_taxonomy_name( $label_name ) ) ) {
+        return new WP_Error( 'invalid_product_attribute_slug_already_exists', sprintf( __( 'Name "%s" is already in use. Change it, please.', 'woocommerce' ), $label_name ), array( 'status' => 400 ) );
+    }
+
+    $data = array(
+        'attribute_label'   => $label_name,
+        'attribute_name'    => $slug,
+        'attribute_type'    => 'select',
+        'attribute_orderby' => 'menu_order',
+        'attribute_public'  => 0, // Enable archives ==> true (or 1)
+    );
+
+    $results = $wpdb->insert( "{$wpdb->prefix}woocommerce_attribute_taxonomies", $data );
+
+    if ( is_wp_error( $results ) ) {
+        return new WP_Error( 'cannot_create_attribute', $results->get_error_message(), array( 'status' => 400 ) );
+    }
+
+    $id = $wpdb->insert_id;
+
+    do_action('woocommerce_attribute_added', $id, $data);
+
+    wp_schedule_single_event( time(), 'woocommerce_flush_rewrite_rules' );
+
+    delete_transient('wc_attribute_taxonomies');
+}
 	
 public function simply_posts_where( $where, $query ) {
 		global $wpdb;
@@ -2578,20 +2657,7 @@ public function syncOverTheCounterInvoice($order_id)
             $data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
         }
 
-		
-		// billing customer details
-		$customer_data = [
 
-			'PHONE'    => $order->get_billing_phone(),
-			'EMAIL'       => $order->get_billing_email(),
-			'ADRS'        => $order->get_billing_address_1(),
-			'ADRS2'       => $order->get_billing_address_2(),
-			'STATEA'      => $order->get_billing_city(),
-			'ZIP'         => $order->get_shipping_postcode(),
-		];
-		$data['EINVOICESCONT_SUBFORM'][] = $customer_data;
-	
-	
 		// shipping
 		$shipping_data = [
 			'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
@@ -2661,7 +2727,7 @@ public function syncOverTheCounterInvoice($order_id)
 		$order_token =  '';
 		$order_cc_expiration = '';
 		$order_cc_authorization = '';
-		$order_cc_qprice =$order->get_total();
+		$order_cc_qprice = 0.0;
 		
 		/*
 		pelecard
