@@ -1119,8 +1119,8 @@ class WooAPI extends \PriorityAPI\API
                 }
 	            $out_of_stock_staus = 'outofstock';
 
-                // 1. Updating the stock quantity
-	          //  update_post_meta($id, '_stock', 0);
+	        // 1. Updating barcode
+	           update_post_meta($id, 'simply_barcode', $item['BARCODE']);
 
                 // 2. Updating the stock quantity
 	           // update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
