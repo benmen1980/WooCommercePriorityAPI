@@ -6,13 +6,11 @@ function woo_add_custom_general_fields() {
 	// You can create text, textarea, select, checkbox and custom fields
 
 	global $woocommerce, $post;
-
-	echo '<div class="options_group">';
-
-	// Custom fields will be created here...
+    // Custom fields will be created here...
 	?>
+	<div class="options_group">
 	<p class="form-field custom_field_type">
-		<label for="custom_field_type"><?php echo __( 'Packs', 'p18a' ); ?></label>
+		<label for="custom_field_packs"><?php echo __( 'Packs', 'p18a' ); ?></label>
 		<span class="wrap">
 		<?php
 		$packs = get_post_meta( $post->ID, 'pri_packs', true );
@@ -23,16 +21,18 @@ function woo_add_custom_general_fields() {
 		}else{
 			_e('There are no packs for this product','p18a');
 		}
-
-
 		?>
-	</span>
+        </span>
+        <br>
+        <label for="custom_field_barcode"><?php echo __( 'Barcode', 'p18a' ); ?></label>
+		<span class="wrap">
+        <?php  echo(get_post_meta($post->ID,'simply_barcode',true)) ?>
+            (The meatadata name is 'simply_barcode')
+	    </span>
 
 	</p>
-	<?php
-
-	echo '</div>';
-
+	</div>
+    <?php
 }
 
 add_filter( 'woocommerce_quantity_input_args', 'bloomer_woocommerce_quantity_changes', 10, 2 );
