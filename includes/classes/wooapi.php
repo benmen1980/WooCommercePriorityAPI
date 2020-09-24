@@ -2678,14 +2678,24 @@ public function syncOverTheCounterInvoice($order_id)
 		$order_cc_authorization = $order->get_meta('_authNumber');;
 		$order_cc_qprice = floatval($order->get_total());
 		*/
+		/* credit guard 
+		$order_ccnumber = $order->get_meta('_transaction_data');;
+		$order_token =  $order->get_meta('_cardToken');;
+		$order_cc_expiration = $order->get_meta('_cardExp');;
+		$order_cc_authorization = $order->get_meta('_authNumber');;
+		$order_cc_qprice = floatval($order->get_total());
+		$order_first_pay = floatval($order->get_meta('_firstPayment'));
+		$order_cc_otherpayment = floatval($order->get_meta('_periodicalPayment'));
+		$number_of_payments = $order->get_meta('_numberOfPayments');
+		  */
 		// payment info
-        if($order->get_total()>0.0) {
-            $data['EPAYMENT2_SUBFORM'][] = [
+      		if($order->get_total()>0.0) {
+            	$data['EPAYMENT2_SUBFORM'][] = [
                 'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-                'QPRICE' => floatval($order_cc_qprice), //floatval($order->get_total()),
-                'FIRSTPAY' => floatval($order_cc_qprice), //floatval($order->get_total()),
-                'PAYACCOUNT' => '',
-                'PAYCODE' => '',
+                'QPRICE' => $order_cc_qprice,
+                'FIRSTPAY' => $order_first_pay,
+                'OTHERPAYMENTS'  =>  $order_cc_otherpayment,
+                'PAYCODE'        => $number_of_payments,
                 'PAYACCOUNT' => substr($order_ccnumber, strlen($order_ccnumber) - 4, 4),
                 'VALIDMONTH' => $order_cc_expiration,
                 'CCUID' => $order_token,
