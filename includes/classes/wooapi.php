@@ -1004,7 +1004,7 @@ class WooAPI extends \PriorityAPI\API
        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
        // get the items simply by time stamp of today
         $daysback = 10; // change days back to get  prev days
-	    $stamp = mktime(0 - $daysback, 0, 0);
+	    $stamp = mktime(0 - $daysback * 24, 0, 0);
 	    $bod = date(DATE_ATOM,$stamp);
 	    //$url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\' and PARTNAME eq \'00260\' &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
         $url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\'  &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
