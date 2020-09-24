@@ -1173,21 +1173,19 @@ class WooAPI extends \PriorityAPI\API
                 $is_has_image = get_the_post_thumbnail_url($id);
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
-	                $priority_image_path = $item['EXTFILENAME'];
-	                $images_url =  'https://'. $this->option('url').'/primail';
-	                $product_full_url    = str_replace( '..\..\system\mail', $images_url, $priority_image_path );
-	                $file_path = $item['EXTFILENAME'];
-		        $file_info = pathinfo( $file_path );
-		        $file_name = $file_info['basename'];
-			$file_ext  = $file_info['extension'];
-                  	$file_array = explode('.',$file_name);
-			global $wpdb;
-	                $attach_id = $wpdb->get_var( "SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_array[0]%' AND meta_key = '_wp_attached_file'" );
-	                if($attach_id){
-                   		 }else{
-                    			$attach_id           = download_attachment( $sku, $product_full_url );
-                    			}
-	                set_post_thumbnail( $id, $attach_id );
+		    $priority_image_path = $item['EXTFILENAME'];
+		    $images_url =  'https://'. $this->option('url').'/primail';
+		    $product_full_url    = str_replace( '..\..\system\mail', $images_url, $priority_image_path );
+		    $file_path = $item['EXTFILENAME'];
+		    $file_info = pathinfo( $file_path );
+		    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
+		    $attach_id = attachment_url_to_postid($url);
+		    if($attach_id != 0){
+		    }
+		    else{
+		        $attach_id           = download_attachment( $sku, $product_full_url );
+                    }
+		    set_post_thumbnail( $id, $attach_id );
                 }
 
             }
