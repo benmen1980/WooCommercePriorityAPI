@@ -1092,6 +1092,7 @@ class WooAPI extends \PriorityAPI\API
 
                 // 1. Updating barcode
 	            update_post_meta($id, 'simply_barcode', $item['BARCODE']);
+		    update_post_meta($id, 'simply_spec19', $item['SPEC19']);
 
                 // 2. Updating the stock quantity
 	           // update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
