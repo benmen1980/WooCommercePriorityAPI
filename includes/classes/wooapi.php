@@ -869,7 +869,7 @@ class WooAPI extends \PriorityAPI\API
 
 
                     try {
-                        $this->syncPriceLists();
+                        $this->syncCustomerPrice();
                     } catch(Exception $e) {
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -2250,6 +2250,75 @@ public function syncPacksPriority()
     /**
      * Sync price lists from priority to web
      */
+    public function syncCustomerPrice()
+    {
+        $response = $this->makeRequest('GET', 'ZOHA_CUSTDISCREP ', [], $this->option('log_pricelist_priority', true));
+
+        // check response status
+        if ($response['status']) {
+
+            // allow multisite
+            $blog_id =  get_current_blog_id();
+
+            // price lists table
+            $table =  $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
+
+            // delete all existing data from price list table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+
+            // decode raw response
+            $data = json_decode($response['body_raw'], true);
+
+            $priceList = [];
+
+            if (isset($data['value'])) {
+
+                foreach($data['value'] as $list)
+                {
+                    /*
+
+                    Assign user to price list, no needed for now
+
+                    // update customers price list
+                    foreach($list['PLISTCUSTOMERS_SUBFORM'] as $customer) {
+                        update_user_meta($customer['CUSTNAME'], '_priority_price_list', $list['PLNAME']);
+                    }
+                    */
+
+                    // products price lists
+
+
+                        $GLOBALS['wpdb']->insert($table, [
+                            'product_sku' => $list['PARTNAME'],
+                            'price_list_code' => $list['CUSTNAME'],
+                            'price_list_name' => $list['CUSTDES'],
+                            'price_list_currency' => 'ILS',
+                            'price_list_price' => $list['PRICE'],
+                            'blog_id' => $blog_id
+                        ]);
+
+
+
+                }
+
+                // add timestamp
+                $this->updateOption('pricelist_priority_update', time());
+
+            }
+
+        } else {
+            /**
+             * t149
+             */
+            $this->sendEmailError(
+                $this->option('email_error_sync_pricelist_priority'),
+                'Error Sync Price Lists Priority',
+                $response['body']
+            );
+
+        }
+
+    }
     public function syncPriceLists()
     {
         $response = $this->makeRequest('GET', 'PRICELIST?$expand=PLISTCUSTOMERS_SUBFORM,PARTPRICE2_SUBFORM', [], $this->option('log_pricelist_priority', true));
@@ -3094,12 +3163,24 @@ public function syncOverTheCounterInvoice($order_id)
 
     // filter product price
     public function filterPrice($price, $product)
+    public function filterPrice($price, $product)
     {
-        $data = $this->getProductDataBySku($product->get_sku());
-
-	    if ($data && $data !== 'no-selected') return $data['price_list_price'];
-        //if ((!is_cart() && !is_checkout()) && $data && $data !== 'no-selected') return $data['price_list_price'];
-        
+        $sku = $product->get_sku();
+        $priority_customer_number = get_user_meta(get_current_user_id(), 'priority_customer_number',true);
+        if(empty($priority_customer_number)||empty($sku)){
+            return $price;
+        }
+        $data = $GLOBALS['wpdb']->get_row('
+                SELECT price_list_price
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
+                WHERE product_sku = "' . esc_sql($sku) . '"
+                AND price_list_code = "' . esc_sql($priority_customer_number) . '"
+                AND blog_id = ' . get_current_blog_id(),
+            ARRAY_A
+        );
+        if($data['price_list_price']> 0.0 && !is_cart() && !is_checkout()){
+            $price = $data['price_list_price'];
+        }
         return $price;
     }
 
