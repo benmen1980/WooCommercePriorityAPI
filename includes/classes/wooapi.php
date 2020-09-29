@@ -76,66 +76,7 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-	// custom check out fields
-	function custom_checkout_fields( $checkout ){
-
-		//  add site to check out form
-        if($this->option('sites') == true) {
-	        $option          = "priority_customer_number";
-	        $customer_number = get_user_option( $option );
-	        $data            = $GLOBALS['wpdb']->get_results( '
-            SELECT  sitecode,sitedesc
-            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_sites
-            where customer_number = ' . $customer_number,
-		        ARRAY_A
-	        );
-
-	        $sitelist = array( // options for <select> or <input type="radio" />
-		        '' => __('Please select','p18a'),
-		        
-	        );
-
-	        $finalsites = $sitelist;
-	        foreach ( $data as $site ) {
-		       $finalsites +=  [$site['sitecode'] => str_replace('"', '', $site['sitedesc'])];
-	        }
-	        //$i = 0;
-	        //$site = array($data[$i]['sitecode'] => $data[$i]['sitedesc']);
-
-	        $sites = array(
-		        'type'        => 'select',
-		        // text, textarea, select, radio, checkbox, password, about custom validation a little later
-		        'required'    => true,
-		        // actually this parameter just adds "*" to the field
-		        'class'       => array( 'misha-field', 'form-row-wide' ),
-		        // array only, read more about classes and styling in the previous step
-		        'label'       => __('Priority ERP Order site ','p18a'),
-		        'label_class' => 'misha-label',
-		        // sometimes you need to customize labels, both string and arrays are supported
-		        'options'     => $finalsites
-	        );
-	        woocommerce_form_field( 'site', $sites, $checkout->get_value( 'site' ) );
-        }
-
-
-
-	}
-
-
-	function my_custom_checkout_field_process() {
-		// Check if set, if its not set add an error.
-		if(isset($_POST['site'])){
-			if ( ! $_POST['site'] && $this->option('sites') == true )
-				wc_add_notice( __( 'Please enter site.' ), 'error' );
-        }
-	}
-
-
-	function my_custom_checkout_field_update_order_meta( $order_id ) {
-		if ( ! empty( $_POST['site'] ) && $this->option('sites') == true ) {
-			update_post_meta( $order_id, 'site', sanitize_text_field( $_POST['site'] ) );
-		}
-	}
+	
 
     public function run()
     {
