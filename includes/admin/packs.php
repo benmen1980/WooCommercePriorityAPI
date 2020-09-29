@@ -29,7 +29,12 @@ function woo_add_custom_general_fields() {
         <?php  echo(get_post_meta($post->ID,'simply_barcode',true)) ?>
             (The meatadata name is 'simply_barcode')
 	    </span>
-
+	    <br>
+        <label for="custom_field_spec19"><?php echo __( 'Spec19', 'p18a' ); ?></label>
+        <span class="wrap">
+        <?php  echo(get_post_meta($post->ID,'simply_spec19',true)) ?>
+            (The meatadata name is 'simply_spec19')
+	    </span>
 	</p>
 	</div>
     <?php
