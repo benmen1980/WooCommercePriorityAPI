@@ -6,6 +6,7 @@
     add_action('woocommerce_after_checkout_billing_form', 'simply_custom_checkout_fields');
     add_action('woocommerce_checkout_process', 'simply_custom_checkout_field_process');
     add_action('woocommerce_checkout_update_order_meta','simply_custom_checkout_field_update_order_meta' );
+    add_action( 'wp_footer', 'simply_ajax_without_file' );
 // functions
 function wp2441_enqueue_scripts() {
 	if ( !is_front_page() ){ // change for is_home() if you're not using a front page
@@ -88,8 +89,39 @@ function simply_custom_checkout_field_update_order_meta( $order_id ) {
         update_post_meta( $order_id, 'site', sanitize_text_field( $_POST['site'] ) );
     }
 }
+//
+/* handle session on frontend */
+function simply_ajax_without_file() { ?>
 
+    <script type="text/javascript" >
+        jQuery("#simply_sites").change(function($) {
+            ajaxurl = '<?php echo admin_url( 'admin-ajax.php' ) ?>'; // get ajaxurl
+            var data = {
+                'action': 'set_site_session', // your action name
+                'sitecode': jQuery("#simply_sites").val(),
+                'sitedesc': jQuery("#simply_sites option:selected").text()
+            }
+            jQuery.ajax({
+                url: ajaxurl, // this will point to admin-ajax.php
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    console.log(response);
+                }
+            });
+        });
+    </script>
+    <?php
+}
+add_action("wp_ajax_set_site_session" , "set_site_session");
+add_action("wp_ajax_nopriv_set_site_session" , "set_site_session");
 
+function set_site_session(){
+    WC()->session->set( 'sitecode', $_POST['sitecode'] );
+    WC()->session->set( 'sitedesc', $_POST['sitedesc'] );
+    echo WC()->session->get( 'sitedesc');
+    wp_die();
+}
 // this is for populate sites in front not in check out
 function simply_populate_sites()
 {
