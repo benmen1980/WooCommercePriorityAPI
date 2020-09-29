@@ -438,7 +438,7 @@ class WooAPI extends \PriorityAPI\API
 
 		                    break;
 			   case 'customersProducts';		
-				include P18AW_ADMIN_DIR . 'customersProducts.php';
+				$this->syncCustomerProducts();
 				break;
 			case 'sync_attachments';
 				include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
@@ -2388,7 +2388,61 @@ public function syncPacksPriority()
         }
 
     }
-
+    /* sunc cust part */
+	public function syncCustomerProducts()
+    {
+        $response = $this->makeRequest('GET', 'CUSTOMERS?$filter=CUSTPART eq \'Y\' and PRIVITAI_USEROFFON eq \'Y\' 
+                                            &$select=CUSTNAME,MCUSTNAME &$expand=CUSTPART_SUBFORM($filter=ITAI_INKATALOG eq \'Y\';),
+                                                                                 ROYY_CUSTPART_SUBFORM($filter=Y_32405_0_ESHB eq \'Y\';)',
+                                            [], $this->option('log_sites_priority', true));
+        // check response status
+        if ($response['status']) {
+            // create the table
+            $table = $GLOBALS['wpdb']->prefix . 'p18a_CustomersParts';
+            $sql = "CREATE TABLE $table (
+            id  INT AUTO_INCREMENT,
+            blog_id INT,
+            custname VARCHAR(32),
+            partname VARCHAR(32),
+            PRIMARY KEY  (id)
+            )";
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            dbDelta($sql);
+            // allow multisite
+            $blog_id =  get_current_blog_id();
+            // delete all existing data from sites list table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            // decode raw response
+            $data = json_decode($response['body_raw'], true);
+            if (isset($data['value'])) {
+                foreach($data['value'] as $list) {
+                    // check MCUSTNAME
+                    $sub_form = 'CUSTPART_SUBFORM';
+                    if (!empty($list['MCUSTNAME'])) {
+                        $sub_form = 'ROYY_CUSTPART_SUBFORM';
+                    }
+                    if (isset($list[$sub_form])) {
+                        {
+                            foreach ($list[$sub_form] as $item) {
+                                    $GLOBALS['wpdb']->insert($table, [
+                                        'custname' => $list['CUSTNAME'],
+                                        'partname' => $item['PARTNAME']
+                                    ]);
+                            }
+                        }
+                    }
+                }
+                // add timestamp
+                $this->updateOption('pricelist_priority_update', time());
+            }
+        } else {
+            $this->sendEmailError(
+                $this->option('email_error_sync_pricelist_priority'),
+                'Error Sync Price Lists Priority',
+                $response['body']
+            );
+        }
+    }
     /* sync sites */
 	public function syncSites()
 	{
