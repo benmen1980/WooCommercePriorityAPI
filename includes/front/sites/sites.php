@@ -4,12 +4,12 @@ add_action( 'wp_footer', 'simply_ajax_without_file' );
 /* handle session on frontend */
 function simply_ajax_without_file() { ?>
     <script type="text/javascript" >
-        jQuery("#simply_sites").change(function($) {
+        jQuery(".simply_sites").change(function($) {
             ajaxurl = '<?php echo admin_url( 'admin-ajax.php' ) ?>'; // get ajaxurl
             var data = {
                 'action': 'set_site_session', // your action name
-                'sitecode': jQuery("#simply_sites").val(),
-                'sitedesc': jQuery("#simply_sites option:selected").text()
+                'sitecode': this.value,
+                'sitedesc': this.innerHTML
             }
             jQuery.ajax({
                 url: ajaxurl, // this will point to admin-ajax.php
@@ -57,7 +57,7 @@ function simply_populate_sites()
         '' => __('Please select', 'p18a'),
 
     );
-    $select_options = '<select name="sites" id="simply_sites">';
+    $select_options = '<select name="sites" id="simply_sites" class="simply_sites">';
     $selected_code = WC()->session->get('sitecode');
     $selected = ' selected';
     foreach ($data as $site) {
