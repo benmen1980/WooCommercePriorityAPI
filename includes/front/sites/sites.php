@@ -59,6 +59,7 @@ function simply_populate_sites()
     );
     $select_options = '<select name="sites" id="simply_sites">';
     $selected_code = WC()->session->get('sitecode');
+    $selected = ' selected';
     foreach ($data as $site) {
         if ($selected_code == $site['sitecode']) {
             $selected = ' selected';
