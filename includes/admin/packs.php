@@ -1,6 +1,5 @@
 <?php
 add_action( 'woocommerce_product_options_general_product_data', 'woo_add_custom_general_fields' );
-
 function woo_add_custom_general_fields() {
 	// Define your fields here.
 	// You can create text, textarea, select, checkbox and custom fields
@@ -29,19 +28,14 @@ function woo_add_custom_general_fields() {
         <?php  echo(get_post_meta($post->ID,'simply_barcode',true)) ?>
             (The meatadata name is 'simply_barcode')
 	    </span>
-	    <br>
-        <label for="custom_field_spec19"><?php echo __( 'Spec19', 'p18a' ); ?></label>
-        <span class="wrap">
-        <?php  echo(get_post_meta($post->ID,'simply_spec19',true)) ?>
-            (The meatadata name is 'simply_spec19')
-	    </span>
+
 	</p>
 	</div>
     <?php
 }
 
-add_filter( 'woocommerce_quantity_input_args', 'bloomer_woocommerce_quantity_changes', 10, 2 );
-
+//add_filter( 'woocommerce_quantity_input_args', 'bloomer_woocommerce_quantity_changes', 10, 2 );
+/*
 function bloomer_woocommerce_quantity_changes( $args, $product ) {
 
 	if ( ! is_cart() ) {
@@ -65,9 +59,11 @@ function bloomer_woocommerce_quantity_changes( $args, $product ) {
 
 	}
 
+
 	return $args;
 
 }
+*/
 
 // define the woocommerce_before_add_to_cart_button callback
 function action_woocommerce_before_add_to_cart_button(  ) {
@@ -78,7 +74,7 @@ function action_woocommerce_before_add_to_cart_button(  ) {
 		?>
 		<label for="cars"><?php _e( 'Choose a pack:', 'storefront' ); ?></label>
 
-		<select name="packs" id="pri-packs">
+		<select name="packs" class="pri-packs">
 			<?php
 			foreach ( $packs as $pack ) {
 				echo $pack['PACKNAME'] . ' ' . $pack['PACKQUANT'] . '<br>';
@@ -97,8 +93,8 @@ add_action( 'woocommerce_before_add_to_cart_form', 'action_woocommerce_before_ad
 
 add_action( 'wp_enqueue_scripts', 'my_theme_scripts' );
 function my_theme_scripts(){
-	if( is_product() ) {
-		//wp_enqueue_script('packs_js', P18AW_ASSET_URL.'packs.js',array('jquery'),true);
+	if( is_product()||is_shop()||is_cart()||is_product_category() ) {
+		wp_enqueue_script('packs_js', P18AW_ASSET_URL.'packs.js',array('jquery'),true);
 	}
 }
 add_filter( 'woocommerce_quantity_input_args', 'jk_woocommerce_quantity_input_args', 10, 2 ); // Simple products
@@ -106,9 +102,9 @@ function jk_woocommerce_quantity_input_args( $args, $product ) {
     if ( ! is_cart() ) {
         $args['input_value']    = 0;
         $args['min_value']    = 0;
+        $args['max_value']   = 1000000; // Max quantity (default = -1)
         $packs = get_post_meta( $product->get_id(), 'pri_packs', true );
         $args['step']    = $packs[0]['PACKQUANT'];  // need to get the steps of the first pack
     }
     return $args;
 }
-
