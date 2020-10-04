@@ -77,51 +77,7 @@ class WooAPI extends \PriorityAPI\API
 
     }
 	// custom check out fields
-	function custom_checkout_fields( $checkout ){
-
-		//  add site to check out form
-        if($this->option('sites') == true) {
-	        $option          = "priority_customer_number";
-	        $customer_number = get_user_option( $option );
-	        $data            = $GLOBALS['wpdb']->get_results( '
-            SELECT  sitecode,sitedesc
-            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_sites
-            where customer_number = ' . $customer_number,
-		        ARRAY_A
-	        );
-
-	        $sitelist = array( // options for <select> or <input type="radio" />
-		        '' => __('Please select','p18a'),
-		        
-	        );
-
-	        $finalsites = $sitelist;
-	        foreach ( $data as $site ) {
-		       $finalsites +=  [$site['sitecode'] => str_replace('"', '', $site['sitedesc'])];
-	        }
-	        //$i = 0;
-	        //$site = array($data[$i]['sitecode'] => $data[$i]['sitedesc']);
-
-	        $sites = array(
-		        'type'        => 'select',
-		        // text, textarea, select, radio, checkbox, password, about custom validation a little later
-		        'required'    => true,
-		        // actually this parameter just adds "*" to the field
-		        'class'       => array( 'misha-field', 'form-row-wide' ),
-		        // array only, read more about classes and styling in the previous step
-		        'label'       => __('Priority ERP Order site ','p18a'),
-		        'label_class' => 'misha-label',
-		        // sometimes you need to customize labels, both string and arrays are supported
-		        'options'     => $finalsites
-	        );
-	        woocommerce_form_field( 'site', $sites, $checkout->get_value( 'site' ) );
-        }
-
-
-
-	}
-
-
+/*
 	function my_custom_checkout_field_process() {
 		// Check if set, if its not set add an error.
 		if(isset($_POST['site'])){
@@ -130,6 +86,7 @@ class WooAPI extends \PriorityAPI\API
         }
 	}
 
+*/
 
 	function my_custom_checkout_field_update_order_meta( $order_id ) {
 		if ( ! empty( $_POST['site'] ) && $this->option('sites') == true ) {
@@ -181,7 +138,7 @@ class WooAPI extends \PriorityAPI\API
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ] );
         // custom check out fields
-	add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
+
 	add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
 	add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
 
@@ -195,7 +152,7 @@ class WooAPI extends \PriorityAPI\API
 
 	    if ( $this->option( 'sell_by_pl' ) == true ) {
 		    // filter products regarding to price list
-		    add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByCustPart' ], 9999 );
+		    add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
 
 		    // filter product price regarding to price list
 		    add_filter( 'woocommerce_product_get_price', [ $this, 'filterPrice' ], 10, 2 );
@@ -438,7 +395,7 @@ class WooAPI extends \PriorityAPI\API
 
 		                    break;
 			   case 'customersProducts';		
-				$this->syncCustomerProducts();
+				include P18AW_ADMIN_DIR . 'customersProducts.php';
 				break;
 			case 'sync_attachments';
 				include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
@@ -869,7 +826,7 @@ class WooAPI extends \PriorityAPI\API
 
 
                     try {
-                        $this->syncCustomerPrice();
+                        $this->syncPriceLists();
                     } catch(Exception $e) {
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -1003,10 +960,10 @@ class WooAPI extends \PriorityAPI\API
        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
        // get the items simply by time stamp of today
-        $daysback = 10; // change days back to get  prev days
+        $daysback = 3; // change days back to get  prev days
 	    $stamp = mktime(0 - $daysback * 24, 0, 0);
 	    $bod = date(DATE_ATOM,$stamp);
-	    //$url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\' and PARTNAME eq \'00260\' &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    //$url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\' and PARTNAME eq \'99709\' &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
         $url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\'  &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
 	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition,[], $this->option('log_items_priority', true));
 	    // check response status
@@ -1092,7 +1049,6 @@ class WooAPI extends \PriorityAPI\API
 
                 // 1. Updating barcode
 	            update_post_meta($id, 'simply_barcode', $item['BARCODE']);
-		    update_post_meta($id, 'simply_spec19', $item['SPEC19']);
 
                 // 2. Updating the stock quantity
 	           // update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
@@ -1174,19 +1130,19 @@ class WooAPI extends \PriorityAPI\API
                 $is_has_image = get_the_post_thumbnail_url($id);
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
-		    $priority_image_path = $item['EXTFILENAME'];
-		    $images_url =  'https://'. $this->option('url').'/primail';
-		    $product_full_url    = str_replace( '..\..\system\mail', $images_url, $priority_image_path );
-		    $file_path = $item['EXTFILENAME'];
-		    $file_info = pathinfo( $file_path );
-		    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
-		    $attach_id = attachment_url_to_postid($url);
-		    if($attach_id != 0){
-		    }
-		    else{
-		        $attach_id           = download_attachment( $sku, $product_full_url );
+	                $priority_image_path = $item['EXTFILENAME'];
+	                $images_url =  'https://'. $this->option('url').'/primail';
+	                $product_full_url    = str_replace( '..\\..\\system\\mail', $images_url, $priority_image_path );
+                //  $product_full_url    =  'https://priority.win-israel.co.il/primail/pics/00093.jpg';
+	                $file_path = $item['EXTFILENAME'];
+		      		$file_info = pathinfo( $file_path );
+		        	$url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
+                    $attach_id = attachment_url_to_postid($url);
+	                if($attach_id != 0){
+                    }else{
+                      $attach_id           = download_attachment( $sku, $product_full_url );
                     }
-		    set_post_thumbnail( $id, $attach_id );
+	                set_post_thumbnail( $id, $attach_id );
                 }
 
             }
@@ -1907,6 +1863,11 @@ public function syncPacksPriority()
           if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
+        // DCODE
+        if(!empty($order->get_meta('priority_site_code'))){
+            $data['DCODE'] = $order->get_meta('priority_site_code');
+        }
+
 
 	    // cart discount header
 	    $cart_discount = floatval($order->get_total_discount());
@@ -1928,9 +1889,6 @@ public function syncPacksPriority()
 
         }
 
-	    
-	
-	    
 	   // billing customer details
         $customer_data = [
           
@@ -1942,11 +1900,7 @@ public function syncPacksPriority()
             'ZIP'         => $order->get_shipping_postcode(),
         ];
         $data['ORDERSCONT_SUBFORM'][] = $customer_data;
-
-	// shipping
-
-        // shop address debug
-
+	    // shipping
         $shipping_data = [
             'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
@@ -1958,14 +1912,14 @@ public function syncPacksPriority()
             'STATE'       => $order->get_shipping_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
-
         // add second address if entered
         if ( ! empty($order->get_shipping_address_2())) {
             $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
         }
-
-        $data['SHIPTO2_SUBFORM'] = $shipping_data;
-
+        // post shipping only if not site
+        if(empty($order->get_meta('priority_site_code'))){
+            $data['SHIPTO2_SUBFORM'] = $shipping_data;
+        }
         // get shipping id
         $shipping_method    = $order->get_shipping_methods();
         $shipping_method    = array_shift($shipping_method);
@@ -2251,75 +2205,6 @@ public function syncPacksPriority()
     /**
      * Sync price lists from priority to web
      */
-    public function syncCustomerPrice()
-    {
-        $response = $this->makeRequest('GET', 'ZOHA_CUSTDISCREP ', [], $this->option('log_pricelist_priority', true));
-
-        // check response status
-        if ($response['status']) {
-
-            // allow multisite
-            $blog_id =  get_current_blog_id();
-
-            // price lists table
-            $table =  $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
-
-            // delete all existing data from price list table
-            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
-
-            // decode raw response
-            $data = json_decode($response['body_raw'], true);
-
-            $priceList = [];
-
-            if (isset($data['value'])) {
-
-                foreach($data['value'] as $list)
-                {
-                    /*
-
-                    Assign user to price list, no needed for now
-
-                    // update customers price list
-                    foreach($list['PLISTCUSTOMERS_SUBFORM'] as $customer) {
-                        update_user_meta($customer['CUSTNAME'], '_priority_price_list', $list['PLNAME']);
-                    }
-                    */
-
-                    // products price lists
-
-
-                        $GLOBALS['wpdb']->insert($table, [
-                            'product_sku' => $list['PARTNAME'],
-                            'price_list_code' => $list['CUSTNAME'],
-                            'price_list_name' => $list['CUSTDES'],
-                            'price_list_currency' => 'ILS',
-                            'price_list_price' => $list['PRICE'],
-                            'blog_id' => $blog_id
-                        ]);
-
-
-
-                }
-
-                // add timestamp
-                $this->updateOption('pricelist_priority_update', time());
-
-            }
-
-        } else {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                $this->option('email_error_sync_pricelist_priority'),
-                'Error Sync Price Lists Priority',
-                $response['body']
-            );
-
-        }
-
-    }
     public function syncPriceLists()
     {
         $response = $this->makeRequest('GET', 'PRICELIST?$expand=PLISTCUSTOMERS_SUBFORM,PARTPRICE2_SUBFORM', [], $this->option('log_pricelist_priority', true));
@@ -2389,61 +2274,7 @@ public function syncPacksPriority()
         }
 
     }
-    /* sunc cust part */
-	public function syncCustomerProducts()
-    {
-        $response = $this->makeRequest('GET', 'CUSTOMERS?$filter=CUSTPART eq \'Y\' and PRIVITAI_USEROFFON eq \'Y\' 
-                                            &$select=CUSTNAME,MCUSTNAME &$expand=CUSTPART_SUBFORM($filter=ITAI_INKATALOG eq \'Y\';),
-                                                                                 ROYY_CUSTPART_SUBFORM($filter=Y_32405_0_ESHB eq \'Y\';)',
-                                            [], $this->option('log_sites_priority', true));
-        // check response status
-        if ($response['status']) {
-            // create the table
-            $table = $GLOBALS['wpdb']->prefix . 'p18a_CustomersParts';
-            $sql = "CREATE TABLE $table (
-            id  INT AUTO_INCREMENT,
-            blog_id INT,
-            custname VARCHAR(32),
-            partname VARCHAR(32),
-            PRIMARY KEY  (id)
-            )";
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-            dbDelta($sql);
-            // allow multisite
-            $blog_id =  get_current_blog_id();
-            // delete all existing data from sites list table
-            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
-            // decode raw response
-            $data = json_decode($response['body_raw'], true);
-            if (isset($data['value'])) {
-                foreach($data['value'] as $list) {
-                    // check MCUSTNAME
-                    $sub_form = 'CUSTPART_SUBFORM';
-                    if (!empty($list['MCUSTNAME'])) {
-                        $sub_form = 'ROYY_CUSTPART_SUBFORM';
-                    }
-                    if (isset($list[$sub_form])) {
-                        {
-                            foreach ($list[$sub_form] as $item) {
-                                    $GLOBALS['wpdb']->insert($table, [
-                                        'custname' => $list['CUSTNAME'],
-                                        'partname' => $item['PARTNAME']
-                                    ]);
-                            }
-                        }
-                    }
-                }
-                // add timestamp
-                $this->updateOption('pricelist_priority_update', time());
-            }
-        } else {
-            $this->sendEmailError(
-                $this->option('email_error_sync_pricelist_priority'),
-                'Error Sync Price Lists Priority',
-                $response['body']
-            );
-        }
-    }
+
     /* sync sites */
 	public function syncSites()
 	{
@@ -3098,42 +2929,7 @@ public function syncOverTheCounterInvoice($order_id)
             $this->syncReceipt($order->get_id());
         }
     }
-	
-    // filter products by partcust
-    public function filterProductsByCustPart($ids)
-    {
-        if($user_id = get_current_user_id()) {
 
-            $custname = get_user_meta($user_id, 'priority_customer_number',true);
-            if(empty($custname)){
-                return $ids;
-            }
-            $products = $GLOBALS['wpdb']->get_results('
-                SELECT partname
-                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_customersparts
-                WHERE custname = "' . $custname . '"',
-                ARRAY_A
-            );
-            $ids = [];
-            // get product id
-            foreach($products as $product) {
-                if ($id = wc_get_product_id_by_sku($product['partname'])) {
-                    $parent_id = get_post($id)->post_parent;
-                    if ($parent_id) $ids[] = $parent_id;
-                    $ids[] = $id;
-                }
-            }
-
-            $ids = array_unique($ids);
-            // there is no products assigned to price list, return 0
-            if (empty($ids)) return 0;
-            // return ids
-            return $ids;
-        }
-
-        // not logged in user
-        return [];
-    }	
     // filter products by user price list
     public function filterProductsByPriceList($ids)
     {
@@ -3253,24 +3049,12 @@ public function syncOverTheCounterInvoice($order_id)
 
     // filter product price
     public function filterPrice($price, $product)
-    public function filterPrice($price, $product)
     {
-        $sku = $product->get_sku();
-        $priority_customer_number = get_user_meta(get_current_user_id(), 'priority_customer_number',true);
-        if(empty($priority_customer_number)||empty($sku)){
-            return $price;
-        }
-        $data = $GLOBALS['wpdb']->get_row('
-                SELECT price_list_price
-                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-                WHERE product_sku = "' . esc_sql($sku) . '"
-                AND price_list_code = "' . esc_sql($priority_customer_number) . '"
-                AND blog_id = ' . get_current_blog_id(),
-            ARRAY_A
-        );
-        if($data['price_list_price']> 0.0 && !is_cart() && !is_checkout()){
-            $price = $data['price_list_price'];
-        }
+        $data = $this->getProductDataBySku($product->get_sku());
+
+	    if ($data && $data !== 'no-selected') return $data['price_list_price'];
+        //if ((!is_cart() && !is_checkout()) && $data && $data !== 'no-selected') return $data['price_list_price'];
+        
         return $price;
     }
 
