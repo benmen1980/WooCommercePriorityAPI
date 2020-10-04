@@ -132,4 +132,5 @@ add_action('plugins_loaded', function(){
 });
 
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
+include_once (P18AW_FRONT_DIR.'sites\sites.php');
 
