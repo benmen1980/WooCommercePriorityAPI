@@ -1,6 +1,11 @@
 <?php
 // Add custom Theme Functions here
 
+function isMobileDevice() { 
+    return preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo 
+|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i" 
+, $_SERVER["HTTP_USER_AGENT"]); 
+} 
 /**
  * Enqueue our JS file
  */
@@ -25,7 +30,7 @@ function add_quantity_before_cart() {
 		?>
 		<label for="pri-packs"><?php _e('Choose a pack:', 'storefront');?></label>
 
-		<select name="packs" id="pri-packs">
+		<select name="packs" id="pri-packs" class="pri-packs">
 
 			<?php
 		foreach ($packs as $pack) {
