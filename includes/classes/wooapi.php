@@ -1729,11 +1729,13 @@ public function syncPacksPriority()
 
 
     public function getPriorityCustomer($order){
+	$cust_numbers = explode('|',$this->option('walkin_number'));
+        $walk_in_customer = $order->get_shipping_country() == 'IL' ? $cust_numbers[0] : $cust_numbers[1];
         if ($order->get_customer_id()) {
             $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
-            $cust_number = !empty($cust_number) ? $cust_number : $this->option('walkin_number');
+            $cust_number = !empty($cust_number) ? $cust_number : $walk_in_customer;
         } else {
-            $cust_number = $this->option('walkin_number');
+            $cust_number = $walk_in_customer;
         }
         return $cust_number;
     }
