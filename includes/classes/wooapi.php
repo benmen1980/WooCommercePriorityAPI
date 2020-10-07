@@ -2051,11 +2051,6 @@ public function syncPacksPriority()
 		    //'ROYY_SECONDPAYMENT' => $order_periodical_payment
 
 	    ];*/
-
-	    // HERE goes the condition to avoid the repetition
-	    $post_done = get_post_meta( $order->get_id(), '_post_done', true);
-	    if( empty($post_done) ) {
-
         // make request
         $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], true);
 
@@ -2077,7 +2072,7 @@ public function syncPacksPriority()
 	       // $order->update_meta_data('priority_ordnumber',$ord_number);
 	        $order->save();
         }
-        }
+        
         if (!$response['status']||$response['code'] >= 400) {
             /**
              * t149
@@ -2088,12 +2083,9 @@ public function syncPacksPriority()
             $response['body']
             );
         }
-
         // add timestamp
     return $response;
     }
-
-
     /**
      * Sync customer data and order data
      *
@@ -2101,8 +2093,9 @@ public function syncPacksPriority()
      */
     public function syncDataAfterOrder($order_id)
     {
-	if(empty(get_post_meta($order_id,'priority_invoice_status',false)[0])){
+	if(empty(get_post_meta($order_id,'_post_done',true))){
 		// get order
+		update_post_meta($order_id,'_post_done',true);
 		$order = new \WC_Order($order_id);
 		
 		// sync customer if it's signed in / registered
@@ -2451,11 +2444,6 @@ public function syncAinvoice($id)
 				'TOTPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax())
 			];
 		}
-
-		// HERE goes the condition to avoid the repetition
-		$post_done = get_post_meta( $order->get_id(), '_post_done', true);
-		if( empty($post_done) ) {
-
 			// make request
 			$response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -2477,7 +2465,7 @@ public function syncAinvoice($id)
 				// $order->update_meta_data('priority_ordnumber',$ord_number);
 				$order->save();
 			}
-		}
+		
 		if (!$response['status']||$response['code'] >= 400) {
 			/**
 			 * t149
@@ -2488,7 +2476,6 @@ public function syncAinvoice($id)
 				$response['body']
 			);
 		}
-
 		// add timestamp
 		return $response;
 	}
