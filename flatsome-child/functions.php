@@ -30,7 +30,7 @@ function add_quantity_before_cart() {
 		?>
 		<label for="pri-packs"><?php _e('Choose a pack:', 'storefront');?></label>
 
-		<select name="packs" id="pri-packs" class="pri-packs">
+		<select name="packs" id="pri-packs">
 
 			<?php
 		foreach ($packs as $pack) {
@@ -52,7 +52,7 @@ function add_quantity_before_cart() {
 
 }
 
-add_action('woocommerce_after_shop_loop_item', 'add_quantity_before_cart',10);
+//add_action('woocommerce_after_shop_loop_item', 'add_quantity_before_cart',10);
 
 
 /**
@@ -214,3 +214,54 @@ function winn_checkout_create_order_line_item( $item, $cart_item_key, $values, $
  	}
 }
 add_action( 'woocommerce_checkout_create_order_line_item', 'winn_checkout_create_order_line_item', 10, 4 );
+
+
+ 
+ 
+// select
+add_action( 'woocommerce_after_order_notes', 'winn_date_field' );
+function winn_date_field( $checkout ){
+ 
+	// you can also add some custom HTML here
+ 
+	woocommerce_form_field( 'shippingduedate', array(
+		'type'          => 'date', // text, textarea, select, radio, checkbox, password, about custom validation a little later
+		'required'	=> true, // actually this parameter just adds "*" to the field
+		'class'         => array('shipping-due-field', 'form-row-wide'), // array only, read more about classes and styling in the previous step
+		'label'         => 'Due Date',
+		'label_class'   => 'shipping-due-label',
+		'validate' => array('validate-shippingduedate'), // sometimes you need to customize labels, both string and arrays are supported
+		
+		), $checkout->get_value( 'shippingduedate' ) );
+ 
+	// you can also add some custom HTML here
+ 
+}
+
+//add_filter( 'woocommerce_ship_to_different_address_checked', '__return_true' );
+
+// save fields to order meta
+add_action( 'woocommerce_checkout_update_order_meta', 'winn_save_what_we_added' );
+ 
+// save field values
+function winn_save_what_we_added( $order_id ){
+ 
+	if( !empty( $_POST['shippingduedate'] ) )
+		update_post_meta( $order_id, 'shippingduedate', sanitize_text_field( $_POST['shippingduedate'] ) );
+ 
+}
+add_filter( 'woocommerce_checkout_fields' , 'winn_not_required_fields', 9999 );
+ 
+function winn_not_required_fields( $f ) {
+ 	
+	unset( $f['billing']); // that's it
+	return $f;
+}
+
+/**
+ * 
+ * Shows the packs on cartesian page. Add action hook for displaying packs on cart page.
+ */
+function show_packs_on_cart_page() {
+	do_action('show_packs_on_cart_page');
+}
