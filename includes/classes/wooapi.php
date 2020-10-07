@@ -1073,6 +1073,14 @@ class WooAPI extends \PriorityAPI\API
                         array_push($terms, $category['CATEGORYDES']);
                     }
                     wp_set_object_terms($id, $terms, 'product_cat');
+		    // update parent
+                    $spec3_id = get_term_by('name',$item['SPEC3'],'product_cat')->term_id;
+                    $spec4_id = get_term_by('name',$item['SPEC4'],'product_cat')->term_id;
+                    wp_update_term($spec3_id,'product_cat',array('parent'=>$spec4_id));
+                    foreach ($item['SOF_PARTCATEGORIES_SUBFORM'] as $category) {
+                      $id = get_term_by('name',$category['CATEGORYDES'],'product_cat')->term_id;
+                      wp_update_term($spec4_id,'product_cat',array('parent'=>$id));
+                    }
                     // update attributes
                     unset($thedata);
                     foreach ($item['PARTUNSPECS_SUBFORM'] as $attribute) {
