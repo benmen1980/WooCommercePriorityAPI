@@ -1726,11 +1726,11 @@ public function syncPacksPriority()
         // end
 	    $this->updateOption('auto_sync_order_status_priority_update', time());
     }
-
-
-    public function getPriorityCustomer($order){
-	$cust_numbers = explode('|',$this->option('walkin_number'));
-        $walk_in_customer = $order->get_shipping_country() == 'IL' ? $cust_numbers[0] : $cust_numbers[1];
+   public function getPriorityCustomer($order){
+        $cust_numbers = explode('|',$this->option('walkin_number'));
+        $country = !empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country();
+        $walk_in_customer = $country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1])  ? $cust_numbers[1] : $cust_numbers[0] ;
+        $walk_in_customer = !empty($walk_in_customer) ? $walk_in_customer : $cust_numbers[0];
         if ($order->get_customer_id()) {
             $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
             $cust_number = !empty($cust_number) ? $cust_number : $walk_in_customer;
