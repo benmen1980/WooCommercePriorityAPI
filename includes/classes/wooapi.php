@@ -2257,7 +2257,7 @@ public function syncPacksPriority()
                         'price_list_code' => $list['CUSTNAME'],
                         'price_list_name' => $list['CUSTDES'],
                         'price_list_currency' => 'ILS',
-                        'price_list_price' => $list['PRICE'],
+                        'price_list_price' => round((float)$list['PRICE']*1.17,2),
                         'blog_id' => $blog_id
                     ]);
 
