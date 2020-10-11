@@ -152,7 +152,7 @@ class WooAPI extends \PriorityAPI\API
 
 	    if ( $this->option( 'sell_by_pl' ) == true ) {
 		    // filter products regarding to price list
-		    add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
+		    add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByCustPart' ], 9999 );
 
 		    // filter product price regarding to price list
 		    add_filter( 'woocommerce_product_get_price', [ $this, 'filterPrice' ], 10, 2 );
@@ -3008,7 +3008,43 @@ public function syncOverTheCounterInvoice($order_id)
             $this->syncReceipt($order->get_id());
         }
     }
+	public function filterProductsByCustPart($ids)
+    {
+        if($user_id = get_current_user_id()) {
 
+            $custname = get_user_meta($user_id, 'priority_customer_number',true);
+            if(empty($custname)){
+                return $ids;
+            }
+            $products = $GLOBALS['wpdb']->get_results('
+                SELECT partname
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_customersparts
+                WHERE custname = "' . $custname . '"',
+                ARRAY_A
+            );
+            if(empty($products)){
+                return $ids;
+            }
+            $ids = [];
+            // get product id
+            foreach($products as $product) {
+                if ($id = wc_get_product_id_by_sku($product['partname'])) {
+                    $parent_id = get_post($id)->post_parent;
+                    if ($parent_id) $ids[] = $parent_id;
+                    $ids[] = $id;
+                }
+            }
+
+            $ids = array_unique($ids);
+            // there is no products assigned to price list, return 0
+            if (empty($ids)) return 0;
+            // return ids
+            return $ids;
+        }
+
+        // not logged in user
+        return [];
+    }
     // filter products by user price list
     public function filterProductsByPriceList($ids)
     {
