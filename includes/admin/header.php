@@ -40,7 +40,7 @@
         </li>
         <?php endif; ?>
 	<li>
-            <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=customersProducts'); ?>" class="<?php if($this->get('tab') == 'customersProducts') echo 'active'; ?>">
+            <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=customersproducts'); ?>" class="<?php if($this->get('tab') == 'customersproducts') echo 'active'; ?>">
 			    <?php _e('Customer\'s Products', 'p18a'); ?>
             </a>
         </li>
