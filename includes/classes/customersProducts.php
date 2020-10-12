@@ -8,7 +8,7 @@
 namespace PriorityWoocommerceAPI;
 
 
-class CustomersProducts extends \WP_List_Table
+class customersproducts extends \WP_List_Table
 {
     public function __construct()
     {
@@ -23,8 +23,8 @@ class CustomersProducts extends \WP_List_Table
         $sortable  = $this->get_sortable_columns();
 
         $data = $GLOBALS['wpdb']->get_results('
-            SELECT  custname,partname,custpartname
-            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_CustomersParts
+            SELECT  custname,partname
+            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_customersparts
             ',
             ARRAY_A
         );
