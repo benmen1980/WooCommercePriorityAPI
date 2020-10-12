@@ -98,12 +98,16 @@ function my_theme_scripts(){
 }
 add_filter( 'woocommerce_quantity_input_args', 'jk_woocommerce_quantity_input_args', 10, 2 ); // Simple products
 function jk_woocommerce_quantity_input_args( $args, $product ) {
-    if ( ! is_cart() ) {
+    $packs = get_post_meta( $product->get_id(), 'pri_packs', true );
+    if(empty($packs)){
+        return $args;
+    }
+    if ( ! is_cart()) {
         $args['input_value']    = 0;
         $args['min_value']    = 0;
-        $packs = get_post_meta( $product->get_id(), 'pri_packs', true );
         $args['step']    = $packs[0]['PACKQUANT'];  // need to get the steps of the first pack
     }
     return $args;
 }
+
 
