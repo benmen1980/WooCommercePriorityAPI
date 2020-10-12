@@ -335,7 +335,7 @@ class WooAPI extends \PriorityAPI\API
                 include P18AW_CLASSES_DIR . 'pricelist.php';
                 include P18AW_CLASSES_DIR . 'productpricelist.php';
 	        include P18AW_CLASSES_DIR . 'sites.php';
-		include P18AW_CLASSES_DIR . 'customersProducts.php';
+		include P18AW_CLASSES_DIR . 'customersproducts.php';
                 
 		add_menu_page(P18AW_PLUGIN_NAME, P18AW_PLUGIN_NAME, 'manage_options', P18AW_PLUGIN_ADMIN_URL, function(){ 
 
@@ -394,15 +394,16 @@ class WooAPI extends \PriorityAPI\API
 
 
 		                    break;
-			   case 'customersProducts';		
-				include P18AW_ADMIN_DIR . 'customersProducts.php';
-				break;
-			case 'sync_attachments';
-				include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
-				break;
-		        case 'packs';
-				$this->syncPacksPriority();
-				break;
+                case 'customersproducts';
+                    include P18AW_ADMIN_DIR . 'customersproducts.php';
+                            break;
+
+			    case 'sync_attachments';
+                    include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
+                    break;
+                    case 'packs';
+                    $this->syncPacksPriority();
+                    break;
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -821,7 +822,6 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
-
                 case 'sync_pricelist_priority':
 
 
@@ -832,7 +832,6 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
-
 	            case 'sync_sites_priority':
 
 
@@ -843,7 +842,6 @@ class WooAPI extends \PriorityAPI\API
 		            }
 
 		            break;
-
                 case 'sync_receipts_priority':
 
                     try {
@@ -855,7 +853,9 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
-
+                case 'sync_c_products_priority':
+                    $this->syncCustomerProducts();
+                    break;
                 case 'post_customers':
                 
                     try {
@@ -871,7 +871,6 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
-
                 case 'auto_sync_order_status_priority':
                     try {
 
@@ -895,17 +894,10 @@ class WooAPI extends \PriorityAPI\API
                     }catch(Exception $e) {
 	                    exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
-
-
-                default: 
-
+                default:
                     exit(json_encode(['status' => 0, 'msg' => 'Unknown method ' . $_POST['sync']]));
-
             }
-
             exit(json_encode(['status' => 1, 'timestamp' => date('d/m/Y H:i:s')]));
-
-
         });
 
         // ajax action for manual syncs
@@ -960,11 +952,11 @@ class WooAPI extends \PriorityAPI\API
        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
        // get the items simply by time stamp of today
-        $daysback = 3; // change days back to get  prev days
+        $daysback = 30; // change days back to get  prev days
 	    $stamp = mktime(0 - $daysback * 24, 0, 0);
 	    $bod = date(DATE_ATOM,$stamp);
-	    //$url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\' and PARTNAME eq \'99709\' &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
-        $url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\'  &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    $url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\' and PARTNAME eq \'99709\' &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+        //$url_addition = 'UDATE ge '.urlencode($bod).' and ITAI_INKATALOG eq \'Y\'  &$expand=SOF_PARTCATEGORIES_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
 	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition,[], $this->option('log_items_priority', true));
 	    // check response status
         if ($response['status']) {
@@ -1073,13 +1065,13 @@ class WooAPI extends \PriorityAPI\API
                         array_push($terms, $category['CATEGORYDES']);
                     }
                     wp_set_object_terms($id, $terms, 'product_cat');
-		    // update parent
+                    // update parent
                     $spec3_id = get_term_by('name',$item['SPEC3'],'product_cat')->term_id;
                     $spec4_id = get_term_by('name',$item['SPEC4'],'product_cat')->term_id;
                     wp_update_term($spec3_id,'product_cat',array('parent'=>$spec4_id));
                     foreach ($item['SOF_PARTCATEGORIES_SUBFORM'] as $category) {
                       $id = get_term_by('name',$category['CATEGORYDES'],'product_cat')->term_id;
-                      wp_update_term($spec4_id,'product_cat',array('parent'=>$id));
+                        wp_update_term($spec4_id,'product_cat',array('parent'=>$id));
                     }
                     // update attributes
                     unset($thedata);
@@ -2208,13 +2200,7 @@ public function syncPacksPriority()
 	    }
     }
 
-
-
-    /**
-     * Sync price lists from priority to web
-     */
-	
-	 public function syncCustomerPrice()
+    public function syncCustomerPrice()
     {
         $response = $this->makeRequest('GET', 'ZOHA_CUSTDISCREP ', [], $this->option('log_pricelist_priority', true));
 
@@ -2283,7 +2269,10 @@ public function syncPacksPriority()
         }
 
     }
-	
+
+    /**
+     * Sync price lists from priority to web
+     */
     public function syncPriceLists()
     {
         $response = $this->makeRequest('GET', 'PRICELIST?$expand=PLISTCUSTOMERS_SUBFORM,PARTPRICE2_SUBFORM', [], $this->option('log_pricelist_priority', true));
@@ -2352,6 +2341,60 @@ public function syncPacksPriority()
 
         }
 
+    }
+    public function syncCustomerProducts()
+    {
+        $response = $this->makeRequest('GET', 'CUSTOMERS?$filter=CUSTPART eq \'Y\' and PRIVITAI_USEROFFON eq \'Y\' 
+                                            &$select=CUSTNAME,MCUSTNAME &$expand=CUSTPART_SUBFORM($filter=ITAI_INKATALOG eq \'Y\';),
+                                                                                 ROYY_CUSTPART_SUBFORM($filter=Y_32405_0_ESHB eq \'Y\';)',
+            [], $this->option('log_sites_priority', true));
+        // check response status
+        if ($response['status']) {
+            // create the table
+            $table = $GLOBALS['wpdb']->prefix . 'p18a_CustomersParts';
+            $sql = "CREATE TABLE $table (
+            id  INT AUTO_INCREMENT,
+            blog_id INT,
+            custname VARCHAR(32),
+            partname VARCHAR(32),
+            PRIMARY KEY  (id)
+            )";
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            dbDelta($sql);
+            // allow multisite
+            $blog_id =  get_current_blog_id();
+            // delete all existing data from sites list table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            // decode raw response
+            $data = json_decode($response['body_raw'], true);
+            if (isset($data['value'])) {
+                foreach($data['value'] as $list) {
+                    // check MCUSTNAME
+                    $sub_form = 'CUSTPART_SUBFORM';
+                    if (!empty($list['MCUSTNAME'])) {
+                        $sub_form = 'ROYY_CUSTPART_SUBFORM';
+                    }
+                    if (isset($list[$sub_form])) {
+                        {
+                            foreach ($list[$sub_form] as $item) {
+                                $GLOBALS['wpdb']->insert($table, [
+                                    'custname' => $list['CUSTNAME'],
+                                    'partname' => $item['PARTNAME']
+                                ]);
+                            }
+                        }
+                    }
+                }
+                // add timestamp
+                $this->updateOption('pricelist_priority_update', time());
+            }
+        } else {
+            $this->sendEmailError(
+                $this->option('email_error_sync_pricelist_priority'),
+                'Error Sync Price Lists Priority',
+                $response['body']
+            );
+        }
     }
 
     /* sync sites */
@@ -3008,7 +3051,9 @@ public function syncOverTheCounterInvoice($order_id)
             $this->syncReceipt($order->get_id());
         }
     }
-	public function filterProductsByCustPart($ids)
+
+    // filter products by user price list
+    public function filterProductsByCustPart($ids)
     {
         if($user_id = get_current_user_id()) {
 
@@ -3045,7 +3090,6 @@ public function syncOverTheCounterInvoice($order_id)
         // not logged in user
         return [];
     }
-    // filter products by user price list
     public function filterProductsByPriceList($ids)
     {
 
@@ -3165,11 +3209,22 @@ public function syncOverTheCounterInvoice($order_id)
     // filter product price
     public function filterPrice($price, $product)
     {
-        $data = $this->getProductDataBySku($product->get_sku());
-
-	    if ($data && $data !== 'no-selected') return $data['price_list_price'];
-        //if ((!is_cart() && !is_checkout()) && $data && $data !== 'no-selected') return $data['price_list_price'];
-        
+        $sku = $product->get_sku();
+        $priority_customer_number = get_user_meta(get_current_user_id(), 'priority_customer_number',true);
+        if(empty($priority_customer_number)||empty($sku)){
+            return $price;
+        }
+        $data = $GLOBALS['wpdb']->get_row('
+                SELECT price_list_price
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
+                WHERE product_sku = "' . esc_sql($sku) . '"
+                AND price_list_code = "' . esc_sql($priority_customer_number) . '"
+                AND blog_id = ' . get_current_blog_id(),
+            ARRAY_A
+        );
+        if($data['price_list_price']> 0.0 && !is_cart() && !is_checkout()){
+            $price = $data['price_list_price'];
+        }
         return $price;
     }
 
