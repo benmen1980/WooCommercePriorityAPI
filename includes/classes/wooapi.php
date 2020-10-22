@@ -2115,17 +2115,17 @@ public function syncPacksPriority()
 			$this->syncOrder( $order_id );
 		}
 		// sync OTC
-		if($this->option('post_einvoices_checkout')&& empty(get_post_meta($order_id,'priority_invoice_status',false)[0])) {
+		if($this->option('post_einvoice_checkout')&& empty(get_post_meta($order_id,'priority_invoice_status',false)[0])) {
 			// avoid repetition
         		$order->update_meta_data('priority_invoice_status','Processing');
 			$this->syncOverTheCounterInvoice( $order_id );
 		}
 		// sync Ainvoices
-		if($this->option('sync_onorder_ainvoices')) {
+		if($this->option('post_ainvoice_checkout')) {
 			$this->syncAinvoice($order_id);
 		}
 		// sync receipts
-		if($this->option('sync_onorder_receipts')) {
+		if($this->option('post_receipt_checkout')) {
 		    $this->syncReceipt($order_id);
 		}
 	 }
