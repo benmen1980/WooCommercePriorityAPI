@@ -339,21 +339,31 @@ $format2 = 'd/m/Y H:i:s';
 
 
 			<tr><td>_______________________________</td></tr>
+        </table>
+        <h1>Sync Orders Control</h1><br>
+        <table>
+            <thead>
+            <td>Title</td>
+            <td>On checkout?</td>
+            <td>Schedule</td>
+            <td>Last cron sync</td>
+            </thead>
 			<!--  sync reciepts -->
 			<tr>
 				<td class="p18a-label">
 					<?php _e('Receipts > Priority', 'p18a'); ?>
 				</td>
 				<td>
-					<input type="checkbox" name="sync_onorder_receipts" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_receipts')) echo 'checked'; ?> />
-				</td>
-				<td>
-
-				</td>
-
-				<td>
-
-				</td>
+					<input type="checkbox" name="post_receipt_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_receipt_checkout')) echo 'checked'; ?> />
+                </td>
+                <td>
+                    <select name="cron_receipt" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('cron_receipt')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('cron_receipt') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('cron_receipt') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('cron_receipt') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
 				<td data-sync-time="sync_receipts_priority">
 					<?php
 					if ($timestamp = $this->option('receipts_priority_update', false)) {
@@ -363,26 +373,23 @@ $format2 = 'd/m/Y H:i:s';
 					}
 					?>
 				</td>
-				<td>
-
-				</td>
-				<td>
-					<input type="text" style="width:300px" name="email_error_sync_receipts_priority" form="p18aw-sync"><?=$this->option('email_error_sync_receipts_priority')?></textarea>
-				</td>
 			</tr>
-
-
+            <!-- sync ainvoices -->
 			<tr>
-
-				<!-- sync ainvoices -->
 				<td class="p18a-label">
 					<?php _e('Sales Invoices > Priority', 'p18a'); ?>
 				</td>
 				<td>
-					<input type="checkbox"  name="sync_onorder_ainvoices" form="p18aw-sync" value="1" <?php if($this->option('sync_onorder_ainvoices')) echo 'checked'; ?> />
+					<input type="checkbox"  name="post_ainvoice_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_ainvoice_checkout')) echo 'checked'; ?> />
 				</td>
-				<td></td>
-				<td></td>
+                <td>
+                    <select name="cron_ainvoice" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('cron_ainvoice')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('cron_ainvoice') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('cron_ainvoice') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('cron_ainvoice') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
 				<td data-sync-time="sync_ainvoices_priority">
 					<?php
 					if ($timestamp = $this->option('ainvoices_priority_update', false)) {
@@ -392,14 +399,8 @@ $format2 = 'd/m/Y H:i:s';
 					}
 					?>
 				</td>
-				<td>
-
-				</td>
-				<td>
-					<input type="text" style="width:300px" name="email_error_sync_ainvoices_priority" form="p18aw-sync"><?=$this->option('email_error_sync_ainvoices_priority')?></input>
-				</td>
 			</tr>
-
+            <!-- sync customers -->
 			<tr>
 				<td class="p18a-label">
 					<?php _e('Customers Web > Priority', 'p18a'); ?>
@@ -407,8 +408,7 @@ $format2 = 'd/m/Y H:i:s';
 				<td>
 					<input type="checkbox" name="post_customers" form="p18aw-sync" value="1" <?php if($this->option('post_customers')) echo 'checked'; ?> />
 				</td>
-				<td colspan="2">
-
+				<td>
 				</td>
 				<td data-sync-time="sync_customers_web">
 					<?php
@@ -420,34 +420,59 @@ $format2 = 'd/m/Y H:i:s';
 					?>
 				</td>
 				<td>
-
-				</td>
-				<td>
-					<input type="text" style="width:300px" name="email_error_sync_customers_web" form="p18aw-sync"><?=$this->option('email_error_sync_customers_web')?></input>
 				</td>
 			</tr>
-
+            <!-- sync Orders -->
 			<tr>
 				<td class="p18a-label">
-					<?php _e('Post Order > Priority on check out', 'p18a'); ?><i><b>  beta</b></i>
+					<?php _e('Sales Order > Priority', 'p18a'); ?>
 				</td>
-				<td colspan="5">
+				<td>
 					<input type="checkbox" name="post_order_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_order_checkout')) echo 'checked'; ?> />
 				</td>
-				<td>
-					<input type="text"  style="width:300px" name="email_error_sync_orders_web" form="p18aw-sync"><?=$this->option('email_error_sync_orders_web')?></input>
-				</td>
+                <td>
+                    <select name="cron_orders" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('cron_orders')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('cron_orders') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('cron_orders') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('cron_orders') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
+                <td data-sync-time="auto_post_orders_priority">
+                    <?php
+                    if ($timestamp = $this->option('time_stamp_cron_order', false)) {
+                        echo(get_date_from_gmt(date($format, $timestamp),$format2));
+                    } else {
+                        _e('Never', 'p18a');
+                    }
+                    ?>
+                </td>
 			</tr>
+            <!-- sync otc -->
 			<tr>
 				<td class="p18a-label">
-					<?php _e('Post Order > Priority OTC Invoice on check out', 'p18a'); ?><i><b>  beta</b></i>
-				</td>
-				<td colspan="5">
-					<input type="checkbox" name="post_einvoices_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_einvoices_checkout')) echo 'checked'; ?> />
+					<?php _e('OTC Invoice > Priority', 'p18a'); ?><i><b>  beta</b></i>
 				</td>
 				<td>
-					<input type="text"  style="width:300px" name="email_error_sync_einvoices_web" form="p18aw-sync" value="<?=$this->option('email_error_sync_einvoices_web')?>">
+					<input type="checkbox" name="post_einvoice_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_einvoice_checkout')) echo 'checked'; ?> />
 				</td>
+                <td>
+                    <select name="cron_otc" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('cron_otc')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('cron_otc') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('cron_otc') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('cron_otc') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
+                <td data-sync-time="time_stamp_cron_otc">
+                    <?php
+                    if ($timestamp = $this->option('time_stamp_cron_otc', false)) {
+                        echo(get_date_from_gmt(date($format, $timestamp),$format2));
+                    } else {
+                        _e('Never', 'p18a');
+                    }
+                    ?>
+                </td>
 			</tr>
 
 
