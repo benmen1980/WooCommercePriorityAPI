@@ -23,7 +23,7 @@ $format2 = 'd/m/Y H:i:s';
 				<td><strong><?php _e('Last sync', 'p18a'); ?></strong></td>
 				<td><strong><?php _e('Manual sync', 'p18a'); ?></strong></td>
 
-				<td><span title="Use this column to overwrite the GET odata header, in order to use a custom filter."><strong><?php _e('Static odata header query', 'p18a'); ?></strong></span></td>
+				<td><span title="Use this column to overwrite the GET odata header, in order to use a custom filter."><strong><?php _e('Extra data', 'p18a'); ?></strong></span></td>
 			</tr>
 
 			<tr>
@@ -364,9 +364,9 @@ $format2 = 'd/m/Y H:i:s';
                         <option value="twicedaily" <?php if($this->option('cron_receipt') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
                     </select>
                 </td>
-				<td data-sync-time="sync_receipts_priority">
+				<td data-sync-time="time_stamp_cron_receipt">
 					<?php
-					if ($timestamp = $this->option('receipts_priority_update', false)) {
+					if ($timestamp = $this->option('time_stamp_cron_receipt', false)) {
 						echo(get_date_from_gmt(date($format, $timestamp),$format2));
 					} else {
 						_e('Never', 'p18a');
@@ -390,9 +390,9 @@ $format2 = 'd/m/Y H:i:s';
                         <option value="twicedaily" <?php if($this->option('cron_ainvoice') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
                     </select>
                 </td>
-				<td data-sync-time="sync_ainvoices_priority">
+				<td data-sync-time="time_stamp_cron_ainvoice">
 					<?php
-					if ($timestamp = $this->option('ainvoices_priority_update', false)) {
+					if ($timestamp = $this->option('time_stamp_cron_ainvoice', false)) {
 						echo(get_date_from_gmt(date($format, $timestamp),$format2));
 					} else {
 						_e('Never', 'p18a');
@@ -438,7 +438,7 @@ $format2 = 'd/m/Y H:i:s';
                         <option value="twicedaily" <?php if($this->option('cron_orders') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
                     </select>
                 </td>
-                <td data-sync-time="auto_post_orders_priority">
+                <td data-sync-time="time_stamp_cron_order">
                     <?php
                     if ($timestamp = $this->option('time_stamp_cron_order', false)) {
                         echo(get_date_from_gmt(date($format, $timestamp),$format2));

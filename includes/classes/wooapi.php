@@ -27,14 +27,12 @@ class WooAPI extends \PriorityAPI\API
         
         return static::$instance;
     }
- 
     private function __construct()
     {
         // get countries
         $this->countries = include(P18AW_INCLUDES_DIR . 'countries.php');
-
         /**
-         * Schedule auto syncs
+         * Schedule cron  syncs
          */
         $syncs = [
             'sync_items_priority'           => 'syncItemsPriority',
@@ -44,12 +42,6 @@ class WooAPI extends \PriorityAPI\API
             'sync_pricelist_priority'       => 'syncPriceLists',
             'sync_receipts_priority'        => 'syncReceipts',
             'sync_order_status_priority' => 'syncPriorityOrderStatus',
-            // sync order control
-            'cron_orders'          => 'syncOrders',
-            'cron_receipt'          => 'syncReceipts',
-            'cron_ainvoice'          => 'syncAinvoices',
-            'cron_otc'          => 'syncOtc'
-
         ];
 
         foreach ($syncs as $hook => $action) {
@@ -63,7 +55,26 @@ class WooAPI extends \PriorityAPI\API
                 }
 
             }
+        }
 
+        // sync order control
+        $syncs = [
+            'cron_orders'          => 'syncOrders',
+            'cron_receipt'          => 'syncReceipts',
+            'cron_ainvoice'          => 'syncAinvoices',
+            'cron_otc'          => 'syncOtc'
+        ];
+        foreach ($syncs as $hook => $action) {
+            // Schedule sync
+            if ($this->option( $hook, false)) {
+
+                add_action($hook, [$this, $action]);
+
+                if ( ! wp_next_scheduled($hook)) {
+                    wp_schedule_event(time(), $this->option( $hook), $hook);
+                }
+
+            }
         }
 
         // add actions for user profile
@@ -1746,7 +1757,6 @@ public function syncPacksPriority()
         }
         return $cust_number;
     }
-
     public function syncOrders(){
 	    $query = new \WC_Order_Query( array(
 		    //'limit' => get_option('posts_per_page'),
@@ -1754,25 +1764,83 @@ public function syncPacksPriority()
 		    'orderby' => 'date',
 		    'order' => 'DESC',
 		    'return' => 'ids',
-		    'meta_key'     => 'priority_status', // The postmeta key field
+		    'meta_key'     => 'priority_order_status', // The postmeta key field
 		    'meta_compare' => 'NOT EXISTS', // The comparison argument 
 	    ) );
 	    
 	    $orders = $query->get_orders();
 	    foreach ($orders as $id){
 		    $order =wc_get_order($id);
-		    $priority_status = $order->get_meta('priority_status');
+		    $priority_status = $order->get_meta('priority_order_status');
 		    if(!$priority_status){
-
 			    $response = $this->syncOrder($id,$this->option('log_auto_post_orders_priority', true));
-
-
 		    }
-
 	    };
-	    $this->updateOption('auto_post_orders_priority_update', time());
+	    $this->updateOption('time_stamp_cron_receipt', time());
     }
+    public function syncReceipts(){
+        $query = new \WC_Order_Query( array(
+            //'limit' => get_option('posts_per_page'),
+            'limit' => 1000,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'return' => 'ids',
+            'meta_key'     => 'priority_recipe_status', // The postmeta key field
+            'meta_compare' => 'NOT EXISTS', // The comparison argument
+        ) );
 
+        $orders = $query->get_orders();
+        foreach ($orders as $id){
+            $order =wc_get_order($id);
+            $priority_status = $order->get_meta('priority_recipe_status');
+            if(!$priority_status){
+                $response = $this->syncReceipt($id);
+            }
+        };
+        $this->updateOption('time_stamp_cron_order', time());
+    }
+    public function syncAinvoices(){
+        $query = new \WC_Order_Query( array(
+            //'limit' => get_option('posts_per_page'),
+            'limit' => 1000,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'return' => 'ids',
+            'meta_key'     => 'priority_invoice_status', // The postmeta key field
+            'meta_compare' => 'NOT EXISTS', // The comparison argument
+        ) );
+
+        $orders = $query->get_orders();
+        foreach ($orders as $id){
+            $order =wc_get_order($id);
+            $priority_status = $order->get_meta('priority_invoice_status');
+            if(!$priority_status){
+                $response = $this->syncAinvoice($id);
+            }
+        };
+        $this->updateOption('time_stamp_cron_ainvoice', time());
+    }
+    public function syncOtc(){
+        $query = new \WC_Order_Query( array(
+            //'limit' => get_option('posts_per_page'),
+            'limit' => 1000,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'return' => 'ids',
+            'meta_key'     => 'priority_invoice_status', // The postmeta key field
+            'meta_compare' => 'NOT EXISTS', // The comparison argument
+        ) );
+
+        $orders = $query->get_orders();
+        foreach ($orders as $id){
+            $order =wc_get_order($id);
+            $priority_status = $order->get_meta('priority_invoice_status');
+            if(!$priority_status){
+                $response = $this->syncOverTheCounterInvoice($id);
+            }
+        };
+        $this->updateOption('time_stamp_cron_otc', time());
+    }
 	/**
 	 * Sync order by id
 	 *
@@ -2676,7 +2744,6 @@ public function syncOverTheCounterInvoice($order_id)
 
 
 	}
-	
     public function syncReceipt($order_id)
     {
 
@@ -2863,7 +2930,7 @@ public function syncOverTheCounterInvoice($order_id)
      *
      * @return void
      */
-    public function syncReceipts()
+    public function syncReceiptsCompleted()
     {
         // get all completed orders
         $orders = wc_get_orders(['status' => 'completed']);
