@@ -43,8 +43,13 @@ class WooAPI extends \PriorityAPI\API
             'sync_inventory_priority'       => 'syncInventoryPriority',
             'sync_pricelist_priority'       => 'syncPriceLists',
             'sync_receipts_priority'        => 'syncReceipts',
-            'sync_orders_priority'          => 'syncOrders',
-            'sync_order_status_priority' => 'syncPriorityOrderStatus'
+            'sync_order_status_priority' => 'syncPriorityOrderStatus',
+            // sync order control
+            'cron_orders'          => 'syncOrders',
+            'cron_receipt'          => 'syncReceipts',
+            'cron_ainvoice'          => 'syncAinvoices',
+            'cron_otc'          => 'syncOtc'
+
         ];
 
         foreach ($syncs as $hook => $action) {
@@ -529,7 +534,7 @@ class WooAPI extends \PriorityAPI\API
 
             }
 
-            // save sync settings
+              // save sync settings
             if ($this->post('p18aw-save-sync') && wp_verify_nonce($this->post('p18aw-nonce'), 'save-sync')) {
 
                 $this->updateOption('log_items_priority',                   $this->post('log_items_priority'));
@@ -550,13 +555,9 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_receipts_priority',                $this->post('log_receipts_priority'));
                 $this->updateOption('auto_sync_receipts_priority',          $this->post('auto_sync_receipts_priority'));
                 $this->updateOption('email_error_sync_receipts_priority',   $this->post('email_error_sync_receipts_priority'));
-                $this->updateOption('post_customers',                    $this->post('post_customers'));
                 $this->updateOption('email_error_sync_customers_web',       $this->post('email_error_sync_customers_web'));
                 $this->updateOption('log_shipping_methods',                 $this->post('log_shipping_methods'));
-                $this->updateOption('post_order_checkout',                  $this->post('post_order_checkout'));
                 $this->updateOption('email_error_sync_orders_web',          $this->post('email_error_sync_orders_web'));
-                $this->updateOption('sync_onorder_receipts',                $this->post('sync_onorder_receipts'));
-		        $this->updateOption('sync_onorder_ainvoices',               $this->post('sync_onorder_ainvoices'));
 	            $this->updateOption('email_error_sync_ainvoices_priority',  $this->post('email_error_sync_ainvoices_priority'));
 	            $this->updateOption('log_sync_order_status_priority',       $this->post('log_sync_order_status_priority'));
 	            $this->updateOption('auto_sync_order_status_priority',      $this->post('auto_sync_order_status_priority'));
@@ -566,11 +567,17 @@ class WooAPI extends \PriorityAPI\API
 	            $this->updateOption('log_sites_priority',                   $this->post('log_sites_priority'));
 		        $this->updateOption('auto_sync_c_products_priority',        $this->post('auto_sync_c_products_priority'));
 		        $this->updateOption('log_c_products_priority',              $this->post('log_c_products_priority'));
-	            $this->updateOption('post_einvoices_checkout',              $this->post('post_einvoices_checkout'));
 		        $this->updateOption('email_error_sync_einvoices_web',       $this->post('email_error_sync_einvoices_web'));
-
-
-
+		        // sync orders control
+                $this->updateOption('post_receipt_checkout',                $this->post('post_receipt_checkout'));
+                $this->updateOption('cron_receipt',                $this->post('cron_receipt'));
+                $this->updateOption('post_ainvoice_checkout',               $this->post('post_ainvoice_checkout'));
+                $this->updateOption('cron_ainvoice',               $this->post('cron_ainvoice'));
+                $this->updateOption('post_customers',                    $this->post('post_customers'));
+                $this->updateOption('post_order_checkout',              $this->post('post_order_checkout'));
+                $this->updateOption('cron_orders',                  $this->post('cron_orders'));
+                $this->updateOption('post_einvoice_checkout',              $this->post('post_einvoice_checkout'));
+                $this->updateOption('cron_otc',              $this->post('cron_otc'));
 
 
                 $this->notify('Sync settings saved');
