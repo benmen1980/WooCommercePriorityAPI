@@ -584,13 +584,18 @@ class WooAPI extends \PriorityAPI\API
 		        // sync orders control
                 $this->updateOption('post_receipt_checkout',                $this->post('post_receipt_checkout'));
                 $this->updateOption('cron_receipt',                $this->post('cron_receipt'));
+                $this->updateOption('receipt_order_field',                $this->post('receipt_order_field'));
                 $this->updateOption('post_ainvoice_checkout',               $this->post('post_ainvoice_checkout'));
                 $this->updateOption('cron_ainvoice',               $this->post('cron_ainvoice'));
+                $this->updateOption('ainvoice_order_field',               $this->post('ainvoice_order_field'));
                 $this->updateOption('post_customers',                    $this->post('post_customers'));
                 $this->updateOption('post_order_checkout',              $this->post('post_order_checkout'));
                 $this->updateOption('cron_orders',                  $this->post('cron_orders'));
+                $this->updateOption('order_order_field',                  $this->post('order_order_field'));
                 $this->updateOption('post_einvoice_checkout',              $this->post('post_einvoice_checkout'));
                 $this->updateOption('cron_otc',              $this->post('cron_otc'));
+                $this->updateOption('otc_order_field',              $this->post('otc_order_field'));
+
 
 
                 $this->notify('Sync settings saved');

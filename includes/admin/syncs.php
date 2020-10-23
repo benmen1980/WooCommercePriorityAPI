@@ -312,15 +312,16 @@ $format2 = 'd/m/Y H:i:s';
         <h1>Sync Orders Control</h1><br>
         <table>
             <thead>
-            <td>Title</td>
-            <td>On checkout?</td>
-            <td>Schedule</td>
-            <td>Last cron sync</td>
+            <td><strong>Priority Document</strong></td>
+            <td><strong>On checkout?</strong></td>
+            <td><strong>Set Schedule</strong></td>
+            <td><strong>Last Schedule run</strong></td>
+            <td><strong>Priority Order Field</strong></td>
             </thead>
 			<!--  sync reciepts -->
 			<tr>
 				<td class="p18a-label">
-					<?php _e('Receipts > Priority', 'p18a'); ?>
+					<?php _e('Receipts', 'p18a'); ?>
 				</td>
 				<td>
 					<input type="checkbox" name="post_receipt_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_receipt_checkout')) echo 'checked'; ?> />
@@ -342,11 +343,16 @@ $format2 = 'd/m/Y H:i:s';
 					}
 					?>
 				</td>
+                <td>
+                    <input type="text" style="width:300px" name="receipt_order_field" form="p18aw-sync" placeholder="Enter BOOKNUM or DETAILS"
+                        value="<?=empty($this->option('receipt_order_field')) ? 'BOOKNUM' : $this->option('receipt_order_field')?>"></input>
+                </td>
+
 			</tr>
             <!-- sync ainvoices -->
 			<tr>
 				<td class="p18a-label">
-					<?php _e('Sales Invoices > Priority', 'p18a'); ?>
+					<?php _e('Sales Invoices', 'p18a'); ?>
 				</td>
 				<td>
 					<input type="checkbox"  name="post_ainvoice_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_ainvoice_checkout')) echo 'checked'; ?> />
@@ -368,33 +374,15 @@ $format2 = 'd/m/Y H:i:s';
 					}
 					?>
 				</td>
-			</tr>
-            <!-- sync customers -->
-			<tr>
-				<td class="p18a-label">
-					<?php _e('Customers Web > Priority', 'p18a'); ?>
-				</td>
-				<td>
-					<input type="checkbox" name="post_customers" form="p18aw-sync" value="1" <?php if($this->option('post_customers')) echo 'checked'; ?> />
-				</td>
-				<td>
-				</td>
-				<td data-sync-time="sync_customers_web">
-					<?php
-					if ($timestamp = $this->option('customers_web_update', false)) {
-						echo(get_date_from_gmt(date($format, $timestamp),$format2));
-					} else {
-						_e('Never', 'p18a');
-					}
-					?>
-				</td>
-				<td>
-				</td>
+                <td>
+                    <input type="text" style="width:300px" name="ainvoice_order_field" form="p18aw-sync" placeholder="Enter BOOKNUM or DETAILS"
+                           value="<?=empty($this->option('ainvoice_order_field')) ? 'DETAILS' : $this->option('ainvoice_order_field')?>"></input>
+                </td>
 			</tr>
             <!-- sync Orders -->
 			<tr>
 				<td class="p18a-label">
-					<?php _e('Sales Order > Priority', 'p18a'); ?>
+					<?php _e('Sales Order', 'p18a'); ?>
 				</td>
 				<td>
 					<input type="checkbox" name="post_order_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_order_checkout')) echo 'checked'; ?> />
@@ -416,11 +404,15 @@ $format2 = 'd/m/Y H:i:s';
                     }
                     ?>
                 </td>
+                <td>
+                    <input type="text" style="width:300px" name="order_order_field" form="p18aw-sync" placeholder="Enter BOOKNUM or DETAILS"
+                           value="<?=empty($this->option('order_order_field')) ? 'BOOKNUM' : $this->option('order_order_field')?>"></input>
+                </td>
 			</tr>
             <!-- sync otc -->
 			<tr>
 				<td class="p18a-label">
-					<?php _e('OTC Invoice > Priority', 'p18a'); ?><i><b>  beta</b></i>
+					<?php _e('OTC Invoice', 'p18a'); ?>
 				</td>
 				<td>
 					<input type="checkbox" name="post_einvoice_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_einvoice_checkout')) echo 'checked'; ?> />
@@ -442,18 +434,41 @@ $format2 = 'd/m/Y H:i:s';
                     }
                     ?>
                 </td>
+                <td>
+                    <input type="text" style="width:300px" name="otc_order_field" form="p18aw-sync" placeholder="Enter BOOKNUM or DETAILS"
+                           value="<?=empty($this->option('otc_order_field')) ? 'DETAILS' : $this->option('otc_order_field')?>"></input>
+                </td>
 			</tr>
-
-
+            <!-- sync customers -->
+            <tr>
+                <td class="p18a-label">
+                    <?php _e('Customers', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="post_customers" form="p18aw-sync" value="1" <?php if($this->option('post_customers')) echo 'checked'; ?> />
+                </td>
+                <td>
+                </td>
+                <td data-sync-time="sync_customers_web">
+                    <?php
+                    if ($timestamp = $this->option('customers_web_update', false)) {
+                        echo(get_date_from_gmt(date($format, $timestamp),$format2));
+                    } else {
+                        _e('Never', 'p18a');
+                    }
+                    ?>
+                </td>
+                <td>
+                </td>
+                <td></td>
+            </tr>
+            <!-- submit -->
 			<tr>
 				<td class="p18a-label" colspan="6">
 					<input type="submit" class="button-primary" value="<?php _e('Save changes', 'p18a'); ?>" name="p18aw-save-sync" form="p18aw-sync" />
 				</td>
 			</tr>
-
-
 		</table>
-
 	</div>
 
 </div>
