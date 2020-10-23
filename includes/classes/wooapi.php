@@ -62,7 +62,7 @@ class WooAPI extends \PriorityAPI\API
             'cron_orders'          => 'syncOrders',
             'cron_receipt'          => 'syncReceipts',
             'cron_ainvoice'          => 'syncAinvoices',
-            'cron_otc'          => 'syncOtc'
+            'cron_otc'          => 'syncOtcs'
         ];
         foreach ($syncs as $hook => $action) {
             // Schedule sync
@@ -1827,7 +1827,7 @@ public function syncPacksPriority()
         };
         $this->updateOption('time_stamp_cron_ainvoice', time());
     }
-    public function syncOtc(){
+    public function syncOtcs(){
         $query = new \WC_Order_Query( array(
             //'limit' => get_option('posts_per_page'),
             'limit' => 1000,
@@ -1873,7 +1873,7 @@ public function syncPacksPriority()
         $data = [
             'CUSTNAME' => $cust_number,
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM'  => $order->get_order_number(),
+            $this->option('order_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
            
@@ -2373,7 +2373,7 @@ public function syncAinvoice($id)
 		$data = [
 			'CUSTNAME' => $cust_number,
 			'IVDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-			'BOOKNUM'  => $order->get_order_number(),
+            $this->option('ainvoice_order_field')  => $order->get_order_number(),
 			//'DCODE' => $priority_dep_number, // this is the site in Priority
 			//'DETAILS' => $user_department,
 
@@ -2571,7 +2571,7 @@ public function syncOverTheCounterInvoice($order_id)
 		$data = [
 			'CUSTNAME'  => $cust_number,
 			'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
-			'BOOKNUM' => $order->get_order_number(),
+            $this->option('otc_order_field') => $order->get_order_number(),
 
 		];
         // CDES
@@ -2762,7 +2762,7 @@ public function syncOverTheCounterInvoice($order_id)
         $data = [
             'CUSTNAME' => $cust_number,
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
-            'BOOKNUM' => $order->get_order_number(),
+            $this->option('receipt_order_field') => $order->get_order_number(),
 
         ];
         // CDES
