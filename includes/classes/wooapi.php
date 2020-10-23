@@ -595,6 +595,9 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('post_einvoice_checkout',              $this->post('post_einvoice_checkout'));
                 $this->updateOption('cron_otc',              $this->post('cron_otc'));
                 $this->updateOption('otc_order_field',              $this->post('otc_order_field'));
+                $this->updateOption('post_prospect',              $this->post('post_prospect'));
+                $this->updateOption('prospect_field',              $this->post('prospect_field'));
+
 
 
 
@@ -1860,7 +1863,7 @@ public function syncPacksPriority()
 	        if($session['ordertype']=='Recipe'){
 		   return;
             }
-	}
+	    }
         $order = new \WC_Order($id);
 	    $user = $order->get_user();
 	    $user_id = $order->get_user_id();

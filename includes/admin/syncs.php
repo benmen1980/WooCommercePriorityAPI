@@ -439,10 +439,10 @@ $format2 = 'd/m/Y H:i:s';
                            value="<?=empty($this->option('otc_order_field')) ? 'DETAILS' : $this->option('otc_order_field')?>"></input>
                 </td>
 			</tr>
-            <!-- sync customers -->
+            <!-- sync registered customers -->
             <tr>
                 <td class="p18a-label">
-                    <?php _e('Customers', 'p18a'); ?>
+                    <?php _e('Registered Customers', 'p18a'); ?>
                 </td>
                 <td>
                     <input type="checkbox" name="post_customers" form="p18aw-sync" value="1" <?php if($this->option('post_customers')) echo 'checked'; ?> />
@@ -461,6 +461,30 @@ $format2 = 'd/m/Y H:i:s';
                 <td>
                 </td>
                 <td></td>
+            </tr>
+            <!-- sync prospect -->
+            <tr>
+                <td class="p18a-label">
+                    <?php _e('Prospect', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="post_prospect" form="p18aw-sync" value="1" <?php if($this->option('post_prospect')) echo 'checked'; ?> />
+                </td>
+                <td>
+                </td>
+                <td
+                </td>
+                <td>
+                    <select name="prospect_field" form="p18aw-sync">
+                        <?php $prospect_field = $this->option('prospect_field'); ?>
+                        <option value="" <?php if( !$this->option('prospect_field')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <!--option value="" selected disabled hidden>Define which field will be posted as customer number</option-->
+                        <option value="prospect_email" <?php if($this->option('prospect_field') == 'prospect_email') echo 'selected'; ?>><?php _e('By order\'s Email', 'p18a'); ?></option>
+                        <!--option value="prospect_email">By order's Email</option-->
+                        <option value="prospect_cellphone" <?php if($this->option('prospect_field') == 'prospect_cellphone') echo 'selected'; ?>><?php _e('By order\'s Cellphone', 'p18a'); ?></option>
+                        <!--option value="prospect_cellphone">By order's Cellphone</option-->
+                    </select>
+                </td>
             </tr>
             <!-- submit -->
 			<tr>
