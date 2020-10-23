@@ -268,40 +268,6 @@ $format2 = 'd/m/Y H:i:s';
 					<input type="text" style="width:300px" name="static_odata_header_sync_c_products_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_c_products_priority')?></input>
 				</td>
 			</tr>
-
-			<tr>
-				<td class="p18a-label">
-					<?php _e('Auto Sync Orders To Priority', 'p18a'); ?>
-				</td>
-				<td>
-					<input type="checkbox" name="log_auto_post_orders_priority" form="p18aw-sync" value="1" <?php if($this->option('log_auto_post_orders_priority')) echo 'checked'; ?> />
-				</td>
-				<td></td>
-				<td>
-					<select name="auto_sync_orders_priority" form="p18aw-sync">
-						<option value="" <?php if( ! $this->option('auto_sync_orders_priority')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
-						<option value="hourly" <?php if($this->option('auto_sync_orders_priority') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
-						<option value="daily" <?php if($this->option('auto_sync_orders_priority') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
-						<option value="twicedaily" <?php if($this->option('auto_sync_orders_priority') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
-					</select>
-				</td>
-				<td data-sync-time="auto_post_orders_priority">
-					<?php
-					if ($timestamp = $this->option('auto_post_orders_priority_update', false)) {
-						echo(get_date_from_gmt(date($format, $timestamp),$format2));
-					} else {
-						_e('Never', 'p18a');
-					}
-					?>
-				</td>
-				<td>
-					<a href="#" class="button p18aw-sync" data-sync="auto_post_orders_priority"><?php _e('Sync', 'p18a'); ?></a>
-				</td>
-
-				<td>
-					<input type="text" style="width:300px" name="static_odata_header_auto_post_orders_priority" form="p18aw-sync"><?=$this->option('static_odata_header_auto_post_orders_priority')?></input>
-				</td>
-			</tr>
 			<tr>
 				<td class="p18a-label">
 					<?php _e('Auto Sync Order Status From Priority', 'p18a'); ?>

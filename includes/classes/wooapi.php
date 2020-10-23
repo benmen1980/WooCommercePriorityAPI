@@ -1539,7 +1539,6 @@ public function sync_product_attachemtns(){
                     $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
                     // get the stock by specific warehouse
                     $wh_name = $this->option('sync_inventory_warhsname');
-                    //$wh_name = 'TEST';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
                         if($wh_stock['WARHSNAME'] == $wh_name)
