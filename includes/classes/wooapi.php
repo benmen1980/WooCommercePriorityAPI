@@ -135,8 +135,8 @@ class WooAPI extends \PriorityAPI\API
     }*/
 
 	// Sync customer and order data after order is proccessed
-        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ] );
-        add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ] );
+        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
+        add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
         // custom check out fields
 	add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
 	add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
