@@ -1653,20 +1653,14 @@ public function syncPacksPriority()
             if ($response['status']) {
 
             } else {
-                /**
-                 * t149
-                 */
                 $this->sendEmailError(
                     $this->option('email_error_sync_customers_web'),
                     'Error Sync Customers',
                     $response['body']
                 );
-
             }
-    
             // add timestamp
             $this->updateOption('post_customers', time());
-    
         }
 
     }
@@ -1764,6 +1758,10 @@ public function syncPacksPriority()
             $cust_number = !empty($cust_number) ? $cust_number : $walk_in_customer;
         } else {
             $cust_number = $walk_in_customer;
+            // check prospect
+            if($this->option('post_prospect')){
+                $cust_number = $this->post_prospect($order);
+            }
         }
         return $cust_number;
     }
@@ -1851,25 +1849,20 @@ public function syncPacksPriority()
         };
         $this->updateOption('time_stamp_cron_otc', time());
     }
-	/**
-	 * Sync order by id
-	 *
-	 * @param [int] $id
-	 */
     public function syncOrder($id)
     {
-	    if(isset(WC()->session)){
-	    $session = WC()->session->get('session_vars');
-	        if($session['ordertype']=='Recipe'){
-		   return;
+        if(isset(WC()->session)){
+            $session = WC()->session->get('session_vars');
+            if($session['ordertype']=='Recipe'){
+                return;
             }
-	    }
+        }
         $order = new \WC_Order($id);
-	    $user = $order->get_user();
-	    $user_id = $order->get_user_id();
-	   // $user_id = $order->user_id;
-	    $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-	    $discount_type = 'additional_line'; // header , in_line , additional_line
+        $user = $order->get_user();
+        $user_id = $order->get_user_id();
+        // $user_id = $order->user_id;
+        $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+        $discount_type = 'additional_line'; // header , in_line , additional_line
 
         $cust_number = $this->getPriorityCustomer($order);
 
@@ -1879,21 +1872,21 @@ public function syncPacksPriority()
             $this->option('order_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
-           
+
         ];
         // CDES
-          if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
-	    // cart discount header
-	    $cart_discount = floatval($order->get_total_discount());
-	    $cart_discount_tax = floatval($order->get_discount_tax());
-	    $order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
-	    $order_discount = ($cart_discount/$order_total) * 100.0;
-	    if('header' == $discount_type){
-		    $data['PERCENT'] = $order_discount;
-	    }
+        // cart discount header
+        $cart_discount = floatval($order->get_total_discount());
+        $cart_discount_tax = floatval($order->get_discount_tax());
+        $order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
+        $order_discount = ($cart_discount/$order_total) * 100.0;
+        if('header' == $discount_type){
+            $data['PERCENT'] = $order_discount;
+        }
 
 // order comments
         $priority_version = (float)$this->option('priority-version');
@@ -1906,12 +1899,12 @@ public function syncPacksPriority()
 
         }
 
-	    
-	
-	    
-	   // billing customer details
+
+
+
+        // billing customer details
         $customer_data = [
-          
+
             'PHONE'    => $order->get_billing_phone(),
             'EMAIL'       => $order->get_billing_email(),
             'ADRS'        => $order->get_billing_address_1(),
@@ -1921,7 +1914,7 @@ public function syncPacksPriority()
         ];
         $data['ORDERSCONT_SUBFORM'][] = $customer_data;
 
-	// shipping
+        // shipping
 
         // shop address debug
 
@@ -1960,15 +1953,15 @@ public function syncPacksPriority()
 
             $parameters = [];
 
-	        // get tax
-	        // Initializing variables
-	        $tax_items_labels   = array(); // The tax labels by $rate Ids
-	        $tax_label = 0.0 ; // The total VAT by order line
-	        $taxes = $item->get_taxes();
-	        // Loop through taxes array to get the right label
-	        foreach( $taxes['subtotal'] as $rate_id => $tax ) {
-		        $tax_label = + $tax; // <== Here the line item tax label
-	        }
+            // get tax
+            // Initializing variables
+            $tax_items_labels   = array(); // The tax labels by $rate Ids
+            $tax_label = 0.0 ; // The total VAT by order line
+            $taxes = $item->get_taxes();
+            // Loop through taxes array to get the right label
+            foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+                $tax_label = + $tax; // <== Here the line item tax label
+            }
 
             // get meta
             foreach($item->get_meta_data() as $meta) {
@@ -2007,32 +2000,32 @@ public function syncPacksPriority()
                     //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
                 ];
                 if($discount_type != 'in_line'){
-	              $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM'])-1]['VATPRICE' ]= $line_before_discount + $line_tax;
+                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM'])-1]['VATPRICE' ]= $line_before_discount + $line_tax;
                 }
             }
-            
+
         }
-	    // additional line cart discount
+        // additional line cart discount
         if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
-		    $data['ORDERITEMS_SUBFORM'][] = [
-			    'PARTNAME' => '000', // change to other item
-			    'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
-			    'TQUANT'   => -1,
+            $data['ORDERITEMS_SUBFORM'][] = [
+                'PARTNAME' => '000', // change to other item
+                'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+                'TQUANT'   => -1,
 
-		    ];
-	    }
-	 // shipping rate
+            ];
+        }
+        // shipping rate
         if( $order->get_shipping_method()) {
-	        $data['ORDERITEMS_SUBFORM'][] = [
-		        // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-		        'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
-		        'TQUANT'   => 1,
-		        'VATPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax()),
-		        "REMARK1"  => "",
-	        ];
+            $data['ORDERITEMS_SUBFORM'][] = [
+                // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+                'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
+                'TQUANT'   => 1,
+                'VATPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax()),
+                "REMARK1"  => "",
+            ];
         }
 
-       
+
         /* get credit guard meta
 
 	    $order_ccnumber = $order->get_meta('_ccnumber');
@@ -2044,18 +2037,18 @@ public function syncPacksPriority()
 	    $order_periodical_payment = $order->get_meta('_periodical_payment');
 	    */
 
-	    /* credit guard dummy data
-		$order_ccnumber = '1234';
-		$order_token = '123456789';
-		$order_creditguard_expiration = '0124';
-		$order_creditguard_authorization = '09090909';
-		$order_payments = $order->get_meta('_payments');
-		$order_first_payment = $order->get_meta('_first_payment');
-		$order_periodical_payment = $order->get_meta('_periodical_payment');
-	    */
+        /* credit guard dummy data
+        $order_ccnumber = '1234';
+        $order_token = '123456789';
+        $order_creditguard_expiration = '0124';
+        $order_creditguard_authorization = '09090909';
+        $order_payments = $order->get_meta('_payments');
+        $order_first_payment = $order->get_meta('_first_payment');
+        $order_periodical_payment = $order->get_meta('_periodical_payment');
+        */
 
 
-	    // pelecard dummy data
+        // pelecard dummy data
         /*
         $args =
                    [
@@ -2109,73 +2102,101 @@ public function syncPacksPriority()
 	    $order->update_meta_data('_transaction_data',$args);
 	    $order->save();
         */
-	    /* get meta pelecard
+        /* get meta pelecard
 
         $order_cc_meta = $order->get_meta('_transaction_data');
         $order_ccnumber = $order_cc_meta['CreditCardNumber'];
-  	    $order_token =  $order_cc_meta['Token'];
-	    $order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
-	    $order_cc_authorization = $order_cc_meta['ConfirmationKey'];
+          $order_token =  $order_cc_meta['Token'];
+        $order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
+        $order_cc_authorization = $order_cc_meta['ConfirmationKey'];
 
         */
 
 
 
-	    // payment info
-	  /*  $data['PAYMENTDEF_SUBFORM'] = [
-		    'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-		    'QPRICE'      => floatval($order->get_total()),
-		    'PAYACCOUNT'  => '',
-		    'PAYCODE'     => '',
-		    'PAYACCOUNT'  => substr($order_ccnumber,strlen($order_ccnumber) -4,4),
-		    'VALIDMONTH'  => $order_cc_expiration,
-		    'CCUID' => $order_token,
-		    'CONFNUM' => $order_cc_authorization,
-		    //'ROYY_NUMBEROFPAY' => $order_payments,
-		    //'FIRSTPAY' => $order_first_payment,
-		    //'ROYY_SECONDPAYMENT' => $order_periodical_payment
+        // payment info
+        /*  $data['PAYMENTDEF_SUBFORM'] = [
+              'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+              'QPRICE'      => floatval($order->get_total()),
+              'PAYACCOUNT'  => '',
+              'PAYCODE'     => '',
+              'PAYACCOUNT'  => substr($order_ccnumber,strlen($order_ccnumber) -4,4),
+              'VALIDMONTH'  => $order_cc_expiration,
+              'CCUID' => $order_token,
+              'CONFNUM' => $order_cc_authorization,
+              //'ROYY_NUMBEROFPAY' => $order_payments,
+              //'FIRSTPAY' => $order_first_payment,
+              //'ROYY_SECONDPAYMENT' => $order_periodical_payment
 
-	    ];*/
+          ];*/
         // make request
         $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], true);
 
         if ($response['code']<=201) {
-	        $body_array = json_decode($response["body"],true);
+            $body_array = json_decode($response["body"],true);
 
-	        $ord_status = $body_array["ORDSTATUSDES"];
-	        $ord_number = $body_array["ORDNAME"];
-	        $order->update_meta_data('priority_order_status',$ord_status);
-	        $order->update_meta_data('priority_order_number',$ord_number);
-	        $order->save();
+            $ord_status = $body_array["ORDSTATUSDES"];
+            $ord_number = $body_array["ORDNAME"];
+            $order->update_meta_data('priority_order_status',$ord_status);
+            $order->update_meta_data('priority_order_number',$ord_number);
+            $order->save();
         }
         if($response['code'] >= 400){
-	        $body_array = json_decode($response["body"],true);
+            $body_array = json_decode($response["body"],true);
 
-	        //$ord_status = $body_array["ORDSTATUSDES"];
-	       // $ord_number = $body_array["ORDNAME"];
-	        $order->update_meta_data('priority_status',$response["body"]);
-	       // $order->update_meta_data('priority_ordnumber',$ord_number);
-	        $order->save();
+            //$ord_status = $body_array["ORDSTATUSDES"];
+            // $ord_number = $body_array["ORDNAME"];
+            $order->update_meta_data('priority_status',$response["body"]);
+            // $order->update_meta_data('priority_ordnumber',$ord_number);
+            $order->save();
         }
-        
+
         if (!$response['status']||$response['code'] >= 400) {
             /**
              * t149
              */
             $this->sendEmailError(
-            $this->option('email_error_sync_orders_web'),
-            'Error Sync Orders',
-            $response['body']
+                $this->option('email_error_sync_orders_web'),
+                'Error Sync Orders',
+                $response['body']
             );
         }
         // add timestamp
-    return $response;
+        return $response;
     }
-    /**
-     * Sync customer data and order data
-     *
-     * @param [int] $order_id
-     */
+    public function post_prospect($order)
+    {
+        if('prospect_email'==$this->option('prospect_field')){
+            $priority_customer_number = $order->get_billing_email();
+        }else{
+            $priority_customer_number = $order->get_billing_phone();
+        }
+        $json_request = json_encode([
+            'CUSTNAME'    => $priority_customer_number,
+            'CUSTDES'     => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'EMAIL'       => $order->get_billing_email(),
+            'ADDRESS'     => $order->get_billing_address_1(),
+            'ADDRESS2'    => $order->get_billing_address_2(),
+            'STATEA'      => $order->get_billing_city(),
+            'ZIP'         => $order->get_shipping_postcode(),
+            'PHONE'       => $order->get_billing_phone(),
+        ]);
+        $method = 'POST';
+        $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
+        // set priority customer id
+        if ($response['status']) {
+
+        } else {
+            $this->sendEmailError(
+                $this->option('email_error_sync_customers_web'),
+                'Error Sync Customers',
+                $response['body']
+            );
+        }
+        // add timestamp
+        $this->updateOption('time_stamp_cron_prospect', time());
+        return $priority_customer_number;
+    }
     public function syncDataAfterOrder($order_id)
     {
 	if(empty(get_post_meta($order_id,'_post_done',true))){
