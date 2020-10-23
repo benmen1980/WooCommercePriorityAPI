@@ -579,6 +579,8 @@ class WooAPI extends \PriorityAPI\API
 		        $this->updateOption('auto_sync_c_products_priority',        $this->post('auto_sync_c_products_priority'));
 		        $this->updateOption('log_c_products_priority',              $this->post('log_c_products_priority'));
 		        $this->updateOption('email_error_sync_einvoices_web',       $this->post('email_error_sync_einvoices_web'));
+		        // extra data
+                $this->updateOption('sync_inventory_warhsname',       $this->post('sync_inventory_warhsname'));
 		        // sync orders control
                 $this->updateOption('post_receipt_checkout',                $this->post('post_receipt_checkout'));
                 $this->updateOption('cron_receipt',                $this->post('cron_receipt'));
@@ -1536,7 +1538,8 @@ public function sync_product_attachemtns(){
                     // get the stock by part availability
                     $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
                     // get the stock by specific warehouse
-                    $wh_name = 'TEST';
+                    $wh_name = $this->option('sync_inventory_warhsname');
+                    //$wh_name = 'TEST';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
                         if($wh_stock['WARHSNAME'] == $wh_name)

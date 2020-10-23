@@ -159,7 +159,10 @@ $format2 = 'd/m/Y H:i:s';
 				</td>
 
 				<td>
-					<input type="text" style="width:300px" name="static_odata_header_sync_inventory_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_inventory_priority')?></input>
+					<input type="text" style="width:300px" name="sync_inventory_warhsname" placeholder="Warehouse code, or empty for availability" form="p18aw-sync"
+                           value="<?=$this->option('sync_inventory_warhsname')?>"
+                    >
+                      </input>
 				</td>
 			</tr>
 
