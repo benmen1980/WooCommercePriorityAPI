@@ -1,7 +1,5 @@
 <?php
-
 defined('ABSPATH') or die('No direct script access!');
-
 function simply_create_message_repost($response){
 	$message  = '<h2>Request</h2>';
 	$message .= $response['args']['body'].'<br>';
@@ -9,15 +7,7 @@ function simply_create_message_repost($response){
 	$message .= $response['body'].'<br>';
 	return $message;
 }
-
 if(isset($_GET['ord'])){
-	/*
-	if($this->option('post_order_checkout')) {
-		echo '<h1>Priority API, sync Order to Priority</h1>';
-	}elseif($this->option('post_einvoices_checkout')) {
-		echo '<h1>Priority API, sync Over The Counter Invoice to Priority</h1>';
-	}
-	*/
 	?>
 	<?php
 	$order_id =  $_GET['ord'];
