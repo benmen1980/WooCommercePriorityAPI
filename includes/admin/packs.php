@@ -34,7 +34,7 @@ function woo_add_custom_general_fields() {
 	echo '</div>';
 
 }
-
+/*
 add_filter( 'woocommerce_quantity_input_args', 'bloomer_woocommerce_quantity_changes', 10, 2 );
 
 function bloomer_woocommerce_quantity_changes( $args, $product ) {
@@ -63,7 +63,7 @@ function bloomer_woocommerce_quantity_changes( $args, $product ) {
 	return $args;
 
 }
-
+*/
 // define the woocommerce_before_add_to_cart_button callback
 function action_woocommerce_before_add_to_cart_button(  ) {
 	global $product;

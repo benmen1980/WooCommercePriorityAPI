@@ -2682,7 +2682,7 @@ public function syncOverTheCounterInvoice($order_id)
 		$shipping_method    = array_shift($shipping_method);
 		$shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
 		// get shipping id
-		if( $order->get_shipping_method()) {
+		if( $order->get_shipping_method() && $order->get_shipping_total()> 0) {
 			$data['EINVOICEITEMS_SUBFORM'][] = [
 				// 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
 				'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),

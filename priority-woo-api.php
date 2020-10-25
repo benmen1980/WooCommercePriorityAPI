@@ -112,7 +112,7 @@ add_action('plugins_loaded', function(){
 				 require P18AW_FRONT_DIR.'my-account/obligo.php';
 				 \obligo::instance()->run();
 			 }
-	        require P18AW_ADMIN_DIR.'packs.php';
+	       require P18AW_ADMIN_DIR.'packs.php';
 		if(WooAPI::instance()->option('sites')){
                 include_once dirname(__FILE__).'/includes/front/sites/sites.php';
             	}
