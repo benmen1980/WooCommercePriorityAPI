@@ -19,7 +19,7 @@ if(isset($_GET['ord'])){
 		$message .= simply_create_message_repost($response);
 	}
 	// sync OTC
-	if($this->option('post_einvoices_checkout')) {
+	if($this->option('post_einvoice_checkout')) {
 		$message .= '<h1>Priority API, sync Over The Counter Invoice to Priority</h1>';
 		$response = $this->syncOverTheCounterInvoice( $order_id );
 		$message .= simply_create_message_repost($response);
