@@ -2599,7 +2599,10 @@ public function syncOverTheCounterInvoice($order_id)
 
 		];
         // CDES
-          if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+          if(
+                  (empty($order->get_customer_id()) && !$this->option('post_prospect')) ||
+                  (true != $this->option( 'post_customers' )&& $order->get_customer_id())
+          ){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
@@ -2729,7 +2732,7 @@ public function syncOverTheCounterInvoice($order_id)
             	$data['EPAYMENT2_SUBFORM'][] = [
                 'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
                 'QPRICE' => $order_cc_qprice,
-                'FIRSTPAY' => $order_first_pay,
+                'FIRSTPAY' => ($order_first_pay > 0 ? $order_first_pay : $order_cc_qprice),
                 'OTHERPAYMENTS'  =>  $order_cc_otherpayment,
                 'PAYCODE'        => $number_of_payments,
                 'PAYACCOUNT' => substr($order_ccnumber, strlen($order_ccnumber) - 4, 4),
