@@ -1513,7 +1513,8 @@ public function sync_product_attachemtns(){
         $local_option = explode(',',$this->option('sync_inventory_warhsname'));
         $pl_regular = $local_option[0];
     	$pl_sales = $local_option[1];
-       $response = $this->makeRequest('GET', 'LOGPART?$filter=SAY_E_B2CWELIGHT eq \'Y\' &$select=PARTNAME&$expand=
+    	$product_filter = $local_option[2];
+       $response = $this->makeRequest('GET', 'LOGPART?$filter='.$product_filter.' eq \'Y\' &$select=PARTNAME&$expand=
                                             PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')
                                             ,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\')'
                                             , [], $this->option('log_inventory_priority', true));
@@ -1560,6 +1561,7 @@ public function sync_product_attachemtns(){
                     }
                     update_post_meta($product_id, '_regular_price', $price);
                     update_post_meta($product_id, '_price',$sales_price );
+                    update_post_meta($product_id, '_sale_price',$sales_price );
                     // get the stock by part availability
                     $stock = 0.0;
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
