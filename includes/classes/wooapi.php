@@ -1088,7 +1088,7 @@ class WooAPI extends \PriorityAPI\API
                 // update product meta
 	            $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
-                    update_post_meta($id, '_sku', $item['PARTNAME']);
+                    // update_post_meta($id, '_sku', $item['PARTNAME']);
                     update_post_meta($id, '_regular_price', $pri_price);
                     update_post_meta($id, '_price',$pri_price );
                     update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
@@ -1542,7 +1542,7 @@ public function sync_product_attachemtns(){
 		    
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
 	     if(!$product_id == 0){
-                    update_post_meta($product_id, '_sku', $item['PARTNAME']);
+                   // update_post_meta($product_id, '_sku', $item['PARTNAME']);
                     // get the stock by part availability
                     $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
                     // get the stock by specific warehouse
