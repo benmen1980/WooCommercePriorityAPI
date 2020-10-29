@@ -1501,15 +1501,19 @@ public function sync_product_attachemtns(){
     public function syncInventoryPriority()
     {
 	// get the items simply by time stamp of today
-    	$daysback = 1; // change days back to get inventory of prev days
-	$stamp = mktime(1 - $daysback, 0, 0);
+
+        $daysback = 10; // change days back to get inventory of prev days
+	    $stamp = mktime(1 - $daysback*24, 0, 0);
     	$bod = date(DATE_ATOM,$stamp);
     	$url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
     	if($this->option('variation_field')) {
 	    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
     	}
-    	$response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', true));
-
+    	// WELIGH
+       $response = $this->makeRequest('GET', 'LOGPART?$filter=SAY_E_B2CWELIGHT eq \'Y\' &$select=PARTNAME&$expand=
+                                            PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \'WELIGH\' or PLNAME eq \'WELIG1\')
+                                            ,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\')'
+                                            , [], $this->option('log_inventory_priority', true));
         // check response status
         if ($response['status']) {
 
@@ -1533,38 +1537,39 @@ public function sync_product_attachemtns(){
 		            while ( $my_query->have_posts() ) {
 			            $my_query->the_post();
 			            $product_id = get_the_ID();
-
-
 		            }
 	            }else{
 		            $product_id = 0;
 	            }
 		    
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
-	     if(!$product_id == 0){
-                    update_post_meta($product_id, '_sku', $item['PARTNAME']);
-                    // get the stock by part availability
-                    $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
-                    // get the stock by specific warehouse
-                    $wh_name = $this->option('sync_inventory_warhsname');
-                    $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
-                    foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
-                        if($wh_stock['WARHSNAME'] == $wh_name)
-                        $stock = $wh_stock['TBALANCE'] - $orders > 0 ?  $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
+	     if($product_id != 0){
+                    // update price and sales price
+                    $price = 0.0;
+                    $sales_price = 0.0;
+                    foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
+                        if('WELIGH'==$plist['PLNAME']){
+                            $price = $plist['VATPRICE'];
+                        }
+                        if('WELIG1'==$plist['PLNAME']){
+                            $sales_price = $plist['VATPRICE'];
+                        }
                     }
-
-
+                    update_post_meta($product_id, '_regular_price', $price);
+                    update_post_meta($product_id, '_price',$sales_price );
+                    // get the stock by part availability
+                    $stock = 0.0;
+                    foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
+                        $stock =+ $wh_stock['TBALANCE'] ;
+                    }
                     update_post_meta($product_id, '_stock', $stock);
-
                     if (intval($stock) > 0) {
                         update_post_meta($product_id, '_stock_status', 'instock');
                     } else {
                         update_post_meta($product_id, '_stock_status', 'outofstock');
                     }
                 }
-                
             }
-
             // add timestamp
             $this->updateOption('inventory_priority_update', time());
 
