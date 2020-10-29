@@ -1509,9 +1509,12 @@ public function sync_product_attachemtns(){
     	if($this->option('variation_field')) {
 	    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
     	}
-    	// WELIGH
+    	//
+        $local_option = explode(',',$this->option('sync_inventory_warhsname'));
+        $pl_regular = $local_option[0];
+    	$pl_sales = $local_option[1];
        $response = $this->makeRequest('GET', 'LOGPART?$filter=SAY_E_B2CWELIGHT eq \'Y\' &$select=PARTNAME&$expand=
-                                            PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \'WELIGH\' or PLNAME eq \'WELIG1\')
+                                            PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')
                                             ,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\')'
                                             , [], $this->option('log_inventory_priority', true));
         // check response status
@@ -1548,10 +1551,10 @@ public function sync_product_attachemtns(){
                     $price = 0.0;
                     $sales_price = 0.0;
                     foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
-                        if('WELIGH'==$plist['PLNAME']){
+                        if($pl_regular==$plist['PLNAME']){
                             $price = $plist['VATPRICE'];
                         }
-                        if('WELIG1'==$plist['PLNAME']){
+                        if($pl_sales==$plist['PLNAME']){
                             $sales_price = $plist['VATPRICE'];
                         }
                     }
