@@ -1550,7 +1550,8 @@ public function sync_product_attachemtns(){
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
                         if($wh_stock['WARHSNAME'] == $wh_name)
-                        $stock = $wh_stock['TBALANCE'] - $orders > 0 ?  $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
+                        //$stock = $wh_stock['TBALANCE'] - $orders > 0 ?  $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
+                        $stock = $wh_stock['TBALANCE']  > 0 ?  $wh_stock['TBALANCE']  : 0; // stock
                     }
 
 
