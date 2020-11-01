@@ -1498,7 +1498,7 @@ public function sync_product_attachemtns(){
     /**
      * sync inventory from priority
      */
-    public function syncInventoryPriority()
+public function syncInventoryPriority()
     {
 	// get the items simply by time stamp of today
 
@@ -1516,7 +1516,8 @@ public function sync_product_attachemtns(){
     	$product_filter = $local_option[2];
        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$product_filter.' eq \'Y\' &$select=PARTNAME&$expand=
                                             PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')
-                                            ,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\')'
+                                            ,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\'),
+                                            LOGCOUNTERS_SUBFORM($select=SELLBALANCE)'
                                             , [], $this->option('log_inventory_priority', true));
         // check response status
         if ($response['status']) {
@@ -1564,9 +1565,12 @@ public function sync_product_attachemtns(){
                     update_post_meta($product_id, '_sale_price',$sales_price );
                     // get the stock by part availability
                     $stock = 0.0;
+                    /*
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
                         $stock =+ $wh_stock['TBALANCE'] ;
                     }
+                    */
+                    $stock = $item['LOGCOUNTERS_SUBFORM'][0]['SELLBALANCE'];
                     update_post_meta($product_id, '_stock', $stock);
                     if (intval($stock) > 0) {
                         update_post_meta($product_id, '_stock_status', 'instock');
