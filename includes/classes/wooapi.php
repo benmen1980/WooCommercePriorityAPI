@@ -42,6 +42,8 @@ class WooAPI extends \PriorityAPI\API
             'sync_pricelist_priority'       => 'syncPriceLists',
             'sync_receipts_priority'        => 'syncReceipts',
             'sync_order_status_priority' => 'syncPriorityOrderStatus',
+            'sync_sites_priority'           => 'syncSites',
+            'sync_c_products_priority'      => 'syncCustomerProducts'
         ];
 
         foreach ($syncs as $hook => $action) {
