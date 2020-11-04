@@ -1022,6 +1022,8 @@ class WooAPI extends \PriorityAPI\API
 			            )
 		            )
 	            );
+		    $product_id = 0;
+                    $id = 0;
 	            $my_query = new \WP_Query( $args );
 	            if ( $my_query->have_posts() ) {
 		            while ( $my_query->have_posts() ) {
