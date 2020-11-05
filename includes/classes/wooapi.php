@@ -597,6 +597,8 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('otc_order_field',              $this->post('otc_order_field'));
                 $this->updateOption('post_prospect',              $this->post('post_prospect'));
                 $this->updateOption('prospect_field',              $this->post('prospect_field'));
+                $this->updateOption('sync_items_priority_config',              $this->post('sync_items_priority_config'));
+
 
 
 

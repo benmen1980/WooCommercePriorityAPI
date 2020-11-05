@@ -56,7 +56,8 @@ $format2 = 'd/m/Y H:i:s';
 				</td>
 
 				<td>
-					<input type="text" style="width:300px" name="static_odata_header_sync_items_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_items_priority')?></input>
+					<textarea style="width:300px !important; height:45px !important;"  name="sync_items_priority_config"
+                               form="p18aw-sync"><?=$this->option('sync_items_priority_config')?></textarea >
 				</td>
 			</tr>
 
