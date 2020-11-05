@@ -57,8 +57,19 @@ $format2 = 'd/m/Y H:i:s';
 
 				<td>
 					<textarea style="width:300px !important; height:45px !important;"  name="sync_items_priority_config"
-                               form="p18aw-sync"><?=$this->option('sync_items_priority_config')?></textarea >
+                               form="p18aw-sync"
+                              placeholder="{&quot;days_back&quot;:&quot;13&quot;,&quot;additional_url&quot;:&quot;and PARTNAME ne '000'&quot;,&quot;search_by&quot;:&quot;PARTNAME&quot;,&quot;is_update_products&quot;:&quot;true&quot;,&quot;categories&quot;:&quot;SPEC1,SPEC2,FAMILYDES&quot;,&quot;is_load_image&quot;:&quot;false&quot;
+                    }"
+                                ><?php echo $this->option('sync_items_priority_config')?></textarea >
 				</td>
+                <td>{
+                    "days_back":"13",
+                    "additional_url":"and PARTNAME ne '000'",
+                    "search_by":"PARTNAME",
+                    "is_update_products":"true",
+                    "categories":"SPEC1,SPEC2,FAMILYDES",
+                    "is_load_image":"false"
+                    }</td>
 			</tr>
 
 			<tr>
