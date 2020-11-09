@@ -316,6 +316,11 @@ $format2 = 'd/m/Y H:i:s';
 				</td>
 			</tr>
 
+            <?php
+            $this->generate_settings('Sync Priority customer as WP user','customer_to_wp_user',$format,$format2);
+
+
+            ?>
 
 
 
