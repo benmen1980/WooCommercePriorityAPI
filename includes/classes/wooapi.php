@@ -3139,18 +3139,29 @@ class WooAPI extends \PriorityAPI\API
     }
 
     function sync_priority_customers_to_wp(){
-        //$url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL';
-        $url_addition = 'CUSTOMERS?$filter=PRIVITAI_USEROFFON eq \'Y\' and EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL,ITAI_USERID,ITAI_USERPASS';
+        // default values
+        $daysback = 1;
+        $url_addition_config = '';
+        // config
+        $config = json_decode(stripslashes($this->option('sync_customer_to_wp_user_config')));
+        $daysback = (int)$config->days_back;
+        $username_filed = $config->username_field;
+        $password_field = $config->password_field;
+        $url_addition_config = $config->additional_url;
+        $stamp = mktime(0 - $daysback*24, 0, 0);
+        $bod = urlencode(date(DATE_ATOM,$stamp));
+        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod;
+        //$url_addition = 'CUSTOMERS?$filter=PRIVITAI_USEROFFON eq \'Y\' and EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL,ITAI_USERID,ITAI_USERPASS';
         // PRIVITAI_USEROFFON
         // ITAI_USERID,ITAI_USERPASS
-        $response = $this->makeRequest('GET', $url_addition, [],false);
+        $response = $this->makeRequest('GET', $url_addition.' '.$url_addition_config, [],false);
         if ($response['status']) {
             // decode raw response
             $data = json_decode($response['body_raw'], true)['value'];
             foreach($data as $user){
-                $username = $user['ITAI_USERID'] ;
+                $username = $user[$username_filed];
                 $email = $user['EMAIL'];
-                $password = $user['ITAI_USERPASS'];
+                $password = $user[$password_field];
                 $user_obj = get_user_by('login',$username);
                 $user_id = wp_insert_user( array(
                     'ID' => $user_obj->ID,
@@ -3164,9 +3175,15 @@ class WooAPI extends \PriorityAPI\API
                     'role' => 'customer'
                 ));
                 update_user_meta($user_id,'priority_customer_number',$user['CUSTNAME']);
+                $customer = new \WC_Customer($user_id);
+                $customer->set_billing_address_1($user['ADDRESS']);
+                $customer->set_billing_address_2($user['ADDRESS2']);
+                $customer->set_billing_city($user['STATE']);
+                $customer->set_billing_phone($user['PHONE']);
+                $customer->set_billing_postcode($user['ZIP']);
+                $customer->save();
             }
         }
-
     }
     function generate_settings($description,$name,$format,$format2){
         ?>
@@ -3202,7 +3219,7 @@ class WooAPI extends \PriorityAPI\API
 					<textarea style="width:300px !important; height:45px !important;"  name="sync_<?php echo $name.'_config' ?>"
                               form="p18aw-sync"
                               placeholder="">
-                        <?php echo $this->option('sync_'.$name.'_config' )?></textarea >
+                        <?php echo stripslashes($this->option('sync_'.$name.'_config' ))?></textarea >
             </td>
             <td>
 
