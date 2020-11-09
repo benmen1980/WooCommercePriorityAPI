@@ -8,6 +8,8 @@
 namespace PriorityWoocommerceAPI;
 
 
+use PHPMailer\PHPMailer\Exception;
+
 class WooAPI extends \PriorityAPI\API
 {
 
@@ -41,7 +43,8 @@ class WooAPI extends \PriorityAPI\API
             'sync_inventory_priority'       => 'syncInventoryPriority',
             'sync_pricelist_priority'       => 'syncPriceLists',
             'sync_receipts_priority'        => 'syncReceipts',
-            'sync_order_status_priority' => 'syncPriorityOrderStatus',
+            'sync_order_status_priority'    => 'syncPriorityOrderStatus',
+            'sync_customer_to_wp_user'      => 'sync_priority_customers_to_wp'
         ];
 
         foreach ($syncs as $hook => $action) {
@@ -598,7 +601,10 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('post_prospect',              $this->post('post_prospect'));
                 $this->updateOption('prospect_field',              $this->post('prospect_field'));
                 $this->updateOption('sync_items_priority_config',             stripslashes($this->post('sync_items_priority_config')));
-
+                // customer_to_wp_user
+                $this->updateOption('sync_customer_to_wp_user',             stripslashes($this->post('sync_customer_to_wp_user')));
+                $this->updateOption('sync_customer_to_wp_user_config',             stripslashes($this->post('sync_customer_to_wp_user_config')));
+                $this->updateOption('auto_sync_customer_to_wp_user',             stripslashes($this->post('auto_sync_customer_to_wp_user')));
 
 
 
@@ -909,7 +915,12 @@ class WooAPI extends \PriorityAPI\API
                     }catch(Exception $e) {
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
-
+                case 'auto_sync_customer_to_wp_user':
+                    try{
+                        $this->sync_priority_customers_to_wp();
+                    }catch (Exception $e){
+                        exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
 
                 default:
 
@@ -3177,7 +3188,7 @@ class WooAPI extends \PriorityAPI\API
             </td>
             <td data-sync-time="auto_sync_customer_to_wp_user">
                 <?php
-                if ($timestamp = $this->option('auto_sync_'.$name, false)) {
+                if ($timestamp = $this->option('auto_sync_'.$name.'_update', false)) {
                     echo(get_date_from_gmt(date($format, $timestamp),$format2));
                 } else {
                     _e('Never', 'p18a');
