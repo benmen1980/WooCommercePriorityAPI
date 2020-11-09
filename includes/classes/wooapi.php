@@ -3163,20 +3163,32 @@ class WooAPI extends \PriorityAPI\API
             foreach($data as $user){
                 $username = $user[$username_filed];
                 $email = $user['EMAIL'];
+                if (!is_email($email)){
+                    continue;
+                }
+                if(!validate_username($username)){
+                    continue;
+                }
                 $password = $user[$password_field];
                 $user_obj = get_user_by('login',$username);
-                $user_id = wp_insert_user( array(
-                    'ID' => $user_obj->ID,
-                    'user_login'   => $username,
-                    'user_pass'    => wp_hash_password($password),
-                    'user_email'   => $email,
+                $data = [
+                    'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
+                    'user_login' => $username,
+                    'user_pass' => wp_hash_password($password),
                     'first_name' => $user['CUSTDES'],
                     //'last_name'  => 'Doe',
-                    'user_nicename'     => $user['CUSTDES'],
+                    'user_nicename' => $user['CUSTDES'],
                     'display_name' => $user['CUSTDES'],
                     'role' => 'customer'
-                ));
-                update_user_meta($user_id,'priority_customer_number',$user['CUSTNAME']);
+                ];
+                if(!isset($user_obj->ID) ){
+                    $data['user_email'] = $email;
+                }
+                $user_id = wp_insert_user($data);
+                if(is_wp_error($user_id)){
+                    error_log('This is customer with error '.$user['CUSTNAME']);
+                }
+                update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
                 $customer = new \WC_Customer($user_id);
                 $customer->set_billing_address_1($user['ADDRESS']);
                 $customer->set_billing_address_2($user['ADDRESS2']);
