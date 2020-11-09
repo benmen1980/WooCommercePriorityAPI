@@ -309,21 +309,13 @@ $format2 = 'd/m/Y H:i:s';
 					<a href="#" class="button p18aw-sync" data-sync="auto_sync_order_status_priority"><?php _e('Sync', 'p18a'); ?></a>
 				</td>
 				<td>
-
 				</td>
 				<td>
-
 				</td>
 			</tr>
-
             <?php
             $this->generate_settings('Sync Priority customer as WP user','customer_to_wp_user',$format,$format2);
-
-
             ?>
-
-
-
 			<tr><td>_______________________________</td></tr>
         </table>
         <h1>Sync Orders Control</h1><br>
