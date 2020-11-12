@@ -523,6 +523,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('update_image',        $this->post('update_image'));
                 $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
                 $this->updateOption('obligo',              $this->post('obligo'));
+                $this->updateOption('setting-config',              $this->post('setting-config'));
 
 
 
@@ -607,8 +608,6 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('sync_customer_to_wp_user',             stripslashes($this->post('sync_customer_to_wp_user')));
                 $this->updateOption('sync_customer_to_wp_user_config',             stripslashes($this->post('sync_customer_to_wp_user_config')));
                 $this->updateOption('auto_sync_customer_to_wp_user',             stripslashes($this->post('auto_sync_customer_to_wp_user')));
-
-
 
 
                 $this->notify('Sync settings saved');
@@ -2047,6 +2046,8 @@ class WooAPI extends \PriorityAPI\API
     public function get_credit_card_data($order){
 
         $gateway = 'debug';
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $gateway = $config->gateway;
         switch($gateway){
             // pelecard
             case 'pelecard';
@@ -2071,7 +2072,14 @@ class WooAPI extends \PriorityAPI\API
             break;
             // card com
             case 'cardcom';
-                $payaccount = '';
+                $payaccount = $order->get_meta('cc_number');
+                $ccuid = '';
+                $validmonth = '';
+                $confnum = $order->get_meta('CardcomInternalDealNumber');
+                $numpay = $order->get_meta('cc_numofpayments');
+                $firstpay = $order->get_meta('cc_firstpayment');
+                $card_type = $order->get_meta('cc_cardtype');
+                $payment_type = $order->get_meta('cc_paymenttype');
             break;
             // tranzila
             case 'tranzila';

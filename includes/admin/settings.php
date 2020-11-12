@@ -229,6 +229,17 @@
                 <td>                             </td>
             </tr>
             <tr>
+            <tr>
+                <td>
+                    <label for="p18a-setting-config"><?php _e('General Settings', 'p18a'); ?></label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                <textarea id="setting-config"  name="setting-config" form="p18aw-settings"> <?php echo stripslashes($this->option('setting-config')) ?> </textarea>
+                </td>
+            </tr>
+
 
 
         </table>
