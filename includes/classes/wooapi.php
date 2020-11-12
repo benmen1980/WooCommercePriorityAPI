@@ -2006,110 +2006,8 @@ class WooAPI extends \PriorityAPI\API
             ];
         }
 
-
-        /* get credit guard meta
-
-	    $order_ccnumber = $order->get_meta('_ccnumber');
-	    $order_token = $order->get_meta('_creditguard_token');
-	    $order_creditguard_expiration = $order->get_meta('_creditguard_expiration');
-	    $order_creditguard_authorization = $order->get_meta('_creditguard_authorization');
-	    $order_payments = $order->get_meta('_payments');
-	    $order_first_payment = $order->get_meta('_first_payment');
-	    $order_periodical_payment = $order->get_meta('_periodical_payment');
-	    */
-
-        /* credit guard dummy data
-        $order_ccnumber = '1234';
-        $order_token = '123456789';
-        $order_creditguard_expiration = '0124';
-        $order_creditguard_authorization = '09090909';
-        $order_payments = $order->get_meta('_payments');
-        $order_first_payment = $order->get_meta('_first_payment');
-        $order_periodical_payment = $order->get_meta('_periodical_payment');
-        */
-
-
-        // pelecard dummy data
-        /*
-        $args =
-                   [
-	              'StatusCode' => '000',
-                    'ErrorMessage' => 'operation success',
-                    'TransactionId' => 'e19d3a85-4096-4d81-b028-bae50b2f4000',
-                    'ShvaResult' => '000',
-                    'AdditionalDetailsParamX' => '197',
-                    'Token' => '' ,
-                    'DebitApproveNumber' => '0080152',
-                    'ConfirmationKey' => '36eddfff0cb4124a9b52bbac34ab3d6f',
-                    'VoucherId' => '05-001-001',
-                    'TransactionPelecardId' => '504338834',
-                    'CardHolderID' => '040369662',
-                    'CardHolderName' => '' ,
-                    'CardHolderEmail' => '' ,
-                    'CardHolderPhone'  => '' ,
-                    'CardHolderAddress' => '' ,
-                    'CardHolderCity' => '' ,
-                    'CardHolderZipCode' => '' ,
-                    'CardHolderCountry' => '' ,
-                    'ShvaFileNumber' => '',
-                    'StationNumber' =>  '1',
-                    'Reciept' => '1',
-                    'JParam'  => '4',
-                    'CreditCardNumber' => '458003******1944',
-                    'CreditCardExpDate'  => '1119',
-                    'CreditCardCompanyClearer' => '6',
-                    'CreditCardCompanyIssuer' => '6',
-                    'CreditCardStarsDiscountTotal' => '0',
-                    'CreditType' => '1',
-                    'CreditCardAbroadCard' => '0',
-                    'DebitType' => '1',
-                    'DebitCode' => '50',
-                    'DebitTotal' => '261',
-                    'DebitCurrency' => '1',
-                    'TotalPayments' => '1',
-                    'FirstPaymentTotal' => '0',
-                    'FixedPaymentTotal' => '0',
-                    'CreditCardBrand' => '2',
-                    'CardHebrewName' => 'לאומי קארד',
-                    'ShvaOutput' => '0000000458003******194426000411191100000261 0000000060110150001008015200000000000000000005001001 ƒ˜€— ‰…€0 197',
-                    'ApprovedBy' => '1',
-                    'CallReason' => '0',
-                    'TransactionInitTime' => '24\/07\/2019 23:38:13',
-                    'TransactionUpdateTime' => '24\/07\/2019 23:39:08',
-                    'Remarks' => '',
-                    'BusinessNumber' => ''
-                ];
-
-	    $order->update_meta_data('_transaction_data',$args);
-	    $order->save();
-        */
-        /* get meta pelecard
-
-        $order_cc_meta = $order->get_meta('_transaction_data');
-        $order_ccnumber = $order_cc_meta['CreditCardNumber'];
-          $order_token =  $order_cc_meta['Token'];
-        $order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
-        $order_cc_authorization = $order_cc_meta['ConfirmationKey'];
-
-        */
-
-
-
         // payment info
-        /*  $data['PAYMENTDEF_SUBFORM'] = [
-              'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-              'QPRICE'      => floatval($order->get_total()),
-              'PAYACCOUNT'  => '',
-              'PAYCODE'     => '',
-              'PAYACCOUNT'  => substr($order_ccnumber,strlen($order_ccnumber) -4,4),
-              'VALIDMONTH'  => $order_cc_expiration,
-              'CCUID' => $order_token,
-              'CONFNUM' => $order_cc_authorization,
-              //'ROYY_NUMBEROFPAY' => $order_payments,
-              //'FIRSTPAY' => $order_first_payment,
-              //'ROYY_SECONDPAYMENT' => $order_periodical_payment
-
-          ];*/
+         $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order);
         // make request
         $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], true);
 
@@ -2145,6 +2043,66 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
+
+    public function get_credit_card_data($order){
+
+        $gateway = 'debug';
+        switch($gateway){
+            // pelecard
+            case 'pelecard';
+                $order_cc_meta = $order->get_meta('_transaction_data');
+                // data
+                $payaccount = $order_cc_meta['CreditCardNumber'];
+                $ccuid =  $order_cc_meta['Token'];
+                $validmonth =  $order_cc_meta['CreditCardExpDate'];
+                $confnum = $order_cc_meta['ConfirmationKey'];
+                $numpay = 1;
+                $firstpay = 0.0;
+            break;
+            // credit guard
+            case 'creditguard';
+                $payaccount = $order->get_meta('_ccnumber');
+                $ccuid = $order->get_meta('_creditguard_token');
+                $validmonth = $order->get_meta('_creditguard_expiration');
+                $confnum = $order->get_meta('_creditguard_authorization');
+                $numpay = $order->get_meta('_payments');
+                $firstpay = $order->get_meta('_first_payment');
+                $order_periodical_payment = $order->get_meta('_periodical_payment');
+            break;
+            // card com
+            case 'cardcom';
+                $payaccount = '';
+            break;
+            // tranzila
+            case 'tranzila';
+            break;
+            // debug
+            case 'debug';
+                $payaccount = '123456789';
+                $validmonth =  '01/25';
+                $ccuid = '1234';
+                $confnum = '987654321';
+                $numpay = 1;
+                $firstpay = 0.0;
+            break;
+
+        }
+
+       $data=[
+            'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+            'PAYACCOUNT'  => substr($payaccount,strlen($payaccount) -4,4),
+            'VALIDMONTH'  => $validmonth,
+            'PAYCODE'     => '',
+            'QPRICE'      => floatval($order->get_total()),
+            'CCUID'       => $ccuid,
+            'CONFNUM'     => $confnum,
+            'NUMPAY'      => $numpay,
+            'FIRSTPAY'    => $firstpay
+        ];
+        return $data;
+    }
+
+
     public function post_prospect($order)
     {
         if('prospect_email'==$this->option('prospect_field')){
@@ -2218,9 +2176,6 @@ class WooAPI extends \PriorityAPI\API
             $this->syncPayment($order_id,$optional);
         }
     }
-
-
-
     /**
      * Sync price lists from priority to web
      */
@@ -2293,7 +2248,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     /* sync sites */
     public function syncSites()
     {
@@ -2352,12 +2306,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
-
-
-
     /* sync over the counter invoice EINVOICES */
-
     public function syncAinvoice($id)
     {
         if(isset(WC()->session)){
@@ -2676,51 +2625,9 @@ class WooAPI extends \PriorityAPI\API
         }
 
 
-        $order_ccnumber = '';
-        $order_token =  '';
-        $order_cc_expiration = '';
-        $order_cc_authorization = '';
-        $order_cc_qprice = (float) $order->get_total();
-
-        /*
-        pelecard
-        $order_cc_meta = $order->get_meta('_transaction_data');
-        $order_ccnumber = $order_cc_meta['CreditCardNumber'];
-        $order_token =  $order_cc_meta['Token'];
-        $order_cc_expiration =  $order_cc_meta['CreditCardExpDate'];
-        $order_cc_authorization = $order_cc_meta['ConfirmationKey'];
-        $order_cc_qprice = $order_cc_meta['DebitTotal']/100;
-        */
-        /* tranzilla
-        $order_ccnumber = $order->get_meta('_transaction_data');;
-        $order_token =  $order->get_meta('_cardToken');;
-        $order_cc_expiration = $order->get_meta('_cardExp');;
-        $order_cc_authorization = $order->get_meta('_authNumber');;
-        $order_cc_qprice = floatval($order->get_total());
-        */
-        /* credit guard
-        $order_ccnumber = $order->get_meta('_transaction_data');;
-        $order_token =  $order->get_meta('_cardToken');;
-        $order_cc_expiration = $order->get_meta('_cardExp');;
-        $order_cc_authorization = $order->get_meta('_authNumber');;
-        $order_cc_qprice = floatval($order->get_total());
-        $order_first_pay = floatval($order->get_meta('_firstPayment'));
-        $order_cc_otherpayment = floatval($order->get_meta('_periodicalPayment'));
-        $number_of_payments = $order->get_meta('_numberOfPayments');
-          */
         // payment info
         if($order->get_total()>0.0) {
-            $data['EPAYMENT2_SUBFORM'][] = [
-                'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-                'QPRICE' => $order_cc_qprice,
-                'FIRSTPAY' => ($order_first_pay > 0 ? $order_first_pay : $order_cc_qprice),
-                'OTHERPAYMENTS'  =>  $order_cc_otherpayment,
-                'PAYCODE'        => $number_of_payments,
-                'PAYACCOUNT' => substr($order_ccnumber, strlen($order_ccnumber) - 4, 4),
-                'VALIDMONTH' => $order_cc_expiration,
-                'CCUID' => $order_token,
-                'CONFNUM' => $order_cc_authorization,
-            ];
+            $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order);
         }
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
@@ -2779,22 +2686,11 @@ class WooAPI extends \PriorityAPI\API
         }
         // cash payment
         if(strtolower($order->get_payment_method()) == 'cod') {
-
             $data['CASHPAYMENT'] = floatval($order->get_total());
-
         } else {
-
             // payment info
-            $data['TPAYMENT2_SUBFORM'][] = [
-                'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-                'QPRICE'      => floatval($order->get_total()),
-                'PAYACCOUNT'  => '',
-                'PAYCODE'     => ''
-            ];
-
+            $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order);
         }
-
-
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
         if ($response['code']<=201) {
