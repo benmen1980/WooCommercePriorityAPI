@@ -2756,12 +2756,7 @@ class WooAPI extends \PriorityAPI\API
         } else {
 
             // payment info
-            $data['TPAYMENT2_SUBFORM'][] = [
-                'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
-                'QPRICE'      => floatval($order->get_total()),
-                'PAYACCOUNT'  => '',
-                'PAYCODE'     => ''
-            ];
+            $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order);
 
         }
 
