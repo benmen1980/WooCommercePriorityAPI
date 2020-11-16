@@ -403,6 +403,9 @@ class WooAPI extends \PriorityAPI\API
 		        case 'packs';
 				$this->syncPacksPriority();
 				break;
+				case 'sync-customers';
+				$this->sync_priority_customers_to_wp();
+				break;
                         default:
 
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -955,166 +958,103 @@ class WooAPI extends \PriorityAPI\API
     /**
      * sync items from priority
      */
+
     public function syncItemsPriority()
     {
-
-
-       //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
-       // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
-       // get the items simply by time stamp of today
-	    $daysback = 10; // change days back to get  prev days
-	    $stamp = mktime(0 - $daysback*24, 0, 0);
-	    $bod = date(DATE_ATOM,$stamp);
-	    $url_addition = 'UDATE ge '.$bod;
-	    if($this->option('variation_field')) {
-		    $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
-	    }
-	    $response = $this->makeRequest('GET', 'LOGPART?$filter='.urlencode($url_addition),[], $this->option('log_items_priority', true));
-
-
-
-
-
+        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
+        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
+        // get the items simply by time stamp of today
+        $daysback = 1000; // change days back to get  prev days
+        $stamp = mktime(0 - $daysback*24, 0, 0);
+        $bod = date(DATE_ATOM,$stamp);
+        //$url_addition = 'CREATEDDATE ge '.$bod.' and SHOWINWEB eq \'Y\'';
+        $url_addition = 'SHOWINWEB eq \'Y\' and MPARTNAME eq \'\'';
+        if($this->option('variation_field')) {
+            $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
+        }
+        $response = $this->makeRequest('GET', 'LOGPART?$filter='.urlencode($url_addition),[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
-
             $response_data = json_decode($response['body_raw'], true);
-
             foreach($response_data['value'] as $item) {
-
-                // add long text from Priority
-	            $content = '';
-	            $post_content = '';
-	            if(isset($item['PARTTEXT_SUBFORM']) ) {
-		            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
-			            $content .= $text['TEXT'];
-		            }
-		            $content = str_replace("pdir","p dir",$content);
-		            $cleancontent = explode("</style>",$content);
-
-		            $post_content = $cleancontent[1];
-	            }
-
-
-
-
                 $data = [
-	                'post_author' => 1,
-                      'post_content' =>  (isset($cleancontent[1]) ?  $cleancontent[1] : 'no content'),
+                    'post_author' => 1,
                     'post_status'  => $this->option('item_status'),
                     //  'post_status'  => 'draft',
                     'post_title'   => $item['PARTDES'],
                     'post_parent'  => '',
                     'post_type'    => 'product',
-
                 ];
-
-                // if product exsits, update
-
-	            $args = array(
-		            'post_type'		=>	array('product', 'product_variation'),
-		            'meta_query'	=>	array(
-			            array(
-				            'key'       => '_sku',
-				            'value'	=>	$item['PARTNAME']
-			            )
-		            )
-	            );
-	            $my_query = new \WP_Query( $args );
-	            if ( $my_query->have_posts() ) {
-		            while ( $my_query->have_posts() ) {
-			            $my_query->the_post();
-			            $product_id = get_the_ID();
-
-
-		            }
-	            }else{
-		            $product_id = 0;
-	            }
-
-
-                if ($product_id != 0 /* = wc_get_product_id_by_sku($item['PARTNAME'])*/) {
-
-	                $data['ID'] = $product_id;
-	                // Update post
-	                $id = $product_id;
-	                global $wpdb;
-	                // @codingStandardsIgnoreStart
-	                $wpdb->query(
-		                $wpdb->prepare(
-			                "
-							UPDATE $wpdb->posts
-							SET post_title = '%s',
-							post_content = '%s'
-							WHERE ID = '%s'
-							",
-			                $item['PARTDES'],
-			               $post_content,
-			                 $id
-
-		                )
-	                );
-
-                } else {
+                // if product exists, ignore
+                $args = array(
+                    'post_type'		=>	array('product', 'product_variation'),
+                    'meta_query'	=>	array(
+                        array(
+                            'key'       => '_sku',
+                            'value'	=>	$item['BARCODE']
+                        )
+                    )
+                );
+                $my_query = new \WP_Query( $args );
+                if ( $my_query->have_posts() ) {
+                    while ( $my_query->have_posts() ) {
+                        $my_query->the_post();
+                        $product_id = get_the_ID();
+                        continue;
+                    }
+                }else{
+                    $product_id = 0;
+                }
+                if ($product_id == 0 ) {
                     // Insert product
-
-
                     $id = wp_insert_post($data);
-
-
-
                     if ($id) {
+                        update_post_meta($id,'_sku',$item['BARCODE']);
                         update_post_meta($id, '_stock', 0);
                         update_post_meta($id, '_stock_status', 'outofstock');
-	                    wp_set_object_terms($id,[$item['FAMILYDES']],'product_cat');
+                        wp_set_object_terms($id,[$item['SPEC12']],'product_cat');
                     }
-                    
-
                 }
-	            $out_of_stock_staus = 'outofstock';
-
+                $out_of_stock_staus = 'outofstock';
                 // 1. Updating the stock quantity
-	          //  update_post_meta($id, '_stock', 0);
-
+                //  update_post_meta($id, '_stock', 0);
                 // 2. Updating the stock quantity
-	           // update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
-
+                // update_post_meta( $id, '_stock_status', wc_clean( $out_of_stock_staus ) );
                 // 3. Updating post term relationship
-	            wp_set_post_terms( $id, 'outofstock', 'product_visibility', true );
-
+                wp_set_post_terms( $id, 'outofstock', 'product_visibility', true );
                 // And finally (optionally if needed)
-	            wc_delete_product_transients( $id ); // Clear/refresh the variation cache
-
+                wc_delete_product_transients( $id ); // Clear/refresh the variation cache
                 // update product meta
-	            $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
-                    update_post_meta($id, '_sku', $item['PARTNAME']);
+                    // update_post_meta($id, '_sku', $item['PARTNAME']);
                     update_post_meta($id, '_regular_price', $pri_price);
                     update_post_meta($id, '_price',$pri_price );
                     update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
-		    // update categories
-                    $terms = [$item['SPEC1'],$item['SPEC2'],$item['SPEC3'],$item['SPEC4'],$item['SPEC5']];
-		    wp_set_object_terms($id,$terms,'product_cat');
+                    // update categories
+                    //$terms = [$item['SPEC1'],$item['SPEC2'],$item['SPEC3'],$item['SPEC4'],$item['SPEC5']];
+                    //wp_set_object_terms($id,$terms,'product_cat');
                 }
                 // sync image
-                $sku =  $item['PARTNAME'];
+                $sku =  $item['BARCODE'];
                 $is_has_image = get_the_post_thumbnail_url($id);
+                /*
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
-		    $priority_image_path = $item['EXTFILENAME'];
-		    $images_url =  'https://'. $this->option('url').'/primail';
-		    $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
-		    $file_path = $item['EXTFILENAME'];
-		    $file_info = pathinfo( $file_path );
-	            $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
+                    $priority_image_path = $item['EXTFILENAME'];
+                    $images_url =  'https://www.eshbelhost.com/sal/zs01u/priority/primail/tabzs01u.ini';
+                    $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
+                    $file_path = $item['EXTFILENAME'];
+                    $file_info = pathinfo( $file_path );
+                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
                     $attach_id = attachment_url_to_postid($url);
-	                if($attach_id != 0){
+                    if($attach_id != 0){
                     }
-		    else{
-		        $attach_id           = download_attachment( $sku, $product_full_url );
+                    else{
+                        $attach_id           = download_attachment( $sku, $product_full_url );
                     }
-	            set_post_thumbnail( $id, $attach_id );
-                }
+                    set_post_thumbnail( $id, $attach_id );
+                }*/
 
             }
 
@@ -1131,8 +1071,45 @@ class WooAPI extends \PriorityAPI\API
                 $response['body']
             );
 
-        }return $response;
+        }
+        return $response;
     }
+
+    public function syncItemsPriority_update_barcode()
+    {
+	    $response = $this->makeRequest('GET', 'LOGPART',[], $this->option('log_items_priority', true));
+        // check response status
+        if ($response['status']) {
+        }
+
+            $response_data = json_decode($response['body_raw'], true);
+            foreach($response_data['value'] as $item) {
+                // if product exsits, update
+	            $args = array(
+		            'post_type'		=>	array('product', 'product_variation'),
+		            'meta_query'	=>	array(
+			            array(
+				            'key'       => '_sku',
+				            'value'	=>	$item['PARTNAME']
+			            )
+		            )
+	            );
+	            $my_query = new \WP_Query( $args );
+	            if ( $my_query->have_posts() ) {
+		            while ( $my_query->have_posts() ) {
+			            $my_query->the_post();
+			            $product_id = get_the_ID();
+                        update_post_meta($product_id,'_sku',$item['BARCODE']);
+		            }
+	            }else{
+		            $product_id = 0;
+	            }
+
+
+
+            }
+    }
+
 
 	
 public function simply_posts_where( $where, $query ) {
@@ -1498,11 +1475,11 @@ public function sync_product_attachemtns(){
     /**
      * sync inventory from priority
      */
-public function syncInventoryPriority()
+    public function syncInventoryPriority()
     {
 	// get the items simply by time stamp of today
 
-        $daysback = 10; // change days back to get inventory of prev days
+        $daysback = 1000; // change days back to get inventory of prev days
 	    $stamp = mktime(1 - $daysback*24, 0, 0);
     	$bod = date(DATE_ATOM,$stamp);
     	$url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
@@ -1514,18 +1491,20 @@ public function syncInventoryPriority()
         $pl_regular = $local_option[0];
     	$pl_sales = $local_option[1];
     	$product_filter = $local_option[2];
-       $response = $this->makeRequest('GET', 'LOGPART?$filter='.$product_filter.' eq \'Y\' &$select=PARTNAME&$expand=
-                                            PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')
-                                            ,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\'),
-                                            LOGCOUNTERS_SUBFORM($select=SELLBALANCE)'
-                                            , [], $this->option('log_inventory_priority', true));
+    	$url  = 'LOGPART?$filter='.$product_filter.' eq \'Y\'  and PARTNAME eq \'NT-SW48-WD-LED\'&$select=PARTNAME&$expand=';
+        $url .= 'PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')';
+        $url .= ',PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\'),';
+        $url .= 'LOGCOUNTERS_SUBFORM($select=SELLBALANCE)';
+        $response = $this->makeRequest('GET', $url  , [], $this->option('log_inventory_priority', true));
         // check response status
         if ($response['status']) {
 
             $data = json_decode($response['body_raw'], true);
 
             foreach($data['value'] as $item) {
-
+                if(!isset($item[PARTINCUSTPLISTS_SUBFORM])){
+                    continue;
+                }
 	 // if product exsits, update
 
 	            $args = array(
@@ -1553,16 +1532,21 @@ public function syncInventoryPriority()
                     $price = 0.0;
                     $sales_price = 0.0;
                     foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
+                        if($plist['VATPRICE']==0.0){
+                            $foo = 'jee it is zero!!!';
+                        }
                         if($pl_regular==$plist['PLNAME']){
                             $price = $plist['VATPRICE'];
+                            update_post_meta($product_id, '_regular_price', $price);
                         }
                         if($pl_sales==$plist['PLNAME']){
                             $sales_price = $plist['VATPRICE'];
+                            update_post_meta($product_id, '_price',$sales_price );
+                            update_post_meta($product_id, '_sale_price',$sales_price );
                         }
                     }
-                    update_post_meta($product_id, '_regular_price', $price);
-                    update_post_meta($product_id, '_price',$sales_price );
-                    update_post_meta($product_id, '_sale_price',$sales_price );
+
+
                     // get the stock by part availability
                     $stock = 0.0;
                     /*
@@ -2257,7 +2241,61 @@ public function syncPacksPriority()
     /**
      * Sync price lists from priority to web
      */
-    public function syncPriceLists()
+
+    public function syncPriceLists() /* this is Winn Function for sync custom prices */
+    {
+        // get list of users that are customers with Priority customer number
+        $args = array(
+            'meta_query' => array(
+                array(
+                    'key' => 'priority_customer_number',
+                    'compare' => 'EXISTS',
+                ),
+            )
+        );
+        $users = get_users($args);
+        foreach ($users as $user) {
+            $priority_customer_number = get_user_meta($user->ID, 'priority_customer_number', true);
+            $response = $this->makeRequest('GET', 'ZOHA_CUSTDISCREP?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$select=PARTNAME,CUSTNAME,CUSTDES,PRICE', [], $this->option('log_pricelist_priority', true));
+            // check response status
+            if ($response['status']) {
+                // allow multisite
+                $blog_id = get_current_blog_id();
+                // price lists table
+                $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
+                // delete all existing data from price list table
+                $GLOBALS['wpdb']->query('DELETE FROM ' . $table.' WHERE price_list_code = '.$priority_customer_number);
+                // decode raw response
+                $data = json_decode($response['body_raw'], true);
+                $priceList = [];
+                if (isset($data['value'])) {
+                    foreach ($data['value'] as $list) {
+                        $GLOBALS['wpdb']->insert($table, [
+                            'product_sku' => $list['PARTNAME'],
+                            'price_list_code' => $list['CUSTNAME'],
+                            'price_list_name' => $list['CUSTDES'],
+                            'price_list_currency' => 'ILS',
+                            'price_list_price' => round((float)$list['PRICE'] * 1.17, 2),
+                            'blog_id' => $blog_id
+                        ]);
+                    }
+                    // add timestamp
+                    $this->updateOption('pricelist_priority_update', time());
+                }
+            } else {
+                /**
+                 * t149
+                 */
+                $this->sendEmailError(
+                    $this->option('email_error_sync_pricelist_priority'),
+                    'Error Sync Price Lists Priority',
+                    $response['body']
+                );
+
+            }
+        }
+    }
+    public function syncPriceLists_()
     {
         $response = $this->makeRequest('GET', 'PRICELIST?$expand=PLISTCUSTOMERS_SUBFORM,PARTPRICE2_SUBFORM', [], $this->option('log_pricelist_priority', true));
 
@@ -3172,6 +3210,37 @@ public function syncOverTheCounterInvoice($order_id)
 			update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
 		}
 	}
+
+function sync_priority_customers_to_wp(){
+    //$url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL';
+    $url_addition = 'CUSTOMERS?$filter=PRIVITAI_USEROFFON eq \'Y\' and EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL,ITAI_USERID,ITAI_USERPASS';
+    // PRIVITAI_USEROFFON
+    // ITAI_USERID,ITAI_USERPASS
+    $response = $this->makeRequest('GET', $url_addition, [],false);
+    if ($response['status']) {
+        // decode raw response
+        $data = json_decode($response['body_raw'], true)['value'];
+        foreach($data as $user){
+            $username = $user['ITAI_USERID'] ;
+            $email = $user['EMAIL'];
+            $password = $user['ITAI_USERPASS'];
+            $user_obj = get_user_by('login',$username);
+            $user_id = wp_insert_user( array(
+                'ID' => $user_obj->ID,
+                'user_login'   => $username,
+                'user_pass'    => $password,
+                'user_email'   => $email,
+                'first_name' => $user['CUSTDES'],
+                //'last_name'  => 'Doe',
+                'user_nicename'     => $user['CUSTDES'],
+                'display_name' => $user['CUSTDES'],
+                'role' => 'customer'
+            ));
+            update_user_meta($user_id,'priority_customer_number',$user['CUSTNAME']);
+            }
+        }
+
+}
 
 
 }
