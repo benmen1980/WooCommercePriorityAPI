@@ -1530,7 +1530,7 @@ public function sync_product_attachemtns(){
 	     if($product_id != 0){
                     // update price and sales price
                     $price = 0.0;
-                    $sales_price = null;
+                    $sales_price = '';
                     foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
                         if($plist['VATPRICE']==0.0){
                             $foo = 'jee it is zero!!!';
@@ -1540,12 +1540,13 @@ public function sync_product_attachemtns(){
                         }
                         if($pl_sales==$plist['PLNAME']){
                             $sales_price = $plist['VATPRICE'];
-                           
+
                         }
                     }
                     update_post_meta($product_id, '_regular_price', $price);
-                    update_post_meta($product_id, '_price',$sales_price );
-                    update_post_meta($product_id, '_sale_price',$sales_price );
+                    update_post_meta($product_id, '_price', $price);
+                    update_post_meta($product_id, '_sale_price', $sales_price);
+             wp_reset_postdata();
 
 
                     // get the stock by part availability
