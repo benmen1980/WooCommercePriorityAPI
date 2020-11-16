@@ -1995,18 +1995,9 @@ class WooAPI extends \PriorityAPI\API
             ];
         }
         // shipping rate
-        if( $order->get_shipping_method()) {
-            $data['ORDERITEMS_SUBFORM'][] = [
-                // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-                'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
-                'TQUANT'   => 1,
-                'VATPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax()),
-                "REMARK1"  => "",
-            ];
-        }
-
+        $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
         // payment info
-         $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order);
+         $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
         // make request
         $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], true);
 
@@ -2043,7 +2034,7 @@ class WooAPI extends \PriorityAPI\API
         return $response;
     }
 
-    public function get_credit_card_data($order){
+    public function get_credit_card_data($order,$is_order){
 
         $gateway = 'debug';
         $config = json_decode(stripslashes($this->option('setting-config')));
@@ -2104,13 +2095,15 @@ class WooAPI extends \PriorityAPI\API
             'QPRICE'      => floatval($order->get_total()),
             'CCUID'       => $ccuid,
             'CONFNUM'     => $confnum,
-            'NUMPAY'      => $numpay,
-            'FIRSTPAY'    => $firstpay
+
         ];
+        // add fields for not order objects
+        if(!is_order){
+            $data['NUMPAY']   = $numpay;
+            $data['FIRSTPAY'] = $firstpay;
+        }
         return $data;
     }
-
-
     public function post_prospect($order)
     {
         if('prospect_email'==$this->option('prospect_field')){
@@ -2362,10 +2355,6 @@ class WooAPI extends \PriorityAPI\API
             // for Priority version 19.1
             $data['PINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
         }
-
-
-
-
         // billing customer details
         $customer_data = [
 
@@ -2377,11 +2366,8 @@ class WooAPI extends \PriorityAPI\API
             'ZIP'         => $order->get_shipping_postcode(),
         ];
         $data['AINVOICESCONT_SUBFORM'][] = $customer_data;
-
         // shipping
-
         // shop address debug
-
         $shipping_data = [
             'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
@@ -2393,30 +2379,21 @@ class WooAPI extends \PriorityAPI\API
             'STATE'       => $order->get_shipping_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
-
         // add second address if entered
         if ( ! empty($order->get_shipping_address_2())) {
             $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
         }
-
         $data['SHIPTO2_SUBFORM'] = $shipping_data;
-
         // get shipping id
         $shipping_method    = $order->get_shipping_methods();
         $shipping_method    = array_shift($shipping_method);
         $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
-
         // get parameters
         $params = [];
-
-
         // get ordered items
         foreach ($order->get_items() as $item) {
-
             $product = $item->get_product();
-
             $parameters = [];
-
             // get tax
             // Initializing variables
             $tax_items_labels   = array(); // The tax labels by $rate Ids
@@ -2480,14 +2457,18 @@ class WooAPI extends \PriorityAPI\API
             ];
         }
         // shipping rate
-        if( $order->get_shipping_method()) {
-            $data['AINVOICEITEMS_SUBFORM'][] = [
+
+            $data['AINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order,false);
+
+                /*
+                [
                 // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
                 'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
                 'TQUANT'   => 1,
                 'TOTPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax())
-            ];
-        }
+            ];*/
+
+
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -2580,12 +2561,10 @@ class WooAPI extends \PriorityAPI\API
             'STATE'       => $order->get_shipping_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
-
         // add second address if entered
         if ( ! empty($order->get_shipping_address_2())) {
             $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
         }
-
         $data['SHIPTO2_SUBFORM'] = $shipping_data;
         // get ordered items
         foreach ($order->get_items() as $item) {
@@ -2617,25 +2596,11 @@ class WooAPI extends \PriorityAPI\API
             }
 
         }
-
         // shipping rate
-        $shipping_method    = $order->get_shipping_methods();
-        $shipping_method    = array_shift($shipping_method);
-        $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
-        // get shipping id
-        if( $order->get_shipping_method() && $order->get_shipping_total()> 0) {
-            $data['EINVOICEITEMS_SUBFORM'][] = [
-                // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-                'PARTNAME' => $this->option( 'shipping_' . $shipping_method_id . '_'.$shipping_method['instance_id'], $order->get_shipping_method() ),
-                'TQUANT'   => 1,
-                'TOTPRICE' => floatval( $order->get_shipping_total() )
-            ];
-        }
-
-
+        $data['EINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order,false);
         // payment info
         if($order->get_total()>0.0) {
-            $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order);
+            $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
         }
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
@@ -2667,12 +2632,7 @@ class WooAPI extends \PriorityAPI\API
                 $response['body']
             );
         }
-
-
         return $response;
-
-
-
     }
     public function syncReceipt($order_id)
     {
@@ -2697,7 +2657,7 @@ class WooAPI extends \PriorityAPI\API
             $data['CASHPAYMENT'] = floatval($order->get_total());
         } else {
             // payment info
-            $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order);
+            $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
         }
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
@@ -2764,7 +2724,7 @@ class WooAPI extends \PriorityAPI\API
         } else {
 
             // payment info
-            $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order);
+            $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
 
         }
 
@@ -2836,9 +2796,6 @@ class WooAPI extends \PriorityAPI\API
         $this->updateOption('receipts_priority_update', time());
 
     }
-
-
-
     /**
      * Sync receipts for completed orders
      *
@@ -2853,7 +2810,6 @@ class WooAPI extends \PriorityAPI\API
             $this->syncReceipt($order->get_id());
         }
     }
-
     // filter products by user price list
     public function filterProductsByPriceList($ids)
     {
@@ -2898,8 +2854,6 @@ class WooAPI extends \PriorityAPI\API
         // not logged in user
         return [];
     }
-
-
     /**
      * Get all price lists
      *
@@ -2917,7 +2871,6 @@ class WooAPI extends \PriorityAPI\API
 
         return static::$priceList;
     }
-
     /**
      * Get price list data by price list code
      *
@@ -2936,7 +2889,6 @@ class WooAPI extends \PriorityAPI\API
         return $data;
 
     }
-
     /**
      * Get product data regarding to price list assigned for user
      *
@@ -3038,7 +2990,27 @@ class WooAPI extends \PriorityAPI\API
             update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
         }
     }
-
+    function get_shipping_price($order,$is_order){
+        $price_filed = $is_order ? 'VATPRICE' : 'TOTPRICE';
+        // config
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $default_product = '000';
+        $default_product = $config->SHIPPING_DEFAULT_PARTNAME ?? $default_product;
+        $shipping_method    = $order->get_shipping_methods();
+        $shipping_method    = array_shift($shipping_method);
+        $data = $shipping_method->get_data();
+        $method_title = $data['method_title'];
+        $method_id = $data['method_id'];
+        $instance_id = $data['instance_id'];
+        $shipping_price = $data['total'];
+        $data = [
+            // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+            'PARTNAME' => $this->option( 'shipping_' . $method_id . '_'.$instance_id, $default_product),
+            'TQUANT'   => 1,
+            $price_filed => floatval( $shipping_price)
+        ];
+        return $data;
+    }
     function sync_priority_customers_to_wp(){
         // default values
         $daysback = 1;
