@@ -1491,7 +1491,7 @@ public function sync_product_attachemtns(){
         $pl_regular = $local_option[0];
     	$pl_sales = $local_option[1];
     	$product_filter = $local_option[2];
-    	$url  = 'LOGPART?$filter='.$product_filter.' eq \'Y\' &$select=PARTNAME&$expand=';
+    	$url  = 'LOGPART?$filter='.$product_filter.' eq \'Y\'  &$select=PARTNAME&$expand=';
         $url .= 'PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')';
         $url .= ',PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\'),';
         $url .= 'LOGCOUNTERS_SUBFORM($select=SELLBALANCE)';
@@ -1530,21 +1530,22 @@ public function sync_product_attachemtns(){
 	     if($product_id != 0){
                     // update price and sales price
                     $price = 0.0;
-                    $sales_price = 0.0;
+                    $sales_price = null;
                     foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
                         if($plist['VATPRICE']==0.0){
                             $foo = 'jee it is zero!!!';
                         }
                         if($pl_regular==$plist['PLNAME']){
                             $price = $plist['VATPRICE'];
-                            update_post_meta($product_id, '_regular_price', $price);
                         }
                         if($pl_sales==$plist['PLNAME']){
                             $sales_price = $plist['VATPRICE'];
-                            update_post_meta($product_id, '_price',$sales_price );
-                            update_post_meta($product_id, '_sale_price',$sales_price );
+                           
                         }
                     }
+                    update_post_meta($product_id, '_regular_price', $price);
+                    update_post_meta($product_id, '_price',$sales_price );
+                    update_post_meta($product_id, '_sale_price',$sales_price );
 
 
                     // get the stock by part availability
