@@ -1491,7 +1491,7 @@ public function sync_product_attachemtns(){
         $pl_regular = $local_option[0];
     	$pl_sales = $local_option[1];
     	$product_filter = $local_option[2];
-    	$url  = 'LOGPART?$filter='.$product_filter.' eq \'Y\'  and PARTNAME eq \'NT-SW48-WD-LED\'&$select=PARTNAME&$expand=';
+    	$url  = 'LOGPART?$filter='.$product_filter.' eq \'Y\' &$select=PARTNAME&$expand=';
         $url .= 'PARTINCUSTPLISTS_SUBFORM($filter=PLNAME eq \''.$pl_regular.'\' or PLNAME eq \''.$pl_sales.'\')';
         $url .= ',PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'Main\' and CUSTNAME eq \'Goods\'),';
         $url .= 'LOGCOUNTERS_SUBFORM($select=SELLBALANCE)';
