@@ -1995,7 +1995,9 @@ class WooAPI extends \PriorityAPI\API
             ];
         }
         // shipping rate
-        $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
+        if(!empty($this->get_shipping_price($order,true))){
+            $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
+        }
         // payment info
          $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
         // make request
@@ -2455,8 +2457,9 @@ class WooAPI extends \PriorityAPI\API
             ];
         }
         // shipping rate
-
-            $data['AINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order,false);
+        if(!empty($this->get_shipping_price($order,false))) {
+            $data['AINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order, false);
+        }
 
                 /*
                 [
@@ -2595,7 +2598,9 @@ class WooAPI extends \PriorityAPI\API
 
         }
         // shipping rate
-        $data['EINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order,false);
+        if(!empty($this->get_shipping_price($order,false))) {
+            $data['EINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order, false);
+        }
         // payment info
         if($order->get_total()>0.0) {
             $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
@@ -2996,18 +3001,22 @@ class WooAPI extends \PriorityAPI\API
         $default_product = $config->SHIPPING_DEFAULT_PARTNAME ?? $default_product;
         $shipping_method    = $order->get_shipping_methods();
         $shipping_method    = array_shift($shipping_method);
-        $data = $shipping_method->get_data();
-        $method_title = $data['method_title'];
-        $method_id = $data['method_id'];
-        $instance_id = $data['instance_id'];
-        $shipping_price = $data['total'];
-        $data = [
-            // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-            'PARTNAME' => $this->option( 'shipping_' . $method_id . '_'.$instance_id, $default_product),
-            'TQUANT'   => 1,
-            $price_filed => floatval( $shipping_price)
-        ];
-        return $data;
+        if(isset($shipping_method)) {
+            $data = $shipping_method->get_data();
+            $method_title = $data['method_title'];
+            $method_id = $data['method_id'];
+            $instance_id = $data['instance_id'];
+            $shipping_price = $data['total'];
+            $data = [
+                // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
+                'PARTNAME' => $this->option('shipping_' . $method_id . '_' . $instance_id, $default_product),
+                'TQUANT' => 1,
+                $price_filed => floatval($shipping_price)
+            ];
+            return $data;
+        }else{
+            return null;
+        }
     }
     function sync_priority_customers_to_wp(){
         // default values
