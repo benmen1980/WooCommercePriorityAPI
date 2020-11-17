@@ -2036,9 +2036,8 @@ class WooAPI extends \PriorityAPI\API
 
     public function get_credit_card_data($order,$is_order){
 
-        $gateway = 'debug';
         $config = json_decode(stripslashes($this->option('setting-config')));
-        $gateway = $config->gateway;
+        $gateway = $config->gateway ?? 'debug';
         switch($gateway){
             // pelecard
             case 'pelecard';
