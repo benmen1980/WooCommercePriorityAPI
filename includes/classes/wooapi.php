@@ -2091,15 +2091,14 @@ class WooAPI extends \PriorityAPI\API
             'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
             'PAYACCOUNT'  => substr($payaccount,strlen($payaccount) -4,4),
             'VALIDMONTH'  => $validmonth,
-            'PAYCODE'     => '',
             'QPRICE'      => floatval($order->get_total()),
             'CCUID'       => $ccuid,
             'CONFNUM'     => $confnum,
+            'PAYCODE'      => (string)$numpay
 
         ];
         // add fields for not order objects
         if(!is_order){
-            $data['NUMPAY']   = $numpay;
             $data['FIRSTPAY'] = $firstpay;
         }
         return $data;
