@@ -1529,24 +1529,31 @@ public function sync_product_attachemtns(){
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
 	     if($product_id != 0){
                     // update price and sales price
-                    $price = 0.0;
+                    $price = '';
                     $sales_price = '';
                     foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
                         if($plist['VATPRICE']==0.0){
                             $foo = 'jee it is zero!!!';
                         }
                         if($pl_regular==$plist['PLNAME']){
-                            $price = $plist['VATPRICE'];
+                            $price = (string)$plist['VATPRICE'];
                         }
                         if($pl_sales==$plist['PLNAME']){
-                            $sales_price = $plist['VATPRICE'];
+                            $sales_price = (string)$plist['VATPRICE'];
 
                         }
                     }
-                    update_post_meta($product_id, '_regular_price', $price);
-                    update_post_meta($product_id, '_price', $price);
-                    update_post_meta($product_id, '_sale_price', $sales_price);
-             wp_reset_postdata();
+                    // update_post_meta($product_id, '_regular_price', $price);
+                    // update_post_meta($product_id, '_price', $price);
+                    //  update_post_meta($product_id, '_sale_price', $sales_price);
+                    // wp_reset_postdata();
+                    // Get an instance of the WC_Product object
+                    $my_product = new \WC_Product( $product_id );
+                    // Set product prices
+                    //$my_product->set_price('43' );
+                    $my_product->set_regular_price($price);
+                    $my_product->set_sale_price( $sales_price);
+                    $my_product->save();
 
 
                     // get the stock by part availability
