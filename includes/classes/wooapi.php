@@ -2076,6 +2076,15 @@ class WooAPI extends \PriorityAPI\API
             // tranzila
             case 'tranzila';
             break;
+            // payplus
+            case 'payplus';
+                $order_first_pay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true));
+                $order_token = get_post_meta($order->get_id(),'payplus_token',true);
+                $order_ccnumber = get_post_meta($order->get_id(),'payplus_last_four',true);
+                $order_cc_expiration = get_post_meta($order->get_id(),'payplus_exp_date',true);
+                $number_of_payments = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
+                $order_cc_authorization = get_post_meta($order->get_id(),'payplus_voucher_id',true);
+            break;
             // debug
             case 'debug';
                 $payaccount = '123456789';
