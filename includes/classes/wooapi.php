@@ -1071,8 +1071,12 @@ class WooAPI extends \PriorityAPI\API
                 // update product price
                 $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
-                    update_post_meta($id, '_regular_price', $pri_price);
-                    update_post_meta($id, '_price',$pri_price );
+		    $my_product = new \WC_Product( $id );
+                    $my_product->set_regular_price($pri_price);
+                    //$my_product->set_sale_price( $sales_price);
+                    $my_product->save();
+                    //update_post_meta($id, '_regular_price', $pri_price);
+                    //update_post_meta($id, '_price',$pri_price );
                     update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
                     // update categories
                     $categories = [];
