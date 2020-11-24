@@ -1502,7 +1502,7 @@ public function sync_product_attachemtns(){
             $data = json_decode($response['body_raw'], true);
 
             foreach($data['value'] as $item) {
-                if(!isset($item[PARTINCUSTPLISTS_SUBFORM])){
+                if(!isset($item['PARTINCUSTPLISTS_SUBFORM'])){
                     continue;
                 }
 	 // if product exsits, update
@@ -1532,7 +1532,7 @@ public function sync_product_attachemtns(){
                     
                     $price = '';
                     $sales_price = '';
-                    foreach($item[PARTINCUSTPLISTS_SUBFORM] as $plist){
+                    foreach($item['PARTINCUSTPLISTS_SUBFORM'] as $plist){
                         if($plist['VATPRICE']==0.0){
                             $foo = 'jee it is zero!!!';
                         }
@@ -1549,7 +1549,13 @@ public function sync_product_attachemtns(){
                     update_post_meta($product_id, '_price', $price);
                     update_post_meta($product_id, '_sale_price', $sales_price);
 					*/
-			 		$my_product = new \WC_Product( $product_id );
+		    $post_type = get_post_type($product_id);
+            	    if($post_type=='product'){
+                	    $my_product = new \WC_Product($product_id);
+                    }
+                    if($post_type=='product_variation'){
+                    	$my_product = new \WC_Product_Variation($product_id);
+                    }
                     // Set product prices
                     //$my_product->set_price('43' );
                     $my_product->set_regular_price($price);
