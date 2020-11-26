@@ -142,6 +142,7 @@ class WooAPI extends \PriorityAPI\API
         // Sync customer and order data after order is proccessed
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
+        add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
         // custom check out fields
         //add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
         add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
@@ -962,6 +963,8 @@ class WooAPI extends \PriorityAPI\API
 
             exit(json_encode(['status' => 1, 'timestamp' => date('d/m/Y H:i:s')]));
         });
+        // post order on status change
+        add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
 
 
     }
@@ -2112,7 +2115,7 @@ class WooAPI extends \PriorityAPI\API
 
         ];
         // add fields for not order objects
-        if(!is_order){
+        if(!$is_order){
             $data['FIRSTPAY'] = $firstpay;
         }
         return $data;
@@ -2152,10 +2155,18 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncDataAfterOrder($order_id)
     {
-        if(empty(get_post_meta($order_id,'_post_done',true))){
+        $order = new \WC_Order($order_id);
+        // checck order status against config
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        if(!isset($config->order_statuses)){
+            $is_status = true;
+        }else{
+            $statuses = explode(',', $config->order_statuses);
+            $is_status = in_array($order->get_status(),$statuses);
+        }
+        if(empty(get_post_meta($order_id,'_post_done',true)) && $is_status){
             // get order
             update_post_meta($order_id,'_post_done',true);
-            $order = new \WC_Order($order_id);
 
             // sync customer if it's signed in / registered
             // guest user will have id 0
@@ -2182,12 +2193,14 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         // sync payments
+        if(isset(WC()->session)){
         $session = WC()->session->get('session_vars');
-        if($session['ordertype']=='Recipe') {
-            $optional = array(
-                "custname" => $session['custname']
-            );
-            $this->syncPayment($order_id,$optional);
+            if($session['ordertype']=='Recipe') {
+                $optional = array(
+                    "custname" => $session['custname']
+                );
+                $this->syncPayment($order_id,$optional);
+            }
         }
     }
     /**
