@@ -671,22 +671,26 @@ class WooAPI extends \PriorityAPI\API
 
 
                 //add the new column "Status"
-                $columns['priority_order_status'] = '<span>'.__( 'Priority Order Status','woocommerce').'</span>'; // title
+                if($this->option('post_order_checkout')) {
+                    // add the Priority order number
+                    $columns['priority_order_number'] = '<span>' . __('Priority Order', 'woocommerce') . '</span>'; // title
+                    $columns['priority_order_status'] = '<span>' . __('Priority Order Status', 'woocommerce') . '</span>'; // title
 
-                // add the Priority order number
-                $columns['priority_order_number'] = '<span>'.__( 'Priority Order','woocommerce').'</span>'; // title
-
+                }
                 //add the new column "Status"
-                $columns['priority_invoice_status'] = '<span>'.__( 'Priority Invoice Status','woocommerce').'</span>'; // title
+                if($this->option('post_einvoice_checkout')|| $this->option('post_ainvoice_checkout')) {
+                    // add the Priority invoice number
+                    $columns['priority_invoice_number'] = '<span>' . __('Priority Invoice', 'woocommerce') . '</span>'; // title
+                    $columns['priority_invoice_status'] = '<span>' . __('Priority Invoice Status', 'woocommerce') . '</span>'; // title
 
-                // add the Priority invoice number
-                $columns['priority_invoice_number'] = '<span>'.__( 'Priority Invoice','woocommerce').'</span>'; // title
-
+                }
                 //add the new column "Status"
-                $columns['priority_recipe_status'] = '<span>'.__( 'Priority Recipe Status','woocommerce').'</span>'; // title
+                if($this->option('post_receipt_checkout')) {
+                    // add the Priority recipe number
+                    $columns['priority_recipe_number'] = '<span>' . __('Priority Recipe', 'woocommerce') . '</span>'; // title
+                    $columns['priority_recipe_status'] = '<span>' . __('Priority Recipe Status', 'woocommerce') . '</span>'; // title
 
-                // add the Priority recipe number
-                $columns['priority_recipe_number'] = '<span>'.__( 'Priority Recipe','woocommerce').'</span>'; // title
+                }
 
 
                 //add the new column "post to Priority"
@@ -697,7 +701,7 @@ class WooAPI extends \PriorityAPI\API
                 $columns['order_actions'] = $action_column;
 
                 return $columns;
-            });
+            },999);
 
 // ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
         add_action( 'manage_shop_order_posts_custom_column' ,
@@ -705,25 +709,28 @@ class WooAPI extends \PriorityAPI\API
             {
 
                 // HERE get the data from your custom field (set the correct meta key below)
-                $order_status = get_post_meta( $post_id, 'priority_order_status', true );
-                $order_number = get_post_meta( $post_id, 'priority_order_number', true );
-                if( empty($order_status)) $order_status = '';
-                if(strlen($order_status) > 15) $order_status = '<div class="tooltip">Error<span class="tooltiptext">'.$order_status.'</span></div>';
-                if( empty($order_number)) $order_number = '';
-                // invoice or OTC
-                $invoice_status = get_post_meta( $post_id, 'priority_invoice_status', true );
-                $invoice_number = get_post_meta( $post_id, 'priority_invoice_number', true );
-                if( empty($invoice_status)) $invoice_status = '';
-                if(strlen($invoice_status) > 15) $invoice_status = '<div class="tooltip">Error<span class="tooltiptext">'.$invoice_status.'</span></div>';
-                if( empty($invoice_number)) $invoice_number = '';
-
+                if($this->option('post_order_checkout')) {
+                    $order_status = get_post_meta($post_id, 'priority_order_status', true);
+                    $order_number = get_post_meta($post_id, 'priority_order_number', true);
+                    if (empty($order_status)) $order_status = '';
+                    if (strlen($order_status) > 15) $order_status = '<div class="tooltip">Error<span class="tooltiptext">' . $order_status . '</span></div>';
+                    if (empty($order_number)) $order_number = '';
+                }
+                if($this->option('post_einvoice_checkout')|| $this->option('post_ainvoice_checkout')){
+                    $invoice_number = get_post_meta($post_id, 'priority_invoice_number', true);
+                    $invoice_status = get_post_meta($post_id, 'priority_invoice_status', true);
+                    if (empty($invoice_status)) $invoice_status = '';
+                    if (strlen($invoice_status) > 15) $invoice_status = '<div class="tooltip">Error<span class="tooltiptext">' . $invoice_status . '</span></div>';
+                    if (empty($invoice_number)) $invoice_number = '';
+                }
                 // recipe
-                $recipe_status = get_post_meta( $post_id, 'priority_recipe_status', true );
-                $recipe_number = get_post_meta( $post_id, 'priority_recipe_number', true );
-                if( empty($recipe_status)) $recipe_status = '';
-                if(strlen($recipe_status) > 15) $recipe_status = '<div class="tooltip">Error<span class="tooltiptext">'.$recipe_status.'</span></div>';
-                if( empty($recipe_number)) $recipe_number = '';
-
+                if($this->option('post_receipt_checkout')) {
+                    $recipe_status = get_post_meta($post_id, 'priority_recipe_status', true);
+                    $recipe_number = get_post_meta($post_id, 'priority_recipe_number', true);
+                    if (empty($recipe_status)) $recipe_status = '';
+                    if (strlen($recipe_status) > 15) $recipe_status = '<div class="tooltip">Error<span class="tooltiptext">' . $recipe_status . '</span></div>';
+                    if (empty($recipe_number)) $recipe_number = '';
+                }
                 switch ( $column )
                 {
                     // order
@@ -753,7 +760,7 @@ class WooAPI extends \PriorityAPI\API
                         echo '<span><a href='.$url.'>Re Post</a></span>'; // display the data
                         break;
                 }
-            },10,2);
+            },999,2);
 
 // MAKE 'stauts' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
         add_filter( 'woocommerce_shop_order_search_fields',
@@ -965,8 +972,39 @@ class WooAPI extends \PriorityAPI\API
         });
         // post order on status change
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
-
-
+        add_action( 'woocommerce_order_status_changed', [ $this, 'post_order_status_to_priority' ],10);
+    }
+    public function post_order_status_to_priority($order_id){
+        // this code is currently working only for EINVOICES
+        if(empty(get_post_meta($order_id,'_post_done',true))){
+            return;
+        }
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $statdes = null;
+        $order = new \WC_Order($order_id);
+        foreach ($config->status_convert[0] as $key=>$value){
+            if($order->get_status()==$key){
+                $statdes = $value;
+            }
+        }
+        if(!$statdes){
+            return;
+        }
+        // get the invoice number from Priority
+        $url_addition = 'EINVOICES?$filter=BOOKNUM eq \''.$order_id.'\'';
+        $response = $this->makeRequest('GET', $url_addition,[],false);
+        if ($response['status']) {
+            $response_data = json_decode($response['body_raw'], true);
+            $invoice = $response_data['value'][0];
+            $ivnum = $invoice['IVNUM'];
+        }
+        // post status to Priority
+        $url_addition = 'EINVOICES(IVNUM=\''.$ivnum.'\',IVTYPE=\'E\',DEBIT=\'D\')';
+        $data = ['STATDES' => $statdes  ];
+        $response = $this->makeRequest('PATCH', $url_addition,['body' => json_encode($data)],false);
+        if ($response['status']) {
+            $response_data = json_decode($response['body_raw'], true);
+        }
     }
 
     /**
