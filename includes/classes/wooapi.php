@@ -151,8 +151,9 @@ class WooAPI extends \PriorityAPI\API
 
         // sync user to priority after registration
         if ( $this->option( 'post_customers' ) == true ) {
-            add_action( 'user_register', [ $this, 'syncCustomer' ] );
-            add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ] );
+            add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
+            //add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
+            add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
 
 
@@ -1654,9 +1655,14 @@ class WooAPI extends \PriorityAPI\API
     {
         // check user
         if ($user = get_userdata($id)) {
-
             $meta = get_user_meta($id);
             $priority_customer_number = 'WEB-'.(string) $user->data->ID;
+            if('prospect_email'==$this->option('prospect_field')){
+                $priority_customer_number = $user->data->user_email;
+            }
+            if('prospect_cellphone'==$this->option('prospect_field')){
+                $priority_customer_number = $meta['billing_phone'][0];
+            }
             $json_request = json_encode([
                 'CUSTNAME'    => $priority_customer_number,
                 'CUSTDES'     => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
@@ -1687,9 +1693,7 @@ class WooAPI extends \PriorityAPI\API
             // add timestamp
             $this->updateOption('post_customers', time());
         }
-
     }
-
     public function syncPriorityOrderStatus(){
 
         // orders
@@ -2080,7 +2084,6 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
     public function get_credit_card_data($order,$is_order){
 
         $config = json_decode(stripslashes($this->option('setting-config')));
@@ -2575,6 +2578,7 @@ class WooAPI extends \PriorityAPI\API
         $user = $order->get_user();
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+        $user_meta = get_user_meta($user_id);
         $cust_number = $this->getPriorityCustomer($order);
         $data = [
             'CUSTNAME'  => $cust_number,

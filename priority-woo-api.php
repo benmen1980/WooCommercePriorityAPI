@@ -1,16 +1,16 @@
 <?php
 /**
 * @package     Priority Woocommerce API
-* @author      Ante Laca <ante.laca@gmail.com>
-* @copyright   2018 Roi Holdings
+* @author      Roy Ben Menachem <roy@simplyCT.co.il>
+* @copyright   2018 SimplyCT
 *
 * @wordpress-plugin
 * Plugin Name: Priority Woocommerce API 
-* Plugin URI: http://www.roi-holdings.com
+* Plugin URI: http://simplyCT.co.il
 * Description: Priority Woocommerce API extension
-* Version: 1.05
-* Author: Roi Holdings
-* Author URI: http://www.roi-holdings.com
+* Version: 1.06
+* Author: SimplyCT
+* Author URI: http://www.simplyCT.co.il
 * Licence: GPLv2
 * Text Domain: p18w
 * Domain Path: /languages  
