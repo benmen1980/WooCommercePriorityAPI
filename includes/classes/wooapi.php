@@ -2156,8 +2156,8 @@ class WooAPI extends \PriorityAPI\API
 
         ];
         // add fields for not order objects
-        if(!$is_order){
-            $data['FIRSTPAY'] = $firstpay;
+        if(!$is_order&&$firstpay != 0.0){
+            $data['FIRSTPAY'] = $firstpay ;
         }
         return $data;
     }
