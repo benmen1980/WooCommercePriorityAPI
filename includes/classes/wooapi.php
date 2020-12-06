@@ -2088,6 +2088,8 @@ class WooAPI extends \PriorityAPI\API
 
         $config = json_decode(stripslashes($this->option('setting-config')));
         $gateway = $config->gateway ?? 'debug';
+        $paymentcode = $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method());
+
         switch($gateway){
             // pelecard
             case 'pelecard';
@@ -2112,9 +2114,10 @@ class WooAPI extends \PriorityAPI\API
             break;
             // card com
             case 'cardcom';
+                $paymentcode = $order->get_meta('cc_Mutag');
                 $payaccount = $order->get_meta('cc_number');
-                $ccuid = '';
-                $validmonth = '';
+                $ccuid = $order->get_meta('CardcomInternalDealNumber');
+                $validmonth = $order->get_meta('cc_Tokef');
                 $confnum = $order->get_meta('CardcomInternalDealNumber');
                 $numpay = $order->get_meta('cc_numofpayments');
                 $firstpay = $order->get_meta('cc_firstpayment');
@@ -2126,12 +2129,12 @@ class WooAPI extends \PriorityAPI\API
             break;
             // payplus
             case 'payplus';
-                $order_first_pay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true));
-                $order_token = get_post_meta($order->get_id(),'payplus_token',true);
-                $order_ccnumber = get_post_meta($order->get_id(),'payplus_last_four',true);
-                $order_cc_expiration = get_post_meta($order->get_id(),'payplus_exp_date',true);
-                $number_of_payments = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
-                $order_cc_authorization = get_post_meta($order->get_id(),'payplus_voucher_id',true);
+                $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
+                $ccuid = get_post_meta($order->get_id(),'payplus_token',true);
+                $payaccount = get_post_meta($order->get_id(),'payplus_last_four',true);
+                $validmonth = get_post_meta($order->get_id(),'payplus_exp_date',true);
+                $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
+                $confnum = get_post_meta($order->get_id(),'payplus_voucher_id',true);
             break;
             // debug
             case 'debug';
@@ -2146,7 +2149,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
        $data=[
-            'PAYMENTCODE' => $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method()),
+            'PAYMENTCODE' => $paymentcode,
             'PAYACCOUNT'  => substr($payaccount,strlen($payaccount) -4,4),
             'VALIDMONTH'  => $validmonth,
             'QPRICE'      => floatval($order->get_total()),
