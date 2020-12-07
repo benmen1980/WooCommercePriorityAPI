@@ -2120,7 +2120,7 @@ class WooAPI extends \PriorityAPI\API
                 $validmonth = $order->get_meta('cc_Tokef');
                 $confnum = $order->get_meta('CardcomInternalDealNumber');
                 $numpay = $order->get_meta('cc_numofpayments');
-                $firstpay = floatval($order->get_meta('cc_firstpayment'));
+                $firstpay = floatval($order->get_meta('cc_firstpayment'))/100;
                 $card_type = $order->get_meta('cc_cardtype');
                 $payment_type = $order->get_meta('cc_paymenttype');
             break;
