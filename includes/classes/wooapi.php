@@ -992,7 +992,8 @@ class WooAPI extends \PriorityAPI\API
             return;
         }
         // get the invoice number from Priority
-        $url_addition = 'EINVOICES?$filter=BOOKNUM eq \''.$order_id.'\'';
+        $order_field = $this->option('otc_order_field');
+        $url_addition = 'EINVOICES?$filter='.$order_field.' eq \''.$order_id.'\'';
         $response = $this->makeRequest('GET', $url_addition,[],false);
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
