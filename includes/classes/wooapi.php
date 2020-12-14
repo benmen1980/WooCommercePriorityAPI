@@ -2095,6 +2095,7 @@ class WooAPI extends \PriorityAPI\API
             // pelecard
             case 'pelecard';
                 $order_cc_meta = $order->get_meta('_transaction_data');
+                $paymentcode = $order_cc_meta['CreditCardCompanyClearer'];
                 // data
                 $payaccount = $order_cc_meta['CreditCardNumber'];
                 $ccuid =  $order_cc_meta['Token'];
