@@ -1572,12 +1572,17 @@ class WooAPI extends \PriorityAPI\API
                     // get the stock by part availability
                     $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
                     // get the stock by specific warehouse
-                    $wh_name = $this->option('sync_inventory_warhsname');
+                    $wh_name = explode (',',$this->option('sync_inventory_warhsname'))[0];
+                    $foo =$this->option('sync_inventory_warhsname');
+                    $foo2 = explode (',',$this->option('sync_inventory_warhsname'))[1];
+                    $is_deduct_order = explode (',',$this->option('sync_inventory_warhsname'))[1] == 'ORDER';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach($item['PARTBALANCE_SUBFORM'] as $wh_stock){
                         if($wh_stock['WARHSNAME'] == $wh_name)
-                            //$stock = $wh_stock['TBALANCE'] - $orders > 0 ?  $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
                             $stock = $wh_stock['TBALANCE']  > 0 ?  $wh_stock['TBALANCE']  : 0; // stock
+                            if($is_deduct_order){
+                                $stock = $wh_stock['TBALANCE'] - $orders > 0 ?  $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
+                            }
                     }
 
 
