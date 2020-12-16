@@ -2547,7 +2547,8 @@ class WooAPI extends \PriorityAPI\API
                 'TOTPRICE' => floatval( $order->get_shipping_total()+$order->get_shipping_tax())
             ];*/
 
-
+        // filter data
+        apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -2684,6 +2685,7 @@ class WooAPI extends \PriorityAPI\API
         if($order->get_total()>0.0) {
             $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
         }
+        apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
         if ($response['code']<=201) {
@@ -2709,7 +2711,7 @@ class WooAPI extends \PriorityAPI\API
              * t149
              */
             $this->sendEmailError(
-                $this->option('email_error_sync_einvoices_web'),
+                [$this->option('email_error_sync_einvoices_web')],
                 'Error Sync OTC invoice',
                 $response['body']
             );
@@ -2766,7 +2768,7 @@ class WooAPI extends \PriorityAPI\API
              * t149
              */
             $this->sendEmailError(
-                $this->option('email_error_sync_einvoices_web'),
+                [$this->option('email_error_sync_einvoices_web')],
                 'Error Sync OTC invoice',
                 $response['body']
             );
@@ -2862,14 +2864,14 @@ class WooAPI extends \PriorityAPI\API
         if($response['code'] >= 400){
             $body_array = json_decode($response["body"],true);
             $this->sendEmailError(
-                $this->option('email_error_sync_einvoices_web'),
+                [$this->option('email_error_sync_einvoices_web')],
                 'Error Sync payment',
                 $response['body']
             );
         }
         if (!$response['status']) {
             $this->sendEmailError(
-                $this->option('email_error_sync_einvoices_web'),
+                [$this->option('email_error_sync_einvoices_web')],
                 'Error Sync payment',
                 $response['body']
             );
