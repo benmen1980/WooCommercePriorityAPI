@@ -674,28 +674,28 @@ class WooAPI extends \PriorityAPI\API
                 //add the new column "Status"
                 if($this->option('post_order_checkout')) {
                     // add the Priority order number
-                    $columns['priority_order_number'] = '<span>' . __('Priority Order', 'woocommerce') . '</span>'; // title
-                    $columns['priority_order_status'] = '<span>' . __('Priority Order Status', 'woocommerce') . '</span>'; // title
+                    $columns['priority_order_number'] = '<span>' . __('Priority Order', 'p18w') . '</span>'; // title
+                    $columns['priority_order_status'] = '<span>' . __('Priority Order Status', 'p18w') . '</span>'; // title
 
                 }
                 //add the new column "Status"
                 if($this->option('post_einvoice_checkout')|| $this->option('post_ainvoice_checkout')) {
                     // add the Priority invoice number
-                    $columns['priority_invoice_number'] = '<span>' . __('Priority Invoice', 'woocommerce') . '</span>'; // title
-                    $columns['priority_invoice_status'] = '<span>' . __('Priority Invoice Status', 'woocommerce') . '</span>'; // title
+                    $columns['priority_invoice_number'] = '<span>' . __('Priority Invoice', 'p18w') . '</span>'; // title
+                    $columns['priority_invoice_status'] = '<span>' . __('Priority Invoice Status', 'p18w') . '</span>'; // title
 
                 }
                 //add the new column "Status"
                 if($this->option('post_receipt_checkout')) {
                     // add the Priority recipe number
-                    $columns['priority_recipe_number'] = '<span>' . __('Priority Recipe', 'woocommerce') . '</span>'; // title
-                    $columns['priority_recipe_status'] = '<span>' . __('Priority Recipe Status', 'woocommerce') . '</span>'; // title
+                    $columns['priority_recipe_number'] = '<span>' . __('Priority Recipe', 'p18w') . '</span>'; // title
+                    $columns['priority_recipe_status'] = '<span>' . __('Priority Recipe Status', 'p18w') . '</span>'; // title
 
                 }
 
 
                 //add the new column "post to Priority"
-                $columns['order_post'] = '<span>'.__( 'Post to Priority','woocommerce').'</span>'; // title
+                $columns['order_post'] = '<span>'.__( 'Post to Priority','p18w').'</span>'; // title
 
 
                 // Set back "Actions" column
@@ -758,7 +758,7 @@ class WooAPI extends \PriorityAPI\API
                     // post order to API, using GET and
                     case 'order_post' :
                         $url ='admin.php?page=priority-woocommerce-api&tab=post_order&ord='.$post_id ;
-                        echo '<span><a href='.$url.'>Re Post</a></span>'; // display the data
+                        echo '<span><a href='.$url.'>'.__('Re Post','p18w').'</a></span>'; // display the data
                         break;
                 }
             },999,2);
