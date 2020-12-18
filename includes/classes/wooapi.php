@@ -2613,7 +2613,7 @@ class WooAPI extends \PriorityAPI\API
             (empty($order->get_customer_id()) && !$this->option('post_prospect')) ||
             (true != $this->option( 'post_customers' )&& $order->get_customer_id())
         ){
-            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+            $data['CDES'] = empty($order->get_billing_company()) ? $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() : $order->get_billing_company();
         }
 
         // order comments
@@ -2695,7 +2695,7 @@ class WooAPI extends \PriorityAPI\API
         if($order->get_total()>0.0) {
             $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
         }
-        apply_filters( 'simply_request_data', $data );
+        $data = apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
         if ($response['code']<=201) {
