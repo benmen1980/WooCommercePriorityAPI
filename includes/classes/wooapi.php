@@ -2120,6 +2120,16 @@ class WooAPI extends \PriorityAPI\API
                 $firstpay = $order->get_meta('_first_payment');
                 $order_periodical_payment = $order->get_meta('_periodical_payment');
             break;
+            // credit guard Direct Pay www.directpay.co.il
+            case 'creditguard-directpay';
+                $payaccount = $order->get_meta('_cardMask');
+                $ccuid = $order->get_meta('_cardToken');
+                $validmonth = $order->get_meta('_cardExp');
+                $confnum = $order->get_meta('_authNumber');
+                $numpay = $order->get_meta('_numberOfPayments');
+                $firstpay = $order->get_meta('_firstPayment');
+                $order_periodical_payment = $order->get_meta('_periodicalPayment');
+                break;
             // card com
             case 'cardcom';
                 $paymentcode = $order->get_meta('cc_Mutag');
