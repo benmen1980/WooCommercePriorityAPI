@@ -1704,7 +1704,7 @@ class WooAPI extends \PriorityAPI\API
     public function syncPriorityOrderStatus(){
 
         // orders
-        $url_addition =  'ORDERS?$filter=BOOKNUM ne \'\'  and ';
+        $url_addition =  'ORDERS?$filter='.$this->option('order_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
         $url_addition .= 'CURDATE ge '.$prev_date;
@@ -1713,7 +1713,7 @@ class WooAPI extends \PriorityAPI\API
         $orders = json_decode($response['body'],true)['value'];
         $output = '';
         foreach ( $orders as $el ) {
-            $order_id = $el['BOOKNUM'];
+            $order_id = $el[$this->option('order_order_field')];
             $order = wc_get_order( $order_id );
             $pri_status = $el['ORDSTATUSDES'];
             if($order){
@@ -1722,7 +1722,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         // invoice
-        $url_addition =  'AINVOICES?$filter=BOOKNUM ne \'\'  and ';
+        $url_addition =  'AINVOICES?$filter='.$this->option('ainvoice_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
         $url_addition .= 'IVDATE ge '.$prev_date;
@@ -1731,7 +1731,7 @@ class WooAPI extends \PriorityAPI\API
         $orders = json_decode($response['body'],true)['value'];
         $output = '';
         foreach ( $orders as $el ) {
-            $order_id = $el['BOOKNUM'];
+            $order_id = $el[$this->option('ainvoice_order_field')];
             $ivnum = $el['IVNUM'];
             $order = wc_get_order( $order_id );
             $pri_status = $el['STATDES'];
@@ -1742,7 +1742,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         // OTC
-        $url_addition =  'EINVOICES?$filter=BOOKNUM ne \'\'  and ';
+        $url_addition =  'EINVOICES?$filter='.$this->option('otc_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
         $url_addition .= 'IVDATE ge '.$prev_date;
@@ -1751,7 +1751,7 @@ class WooAPI extends \PriorityAPI\API
         $orders = json_decode($response['body'],true)['value'];
         $output = '';
         foreach ( $orders as $el ) {
-            $order_id = $el['BOOKNUM'];
+            $order_id = $el[$this->option('otc_order_field')];
             $ivnum = $el['IVNUM'];
             $order = wc_get_order( $order_id );
             $pri_status = $el['STATDES'];
@@ -1762,7 +1762,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         // recipe
-        $url_addition =  'TINVOICES?$filter=BOOKNUM ne \'\'  and ';
+        $url_addition =  'TINVOICES?$filter='.$this->option('receipt_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
         $url_addition .= 'IVDATE ge '.$prev_date;
@@ -1771,7 +1771,7 @@ class WooAPI extends \PriorityAPI\API
         $orders = json_decode($response['body'],true)['value'];
         $output = '';
         foreach ( $orders as $el ) {
-            $order_id = $el['BOOKNUM'];
+            $order_id = $el[$this->option('receipt_order_field')];
             $order = wc_get_order( $order_id );
             $ivnum = $el['IVNUM'];
             $pri_status = $el['STATDES'];
