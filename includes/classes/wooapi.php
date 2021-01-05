@@ -1286,19 +1286,13 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncItemsPriorityVariation()
     {
-
-        $response = $this->makeRequest('GET', 'LOGPART?$expand=PARTUNSPECS_SUBFORM&$filter='.$this->option('variation_field').' ne \'\'    and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority_variation', true));
-
+        $response = $this->makeRequest('GET', 'LOGPART?$expand=PARTUNSPECS_SUBFORM&$filter='.$this->option('variation_field').' ne \'\'    and SHOWINWEB eq \'Y\'', [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
-
             $response_data = json_decode($response['body_raw'], true);
-
             $product_cross_sells = [];
             $parents = [];
             $childrens = [];
-
-
             foreach($response_data['value'] as $item) {
                 if ($item[$this->option('variation_field')] !== '-') {
                     $attributes = [];
@@ -1307,7 +1301,6 @@ class WooAPI extends \PriorityAPI\API
                             $attributes[$attr['SPECNAME']] = $attr['VALUE'];
                         }
                     }
-
                     if ($attributes) {
                         $parents[$item[$this->option('variation_field')]] = [
                             'sku'       => $item[$this->option('variation_field')],
@@ -1337,10 +1330,6 @@ class WooAPI extends \PriorityAPI\API
                     }
                 }
             }
-
-
-
-
             foreach ($parents as $partname => $value) {
                 if (count($childrens[$partname])) {
                     $parents[$partname]['categories']  = end($childrens[$partname])['categories'];
@@ -1358,7 +1347,6 @@ class WooAPI extends \PriorityAPI\API
                     unset($parents[$partname]);
                 }
             }
-
             if ($parents) {
 
                 foreach ($parents as $sku_parent => $parent) {
@@ -1438,10 +1426,8 @@ class WooAPI extends \PriorityAPI\API
                 }
 
             }
-
             // add timestamp
             $this->updateOption('items_priority_variation_update', time());
-
         } else {
             /**
              * t149
@@ -1455,7 +1441,6 @@ class WooAPI extends \PriorityAPI\API
             exit(json_encode(['status' => 0, 'msg' => 'Error Sync Items Priority Variation']));
 
         }
-
     }
 
 
@@ -1706,7 +1691,7 @@ class WooAPI extends \PriorityAPI\API
         // orders
         $url_addition =  'ORDERS?$filter='.$this->option('order_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $prev_date = date('Y-m-d', strtotime($date .' -10 day'));
         $url_addition .= 'CURDATE ge '.$prev_date;
 
         $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
@@ -1724,8 +1709,9 @@ class WooAPI extends \PriorityAPI\API
         // invoice
         $url_addition =  'AINVOICES?$filter='.$this->option('ainvoice_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $prev_date = date('Y-m-d', strtotime($date .' -10 day'));
         $url_addition .= 'IVDATE ge '.$prev_date;
+        $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
         $orders = json_decode($response['body'],true)['value'];
@@ -1744,8 +1730,9 @@ class WooAPI extends \PriorityAPI\API
         // OTC
         $url_addition =  'EINVOICES?$filter='.$this->option('otc_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $prev_date = date('Y-m-d', strtotime($date .' -10 day'));
         $url_addition .= 'IVDATE ge '.$prev_date;
+        $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
         $orders = json_decode($response['body'],true)['value'];
@@ -1764,8 +1751,9 @@ class WooAPI extends \PriorityAPI\API
         // recipe
         $url_addition =  'TINVOICES?$filter='.$this->option('receipt_order_field').' ne \'\'  and ';
         $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date .' -1 day'));
+        $prev_date = date('Y-m-d', strtotime($date .' -10 day'));
         $url_addition .= 'IVDATE ge '.$prev_date;
+        $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response     =  $this->makeRequest( 'GET', $url_addition, null, true ) ;
         $orders = json_decode($response['body'],true)['value'];
@@ -2129,6 +2117,7 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = $order->get_meta('_numberOfPayments');
                 $firstpay = $order->get_meta('_firstPayment');
                 $order_periodical_payment = $order->get_meta('_periodicalPayment');
+                $cardnum = $order->get_meta('CG Transaction Id');
                 break;
             // card com
             case 'cardcom';
@@ -2173,7 +2162,8 @@ class WooAPI extends \PriorityAPI\API
             'QPRICE'      => floatval($order->get_total()),
             'CCUID'       => $ccuid,
             'CONFNUM'     => $confnum,
-            'PAYCODE'      => (string)$numpay
+            'PAYCODE'     => (string)$numpay,
+            'CARDNUM'     => $cardnum
 
         ];
         // add fields for not order objects
