@@ -31,6 +31,10 @@ class WooAPI extends \PriorityAPI\API
     }
     private function __construct()
     {
+        // set json serilaized 2 decimals
+        if (version_compare(phpversion(), '7.1', '>=')) {
+            ini_set( 'serialize_precision', -1 );
+        }
         // get countries
         $this->countries = include(P18AW_INCLUDES_DIR . 'countries.php');
         /**
@@ -2169,6 +2173,7 @@ class WooAPI extends \PriorityAPI\API
         // add fields for not order objects
         if(!$is_order&&$firstpay != 0.0){
             $data['FIRSTPAY'] = (float)$firstpay ;
+        //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
         }
         return $data;
     }
