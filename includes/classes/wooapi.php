@@ -851,6 +851,7 @@ class WooAPI extends \PriorityAPI\API
 
                     try {
                         $this->syncPriceLists();
+                        $this->syncSpecialPriceItemCustomer();
                     } catch(Exception $e) {
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -3051,6 +3052,7 @@ class WooAPI extends \PriorityAPI\API
     }
     function crf_show_extra_profile_fields( $user ) {
         $priority_customer_number = get_the_author_meta( 'priority_customer_number', $user->ID );
+        $priority_mcustomer_number = get_the_author_meta( 'priority_mcustomer_number', $user->ID );
         ?>
         <h3><?php esc_html_e( 'Priority API User Information', 'p18a' ); ?></h3>
 
@@ -3063,6 +3065,17 @@ class WooAPI extends \PriorityAPI\API
                            id="priority_customer_number"
                            name="priority_customer_number"
                            value="<?php echo esc_attr( $priority_customer_number ); ?>"
+                           class="regular-text"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="Priority MCustomer Number"><?php esc_html_e( 'Priority MCustomer Number', 'p18a' ); ?></label></th>
+                <td>
+                    <input type="text"
+                           id="priority_mcustomer_number"
+                           name="priority_mcustomer_number"
+                           value="<?php echo esc_attr( $priority_mcustomer_number ); ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3117,9 +3130,6 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = urlencode(date(DATE_ATOM,$stamp));
         $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM';
-        //$url_addition = 'CUSTOMERS?$filter=PRIVITAI_USEROFFON eq \'Y\' and EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL,ITAI_USERID,ITAI_USERPASS';
-        // PRIVITAI_USEROFFON
-        // ITAI_USERID,ITAI_USERPASS
         $response = $this->makeRequest('GET', $url_addition.' '.$url_addition_config, [],false);
         if ($response['status']) {
             // decode raw response
@@ -3139,6 +3149,7 @@ class WooAPI extends \PriorityAPI\API
                     'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
                     'user_login' => $username,
                     'user_pass' => wp_hash_password($password),
+                    'email'  => $email,
                     'first_name' => $user['CUSTDES'],
                     //'last_name'  => 'Doe',
                     'user_nicename' => $user['CUSTDES'],
@@ -3154,6 +3165,7 @@ class WooAPI extends \PriorityAPI\API
                 }
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
                 update_user_meta($user_id,'custpricelists',$user['CUSTPLIST_SUBFORM']);
+                update_user_meta($user_id,'priority_mcustomer_number',$user['MCUSTNAME']);
                 $customer = new \WC_Customer($user_id);
                 $customer->set_billing_address_1($user['ADDRESS']);
                 $customer->set_billing_address_2($user['ADDRESS2']);
@@ -3161,8 +3173,6 @@ class WooAPI extends \PriorityAPI\API
                 $customer->set_billing_phone($user['PHONE']);
                 $customer->set_billing_postcode($user['ZIP']);
                 $customer->save();
-                //$pricelists = get_user_meta($user_id,'custpricelists',true);
-
             }
         }
     }
@@ -3229,7 +3239,7 @@ class WooAPI extends \PriorityAPI\API
                     $GLOBALS['wpdb']->insert($table, [
                         'partname' => $list['PARTNAME'],
                         'custname' => $list['CUSTNAME'],
-                        'price' => round((float)$list['PRICE'] * 1.17, 3),
+                        'price' => (float)$list['PRICE'] ,
                         'blog_id' => $blog_id
                     ]);
                 }
