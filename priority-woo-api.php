@@ -77,6 +77,22 @@ register_activation_hook(P18AW_SELF, function(){
     
     dbDelta($sql);
 
+    /* special price item customer */
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer';
+    $sql = "CREATE TABLE $table (
+        id  INT AUTO_INCREMENT,
+        blog_id INT,
+        custname VARCHAR(32),
+        partname VARCHAR(32),
+        price DECIMAL(6,3),
+        PRIMARY KEY  (id)
+    )";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+    dbDelta($sql);
+
+
 });
 
 // housekeeping

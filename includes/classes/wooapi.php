@@ -12,7 +12,6 @@ use PHPMailer\PHPMailer\Exception;
 
 class WooAPI extends \PriorityAPI\API
 {
-
     private static $instance; // api instance
     private $countries = []; // countries list
     private static $priceList = []; // price lists
@@ -101,14 +100,11 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-
-
     public function run()
     {
         return is_admin() ? $this->backend(): $this->frontend();
 
     }
-
     /* hode price for not registered user */
     function bbloomer_hide_price_add_cart_not_logged_in() {
         if ( !is_user_logged_in() and  $this->option('walkin_hide_price') ) {
@@ -120,16 +116,9 @@ class WooAPI extends \PriorityAPI\API
             add_action( 'woocommerce_after_shop_loop_item', array($this,'bbloomer_print_login_to_see'), 11 );
         }
     }
-
-
-
-
     function bbloomer_print_login_to_see() {
         echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'theme_name') . '</a>';
     }
-
-
-
     /**
      * Frontend
      *
@@ -610,6 +599,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('post_prospect',              $this->post('post_prospect'));
                 $this->updateOption('prospect_field',              $this->post('prospect_field'));
                 $this->updateOption('sync_items_priority_config',             stripslashes($this->post('sync_items_priority_config')));
+                $this->updateOption('sync_variations_priority_config',             stripslashes($this->post('sync_variations_priority_config')));
                 // customer_to_wp_user
                 $this->updateOption('sync_customer_to_wp_user',             stripslashes($this->post('sync_customer_to_wp_user')));
                 $this->updateOption('sync_customer_to_wp_user_config',             stripslashes($this->post('sync_customer_to_wp_user_config')));
@@ -1290,7 +1280,20 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncItemsPriorityVariation()
     {
-        $response = $this->makeRequest('GET', 'LOGPART?$expand=PARTUNSPECS_SUBFORM&$filter='.$this->option('variation_field').' ne \'\'    and SHOWINWEB eq \'Y\'', [], $this->option('log_items_priority_variation', true));
+        // default values
+        $daysback = 1;
+        $url_addition_config = '';
+        // config
+
+        $res = $this->option('sync_variations_priority_config');
+        $res = str_replace(array('.',  "\n", "\t", "\r"), '', $res);
+        $config = json_decode($res);
+        $daysback = (int)$config->days_back;
+        $url_addition_config = $config->additional_url;
+        $stamp = mktime(0 - $daysback*24, 0, 0);
+        $bod = date(DATE_ATOM,$stamp);
+        $url_addition = 'UDATE ge '.$bod;
+        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' ne \'\'    and SHOWINWEB eq \'Y\' and '.urlencode($url_addition).' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM', [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -3010,8 +3013,6 @@ class WooAPI extends \PriorityAPI\API
         return false;
 
     }
-
-
     // filter product price
     public function filterPrice($price, $product)
     {
@@ -3022,7 +3023,6 @@ class WooAPI extends \PriorityAPI\API
 
         return $price;
     }
-
     // filter price range for products with variations
     public function filterPriceRange($price, $product)
     {
@@ -3047,7 +3047,6 @@ class WooAPI extends \PriorityAPI\API
         return $price;
 
     }
-
     function crf_show_extra_profile_fields( $user ) {
         $priority_customer_number = get_the_author_meta( 'priority_customer_number', $user->ID );
         ?>
@@ -3069,7 +3068,6 @@ class WooAPI extends \PriorityAPI\API
         </table>
         <?php
     }
-
     function crf_update_profile_fields( $user_id ) {
         if ( ! current_user_can( 'edit_user', $user_id ) ) {
             return false;
@@ -3116,7 +3114,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = $config->additional_url;
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = urlencode(date(DATE_ATOM,$stamp));
-        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod;
+        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM';
         //$url_addition = 'CUSTOMERS?$filter=PRIVITAI_USEROFFON eq \'Y\' and EMAIL ne \'\' &$select=CUSTNAME,CUSTDES,EMAIL,ITAI_USERID,ITAI_USERPASS';
         // PRIVITAI_USEROFFON
         // ITAI_USERID,ITAI_USERPASS
@@ -3153,6 +3151,7 @@ class WooAPI extends \PriorityAPI\API
                     error_log('This is customer with error '.$user['CUSTNAME']);
                 }
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
+                update_user_meta($user_id,'custpricelists',$user['CUSTPLIST_SUBFORM']);
                 $customer = new \WC_Customer($user_id);
                 $customer->set_billing_address_1($user['ADDRESS']);
                 $customer->set_billing_address_2($user['ADDRESS2']);
@@ -3160,6 +3159,8 @@ class WooAPI extends \PriorityAPI\API
                 $customer->set_billing_phone($user['PHONE']);
                 $customer->set_billing_postcode($user['ZIP']);
                 $customer->save();
+                //$pricelists = get_user_meta($user_id,'custpricelists',true);
+
             }
         }
     }
@@ -3206,6 +3207,41 @@ class WooAPI extends \PriorityAPI\API
 
         <?php
 
+    }
+    public function syncSpecialPriceItemCustomer()
+    {
+        $response = $this->makeRequest('GET', 'CUSTPARTPRICEONE?&$select=PARTNAME,CUSTNAME,PRICE', [], $this->option('log_pricelist_priority', true));
+        // check response status
+        if ($response['status']) {
+            // allow multisite
+            $blog_id = get_current_blog_id();
+            // price lists table
+            $table = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer';
+            // delete all existing data from price list table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            // decode raw response
+            $data = json_decode($response['body_raw'], true);
+            $priceList = [];
+            if (isset($data['value'])) {
+                foreach ($data['value'] as $list) {
+                    $GLOBALS['wpdb']->insert($table, [
+                        'partname' => $list['PARTNAME'],
+                        'custname' => $list['CUSTNAME'],
+                        'price' => round((float)$list['PRICE'] * 1.17, 3),
+                        'blog_id' => $blog_id
+                    ]);
+                }
+                // add timestamp
+                // $this->updateOption('pricelist_priority_update', time());
+            }
+        } else {
+            $this->sendEmailError(
+                $this->option('email_error_sync_pricelist_priority'),
+                'Error Sync Price Lists Priority',
+                $response['body']
+            );
+
+        }
     }
 
 }
