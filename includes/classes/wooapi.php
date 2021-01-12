@@ -3053,6 +3053,7 @@ class WooAPI extends \PriorityAPI\API
     function crf_show_extra_profile_fields( $user ) {
         $priority_customer_number = get_the_author_meta( 'priority_customer_number', $user->ID );
         $priority_mcustomer_number = get_the_author_meta( 'priority_mcustomer_number', $user->ID );
+        $custpricelists = get_the_author_meta( 'custpricelists', $user->ID );
         ?>
         <h3><?php esc_html_e( 'Priority API User Information', 'p18a' ); ?></h3>
 
@@ -3075,7 +3076,18 @@ class WooAPI extends \PriorityAPI\API
                     <input type="text"
                            id="priority_mcustomer_number"
                            name="priority_mcustomer_number"
-                           value="<?php echo esc_attr( $priority_mcustomer_number ); ?>"
+                           value="<?php echo esc_attr( $priority_mcustomer_number); ?>"
+                           class="regular-text"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="Priority Price Lists"><?php esc_html_e( 'Priority Price Lists', 'p18a' ); ?></label></th>
+                <td>
+                    <input type="text"
+                           id="custpricelists"
+                           name="custpricelists"
+                           value="<?php foreach($custpricelists as $item){ echo $item["PLNAME"].' '; }; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3129,7 +3141,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = $config->additional_url;
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = urlencode(date(DATE_ATOM,$stamp));
-        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM';
+        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM($select=PLNAME)';
         $response = $this->makeRequest('GET', $url_addition.' '.$url_addition_config, [],false);
         if ($response['status']) {
             // decode raw response
