@@ -2050,7 +2050,9 @@ class WooAPI extends \PriorityAPI\API
             $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
         }
         // payment info
-         $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
+        $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
+        // filter
+        $data = apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'ORDERS', ['body' => json_encode($data)], true);
 
