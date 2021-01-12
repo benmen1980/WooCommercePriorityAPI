@@ -3054,6 +3054,7 @@ class WooAPI extends \PriorityAPI\API
         $priority_customer_number = get_the_author_meta( 'priority_customer_number', $user->ID );
         $priority_mcustomer_number = get_the_author_meta( 'priority_mcustomer_number', $user->ID );
         $custpricelists = get_the_author_meta( 'custpricelists', $user->ID );
+        $customer_percents = get_the_author_meta( 'customer_percents', $user->ID );
         ?>
         <h3><?php esc_html_e( 'Priority API User Information', 'p18a' ); ?></h3>
 
@@ -3088,6 +3089,17 @@ class WooAPI extends \PriorityAPI\API
                            id="custpricelists"
                            name="custpricelists"
                            value="<?php foreach($custpricelists as $item){ echo $item["PLNAME"].' '; }; ?>"
+                           class="regular-text"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="Priority Percents"><?php esc_html_e( 'Priority Customer Discounts', 'p18a' ); ?></label></th>
+                <td>
+                    <input type="text"
+                           id="customer_percents"
+                           name="customer_percents"
+                           value="<?php foreach($customer_percents as $item){ echo $item["PERCENT"].'% '; }; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3141,7 +3153,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = $config->additional_url;
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = urlencode(date(DATE_ATOM,$stamp));
-        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM($select=PLNAME)';
+        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
         $response = $this->makeRequest('GET', $url_addition.' '.$url_addition_config, [],false);
         if ($response['status']) {
             // decode raw response
@@ -3178,6 +3190,7 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
                 update_user_meta($user_id,'custpricelists',$user['CUSTPLIST_SUBFORM']);
                 update_user_meta($user_id,'priority_mcustomer_number',$user['MCUSTNAME']);
+                update_user_meta($user_id,'customer_percents',$user['CUSTDISCOUNT_SUBFORM']);
                 $customer = new \WC_Customer($user_id);
                 $customer->set_billing_address_1($user['ADDRESS']);
                 $customer->set_billing_address_2($user['ADDRESS2']);
@@ -3269,3 +3282,4 @@ class WooAPI extends \PriorityAPI\API
     }
 
 }
+
