@@ -105,7 +105,7 @@ class WooAPI extends \PriorityAPI\API
         return is_admin() ? $this->backend(): $this->frontend();
 
     }
-    /* hode price for not registered user */
+    /* hide price for not registered user */
     function bbloomer_hide_price_add_cart_not_logged_in() {
         if ( !is_user_logged_in() and  $this->option('walkin_hide_price') ) {
             remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
@@ -124,14 +124,12 @@ class WooAPI extends \PriorityAPI\API
      *
      */
     private function frontend() {
-        //frontenf test point
-
+        //frontend test point
         // load obligo
         /*if($this->option('obligo')){
              require P18AW_FRONT_DIR.'my-account\obligo.php';
              \obligo::instance()->run();
          }*/
-
         // Sync customer and order data after order is proccessed
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
@@ -140,20 +138,15 @@ class WooAPI extends \PriorityAPI\API
         //add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
         add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
         add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
-
-
         // sync user to priority after registration
         if ( $this->option( 'post_customers' ) == true ) {
             add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
             //add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
             add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
-
-
         if ( $this->option( 'sell_by_pl' ) == true ) {
             // filter products regarding to price list
-            add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
-
+            // add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
             // filter product price regarding to price list
             add_filter( 'woocommerce_product_get_price', [ $this, 'filterPrice' ], 10, 2 );
 
@@ -2908,15 +2901,10 @@ class WooAPI extends \PriorityAPI\API
     // filter products by user price list
     public function filterProductsByPriceList($ids)
     {
-
         if($user_id = get_current_user_id()) {
-
             $meta = get_user_meta($user_id, '_priority_price_list');
-
             if ($meta[0] === 'no-selected') return $ids;
-
             $list = empty($meta) ? $this->basePriceCode : $meta[0];
-
             $products = $GLOBALS['wpdb']->get_results('
                 SELECT product_sku
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -2924,9 +2912,7 @@ class WooAPI extends \PriorityAPI\API
                 AND blog_id = ' . get_current_blog_id(),
                 ARRAY_A
             );
-
             $ids = [];
-
             // get product id
             foreach($products as $product) {
                 if ($id = wc_get_product_id_by_sku($product['product_sku'])) {
@@ -2935,12 +2921,9 @@ class WooAPI extends \PriorityAPI\API
                     $ids[] = $id;
                 }
             }
-
             $ids = array_unique($ids);
-
             // there is no products assigned to price list, return 0
             if (empty($ids)) return 0;
-
             // return ids
             return $ids;
 
@@ -2991,15 +2974,10 @@ class WooAPI extends \PriorityAPI\API
      */
     public function getProductDataBySku($sku)
     {
-
         if($user_id = get_current_user_id()) {
-
             $meta = get_user_meta($user_id, '_priority_price_list');
-
             if ($meta[0] === 'no-selected') return 'no-selected';
-
             $list = empty($meta) ? $this->basePriceCode : $meta[0]; // use base price list if there is no list assigned
-
             $data = $GLOBALS['wpdb']->get_row('
                 SELECT price_list_price, price_list_currency
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -3008,23 +2986,49 @@ class WooAPI extends \PriorityAPI\API
                 AND blog_id = ' . get_current_blog_id(),
                 ARRAY_A
             );
-
             return $data;
-
         }
-
         return false;
-
     }
     // filter product price
     public function filterPrice($price, $product)
     {
         $data = $this->getProductDataBySku($product->get_sku());
-
-        if ($data && $data !== 'no-selected') return $data['price_list_price'];
-        //if ((!is_cart() && !is_checkout()) && $data && $data !== 'no-selected') return $data['price_list_price'];
-
+        $user = wp_get_current_user();
+        // get the MCUSTNAME if any else get the cust
+        $custname = empty(get_user_meta($user->ID,'priority_mcustomer_number',true)) ?  get_user_meta($user->ID,'priority_customer_number',true) : get_user_meta($user->ID,'priority_mcustomer_number',true);
+        // get special price
+        $special_price = $this->getSpecialPriceCustomer($custname,$product->get_sku());
+        if($special_price != 0){
+            return $special_price;
+        }
+        // get price list
+        $plists = get_user_meta($user->ID,'custpricelists',true);
+        foreach($plists as $plist){
+            $data = $GLOBALS['wpdb']->get_row('
+                SELECT price_list_price
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
+                WHERE product_sku = "' . esc_sql($product->get_sku()) . '"
+                AND price_list_code = "' . esc_sql($plist['PLNAME']) . '"
+                AND blog_id = ' . get_current_blog_id(),
+                ARRAY_A
+            );
+            if($data['price_list_price'] != 0){
+                return $data['price_list_price'];
+            }
+        }
         return $price;
+    }
+    public function getSpecialPriceCustomer($custname,$sku){
+        $data = $GLOBALS['wpdb']->get_row('
+                SELECT price
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer
+                WHERE partname = "' . esc_sql($sku) . '"
+                AND custname = "' . esc_sql($custname) . '"
+                AND blog_id = ' . get_current_blog_id(),
+            ARRAY_A
+        );
+        return $data['price'];
     }
     // filter price range for products with variations
     public function filterPriceRange($price, $product)
@@ -3088,7 +3092,7 @@ class WooAPI extends \PriorityAPI\API
                     <input type="text"
                            id="custpricelists"
                            name="custpricelists"
-                           value="<?php foreach($custpricelists as $item){ echo $item["PLNAME"].' '; }; ?>"
+                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item["PLNAME"].' '; }}; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3099,7 +3103,7 @@ class WooAPI extends \PriorityAPI\API
                     <input type="text"
                            id="customer_percents"
                            name="customer_percents"
-                           value="<?php foreach($customer_percents as $item){ echo $item["PERCENT"].'% '; }; ?>"
+                           value="<?php if(!empty($customer_percents)){foreach($customer_percents as $item){ echo $item["PERCENT"].'% '; }}; ?>"
                            class="regular-text"
                     />
                 </td>

@@ -21,7 +21,7 @@
 
             <tr>
                 <td class="p18a-label">
-                    <label for="p18a-sell_by_pl"><?php _e('Show items from user\'s price list only ?', 'p18a'); ?></label>
+                    <label for="p18a-sell_by_pl"><?php _e('Use price lists  ? (B2B mode)', 'p18a'); ?></label>
                 </td>
                 <td></td>
                 <td>
