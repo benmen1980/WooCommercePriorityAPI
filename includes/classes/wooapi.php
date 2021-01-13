@@ -1786,7 +1786,7 @@ class WooAPI extends \PriorityAPI\API
         $walk_in_customer = !empty($walk_in_customer) ? $walk_in_customer : $cust_numbers[0];
         if ($order->get_customer_id()) {
             $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
-            $cust_number = !empty($cust_number) ? $cust_number : $walk_in_customer;
+            $cust_number = (!empty($cust_number) ? $cust_number : $walk_in_customer);
         } else {
             $cust_number = $walk_in_customer;
             // check prospect
