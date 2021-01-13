@@ -1285,7 +1285,6 @@ class WooAPI extends \PriorityAPI\API
         $daysback = 1;
         $url_addition_config = '';
         // config
-
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.',  "\n", "\t", "\r"), '', $res);
         $config = json_decode($res);
@@ -2619,12 +2618,13 @@ class WooAPI extends \PriorityAPI\API
 
         // order comments
         $priority_version = (float)$this->option('priority-version');
+        $text = str_replace(array("\n", "\t", "\r"), '', $order->get_customer_note());
         if($priority_version>19.1){
             // version 20.0
-            $data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $order->get_customer_note()];
+            $data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $text];
         }else{
             // version 19.1
-            $data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $order->get_customer_note()];
+            $data['PINVOICESTEXT_SUBFORM'][] = ['TEXT' => $text];
         }
 
 
