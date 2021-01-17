@@ -962,7 +962,8 @@ class WooAPI extends \PriorityAPI\API
             exit(json_encode(['status' => 1, 'timestamp' => date('d/m/Y H:i:s')]));
         });
         // post order on status change
-        add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
+        // this is duplicate with action defined next to thank you action
+        //add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
         add_action( 'woocommerce_order_status_changed', [ $this, 'post_order_status_to_priority' ],10);
     }
     public function post_order_status_to_priority($order_id){
