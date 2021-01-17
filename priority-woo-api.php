@@ -87,9 +87,7 @@ register_activation_hook(P18AW_SELF, function(){
         price DECIMAL(6,3),
         PRIMARY KEY  (id)
     )";
-
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-
     dbDelta($sql);
 
 

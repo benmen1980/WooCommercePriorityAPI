@@ -145,6 +145,8 @@ class WooAPI extends \PriorityAPI\API
             add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
         if ( $this->option( 'sell_by_pl' ) == true ) {
+            // add overall customer discount
+            add_action( 'woocommerce_cart_calculate_fees', [$this,'add_customer_discount'] );
             // filter products regarding to price list
             // add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
             // filter product price regarding to price list
@@ -2153,6 +2155,7 @@ class WooAPI extends \PriorityAPI\API
                 $confnum = '987654321';
                 $numpay = 1;
                 $firstpay = 0.0;
+                $cardnum = '';
             break;
 
         }
@@ -2164,13 +2167,13 @@ class WooAPI extends \PriorityAPI\API
             'QPRICE'      => floatval($order->get_total()),
             'CCUID'       => $ccuid,
             'CONFNUM'     => $confnum,
-            'PAYCODE'     => (string)$numpay,
-            'CARDNUM'     => $cardnum
+            'PAYCODE'     => (string)$numpay
 
         ];
         // add fields for not order objects
         if(!$is_order&&$firstpay != 0.0){
             $data['FIRSTPAY'] = (float)$firstpay ;
+            $data['CARDNUM']     = $cardnum;
         //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
         }
         return $data;
@@ -2611,7 +2614,7 @@ class WooAPI extends \PriorityAPI\API
 
         // order comments
         $priority_version = (float)$this->option('priority-version');
-        $text = str_replace(array("\n", "\t", "\r"), '', $order->get_customer_note());
+        $text = urlencode(str_replace(array("\n", "\t", "\r"), '', $order->get_customer_note()));
         if($priority_version>19.1){
             // version 20.0
             $data['PINVOICESTEXT_SUBFORM'] = ['TEXT' => $text];
@@ -3004,19 +3007,22 @@ class WooAPI extends \PriorityAPI\API
         }
         // get price list
         $plists = get_user_meta($user->ID,'custpricelists',true);
-        foreach($plists as $plist){
-            $data = $GLOBALS['wpdb']->get_row('
-                SELECT price_list_price
-                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-                WHERE product_sku = "' . esc_sql($product->get_sku()) . '"
-                AND price_list_code = "' . esc_sql($plist['PLNAME']) . '"
-                AND blog_id = ' . get_current_blog_id(),
-                ARRAY_A
-            );
-            if($data['price_list_price'] != 0){
-                return $data['price_list_price'];
-            }
+        if(empty($plists)){
+            return $price;
         }
+            foreach($plists as $plist) {
+                $data = $GLOBALS['wpdb']->get_row('
+                    SELECT price_list_price
+                    FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
+                    WHERE product_sku = "' . esc_sql($product->get_sku()) . '"
+                    AND price_list_code = "' . esc_sql($plist['PLNAME']) . '"
+                    AND blog_id = ' . get_current_blog_id(),
+                    ARRAY_A
+                );
+                if ($data['price_list_price'] != 0) {
+                    return $data['price_list_price'];
+                }
+            }
         return $price;
     }
     public function getSpecialPriceCustomer($custname,$sku){
@@ -3283,6 +3289,22 @@ class WooAPI extends \PriorityAPI\API
             );
 
         }
+    }
+    function add_customer_discount()
+    {
+        global $woocommerce; //Set the price for user role.
+        $user = wp_get_current_user();
+       update_user_meta($user->ID,'customer_percents',[['PERCENT'=>'7.0']]);
+        $percentages = get_user_meta($user->ID,'customer_percents',true);
+        if(empty($percentages)){
+            return;
+        };
+        foreach($percentages as $item){
+            $percentage =+ $item['PERCENT'];
+        }
+        $subtotal = $woocommerce->cart->get_subtotal() + $woocommerce->cart->get_subtotal_tax();
+        $discount_price = $percentage * $subtotal / 100;
+        $woocommerce->cart->add_fee( __('Discount '. $percentage.'%','p18w'), -$discount_price, false, 'standard' );
     }
 
 }
