@@ -224,12 +224,12 @@ function create_product_variation( $product_id, $variation_data ){
     // Iterating through the variations attributes
     foreach ($variation_data['attributes'] as $attribute => $term_name )
     {
-        $taxonomy = 'pa_'.sanitize_title($attribute); // The attribute taxonomy
+        //$taxonomy = 'pa_'.sanitize_title($attribute); // The attribute taxonomy
+        $taxonomy = 'pa_'.str_replace(' ', '-', $attribute); // The attribute taxonomy
 
         // Check if the Term name exist and if not we create it.
         if( ! term_exists( $term_name, $taxonomy ) )
             $response = wp_insert_term( $term_name, $taxonomy ); // Create the term
-
         $term_slug = get_term_by('name', $term_name, $taxonomy )->slug; // Get the term slug
 
         // Get the post Terms names from the parent variable product.
@@ -238,9 +238,8 @@ function create_product_variation( $product_id, $variation_data ){
         // Check if the post term exist and if not we set it in the parent variable product.
         if( is_array($post_term_names) && ! in_array( $term_name, $post_term_names ) )
             wp_set_post_terms( $product_id, $term_name, $taxonomy, true );
-
         // Set/save the attribute data in the product variation
-        update_post_meta( $variation_id, 'attribute_'.$taxonomy, $term_slug );
+        $foo = update_post_meta( $variation_id, 'attribute_'.$taxonomy, $term_slug );
     }
 
     ## Set/save all other data

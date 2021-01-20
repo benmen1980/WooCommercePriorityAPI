@@ -382,10 +382,24 @@ class WooAPI extends \PriorityAPI\API
                             break;
 
                         case 'order_meta';
+                            $term_name = 'TWISTER';
+                            $taxonomy  = 'pa_שם-המחזיק';
+                            $term_slug = get_term_by('name', $term_name, $taxonomy )->slug;
+                            $data = $term_slug;
+                        /*
                             $id = $_GET['ord'];
                             $order = new \WC_Order($id);
-                            $data = get_post_meta($id);
-                            highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+                            foreach( $order->get_coupon_codes() as $coupon_code ) {
+                                // Get the WC_Coupon object
+                                $coupon = new \WC_Coupon($coupon_code);
+                                $discount_type = $coupon->get_discount_type(); // Get coupon discount type
+                                $coupon_amount = $coupon->get_amount(); // Get coupon amount
+                                $data = $discount_type.' '.$coupon_amount.',<br>';
+
+                            }
+                        */
+                        highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+
 
 
                             break;
@@ -543,7 +557,6 @@ class WooAPI extends \PriorityAPI\API
 
             // save sync settings
             if ($this->post('p18aw-save-sync') && wp_verify_nonce($this->post('p18aw-nonce'), 'save-sync')) {
-
                 $this->updateOption('log_items_priority',                   $this->post('log_items_priority'));
                 $this->updateOption('auto_sync_items_priority',             $this->post('auto_sync_items_priority'));
                 $this->updateOption('email_error_sync_items_priority',      $this->post('email_error_sync_items_priority'));
@@ -1301,7 +1314,9 @@ class WooAPI extends \PriorityAPI\API
                     $attributes = [];
                     if ($item['PARTUNSPECS_SUBFORM']) {
                         foreach ($item['PARTUNSPECS_SUBFORM'] as $attr) {
-                            $attributes[$attr['SPECNAME']] = $attr['VALUE'];
+                            $attribute = $attr['SPECDES'];
+                            //$attribute = 'שתי מילים';
+                            $attributes[$attribute] = $attr['VALUE'];
                         }
                     }
                     if ($attributes) {
@@ -1446,12 +1461,11 @@ class WooAPI extends \PriorityAPI\API
         }
     }
 
-
     /**
      * sync items from web to priority
      *
      */
-    public function syncItemsWeb()
+     public function syncItemsWeb()
     {
         // get all items from priority
         $response = $this->makeRequest('GET', 'LOGPART');
@@ -2041,6 +2055,8 @@ class WooAPI extends \PriorityAPI\API
 
             ];
         }
+        // coupons
+        //$data = $this->get_coupons($data,$order);
         // shipping rate
         if(!empty($this->get_shipping_price($order,true))){
             $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
@@ -3157,15 +3173,17 @@ class WooAPI extends \PriorityAPI\API
         $daysback = 1;
         $url_addition_config = '';
         // config
-        $config = json_decode(stripslashes($this->option('sync_customer_to_wp_user_config')));
+        $json = $this->option('sync_customer_to_wp_user_config');
+        $json = preg_replace('/\r|\n/','',trim($json));
+        $config = json_decode($json);
         $daysback = (int)$config->days_back;
         $username_filed = $config->username_field;
         $password_field = $config->password_field;
         $url_addition_config = $config->additional_url;
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = urlencode(date(DATE_ATOM,$stamp));
-        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.'&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
-        $response = $this->makeRequest('GET', $url_addition.' '.$url_addition_config, [],false);
+        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.'&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $response = $this->makeRequest('GET', $url_addition, [],false);
         if ($response['status']) {
             // decode raw response
             $data = json_decode($response['body_raw'], true)['value'];
@@ -3295,7 +3313,6 @@ class WooAPI extends \PriorityAPI\API
     {
         global $woocommerce; //Set the price for user role.
         $user = wp_get_current_user();
-       update_user_meta($user->ID,'customer_percents',[['PERCENT'=>'7.0']]);
         $percentages = get_user_meta($user->ID,'customer_percents',true);
         if(empty($percentages)){
             return;
@@ -3307,6 +3324,19 @@ class WooAPI extends \PriorityAPI\API
         $discount_price = $percentage * $subtotal / 100;
         $woocommerce->cart->add_fee( __('Discount '. $percentage.'%','p18w'), -$discount_price, false, 'standard' );
     }
-
+    function get_coupons($data,$order){
+        foreach( $order->get_coupon_codes() as $coupon_code ) {
+            // Get the WC_Coupon object
+            $coupon = new \WC_Coupon($coupon_code);
+            $discount_type = $coupon->get_discount_type(); // Get coupon discount type
+            $coupon_amount = $coupon->get_amount(); // Get coupon amount
+            $data['ORDERITEMS_SUBFORM'][] = [
+            'PARTNAME' => '000', // change to other item
+            'VATPRICE' => -1* floatval($coupon_amount),
+            'TQUANT'   => -1,
+            ];
+        }
+        return $data;
+    }
 }
 
