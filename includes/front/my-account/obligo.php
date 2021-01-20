@@ -26,8 +26,19 @@ class Obligo extends \PriorityAPI\API{
 	{
 		add_filter( 'woocommerce_get_item_data', [$this,'render_custom_data_on_cart_checkout'], 10, 2 );
 		add_filter( 'woocommerce_add_cart_item_data',[$this,'split_product_individual_cart_items'], 10, 2 );
+		if(isset($_GET['c'])){
+			add_filter( 'wc_add_to_cart_message_html', [$this,'remove_add_to_cart_message']);
+            // remove this if you want to allow adding paymnets to cart with different iv or price
+            add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
+        }
+		if(isset($_GET['currency'])){
+            add_filter( 'woocommerce_currency',[$this,'simply_change_existing_currency_symbol'],9999,2 );
+        }
+		add_filter( 'woocommerce_add_cart_item_data',[$this,'simplypay'], 10, 2 );
 		add_action( 'woocommerce_before_calculate_totals', [$this,'add_custom_price']);
 		add_action( 'p18a_request_front_obligo',[$this,'request_front_obligo']);
+
+	//	add_action('woocommerce_before_checkout_form',[$this,'add_item_from_url']);
         // JS
 		add_action( 'wp_ajax_my_action',[$this,'my_action']);
 		add_action( 'wp_enqueue_scripts', [$this,'my_enqueue']);
@@ -88,6 +99,12 @@ class Obligo extends \PriorityAPI\API{
                   )
         );
 	}
+	public function add_item_from_url(){
+		$cart_item_data['_other_options']['product-price'] = 177.77 ;
+		$cart_item_data['_other_options']['product-ivnum'] = 'MY_IV000001' ;
+		$product_id = wc_get_product_id_by_sku('PAYMENT');
+		$cart           = WC()->cart->add_to_cart( $product_id, 1, null, null, $cart_item_data );
+    }
 	public function my_action() {
 
 		$data = $_POST['data'];
@@ -115,6 +132,36 @@ class Obligo extends \PriorityAPI\API{
 
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
+	// simply pay module
+    function simplypay(){
+	    if(isset($_GET['c'])){
+		    $cart_item_data['_other_options']['product-price'] = $_GET['pr'] ;
+		    $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
+		    WC()->session->set(
+			    'session_vars',
+			    array(
+				    'ordertype' => 'Recipe',
+                 		    'custname'  => isset($_GET['c']) ? $_GET['c'] : null
+                                 )
+		    );
+		    return $cart_item_data;
+	    }
+    }
+	function remove_add_to_cart_message( $message ){
+		return '';
+	}
+
+    function simply_custom_add_to_cart_before( $cart_item_data ) {
+
+        global $woocommerce;
+        $woocommerce->cart->empty_cart();
+        // Do nothing with the data and return
+        return true;
+    }
+    function simply_change_existing_currency_symbol(  $currency ) {
+        return $_GET['currency']; // <=== HERE define the targeted currency code
+    }
+    // end simply pay
 	function split_product_individual_cart_items( $cart_item_data, $product_id ){
 		if(isset($_POST['obligoSubmit'])){
 	    $unique_cart_item_key = uniqid();
@@ -127,6 +174,19 @@ class Obligo extends \PriorityAPI\API{
 		foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 			if(isset($cart_item['_other_options'])){
 				$custom_price = $cart_item['_other_options']['product-price']; // This will be your custom price
+                // currency
+                if (class_exists('WOOCS')) {
+                    global $WOOCS;
+                    if ($WOOCS->is_multiple_allowed) {
+                        $currrent = $WOOCS->current_currency;
+                        if ($currrent != $WOOCS->default_currency) {
+
+                            $currencies = $WOOCS->get_currencies();
+                            $rate = $currencies[$currrent]['rate'];
+                            $custom_price = $custom_price / $rate;
+                        }
+                    }
+                }
 				$cart_item['data']->set_price($custom_price);
             }
 		}

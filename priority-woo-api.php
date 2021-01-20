@@ -1,16 +1,16 @@
 <?php
 /**
 * @package     Priority Woocommerce API
-* @author      Ante Laca <ante.laca@gmail.com>
-* @copyright   2018 Roi Holdings
+* @author      Roy Ben Menachem <roy@simplyCT.co.il>
+* @copyright   2018 SimplyCT
 *
 * @wordpress-plugin
 * Plugin Name: Priority Woocommerce API 
-* Plugin URI: http://www.roi-holdings.com
+* Plugin URI: http://simplyCT.co.il
 * Description: Priority Woocommerce API extension
-* Version: 1.05
-* Author: Roi Holdings
-* Author URI: http://www.roi-holdings.com
+* Version: 1.06
+* Author: SimplyCT
+* Author URI: http://www.simplyCT.co.il
 * Licence: GPLv2
 * Text Domain: p18w
 * Domain Path: /languages  
@@ -78,6 +78,20 @@ register_activation_hook(P18AW_SELF, function(){
     
     dbDelta($sql);
 
+    /* special price item customer */
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer';
+    $sql = "CREATE TABLE $table (
+        id  INT AUTO_INCREMENT,
+        blog_id INT,
+        custname VARCHAR(32),
+        partname VARCHAR(32),
+        price DECIMAL(6,3),
+        PRIMARY KEY  (id)
+    )";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+
+
 });
 
 // housekeeping
@@ -113,10 +127,18 @@ add_action('plugins_loaded', function(){
 				 require P18AW_FRONT_DIR.'my-account/obligo.php';
 				 \obligo::instance()->run();
 			 }
-	        require P18AW_ADMIN_DIR.'packs.php';
+
+	        
             //load prority orders excel 
             require P18AW_CLASSES_DIR . 'priority_orders_excel.php';
             \priority_orders_excel::instance()->run();
+
+	       require P18AW_ADMIN_DIR.'packs.php';
+		if(WooAPI::instance()->option('sites')){
+                include_once dirname(__FILE__).'/includes/front/sites/sites.php';
+            	}
+
+
 
         } else {
             add_action('admin_notices', function(){

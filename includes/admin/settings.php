@@ -21,7 +21,7 @@
 
             <tr>
                 <td class="p18a-label">
-                    <label for="p18a-sell_by_pl"><?php _e('Show items from user\'s price list only ?', 'p18a'); ?></label>
+                    <label for="p18a-sell_by_pl"><?php _e('Use price lists  ? (B2B mode)', 'p18a'); ?></label>
                 </td>
                 <td></td>
                 <td>
@@ -71,6 +71,8 @@
             <col width="300">
             <col width="300">
             <col width="300">
+
+
 
             <tr>
                 <td class="p18a-label">
@@ -227,6 +229,17 @@
                 <td>                             </td>
             </tr>
             <tr>
+            <tr>
+                <td>
+                    <label for="p18a-setting-config"><?php _e('General Settings', 'p18a'); ?></label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                <textarea id="setting-config"  name="setting-config" form="p18aw-settings"> <?php echo stripslashes($this->option('setting-config')) ?> </textarea>
+                </td>
+            </tr>
+
 
 
         </table>
