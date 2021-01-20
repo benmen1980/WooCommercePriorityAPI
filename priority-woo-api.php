@@ -54,6 +54,7 @@ register_activation_hook(P18AW_SELF, function(){
 
     /* This is used add the endpoint and menu item in woocommerce account menu. */
     add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
+    add_rewrite_endpoint( 'priority-orders', EP_ROOT | EP_PAGES );
 
     /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
     $wp_rewrite->flush_rules( false );
@@ -126,10 +127,17 @@ add_action('plugins_loaded', function(){
 				 require P18AW_FRONT_DIR.'my-account/obligo.php';
 				 \obligo::instance()->run();
 			 }
+
+	        
+            //load prority orders excel 
+            require P18AW_CLASSES_DIR . 'priority_orders_excel.php';
+            \priority_orders_excel::instance()->run();
+
 	       require P18AW_ADMIN_DIR.'packs.php';
 		if(WooAPI::instance()->option('sites')){
                 include_once dirname(__FILE__).'/includes/front/sites/sites.php';
             	}
+
 
 
         } else {
