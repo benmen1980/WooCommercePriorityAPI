@@ -1,6 +1,4 @@
 <?php
-
-PriorityWoocommerceAPI;
 class Priority_orders_excel extends \PriorityAPI\API{
 	private static $instance; // api instance
 
@@ -62,7 +60,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
 		$data     = json_decode( $response['body'] );
-		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel' target='_blank' style='display: block; width: 115px; height: 45px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
+		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
 		echo "<table>";
 		echo "<tr><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('BOOK Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
 		foreach ($data->value as $key => $value) {
