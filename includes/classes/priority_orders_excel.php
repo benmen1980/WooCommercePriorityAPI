@@ -56,7 +56,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 
 		$current_user             = wp_get_current_user();
 		$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
-		$additionalurl = 'ORDERS?$filter=CUSTNAME eq \'02\'';
+		// get the date inputs
+        $from_date = urlencode(date(DATE_ATOM,mktime(0 - 100*24, 0, 0)));  // get from $_POST['from date']
+        $to_date   = urlencode(date(DATE_ATOM,mktime(0  , 0, 0)));         // get from $_POST['from date']
+        //
+		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
 		$data     = json_decode( $response['body'] );

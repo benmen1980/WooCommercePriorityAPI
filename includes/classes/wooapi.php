@@ -1536,7 +1536,7 @@ class WooAPI extends \PriorityAPI\API
         if($this->option('variation_field')) {
             $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
 
         // check response status
         if ($response['status']) {
@@ -1552,7 +1552,7 @@ class WooAPI extends \PriorityAPI\API
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
-                            'value'	=>	$item['BARCODE']
+                            'value'	=>	$item['PARTNAME']
                         )
                     )
                 );
