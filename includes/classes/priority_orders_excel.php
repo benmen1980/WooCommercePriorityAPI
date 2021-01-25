@@ -20,6 +20,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 	{
 
 		add_action( 'wp_ajax_my_action_exporttoexcel', [$this,'my_action_exporttoexcel'] );
+		add_action ( 'wp_ajax_nopriv_my_action_exporttoexcel', [$this,'my_action_exporttoexcel'] );
 		add_action( 'p18a_request_front_priorityorders',[$this,'request_front_priorityorders']);
 
 		add_action('init', function() {
@@ -56,30 +57,57 @@ class Priority_orders_excel extends \PriorityAPI\API{
 
 		$current_user             = wp_get_current_user();
 		$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
+		
 		// get the date inputs
-        $from_date = urlencode(date(DATE_ATOM,mktime(0 - 100*24, 0, 0)));  // get from $_POST['from date']
-        $to_date   = urlencode(date(DATE_ATOM,mktime(0  , 0, 0)));         // get from $_POST['from date']
-        //
-		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+		if(isset($_POST['from-date']) && isset($_POST['to-date'])) {
+			$fdate = date(DATE_ATOM, strtotime($_POST['from-date']));
+			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']));
+
+			$from_date = urlencode($fdate);  // get from $_POST['from date']
+        	$to_date   = urlencode($tdate);  // get from $_POST['from date']
+
+        	$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+		} else {
+			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+		}
+        
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
 		$data     = json_decode( $response['body'] );
-		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
+
+		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
+		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
+		echo "<form method='POST'>";
+		echo "FROM: <input type='text' name='from-date' id='from-date' placeholder='Any Valid date format' value='".$in_fdata."' />";
+		echo "TO: <input type='text' name='to-date' id='to-date' placeholder='Any Valid date format' value='".$in_tdata."' />";
+		echo "<input type='submit' value='submit' name='date'/>";
+		echo "</form>";
+		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
 		echo "<table>";
 		echo "<tr><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('BOOK Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
 		foreach ($data->value as $key => $value) {
 			echo "<tr><td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->BOOKNUM."</td><td>".$value->QUANT."</td><td>".$value->QPRICE."</td><td>".$value->PERCENT."</td><td>".$value->DISPRICE."</td><td>".$value->VAT."</td><td>".$value->TOTPRICE."</td></tr>";
 		}
 		echo "</table>";
-	}	
+	}
 	
 
 	function my_action_exporttoexcel() {
+		if(!empty($_REQUEST['from_date']) && !empty($_REQUEST['to_date'])) {
+			$fdate = date(DATE_ATOM, strtotime($_REQUEST['from_date']));
+			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']));
+			
+			$from_date = urlencode($fdate);  // get from $_POST['from date']
+        	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   $additionalurl = 'ORDERS?$filter=CUSTNAME eq \'02\'';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \'02\'';
+		} else {
+			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \'02\'';
+		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
 		$data     = json_decode( $response['body'] );
+
 		header('Content-Type: application/csv');
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
@@ -90,7 +118,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
 			fputcsv($f, $array);
 		}
-		
+
 	    wp_die(); // this is required to terminate immediately and return a proper response
 	}
 }
