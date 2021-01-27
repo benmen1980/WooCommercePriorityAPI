@@ -1,0 +1,3 @@
+.toggle{font-size: 30px;font-weight: bold;cursor:pointer;}
+.toggle.plus{color: green;}
+.toggle.minus{color: red;}
