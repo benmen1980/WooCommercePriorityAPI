@@ -83,8 +83,8 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
 		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
 		echo "<form method='POST'>";
-		echo "FROM: <input type='text' name='from-date' id='from-date' placeholder='Any Valid date format' value='".$in_fdata."' />";
-		echo "TO: <input type='text' name='to-date' id='to-date' placeholder='Any Valid date format' value='".$in_tdata."' />";
+		echo "FROM: <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' />";
+		echo "TO: <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' />";
 		echo "<input type='submit' value='submit' name='date'/>";
 		echo "</form>";
 		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
@@ -122,9 +122,9 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \'02\'';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \'02\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \'02\'';
+			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \'02\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
@@ -134,11 +134,18 @@ class Priority_orders_excel extends \PriorityAPI\API{
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
 		$f = fopen('php://output', 'w');
-		$array=array('Date','Order Name','BOOK Number','Quantity','Price','Percentage','Discounted Price','VAT','Total Price');
+		$array=array('Date','Order Name','BOOK Number','Quantity','Price','Percentage','Discounted Price','VAT','Total Price','Partname','Quantity','Price');
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
-			$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
-			fputcsv($f, $array);
+			if(!empty($value->ORDERITEMS_SUBFORM)) {
+				foreach($value->ORDERITEMS_SUBFORM as $subform) {
+					$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
+					fputcsv($f, $array);
+				}
+			}else {
+				$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
+				fputcsv($f, $array);
+			}
 		}
 
 	    wp_die(); // this is required to terminate immediately and return a proper response
