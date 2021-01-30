@@ -16,6 +16,7 @@ jQuery(document).ready(function($) {
 		}
 	});
 	jQuery('.toggle').click(function(){
+		console.log('clicked');
 		var cls=jQuery(this).attr('id');
 		if(jQuery('.subform-'+cls).hasClass('active')){
 			jQuery(this).text('+').addClass('plus').removeClass('minus');
@@ -27,6 +28,8 @@ jQuery(document).ready(function($) {
 			jQuery('.content_value').hide().removeClass('active');	
 			jQuery('.subform-'+cls).show();
 			jQuery('.subform-'+cls).addClass('active');
+
+
 		}
 	});
 });
