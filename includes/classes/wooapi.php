@@ -1421,7 +1421,7 @@ class WooAPI extends \PriorityAPI\API
         /**/
         $user = get_user_by('id', $user_id);
         $username = $user->user_login;
-        $user_kit = get_user_meta($user_id, 'user_kit');
+        $user_kit = get_user_meta($user_id, 'user_kit',true);
         $campain_kits = get_post_meta($active_campain, 'product_option')[0];
         $is_budget_by_points = get_post_meta($active_campain, 'budget_by_points')[0];
 
@@ -1548,10 +1548,10 @@ class WooAPI extends \PriorityAPI\API
                     $price = (float)$product->get_regular_price();;
                     $order_item = $item['product_id'];
                     foreach ($campain_kits as $key => $value) {
-                        if ($key == $user_kit[0]) {
+                        if ($key == $user_kit) {
                             foreach ($value as $product_id => $product_option) {
-                                if ($order_item === $product_id && !is_null($product_option->price)) {
-                                    $price = (float)$product_option->price;
+                                if ($order_item === $product_id && !is_null($product_option['price'])) {
+                                    $price = (float)$product_option['price'];
                                 }
                             }
                         } else { }
