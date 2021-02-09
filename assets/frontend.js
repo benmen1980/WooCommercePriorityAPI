@@ -15,18 +15,23 @@ jQuery(document).ready(function($) {
 			});
 		}
 	});
-	jQuery('.toggle').click(function(){
+
+	// jQuery('.toggle').click(function(){
+	jQuery(document).on('click','.cust-toggle', function() {
+		console.log('clicked');
 		var cls=jQuery(this).attr('id');
 		if(jQuery('.subform-'+cls).hasClass('active')){
 			jQuery(this).text('+').addClass('plus').removeClass('minus');
 			jQuery('.subform-'+cls).hide();	
 			jQuery('.subform-'+cls).removeClass('active');
 		}else{
-			jQuery('.toggle').text('+').addClass('plus').removeClass('minus');
+			jQuery('.cust-toggle').text('+').addClass('plus').removeClass('minus');
 			jQuery(this).text('-').addClass('minus').removeClass('plus');
 			jQuery('.content_value').hide().removeClass('active');	
 			jQuery('.subform-'+cls).show();
 			jQuery('.subform-'+cls).addClass('active');
+
+
 		}
 	});
 });
