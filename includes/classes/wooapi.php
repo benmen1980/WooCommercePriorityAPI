@@ -1528,7 +1528,8 @@ class WooAPI extends \PriorityAPI\API
     public function syncInventoryPriority()
     {
         // get the items simply by time stamp of today
-        $daysback = 10; // change days back to get inventory of prev days
+        $daysback_options = explode (',',$this->option('sync_inventory_warhsname'))[3] ;
+        $daysback = intval(!empty($daysback_options) ? $daysback_options :  10); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback*24), 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
@@ -1546,12 +1547,14 @@ class WooAPI extends \PriorityAPI\API
 
                 // if product exsits, update
 
+                $option_filed = explode (',',$this->option('sync_inventory_warhsname'))[2] ;
+                $field = (!empty($option_filed) ? $option_filed : 'PARTNAME');
                 $args = array(
                     'post_type'      => array('product', 'product_variation'),
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
-                            'value'	=>	$item['PARTNAME']
+                            'value'	=>	$field
                         )
                     )
                 );
@@ -1792,8 +1795,8 @@ class WooAPI extends \PriorityAPI\API
     }
     public function getPriorityCustomer($order){
         $cust_numbers = explode('|',$this->option('walkin_number'));
-        $country = !empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country();
-        $walk_in_customer = $country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1])  ? $cust_numbers[1] : $cust_numbers[0] ;
+        $country = (!empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country());
+        $walk_in_customer = (($country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1]))  ? $cust_numbers[1] : $cust_numbers[0]);
         $walk_in_customer = !empty($walk_in_customer) ? $walk_in_customer : $cust_numbers[0];
         if ($order->get_customer_id()) {
             $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
@@ -2578,7 +2581,7 @@ class WooAPI extends \PriorityAPI\API
             ];*/
 
         // filter data
-        apply_filters( 'simply_request_data', $data );
+        $data = apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -2878,7 +2881,7 @@ class WooAPI extends \PriorityAPI\API
         ];
         $data['TINVOICESCONT_SUBFORM'][] = $customer_data;
 
-
+        $data = apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)],true);
         if ($response['code']<=201) {
