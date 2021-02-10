@@ -1554,7 +1554,7 @@ class WooAPI extends \PriorityAPI\API
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
-                            'value'	=>	$field
+                            'value'	=> $item[$field]
                         )
                     )
                 );
