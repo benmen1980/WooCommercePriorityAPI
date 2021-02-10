@@ -94,7 +94,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		foreach ($data->value as $key => $value) {
 			echo "<tr><td>";
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
-				echo "<div class='toggle plus' id='content-".$i."'>+</div>";
+				echo "<div class='cust-toggle plus' id='content-".$i."'>+</div>";
 			}
 			echo "</td><td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->BOOKNUM."</td><td>".$value->QUANT."</td><td>".$value->QPRICE."</td><td>".$value->PERCENT."</td><td>".$value->DISPRICE."</td><td>".$value->VAT."</td><td>".$value->TOTPRICE."</td></tr>";
 				
