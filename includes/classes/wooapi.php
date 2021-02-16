@@ -140,7 +140,7 @@ class WooAPI extends \PriorityAPI\API
         add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
         // sync user to priority after registration
         if ( $this->option( 'post_customers' ) == true ) {
-            add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
+           // add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
             //add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
             add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
@@ -306,7 +306,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     /**
      * Backend - PriorityAPI Admin
      *
@@ -1012,7 +1011,6 @@ class WooAPI extends \PriorityAPI\API
             $response_data = json_decode($response['body_raw'], true);
         }
     }
-
     /**
      * sync items from priority
      */
@@ -1459,7 +1457,6 @@ class WooAPI extends \PriorityAPI\API
 
         }
     }
-
     /**
      * sync items from web to priority
      *
@@ -1520,8 +1517,6 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-
-
     /**
      * sync inventory from priority
      */
@@ -1661,7 +1656,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     /**
      * sync Customer by given ID
      *
@@ -1673,6 +1667,12 @@ class WooAPI extends \PriorityAPI\API
         if ($user = get_userdata($id)) {
             $meta = get_user_meta($id);
             $priority_customer_number = 'WEB-'.(string) $user->data->ID;
+            if('prospect_email'==$this->option('prospect_field')){
+                $priority_customer_number = $user->data->user_email;
+            }
+            if('prospect_cellphone'==$this->option('prospect_field')){
+                $priority_customer_number = $meta['billing_phone'][0];
+            }
             /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration
             if('prospect_email'==$this->option('prospect_field')){
                 $priority_customer_number = $user->data->user_email;
@@ -2246,6 +2246,7 @@ class WooAPI extends \PriorityAPI\API
     public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
+        $this->syncCustomer($order->get_user()->ID);
         // checck order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
         if(!isset($config->order_statuses)){
