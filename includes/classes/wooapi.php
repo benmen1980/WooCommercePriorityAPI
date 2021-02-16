@@ -1534,7 +1534,7 @@ class WooAPI extends \PriorityAPI\API
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
         if($this->option('variation_field')) {
-            $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
+          //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
         $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
 
@@ -1589,15 +1589,20 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-
-
+                    $stock = ($stock >= 0 ? $stock : 0);
                     update_post_meta($product_id, '_stock', $stock);
-
+                    // set stock status
                     if (intval($stock) > 0) {
-                        update_post_meta($product_id, '_stock_status', 'instock');
+                       // update_post_meta($product_id, '_stock_status', 'instock');
+                        $stock_status = 'instock';
+
                     } else {
-                        update_post_meta($product_id, '_stock_status', 'outofstock');
+                       // update_post_meta($product_id, '_stock_status', 'outofstock');
+                        $stock_status = 'outofstock';
                     }
+                    $variation = wc_get_product($product_id);
+                    $variation->set_stock_status($stock_status);
+                    $variation->save();
                 }
 
             }
