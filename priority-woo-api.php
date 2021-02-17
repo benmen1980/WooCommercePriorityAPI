@@ -55,6 +55,8 @@ register_activation_hook(P18AW_SELF, function(){
     /* This is used add the endpoint and menu item in woocommerce account menu. */
     add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
     add_rewrite_endpoint( 'priority-orders', EP_ROOT | EP_PAGES );
+    add_rewrite_endpoint( 'priority-invoices', EP_ROOT | EP_PAGES );
+    add_rewrite_endpoint( 'priority-receipt', EP_ROOT | EP_PAGES );
 
     /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
     $wp_rewrite->flush_rules( false );
@@ -130,8 +132,16 @@ add_action('plugins_loaded', function(){
 
 	        
             //load prority orders excel 
-            require P18AW_CLASSES_DIR . 'priority_orders_excel.php';
+            require P18AW_CLASSES_DIR . 'priority_excel_reports/priority_orders_excel.php';
             \priority_orders_excel::instance()->run();
+
+            //load prority invoices
+            require P18AW_CLASSES_DIR . 'priority_invoices/priority_invoices.php';
+            \priority_invoices::instance()->run();
+
+            //load prority receipt
+            require P18AW_CLASSES_DIR . 'priority_receipt/priority_receipt.php';
+            \priority_receipt::instance()->run();
 
 	       require P18AW_ADMIN_DIR.'packs.php';
 		if(WooAPI::instance()->option('sites')){
