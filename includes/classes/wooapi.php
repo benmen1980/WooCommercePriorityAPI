@@ -1022,10 +1022,11 @@ class WooAPI extends \PriorityAPI\API
         $search_field = 'PARTNAME';
         $is_update_products = (bool)true;
         // config
-        $config = json_decode(stripslashes($this->option('sync_items_priority_config')));
+        $raw_option = $this->option('sync_items_priority_config');
+        $config = json_decode(stripslashes($raw_option));
         $daysback = (int)$config->days_back;
         $url_addition_config = $config->additional_url;
-        $search_field = $config->search_by;
+        $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_update_products = json_decode($config->is_update_products);
         //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
         // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
@@ -1061,12 +1062,13 @@ class WooAPI extends \PriorityAPI\API
                     'post_type'    => 'product',
                 ];
                 // if product exsits, update
+                $search_by_value = $item[$search_field];
                 $args = array(
                     'post_type'		=>	array('product', 'product_variation'),
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
-                            'value'	=>	$item[$search_field]
+                            'value'	=>	$search_by_value
                         )
                     )
                 );
@@ -1091,12 +1093,10 @@ class WooAPI extends \PriorityAPI\API
                         $wpdb->prepare(
                             "
 							UPDATE $wpdb->posts
-							SET post_title = '%s',
-							post_content = '%s'
+							SET post_title = '%s'
 							WHERE ID = '%s'
 							",
                             $item['PARTDES'],
-                            //$post_content,
                             $id
                         )
                     );
