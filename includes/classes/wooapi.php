@@ -134,6 +134,8 @@ class WooAPI extends \PriorityAPI\API
         add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
+
+
         // custom check out fields
         //add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
         add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
@@ -976,6 +978,9 @@ class WooAPI extends \PriorityAPI\API
         // post order on status change
         // this is duplicate with action defined next to thank you action
         //add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
+        //add_action( 'woocommerce_rest_insert_shop_order_object', [ $this, 'post_order_status_to_priority' ],10);
+        //add_action( 'woocommerce_new_order', [ $this, 'syncDataAfterOrder' ]);
+        add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
         add_action( 'woocommerce_order_status_changed', [ $this, 'post_order_status_to_priority' ],10);
     }
     public function post_order_status_to_priority($order_id){
@@ -1014,6 +1019,19 @@ class WooAPI extends \PriorityAPI\API
     /**
      * sync items from priority
      */
+    private function is_attribute_exists($slug){
+        $is_attr_exists = false;
+        $attribute_taxonomies = wc_get_attribute_taxonomies();
+        if ( $attribute_taxonomies ) {
+            foreach ($attribute_taxonomies as $tax) {
+                if ($slug == $tax->attribute_name) {
+                    $is_attr_exists = true;
+                }
+            }
+        }
+        return $is_attr_exists;
+    }
+
     public function syncItemsPriority()
     {
         // default values
@@ -1023,6 +1041,7 @@ class WooAPI extends \PriorityAPI\API
         $is_update_products = (bool)true;
         // config
         $raw_option = $this->option('sync_items_priority_config');
+        $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
         $daysback = (int)$config->days_back;
         $url_addition_config = $config->additional_url;
@@ -1034,7 +1053,7 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = 'UDATE ge '.$bod;
-        $response = $this->makeRequest('GET', 'LOGPART?$filter='.urlencode($url_addition.' '.$url_addition_config),[], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$filter='.urlencode($url_addition.' '.$url_addition_config).'&$expand=PARTUNSPECS_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1065,6 +1084,7 @@ class WooAPI extends \PriorityAPI\API
                 $search_by_value = $item[$search_field];
                 $args = array(
                     'post_type'		=>	array('product', 'product_variation'),
+                    'post_status' => array('publish',  'draft'),
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
@@ -1079,6 +1099,11 @@ class WooAPI extends \PriorityAPI\API
                         $my_query->the_post();
                         $product_id = get_the_ID();
                     }
+                }
+                // if product variation skip
+                $_product = wc_get_product($product_id);
+                if( !$_product->is_type( 'simple' ) ) {
+                    continue;
                 }
                 if($product_id != 0 && false == $is_update_products){
                     continue;
@@ -1133,6 +1158,57 @@ class WooAPI extends \PriorityAPI\API
                     $terms = $categories ;
                     wp_set_object_terms($id,$terms,'product_cat');
                 }
+                // update attributes
+                unset($thedata);
+                foreach ($item['PARTUNSPECS_SUBFORM'] as $attribute) {
+                    $attr_name = $attribute['SPECDES'];
+                    $attr_slug = strtolower($attribute['SPECNAME']);
+                    $attr_value = $attribute['VALUE'];
+                    if(!$this->is_attribute_exists($attr_slug)){
+                        $attribute_id = wc_create_attribute(
+                            array(
+                                'name' => $attr_name,
+                                'slug' => $attr_slug,
+                                'type' => 'select',
+                                'order_by' => 'menu_order',
+                                'has_archives' => 0,
+                            )
+                        );
+                    }
+                    wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
+                    $thedata['pa_'.$attr_slug] = array(
+                        'name' => 'pa_'.$attr_slug,
+                        'value' => '',
+                        'is_visible' => '1',
+                        'is_taxonomy' => '1'
+                    );
+                    update_post_meta($id, '_product_attributes', $thedata);
+                }
+                // add spec 5 as attribute
+                /*
+                $attr_name = 'סוג הצגה';
+                $attr_slug = spec5;
+                $attr_value = $item['SPEC5'];
+                if(!$this->is_attribute_exists($attr_slug)) {
+                    $attribute_id = wc_create_attribute(
+                        array(
+                            'name' => $attr_name,
+                            'slug' => $attr_slug,
+                            'type' => 'select',
+                            'order_by' => 'menu_order',
+                            'has_archives' => 0,
+                        )
+                    );
+                }
+                wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
+                $thedata['pa_'.$attr_slug] = array(
+                    'name' => 'pa_'.$attr_slug,
+                    'value' => '',
+                    'is_visible' => '1',
+                    'is_taxonomy' => '1'
+                );
+                */
+                update_post_meta($id, '_product_attributes', $thedata);
                 // sync image
                 $is_load_image = json_decode($config->is_load_image);
                 if(false == $is_load_image){
@@ -2097,7 +2173,7 @@ class WooAPI extends \PriorityAPI\API
 
             //$ord_status = $body_array["ORDSTATUSDES"];
             // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_status',$response["body"]);
+            $order->update_meta_data('priority_order_status',$response["body"]);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
         }
