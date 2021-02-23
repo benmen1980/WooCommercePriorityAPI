@@ -81,7 +81,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
 		$data     = json_decode( $response['body'] );
-
+		
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
 		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
 		echo "<form method='POST'>";
@@ -93,6 +93,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		echo "<table>";
 		echo "<tr><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('BOOK Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
 		$i = 1;
+
 		foreach ($data->value as $key => $value) {
 			echo "<tr><td>";
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
