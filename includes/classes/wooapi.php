@@ -1667,6 +1667,7 @@ class WooAPI extends \PriorityAPI\API
         if ($user = get_userdata($id)) {
             $meta = get_user_meta($id);
             $priority_customer_number = 'WEB-'.(string) $user->data->ID;
+            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration
             if('prospect_email'==$this->option('prospect_field')){
                 $priority_customer_number = $user->data->user_email;
             }
@@ -1680,6 +1681,7 @@ class WooAPI extends \PriorityAPI\API
             if('prospect_cellphone'==$this->option('prospect_field')){
                 $priority_customer_number = $meta['billing_phone'][0];
             }
+
             */
             $json_request = json_encode([
                 'CUSTNAME'    => $priority_customer_number,
