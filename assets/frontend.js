@@ -16,8 +16,10 @@ jQuery(document).ready(function($) {
 		}
 	});
 
+
 	// jQuery('.toggle').click(function(){
 	jQuery(document).on('click','.cust-toggle', function() {
+
 		console.log('clicked');
 		var cls=jQuery(this).attr('id');
 		if(jQuery('.subform-'+cls).hasClass('active')){

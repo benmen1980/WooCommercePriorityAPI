@@ -140,7 +140,7 @@ class WooAPI extends \PriorityAPI\API
         add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
         // sync user to priority after registration
         if ( $this->option( 'post_customers' ) == true ) {
-            add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
+           // add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
             //add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
             add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
@@ -306,7 +306,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     /**
      * Backend - PriorityAPI Admin
      *
@@ -1012,7 +1011,6 @@ class WooAPI extends \PriorityAPI\API
             $response_data = json_decode($response['body_raw'], true);
         }
     }
-
     /**
      * sync items from priority
      */
@@ -1024,10 +1022,11 @@ class WooAPI extends \PriorityAPI\API
         $search_field = 'PARTNAME';
         $is_update_products = (bool)true;
         // config
-        $config = json_decode(stripslashes($this->option('sync_items_priority_config')));
+        $raw_option = $this->option('sync_items_priority_config');
+        $config = json_decode(stripslashes($raw_option));
         $daysback = (int)$config->days_back;
         $url_addition_config = $config->additional_url;
-        $search_field = $config->search_by;
+        $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_update_products = json_decode($config->is_update_products);
         //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
         // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
@@ -1063,12 +1062,13 @@ class WooAPI extends \PriorityAPI\API
                     'post_type'    => 'product',
                 ];
                 // if product exsits, update
+                $search_by_value = $item[$search_field];
                 $args = array(
                     'post_type'		=>	array('product', 'product_variation'),
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
-                            'value'	=>	$item[$search_field]
+                            'value'	=>	$search_by_value
                         )
                     )
                 );
@@ -1093,12 +1093,10 @@ class WooAPI extends \PriorityAPI\API
                         $wpdb->prepare(
                             "
 							UPDATE $wpdb->posts
-							SET post_title = '%s',
-							post_content = '%s'
+							SET post_title = '%s'
 							WHERE ID = '%s'
 							",
                             $item['PARTDES'],
-                            //$post_content,
                             $id
                         )
                     );
@@ -1459,7 +1457,6 @@ class WooAPI extends \PriorityAPI\API
 
         }
     }
-
     /**
      * sync items from web to priority
      *
@@ -1520,20 +1517,19 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-
-
     /**
      * sync inventory from priority
      */
     public function syncInventoryPriority()
     {
         // get the items simply by time stamp of today
-        $daysback = 10; // change days back to get inventory of prev days
+        $daysback_options = explode (',',$this->option('sync_inventory_warhsname'))[3] ;
+        $daysback = intval(!empty($daysback_options) ? $daysback_options :  10); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback*24), 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = '(WARHSTRANSDATE ge '.$bod. ' or PURTRANSDATE ge '.$bod .' or SALETRANSDATE ge '.$bod.')';
         if($this->option('variation_field')) {
-            $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
+          //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
         $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
 
@@ -1546,12 +1542,14 @@ class WooAPI extends \PriorityAPI\API
 
                 // if product exsits, update
 
+                $option_filed = explode (',',$this->option('sync_inventory_warhsname'))[2] ;
+                $field = (!empty($option_filed) ? $option_filed : 'PARTNAME');
                 $args = array(
                     'post_type'      => array('product', 'product_variation'),
                     'meta_query'	=>	array(
                         array(
                             'key'       => '_sku',
-                            'value'	=>	$item['PARTNAME']
+                            'value'	=> $item[$field]
                         )
                     )
                 );
@@ -1586,15 +1584,20 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-
-
+                    $stock = ($stock >= 0 ? $stock : 0);
                     update_post_meta($product_id, '_stock', $stock);
-
+                    // set stock status
                     if (intval($stock) > 0) {
-                        update_post_meta($product_id, '_stock_status', 'instock');
+                       // update_post_meta($product_id, '_stock_status', 'instock');
+                        $stock_status = 'instock';
+
                     } else {
-                        update_post_meta($product_id, '_stock_status', 'outofstock');
+                       // update_post_meta($product_id, '_stock_status', 'outofstock');
+                        $stock_status = 'outofstock';
                     }
+                    $variation = wc_get_product($product_id);
+                    $variation->set_stock_status($stock_status);
+                    $variation->save();
                 }
 
             }
@@ -1653,7 +1656,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     /**
      * sync Customer by given ID
      *
@@ -1672,6 +1674,14 @@ class WooAPI extends \PriorityAPI\API
             if('prospect_cellphone'==$this->option('prospect_field')){
                 $priority_customer_number = $meta['billing_phone'][0];
             }
+            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration
+            if('prospect_email'==$this->option('prospect_field')){
+                $priority_customer_number = $user->data->user_email;
+            }
+            if('prospect_cellphone'==$this->option('prospect_field')){
+                $priority_customer_number = $meta['billing_phone'][0];
+            }
+
             */
             $json_request = json_encode([
                 'CUSTNAME'    => $priority_customer_number,
@@ -1792,8 +1802,8 @@ class WooAPI extends \PriorityAPI\API
     }
     public function getPriorityCustomer($order){
         $cust_numbers = explode('|',$this->option('walkin_number'));
-        $country = !empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country();
-        $walk_in_customer = $country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1])  ? $cust_numbers[1] : $cust_numbers[0] ;
+        $country = (!empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country());
+        $walk_in_customer = (($country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1]))  ? $cust_numbers[1] : $cust_numbers[0]);
         $walk_in_customer = !empty($walk_in_customer) ? $walk_in_customer : $cust_numbers[0];
         if ($order->get_customer_id()) {
             $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
@@ -2238,6 +2248,7 @@ class WooAPI extends \PriorityAPI\API
     public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
+        $this->syncCustomer($order->get_user()->ID);
         // checck order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
         if(!isset($config->order_statuses)){
@@ -2578,7 +2589,7 @@ class WooAPI extends \PriorityAPI\API
             ];*/
 
         // filter data
-        apply_filters( 'simply_request_data', $data );
+        $data = apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -2878,7 +2889,7 @@ class WooAPI extends \PriorityAPI\API
         ];
         $data['TINVOICESCONT_SUBFORM'][] = $customer_data;
 
-
+        $data = apply_filters( 'simply_request_data', $data );
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)],true);
         if ($response['code']<=201) {

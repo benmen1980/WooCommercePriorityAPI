@@ -128,12 +128,17 @@ add_action('plugins_loaded', function(){
 	        if(WooAPI::instance()->option('obligo')){
 				 require P18AW_FRONT_DIR.'my-account/obligo.php';
 				 \obligo::instance()->run();
+                //load prority orders excel
+                require P18AW_CLASSES_DIR . 'priority_orders_excel.php';
+                \priority_orders_excel::instance()->run();
 			 }
 
 	        
+
             //load prority orders excel 
             require P18AW_CLASSES_DIR . 'priority_excel_reports/priority_orders_excel.php';
             \priority_orders_excel::instance()->run();
+
 
             //load prority invoices
             require P18AW_CLASSES_DIR . 'priority_invoices/priority_invoices.php';
@@ -144,7 +149,7 @@ add_action('plugins_loaded', function(){
             \priority_receipt::instance()->run();
 
 	       require P18AW_ADMIN_DIR.'packs.php';
-		if(WooAPI::instance()->option('sites')){
+		     if(WooAPI::instance()->option('sites')){
                 include_once dirname(__FILE__).'/includes/front/sites/sites.php';
             	}
 
