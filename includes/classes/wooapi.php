@@ -1665,14 +1665,14 @@ class WooAPI extends \PriorityAPI\API
                     // set stock status
                     if (intval($stock) > 0) {
                        // update_post_meta($product_id, '_stock_status', 'instock');
-                        $stock_status = 'instock';
+                       $stock_status = 'instock';
 
                     } else {
                        // update_post_meta($product_id, '_stock_status', 'outofstock');
                         $stock_status = 'outofstock';
                     }
                     $variation = wc_get_product($product_id);
-                    $variation->set_stock_status($stock_status);
+                   // $variation->set_stock_status($stock_status);
                     $variation->save();
                 }
 
