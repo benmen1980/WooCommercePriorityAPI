@@ -2118,7 +2118,7 @@ class WooAPI extends \PriorityAPI\API
                 $line_before_discount = (float)$item->get_subtotal();
                 $line_tax = (float)$item->get_subtotal_tax();
                 $line_after_discount  = (float)$item->get_total();
-                $discount = ($line_before_discount - $line_after_discount)/$line_before_discount * 100.0;
+                $discount = ($line_before_discount - $line_after_discount)/($line_before_discount ?: 1) * 100.0;
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
