@@ -2858,6 +2858,11 @@ class WooAPI extends \PriorityAPI\API
         if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
             $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
+        // ORDNAME
+        $order_number = get_post_meta($order_id, 'priority_order_number', true);
+        if(!empty($order_number)){
+            $data['ORDNAME'] = $order_number;
+        }
         // cash payment
         if(strtolower($order->get_payment_method()) == 'cod') {
             $data['CASHPAYMENT'] = floatval($order->get_total());
