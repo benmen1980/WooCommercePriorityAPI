@@ -1990,7 +1990,9 @@ class WooAPI extends \PriorityAPI\API
         $user_id = $order->get_user_id();
         // $user_id = $order->user_id;
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-        $discount_type = 'additional_line'; // header , in_line , additional_line
+
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
         $cust_number = $this->getPriorityCustomer($order);
 
@@ -2142,7 +2144,7 @@ class WooAPI extends \PriorityAPI\API
 
             ];
         }
-        // coupons
+
         //$data = $this->get_coupons($data,$order);
         // shipping rate
         if(!empty($this->get_shipping_price($order,true))){
