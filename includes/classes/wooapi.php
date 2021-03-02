@@ -1991,7 +1991,9 @@ class WooAPI extends \PriorityAPI\API
         // $user_id = $order->user_id;
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
-        $config = json_decode(stripslashes($this->option('setting-config')));
+        $raw_option = $this->option('setting-config');
+        $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
         $cust_number = $this->getPriorityCustomer($order);
@@ -2124,7 +2126,7 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     'PARTNAME'         => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
-                    'PRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int) $item->get_quantity() : 0.0,
+                    'VPRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int)$item->get_quantity() : 0.0,
                     'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
                     'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
