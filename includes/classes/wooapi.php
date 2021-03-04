@@ -1977,226 +1977,6 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_otc', time());
     }
-    public function syncOrder($id)
-    {
-        if(isset(WC()->session)){
-            $session = WC()->session->get('session_vars');
-            if($session['ordertype']=='Recipe'){
-                return;
-            }
-        }
-        $order = new \WC_Order($id);
-        $user = $order->get_user();
-        $user_id = $order->get_user_id();
-        // $user_id = $order->user_id;
-        $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-
-        $raw_option = $this->option('setting-config');
-        $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
-        $config = json_decode(stripslashes($raw_option));
-        $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
-
-        $cust_number = $this->getPriorityCustomer($order);
-
-        $data = [
-            'CUSTNAME' => $cust_number,
-            'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
-            $this->option('order_order_field')  => $order->get_order_number(),
-            //'DCODE' => $priority_dep_number, // this is the site in Priority
-            //'DETAILS' => $user_department,
-
-        ];
-        // CDES
-        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
-            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        }
-
-        // cart discount header
-        $cart_discount = floatval($order->get_total_discount());
-        $cart_discount_tax = floatval($order->get_discount_tax());
-        $order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
-        $order_discount = ($cart_discount/$order_total) * 100.0;
-        if('header' == $discount_type){
-            $data['PERCENT'] = $order_discount;
-        }
-
-// order comments
-        $priority_version = (float)$this->option('priority-version');
-        if($priority_version>19.1){
-            // for Priority version 20.0
-            $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
-        }else{
-            // for Priority version 19.1
-            $data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
-
-        }
-
-
-
-
-        // billing customer details
-        $customer_data = [
-
-            'PHONE'    => $order->get_billing_phone(),
-            'EMAIL'       => $order->get_billing_email(),
-            'ADRS'        => $order->get_billing_address_1(),
-            'ADRS2'       => $order->get_billing_address_2(),
-            'STATEA'      => $order->get_billing_city(),
-            'ZIP'         => $order->get_shipping_postcode(),
-        ];
-        $data['ORDERSCONT_SUBFORM'][] = $customer_data;
-
-        // shipping
-
-        // shop address debug
-
-        $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
-            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
-            'PHONENUM'    => $order->get_billing_phone(),
-            'EMAIL'       => $order->get_billing_email(),
-            'CELLPHONE'   => $order->get_billing_phone(),
-            'ADDRESS'     => $order->get_shipping_address_1(),
-            'ADDRESS2'    => $order->get_shipping_address_2(),
-            'STATE'       => $order->get_shipping_city(),
-            'ZIP'         => $order->get_shipping_postcode(),
-        ];
-
-        // add second address if entered
-        if ( ! empty($order->get_shipping_address_2())) {
-            $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
-        }
-
-        $data['SHIPTO2_SUBFORM'] = $shipping_data;
-
-        // get shipping id
-        $shipping_method    = $order->get_shipping_methods();
-        $shipping_method    = array_shift($shipping_method);
-        $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
-
-        // get parameters
-        $params = [];
-
-
-        // get ordered items
-        foreach ($order->get_items() as $item) {
-
-            $product = $item->get_product();
-
-            $parameters = [];
-
-            // get tax
-            // Initializing variables
-            $tax_items_labels   = array(); // The tax labels by $rate Ids
-            $tax_label = 0.0 ; // The total VAT by order line
-            $taxes = $item->get_taxes();
-            // Loop through taxes array to get the right label
-            foreach( $taxes['subtotal'] as $rate_id => $tax ) {
-                $tax_label = + $tax; // <== Here the line item tax label
-            }
-
-            // get meta
-            foreach($item->get_meta_data() as $meta) {
-
-                if(isset($params[$meta->key])) {
-                    $parameters[$params[$meta->key]] = $meta->value;
-                }
-
-            }
-
-            if ($product) {
-
-                /*start T151*/
-                $new_data = [];
-
-                $item_meta = wc_get_order_item_meta($item->get_id(),'_tmcartepo_data');
-
-                if ($item_meta && is_array($item_meta)) {
-                    foreach ($item_meta as $tm_item) {
-                        $new_data[] = [
-                            'SPEC' => addslashes($tm_item['name']),
-                            'VALUE' => htmlspecialchars(addslashes($tm_item['value']))
-                        ];
-                    }
-                }
-                $line_before_discount = (float)$item->get_subtotal();
-                $line_tax = (float)$item->get_subtotal_tax();
-                $line_after_discount  = (float)$item->get_total();
-                $discount = ($line_before_discount - $line_after_discount)/($line_before_discount ?: 1) * 100.0;
-                $data['ORDERITEMS_SUBFORM'][] = [
-                    'PARTNAME'         => $product->get_sku(),
-                    'TQUANT'           => (int) $item->get_quantity(),
-                    'VPRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int)$item->get_quantity() : 0.0,
-                    'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
-                    'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
-                    //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
-                ];
-                if($discount_type != 'in_line'){
-                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM'])-1]['VATPRICE' ]= $line_before_discount + $line_tax;
-                }
-            }
-
-        }
-        // additional line cart discount
-        if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
-            $data['ORDERITEMS_SUBFORM'][] = [
-                'PARTNAME' => '000', // change to other item
-                'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
-                'TQUANT'   => -1,
-
-            ];
-        }
-
-        //$data = $this->get_coupons($data,$order);
-        // shipping rate
-        if(!empty($this->get_shipping_price($order,true))){
-            $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
-        }
-        // payment info
-        $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
-        // filter
-        $data = apply_filters( 'simply_request_data', $data );
-        $config = json_decode(stripslashes($this->option('setting-config')));
-        if(!empty($config->formname)){
-            $form_name = $config->formname;
-        }else{
-            $form_name = 'ORDERS';
-        }
-        // make request
-        $response = $this->makeRequest('POST', $form_name, ['body' => json_encode($data)], true);
-
-        if ($response['code']<=201) {
-            $body_array = json_decode($response["body"],true);
-
-            $ord_status = $body_array["ORDSTATUSDES"];
-            $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_order_status',$ord_status);
-            $order->update_meta_data('priority_order_number',$ord_number);
-            $order->save();
-        }
-        if($response['code'] >= 400){
-            $body_array = json_decode($response["body"],true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_order_status',$response["body"]);
-            // $order->update_meta_data('priority_ordnumber',$ord_number);
-            $order->save();
-        }
-
-        if (!$response['status']||$response['code'] >= 400) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                $this->option('email_error_sync_orders_web'),
-                'Error Sync Orders',
-                $response['body']
-            );
-        }
-        // add timestamp
-        return $response;
-    }
     public function get_credit_card_data($order,$is_order){
 
         $config = json_decode(stripslashes($this->option('setting-config')));
@@ -2507,6 +2287,227 @@ class WooAPI extends \PriorityAPI\API
 
     }
     /* sync over the counter invoice EINVOICES */
+
+    public function syncOrder($id)
+    {
+        if(isset(WC()->session)){
+            $session = WC()->session->get('session_vars');
+            if($session['ordertype']=='Recipe'){
+                return;
+            }
+        }
+        $order = new \WC_Order($id);
+        $user = $order->get_user();
+        $user_id = $order->get_user_id();
+        // $user_id = $order->user_id;
+        $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+
+        $raw_option = $this->option('setting-config');
+        $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
+        $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
+
+        $cust_number = $this->getPriorityCustomer($order);
+
+        $data = [
+            'CUSTNAME' => $cust_number,
+            'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
+            $this->option('order_order_field')  => $order->get_order_number(),
+            //'DCODE' => $priority_dep_number, // this is the site in Priority
+            //'DETAILS' => $user_department,
+
+        ];
+        // CDES
+        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        }
+
+        // cart discount header
+        $cart_discount = floatval($order->get_total_discount());
+        $cart_discount_tax = floatval($order->get_discount_tax());
+        $order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
+        $order_discount = ($cart_discount/$order_total) * 100.0;
+        if('header' == $discount_type){
+            $data['PERCENT'] = $order_discount;
+        }
+
+// order comments
+        $priority_version = (float)$this->option('priority-version');
+        if($priority_version>19.1){
+            // for Priority version 20.0
+            $data['ORDERSTEXT_SUBFORM'] =   ['TEXT' => $order->get_customer_note()];
+        }else{
+            // for Priority version 19.1
+            $data['ORDERSTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
+
+        }
+
+
+
+
+        // billing customer details
+        $customer_data = [
+
+            'PHONE'    => $order->get_billing_phone(),
+            'EMAIL'       => $order->get_billing_email(),
+            'ADRS'        => $order->get_billing_address_1(),
+            'ADRS2'       => $order->get_billing_address_2(),
+            'STATEA'      => $order->get_billing_city(),
+            'ZIP'         => $order->get_shipping_postcode(),
+        ];
+        $data['ORDERSCONT_SUBFORM'][] = $customer_data;
+
+        // shipping
+
+        // shop address debug
+
+        $shipping_data = [
+            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+            'PHONENUM'    => $order->get_billing_phone(),
+            'EMAIL'       => $order->get_billing_email(),
+            'CELLPHONE'   => $order->get_billing_phone(),
+            'ADDRESS'     => $order->get_shipping_address_1(),
+            'ADDRESS2'    => $order->get_shipping_address_2(),
+            'STATE'       => $order->get_shipping_city(),
+            'ZIP'         => $order->get_shipping_postcode(),
+        ];
+
+        // add second address if entered
+        if ( ! empty($order->get_shipping_address_2())) {
+            $shipping_data['ADDRESS2'] = $order->get_shipping_address_2();
+        }
+
+        $data['SHIPTO2_SUBFORM'] = $shipping_data;
+
+        // get shipping id
+        $shipping_method    = $order->get_shipping_methods();
+        $shipping_method    = array_shift($shipping_method);
+        $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
+
+        // get parameters
+        $params = [];
+
+
+        // get ordered items
+        foreach ($order->get_items() as $item) {
+
+            $product = $item->get_product();
+
+            $parameters = [];
+
+            // get tax
+            // Initializing variables
+            $tax_items_labels   = array(); // The tax labels by $rate Ids
+            $tax_label = 0.0 ; // The total VAT by order line
+            $taxes = $item->get_taxes();
+            // Loop through taxes array to get the right label
+            foreach( $taxes['subtotal'] as $rate_id => $tax ) {
+                $tax_label = + $tax; // <== Here the line item tax label
+            }
+
+            // get meta
+            foreach($item->get_meta_data() as $meta) {
+
+                if(isset($params[$meta->key])) {
+                    $parameters[$params[$meta->key]] = $meta->value;
+                }
+
+            }
+
+            if ($product) {
+
+                /*start T151*/
+                $new_data = [];
+
+                $item_meta = wc_get_order_item_meta($item->get_id(),'_tmcartepo_data');
+
+                if ($item_meta && is_array($item_meta)) {
+                    foreach ($item_meta as $tm_item) {
+                        $new_data[] = [
+                            'SPEC' => addslashes($tm_item['name']),
+                            'VALUE' => htmlspecialchars(addslashes($tm_item['value']))
+                        ];
+                    }
+                }
+                $line_before_discount = (float)$item->get_subtotal();
+                $line_tax = (float)$item->get_subtotal_tax();
+                $line_after_discount  = (float)$item->get_total();
+                $discount = ($line_before_discount - $line_after_discount)/($line_before_discount ?: 1) * 100.0;
+                $data['ORDERITEMS_SUBFORM'][] = [
+                    $this->get_sku_prioirty_dest_field()  => $product->get_sku(),
+                    'TQUANT'           => (int) $item->get_quantity(),
+                    'VPRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int)$item->get_quantity() : 0.0,
+                    'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
+                    'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
+                    //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+                ];
+                if($discount_type != 'in_line'){
+                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM'])-1]['VATPRICE' ]= $line_before_discount + $line_tax;
+                }
+            }
+
+        }
+        // additional line cart discount
+        if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
+            $data['ORDERITEMS_SUBFORM'][] = [
+                'PARTNAME' => '000', // change to other item
+                'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+                'TQUANT'   => -1,
+
+            ];
+        }
+
+        //$data = $this->get_coupons($data,$order);
+        // shipping rate
+        if(!empty($this->get_shipping_price($order,true))){
+            $data['ORDERITEMS_SUBFORM'][] =  $this->get_shipping_price($order,true);
+        }
+        // payment info
+        $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
+        // filter
+        $data = apply_filters( 'simply_request_data', $data );
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        if(!empty($config->formname)){
+            $form_name = $config->formname;
+        }else{
+            $form_name = 'ORDERS';
+        }
+        // make request
+        $response = $this->makeRequest('POST', $form_name, ['body' => json_encode($data)], true);
+
+        if ($response['code']<=201) {
+            $body_array = json_decode($response["body"],true);
+
+            $ord_status = $body_array["ORDSTATUSDES"];
+            $ord_number = $body_array["ORDNAME"];
+            $order->update_meta_data('priority_order_status',$ord_status);
+            $order->update_meta_data('priority_order_number',$ord_number);
+            $order->save();
+        }
+        if($response['code'] >= 400){
+            $body_array = json_decode($response["body"],true);
+
+            //$ord_status = $body_array["ORDSTATUSDES"];
+            // $ord_number = $body_array["ORDNAME"];
+            $order->update_meta_data('priority_order_status',$response["body"]);
+            // $order->update_meta_data('priority_ordnumber',$ord_number);
+            $order->save();
+        }
+
+        if (!$response['status']||$response['code'] >= 400) {
+            /**
+             * t149
+             */
+            $this->sendEmailError(
+                $this->option('email_error_sync_orders_web'),
+                'Error Sync Orders',
+                $response['body']
+            );
+        }
+        // add timestamp
+        return $response;
+    }
     public function syncAinvoice($id)
     {
         if(isset(WC()->session)){
@@ -2604,16 +2605,12 @@ class WooAPI extends \PriorityAPI\API
             foreach( $taxes['subtotal'] as $rate_id => $tax ) {
                 $tax_label = + $tax; // <== Here the line item tax label
             }
-
             // get meta
             foreach($item->get_meta_data() as $meta) {
-
                 if(isset($params[$meta->key])) {
                     $parameters[$params[$meta->key]] = $meta->value;
                 }
-
             }
-
             if ($product) {
 
                 /*start T151*/
@@ -2634,7 +2631,7 @@ class WooAPI extends \PriorityAPI\API
                 $line_after_discount  = (float)$item->get_total();
                 $discount = ($line_before_discount - $line_after_discount)/$line_before_discount * 100.0;
                 $data['AINVOICEITEMS_SUBFORM'][] = [
-                    'PARTNAME'         => $product->get_sku(),
+                    $this->get_sku_prioirty_dest_field()  => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     'PRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int) $item->get_quantity() : 0.0,
                     'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
@@ -2792,11 +2789,9 @@ class WooAPI extends \PriorityAPI\API
             if ($product) {
 
                 $data['EINVOICEITEMS_SUBFORM'][] = [
-                    'PARTNAME'         => $product->get_sku(),
+                    $this->get_sku_prioirty_dest_field()  => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     'TOTPRICE'            => round((float) ($item->get_total() + $tax_label) ,2),
-
-
                 ];
             }
 
@@ -3442,6 +3437,11 @@ class WooAPI extends \PriorityAPI\API
             ];
         }
         return $data;
+    }
+    function get_sku_prioirty_dest_field(){
+        $fieldname = 'PARTNAME';
+        $fieldname = apply_filters( 'simply_set_priority_sku_field', $fieldname );
+        return $fieldname;
     }
 }
 
