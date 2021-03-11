@@ -717,7 +717,7 @@ class WooAPI extends \PriorityAPI\API
                     $order_status = get_post_meta($post_id, 'priority_order_status', true);
                     $order_number = get_post_meta($post_id, 'priority_order_number', true);
                     if (empty($order_status)) $order_status = '';
-                    if (strlen($order_status) > 20) $order_status = '<div class="tooltip">Error<span class="tooltiptext">' . $order_status . '</span></div>';
+                    if (strlen($order_status) > 200) $order_status = '<div class="tooltip">Error<span class="tooltiptext">' . $order_status . '</span></div>';
                     if (empty($order_number)) $order_number = '';
                 }
                 if($this->option('post_einvoice_checkout')|| $this->option('post_ainvoice_checkout')){
