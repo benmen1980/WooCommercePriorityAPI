@@ -21,11 +21,11 @@ jQuery(document).ready(function($) {
 	jQuery(document).on('click','.cust-toggle', function() {
 		console.log('clicked');
 		var cls=jQuery(this).attr('id');
-		if(jQuery('.subform-content'+cls).hasClass('active')){
+		if(jQuery('.subform-'+cls).hasClass('active')){
 			jQuery(this).text('+').addClass('plus').removeClass('minus');
 			//jQuery('.subform-'+cls).hide();
-			jQuery('.subform-content'+cls).css('display','none');
-			jQuery('.subform-content'+cls).removeClass('active');
+			jQuery('.subform-'+cls).css('display','none');
+			jQuery('.subform-'+cls).removeClass('active');
 		}else{
 			jQuery('.cust-toggle').text('+').addClass('plus').removeClass('minus');
 			jQuery(this).text('-').addClass('minus').removeClass('plus');
@@ -39,8 +39,8 @@ jQuery(document).ready(function($) {
 		}
 	});
 
-	$( "#from-date" ).datepicker();
-	$( "#to-date" ).datepicker();
+	jQuery( "#from-date" ).datepicker();
+	jQuery( "#to-date" ).datepicker();
 
 	jQuery.browser = {};
 	(function () {
