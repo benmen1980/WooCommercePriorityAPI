@@ -1,3 +1,4 @@
 .cust-toggle{font-size: 30px;font-weight: bold;cursor:pointer;}
 .cust-toggle.plus{color: green;}
 .cust-toggle.minus{color: red;}
+.row-titles{background-color: #EDEDED;}

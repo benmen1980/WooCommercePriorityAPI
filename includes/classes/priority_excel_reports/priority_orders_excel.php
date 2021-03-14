@@ -85,15 +85,15 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
 		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
 		echo "<form method='POST'>";
-		echo "FROM: <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' required />";
-		echo "TO: <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' required />";
+		echo __('FROM:','p18w')." <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' required />";
+		echo __('TO:','p18w')." <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' required />";
 		echo "<input type='submit' value='".__('submit','p18w')."' name='date'/>";
 		echo "</form>";
 		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank' 
 		style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> 
 		".__('Export Excel','p18w')." </a>";
 		echo "<table>";
-		echo "<tr><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('BOOK Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
+		echo "<tr class='row-titles'><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('BOOK Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
 		$i = 1;
 
 		foreach ($data->value as $key => $value) {
