@@ -26,8 +26,8 @@ class Priority_receipt extends \PriorityAPI\API{
 		add_action( 'wp_enqueue_scripts', function() {
 			//wp_enqueue_script('priority-woo-api-frontend', P18AW_ASSET_URL.'frontend.js', array('jquery'), time());
 			wp_enqueue_style( 'priority-woo-api-style', P18AW_ASSET_URL.'style.css', time() );
-			wp_enqueue_script('priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js');
-			wp_enqueue_style( 'priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
+			wp_enqueue_script('priority-woo-api-jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js');
+			wp_enqueue_style( 'priority-woo-api-jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
 		});
 
 		add_action('init', function() {
@@ -76,9 +76,10 @@ class Priority_receipt extends \PriorityAPI\API{
 		echo "<form method='POST'>";
 		echo "FROM: <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' required />";
 		echo "TO: <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' required />";
-		echo "<input type='submit' value='submit' name='date'/>";
+		echo "<input type='submit' value='".__('submit','p18w')."' name='date'/>";
 		echo "</form>";
-		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_receipt&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> Export Excel </a>";
+		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_receipt&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> 
+		".__('Export Excel','p18w')." </a>";
 		echo "<table>";
 		echo "<tr><td></td><td>".__('Date','p18w')."</td><td>".__('IVNUM','p18w')."</td><td>".__('DEBIT','p18w')."</td><td>".__('IVTYPE','p18w')."</td><td>".__('ACCNAME','p18w')."</td><td>".__('QPRICE','p18w')."</td></tr>";
 		$i = 1;
