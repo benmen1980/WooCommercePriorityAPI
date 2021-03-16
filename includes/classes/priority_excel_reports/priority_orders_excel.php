@@ -127,9 +127,9 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \'02\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \'02\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );

@@ -57,6 +57,7 @@ register_activation_hook(P18AW_SELF, function(){
     add_rewrite_endpoint( 'priority-orders', EP_ROOT | EP_PAGES );
     add_rewrite_endpoint( 'priority-invoices', EP_ROOT | EP_PAGES );
     add_rewrite_endpoint( 'priority-receipt', EP_ROOT | EP_PAGES );
+    add_rewrite_endpoint( 'priority-documents', EP_ROOT | EP_PAGES );
 
     /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
     $wp_rewrite->flush_rules( false );
@@ -139,6 +140,10 @@ add_action('plugins_loaded', function(){
                 //load prority receipt
                 require P18AW_CLASSES_DIR . 'priority_receipt/priority_receipt.php';
                 \priority_receipt::instance()->run();
+
+                //load prority document
+                require P18AW_CLASSES_DIR . 'priority_documents/priority_documents.php';
+                \priority_documents::instance()->run();
 
                 require P18AW_ADMIN_DIR . 'packs.php';
                 if (WooAPI::instance()->option('sites')) {

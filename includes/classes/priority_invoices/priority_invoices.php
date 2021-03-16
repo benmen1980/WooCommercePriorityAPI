@@ -126,9 +126,9 @@ class Priority_invoices extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-        	$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \'02\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+        	$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \'02\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );

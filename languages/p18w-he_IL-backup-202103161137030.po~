@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2021-03-16 11:37+0000\n"
+"PO-Revision-Date: 2021-03-16 11:36+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -60,10 +60,10 @@ msgid "Export Excel"
 msgstr "ייצוא לאקסל"
 
 msgid "File Name"
-msgstr "שם קובץ"
+msgstr ""
 
 msgid "File Path"
-msgstr "נתיב הקובץ"
+msgstr ""
 
 #: includes/front/my-account/obligo.php:170
 msgid "FNCNUM"
