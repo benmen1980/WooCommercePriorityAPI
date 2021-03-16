@@ -1,0 +1,195 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Priority Woocommerce API\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-03-14 09:00+0000\n"
+"PO-Revision-Date: 2021-03-14 09:01+0000\n"
+"Last-Translator: ענבל משה\n"
+"Language-Team: עִבְרִית\n"
+"Language: he_IL\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.4.3; wp-5.4.4"
+
+#: includes/classes/wooapi.php:124
+msgid "Login to see prices"
+msgstr "התחבר כדי לראות מחירים"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:44
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:54
+msgid "Priority Orders"
+msgstr "הזמנות פריוריטי"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:90
+msgid "submit"
+msgstr "שלח"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+#: includes/classes/priority_invoices/priority_invoices.php:94
+#: includes/classes/priority_receipt/priority_receipt.php:83
+msgid "Date"
+msgstr "תאריך"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+msgid "Order Name"
+msgstr "מספר הזמנה"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+msgid "BOOK Number"
+msgstr "מספר פנקס"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:107
+#: includes/classes/priority_invoices/priority_invoices.php:107
+msgid "Quantity"
+msgstr "כמות"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:107
+#: includes/classes/priority_invoices/priority_invoices.php:107
+msgid "Price"
+msgstr "מחיר"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+msgid "Percentage"
+msgstr "אחוז"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+msgid "Discounted Price"
+msgstr "מחיר מוזל"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+#: includes/classes/priority_invoices/priority_invoices.php:94
+msgid "VAT"
+msgstr "מע\"מ"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:94
+#: includes/classes/priority_invoices/priority_invoices.php:94
+msgid "Total Price"
+msgstr "סה\"כ מחיר"
+
+#: includes/classes/priority_excel_reports/priority_orders_excel.php:107
+#: includes/classes/priority_invoices/priority_invoices.php:107
+msgid "Part Name"
+msgstr "מקט מוצר"
+
+#: includes/classes/priority_invoices/priority_invoices.php:44
+#: includes/classes/priority_invoices/priority_invoices.php:54
+msgid "Priority Invoices"
+msgstr "חשבוניות פריוריטי"
+
+#: includes/classes/priority_invoices/priority_invoices.php:94
+msgid "Customer Name"
+msgstr "שם לקוח"
+
+#: includes/classes/priority_invoices/priority_invoices.php:94
+#: includes/classes/priority_receipt/priority_receipt.php:83
+#: includes/front/my-account/obligo.php:170
+msgid "IVNUM"
+msgstr "מספר חשבונית"
+
+#: includes/classes/priority_invoices/priority_invoices.php:94
+#: includes/classes/priority_receipt/priority_receipt.php:83
+#: includes/classes/priority_receipt/priority_receipt.php:96
+msgid "QPRICE"
+msgstr "מחיר לכמות"
+
+#: includes/classes/priority_invoices/priority_invoices.php:94
+msgid "DISCOUNT"
+msgstr "הנחה"
+
+#: includes/classes/priority_invoices/priority_invoices.php:94
+msgid "DISPRICE"
+msgstr "מחיר הנחה"
+
+#: includes/classes/priority_receipt/priority_receipt.php:44
+#: includes/classes/priority_receipt/priority_receipt.php:54
+msgid "Priority Receipts"
+msgstr "קבלות פריוריטי"
+
+#: includes/classes/priority_receipt/priority_receipt.php:83
+msgid "DEBIT"
+msgstr "חוֹבָה"
+
+#: includes/classes/priority_receipt/priority_receipt.php:83
+msgid "IVTYPE"
+msgstr "סוג חשבונית"
+
+#: includes/classes/priority_receipt/priority_receipt.php:83
+msgid "ACCNAME"
+msgstr "שם חשבון"
+
+#: includes/classes/priority_receipt/priority_receipt.php:96
+msgid "PAYMENT CODE"
+msgstr "קוד תשלום"
+
+#: includes/classes/priority_receipt/priority_receipt.php:96
+msgid "PAYMENT NAME"
+msgstr "שם תשלום"
+
+#: includes/front/my-account/obligo.php:50
+#: includes/front/my-account/obligo.php:60
+#, fuzzy
+msgid "Obligo"
+msgstr "אובליגו"
+
+#: includes/front/my-account/obligo.php:167
+msgid "Open Payment"
+msgstr "תשלומים פתוחים"
+
+#: includes/front/my-account/obligo.php:170
+msgid "BALDATE"
+msgstr "תאריך למאזן"
+
+#: includes/front/my-account/obligo.php:170
+msgid "FNCNUM"
+msgstr "מספר תנועת היומן"
+
+#: includes/front/my-account/obligo.php:170
+msgid "DETAILS"
+msgstr "פרטים"
+
+#: includes/front/my-account/obligo.php:170
+msgid "SUM1"
+msgstr "סה\"כ"
+
+#: includes/front/sites/sites.php:61
+msgid "Please select"
+msgstr ""
+
+#: includes/front/sites/sites.php:68
+msgid "Please choose a site"
+msgstr "אנא בחר אתר."
+
+#: includes/front/sites/sites.php:146
+msgid "Site is missing"
+msgstr "אתר חסר. אנא בחר אתר מתוך הרשימה בחלק העליון של המסך."
+
+#. Name of the plugin
+msgid "Priority Woocommerce API"
+msgstr ""
+
+#. Description of the plugin
+msgid "Priority Woocommerce API extension"
+msgstr ""
+
+#. URI of the plugin
+#. Author URI of the plugin
+msgid "http://www.roi-holdings.com"
+msgstr ""
+
+#. Author of the plugin
+msgid "Roi Holdings"
+msgstr ""
+
+msgid "Export Excel"
+msgstr "ייצוא לאקסל"
+
+msgid "FROM:"
+msgstr "מתאריך:"
+
+msgid "TO:"
+msgstr "עד תאריך:"
