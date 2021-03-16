@@ -120,6 +120,9 @@ class Priority_orders_excel extends \PriorityAPI\API{
 	
 
 	function my_action_exporttoexcel() {
+		$current_user             = wp_get_current_user();
+		$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
+		
 		if(!empty($_REQUEST['from_date']) && !empty($_REQUEST['to_date'])) {
 			$fdate = date(DATE_ATOM, strtotime($_REQUEST['from_date']));
 			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']));
