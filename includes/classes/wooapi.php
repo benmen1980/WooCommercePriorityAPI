@@ -1593,11 +1593,35 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
+    public function get_items_total_by_status($product_id) {
+
+        //$statuses = ['on-hold','pending']; 
+        $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[3];
+        // Get 'on-hold' customer ORDERS
+        $orders_by_status = wc_get_orders( array(
+            'limit' => -1,
+            'status' => $statuses,
+        ) );
+    
+        $qty = 0;
+        foreach( $orders_by_status as $order) {
+            foreach ( $order->get_items() as $item_id => $item ) {
+                $order_item_product_id = $item['product_id'];
+                if($order_item_product_id == $product_id){
+                    $qty += $item['qty'];
+                }
+    
+            }
+        }
+        return $qty;
+        
+    }
     /**
      * sync inventory from priority
      */
     public function syncInventoryPriority()
     {
+        
         // get the items simply by time stamp of today
         $daysback_options = explode (',',$this->option('sync_inventory_warhsname'))[3] ;
         $daysback = intval(!empty($daysback_options) ? $daysback_options :  10); // change days back to get inventory of prev days
@@ -1660,7 +1684,11 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-                    $stock = ($stock >= 0 ? $stock : 0);
+
+                    $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[3];
+                    if(!empty($statuses)){
+                        $stock -= get_items_total_by_status($product_id);
+                    }
                     update_post_meta($product_id, '_stock', $stock);
                     // set stock status
                     if (intval($stock) > 0) {
