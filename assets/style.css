@@ -2,3 +2,4 @@
 .cust-toggle.plus{color: green;}
 .cust-toggle.minus{color: red;}
 .row-titles{background-color: #EDEDED;}
+form input#from-date, form input#to-date{max-width: 200px; margin: 0 20px;}
