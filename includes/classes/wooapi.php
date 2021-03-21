@@ -1101,9 +1101,11 @@ class WooAPI extends \PriorityAPI\API
                     }
                 }
                 // if product variation skip
-                $_product = wc_get_product($product_id);
-                if( !$_product->is_type( 'simple' ) ) {
-                    continue;
+                if($product_id != 0) {
+                    $_product = wc_get_product($product_id);
+                    if (!$_product->is_type('simple')) {
+                        continue;
+                    }
                 }
                 if($product_id != 0 && false == $is_update_products){
                     continue;
