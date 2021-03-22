@@ -151,7 +151,10 @@ class Priority_invoices extends \PriorityAPI\API{
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
 		$f = fopen('php://output', 'w');
-		$array=array('Date','Customer Name','IVNUM','QPRICE','DISCOUNT','DISPRICE','VAT','Total Price','Partname','Quantity','Price');
+		//add BOM to fix UTF-8 in Excel
+        fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+		$array=array(__('Date','p18w'),__('Customer Name','p18w'),__('IVNUM','p18w'),__('QPRICE','p18w'),__('DISCOUNT','p18w'),__('DISPRICE','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Quantity','p18w'),__('Price','p18w'));
+		//$array=array('Date','Customer Name','IVNUM','QPRICE','DISCOUNT','DISPRICE','VAT','Total Price','Partname','Quantity','Price');
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->AINVOICEITEMS_SUBFORM)) {

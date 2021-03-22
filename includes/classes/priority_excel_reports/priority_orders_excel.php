@@ -153,7 +153,9 @@ class Priority_orders_excel extends \PriorityAPI\API{
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
 		$f = fopen('php://output', 'w');
-		$array=array('Date','Order Name','BOOK Number','Quantity','Price','Percentage','Discounted Price','VAT','Total Price','Partname','Quantity','Price');
+		//add BOM to fix UTF-8 in Excel
+        fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+		$array=array(__('Date','p18w'),__('Order Name','p18w'),__('BOOK Number','p18w'),__('Quantity','p18w'),__('Price','p18w'),__('Percentage','p18w'),__('Discounted Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Quantity','p18w'),__('Price','p18w'));
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->ORDERITEMS_SUBFORM)) {

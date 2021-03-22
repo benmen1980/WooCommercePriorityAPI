@@ -154,7 +154,10 @@ class Priority_receipt extends \PriorityAPI\API{
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
 		$f = fopen('php://output', 'w');
-		$array=array('Date','IVNUM','DEBIT','IVTYPE','ACCNAME','QPRICE','IVDATE','PAYMENTCODE','PAYMENTNAME','QPRICE');
+		//add BOM to fix UTF-8 in Excel
+		fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+		$array=array(__('Date','p18w'),__('IVNUM','p18w'),__('DEBIT','p18w'),__('IVTYPE','p18w'),__('ACCNAME','p18w'),__('QPRICE','p18w'),__('IVDATE','p18w'),__('PAYMENTCODE','p18w'),__('PAYMENTNAME','p18w'),__('QPRICE','p18w'));
+		//$array=array('Date','IVNUM','DEBIT','IVTYPE','ACCNAME','QPRICE','IVDATE','PAYMENTCODE','PAYMENTNAME','QPRICE');
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->TPAYMENT2_SUBFORM)) {
