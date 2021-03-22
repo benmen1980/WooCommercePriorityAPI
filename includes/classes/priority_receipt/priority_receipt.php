@@ -64,8 +64,25 @@ class Priority_receipt extends \PriorityAPI\API{
 
 		$current_user             = wp_get_current_user();
 		$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
+
+		if(isset($_POST['from-date']) && isset($_POST['to-date'])) {
+			$fdate = date(DATE_ATOM, strtotime($_POST['from-date']));
+			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']));
+
+			$from_date = urlencode($fdate);  // get from $_POST['from date']
+        	$to_date   = urlencode($tdate);  // get from $_POST['from date']
+
+			$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+		} else {
+			//by default, get invoices from beginning of year till today
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+
+			$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+			
+		}
 		
-        $additionalurl = 'TINVOICES?$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+        //$additionalurl = 'TINVOICES?$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
 
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
@@ -108,7 +125,27 @@ class Priority_receipt extends \PriorityAPI\API{
 	
 
 	function my_action_exporttoexcel_receipt() {
-		$additionalurl = 'TINVOICES?$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+
+		$current_user             = wp_get_current_user();
+		$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
+		
+		if(!empty($_REQUEST['from_date']) && !empty($_REQUEST['to_date'])) {
+			$fdate = date(DATE_ATOM, strtotime($_REQUEST['from_date']));
+			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']));
+			
+			$from_date = urlencode($fdate);  // get from $_POST['from date']
+        	$to_date   = urlencode($tdate);  // get from $_POST['from date']
+
+        	$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+		} else {
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+
+			$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+			
+		}
+
+		//$additionalurl = 'TINVOICES?$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
 		$data     = json_decode( $response['body'] );
@@ -122,11 +159,11 @@ class Priority_receipt extends \PriorityAPI\API{
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->TPAYMENT2_SUBFORM)) {
 				foreach($value->TPAYMENT2_SUBFORM as $subform) {
-					$array=array($value->IVDATE,$value->IVNUM,$value->DEBIT,$value->IVTYPE,$value->ACCNAME,$value->QPRICE,$subform->PAYMENTCODE,$subform->PAYMENTNAME,$subform->QPRICE);
+					$array=array(date( 'd/m/y',strtotime($value->IVDATE)),$value->IVNUM,$value->DEBIT,$value->IVTYPE,$value->ACCNAME,$value->QPRICE,$subform->PAYMENTCODE,$subform->PAYMENTNAME,$subform->QPRICE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array($value->IVDATE,$value->IVNUM,$value->DEBIT,$value->IVTYPE,$value->ACCNAME,$value->QPRICE);
+				$array=array(date( 'd/m/y',strtotime($value->IVDATE)),$value->IVNUM,$value->DEBIT,$value->IVTYPE,$value->ACCNAME,$value->QPRICE);
 				fputcsv($f, $array);
 			}
 		}

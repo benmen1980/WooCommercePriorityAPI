@@ -75,7 +75,12 @@ class Priority_invoices extends \PriorityAPI\API{
 
         	$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			//by default, get invoices from beginning of year till today
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+
+			$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			//$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
         
 		$args= [];
@@ -131,7 +136,12 @@ class Priority_invoices extends \PriorityAPI\API{
 
         	$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+
+			$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			
+			//$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
@@ -146,11 +156,11 @@ class Priority_invoices extends \PriorityAPI\API{
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->AINVOICEITEMS_SUBFORM)) {
 				foreach($value->AINVOICEITEMS_SUBFORM as $subform) {
-					$array=array($value->IVDATE,$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
+					$array=array(date( 'd/m/y',strtotime($value->IVDATE)),$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array($value->IVDATE,$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
+				$array=array(date( 'd/m/y',strtotime($value->IVDATE)),$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
 				fputcsv($f, $array);
 			}
 		}

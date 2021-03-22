@@ -78,12 +78,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		} else 
 		//by default enter date from begin of year to today
 		{
-			//$begindate = date('Y-m-d ', strtotime('first day of january this year'));
-			//$todaydate = date("Y-m-d");
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			
-			//$additionalurl = 'ORDERS?$filter=CURDATE gt '.$begindate.' and CURDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
-			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE gt '.$begindate.' and CURDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 
 		//$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
@@ -141,7 +140,10 @@ class Priority_orders_excel extends \PriorityAPI\API{
 
 	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+			$additionalurl = 'ORDERS?$filter=CURDATE gt '.$begindate.' and CURDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
@@ -156,11 +158,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				foreach($value->ORDERITEMS_SUBFORM as $subform) {
-					$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
+					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array($value->CURDATE,$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
+				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
 				fputcsv($f, $array);
 			}
 		}
