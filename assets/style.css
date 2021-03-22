@@ -4,4 +4,5 @@
 .row-titles{background-color: #EDEDED;}
 form.priority_form{display:inline-flex; align-items: center;}
 form input#from-date, form input#to-date{max-width: 180px; margin: 0 15px;}
+form input[type='submit']{margin: 0px;}
 a.btn_export_excel{display: inline-block; margin:0 20px 0 0; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; text-decoration: none!important;}
