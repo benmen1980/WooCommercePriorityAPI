@@ -75,7 +75,12 @@ class Priority_invoices extends \PriorityAPI\API{
 
         	$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			//by default, get invoices from beginning of year till today
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+
+			$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			//$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
         
 		$args= [];
@@ -84,12 +89,12 @@ class Priority_invoices extends \PriorityAPI\API{
 
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
 		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
-		echo "<form method='POST'>";
+		echo "<form class='priority_form' method='POST'>";
 		echo __('FROM:','p18w')." <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' required />";
 		echo __('TO:','p18w')." <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' required />";
 		echo "<input type='submit' value='".__('submit','p18w')."' name='date'/>";
 		echo "</form>";
-		echo "<a href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_invoice&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank' style='display: block; margin-bottom:5px; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; float: right; text-decoration: none;'> 
+		echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_invoice&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
 		".__('Export Excel','p18w')." </a>";
 		echo "<table>";
 		echo "<tr class='row-titles'><td></td><td>".__('Date','p18w')."</td><td>".__('Customer Name','p18w')."</td><td>".__('IVNUM','p18w')."</td><td>".__('QPRICE','p18w')."</td><td>".__('DISCOUNT','p18w')."</td><td>".__('DISPRICE','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
@@ -131,7 +136,12 @@ class Priority_invoices extends \PriorityAPI\API{
 
         	$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
-			$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
+
+			$additionalurl = 'AINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			
+			//$additionalurl = 'AINVOICES?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=AINVOICEITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
@@ -141,16 +151,19 @@ class Priority_invoices extends \PriorityAPI\API{
 	    // tell the browser we want to save it instead of displaying it
 	    header('Content-Disposition: attachment; filename="export.csv";');
 		$f = fopen('php://output', 'w');
-		$array=array('Date','Customer Name','IVNUM','QPRICE','DISCOUNT','DISPRICE','VAT','Total Price','Partname','Quantity','Price');
+		//add BOM to fix UTF-8 in Excel
+        fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+		$array=array(__('Date','p18w'),__('Customer Name','p18w'),__('IVNUM','p18w'),__('QPRICE','p18w'),__('DISCOUNT','p18w'),__('DISPRICE','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Quantity','p18w'),__('Price','p18w'));
+		//$array=array('Date','Customer Name','IVNUM','QPRICE','DISCOUNT','DISPRICE','VAT','Total Price','Partname','Quantity','Price');
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->AINVOICEITEMS_SUBFORM)) {
 				foreach($value->AINVOICEITEMS_SUBFORM as $subform) {
-					$array=array($value->IVDATE,$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
+					$array=array(date( 'd/m/y',strtotime($value->IVDATE)),$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array($value->IVDATE,$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
+				$array=array(date( 'd/m/y',strtotime($value->IVDATE)),$value->CUSTNAME,$value->IVNUM,$value->QPRICE,$value->DISCOUNT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
 				fputcsv($f, $array);
 			}
 		}
