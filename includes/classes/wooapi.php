@@ -1598,7 +1598,7 @@ class WooAPI extends \PriorityAPI\API
     public function get_items_total_by_status($product_id) {
 
         //$statuses = ['on-hold','pending']; 
-        $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[3];
+        $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[4];
         // Get 'on-hold' customer ORDERS
         $orders_by_status = wc_get_orders( array(
             'limit' => -1,
@@ -1672,6 +1672,7 @@ class WooAPI extends \PriorityAPI\API
                     // update_post_meta($product_id, '_sku', $item['PARTNAME']);
                     // get the stock by part availability
                     $stock =  $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
+
                     // get the stock by specific warehouse
                     $wh_name = explode (',',$this->option('sync_inventory_warhsname'))[0];
                     $foo =$this->option('sync_inventory_warhsname');
@@ -1687,10 +1688,10 @@ class WooAPI extends \PriorityAPI\API
                         }
                     }
 
-                    $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[3];
+                    $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[4];
                     if(!empty($statuses)){
-                        $stock -= get_items_total_by_status($product_id);
-                        $item['order_status_qty'] = get_items_total_by_status($product_id);
+                        $stock -= $this->get_items_total_by_status($product_id);
+                        $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
                     }
 
                     $stock = apply_filters( 'simply_sync_inventory_priority', $item );
