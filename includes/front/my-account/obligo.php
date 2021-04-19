@@ -226,7 +226,7 @@ class Obligo extends \PriorityAPI\API{
 		echo "<form id='simply-obligo' action='' method='post'>";
 
 		echo '<input type="hidden" name="action" value="my_action_obligo" />';
-		echo "<button type='submit' name='obligoSubmit' id='obligoSubmit' style='float: right;' disabled>".__('Open Payment','p18w')."</button>";
+		echo "<button type='submit' name='obligoSubmit' id='obligoSubmit' style='float: right;' disabled>".__('Pay now','p18w')."</button>";
 
 		echo "<table> <tr>";
 		echo "<th></th><th>".esc_html__('BALDATE','p18w')."</th> <th>".esc_html__('FNCNUM','p18w')."</th> <th>".esc_html__('IVNUM','p18w')."</th> <th>".esc_html__('DETAILS','p18w')."</th> <th>".esc_html__('SUM1','p18w')."</th>";
