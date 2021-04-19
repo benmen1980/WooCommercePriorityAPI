@@ -142,9 +142,9 @@ class WooAPI extends \PriorityAPI\API
         add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
         // sync user to priority after registration
         if ( $this->option( 'post_customers' ) == true ) {
-           // add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
+            //add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
             //add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
-            add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
+            //add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
         if ( $this->option( 'sell_by_pl' ) == true ) {
             // add overall customer discount
@@ -565,6 +565,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('auto_sync_items_priority_variation',   $this->post('auto_sync_items_priority_variation'));
                 $this->updateOption('email_error_sync_items_priority_variation',      $this->post('email_error_sync_items_priority_variation'));
                 $this->updateOption('log_items_web',                        $this->post('log_items_web'));
+                $this->updateOption('sync_items_web',                       $this->post('sync_items_web'));
                 $this->updateOption('auto_sync_items_web',                  $this->post('auto_sync_items_web'));
                 $this->updateOption('email_error_sync_items_web',           $this->post('email_error_sync_items_web'));
                 $this->updateOption('log_inventory_priority',               $this->post('log_inventory_priority'));
@@ -1031,7 +1032,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $is_attr_exists;
     }
-
     public function syncItemsPriority()
     {
         // default values
@@ -1541,33 +1541,45 @@ class WooAPI extends \PriorityAPI\API
      */
      public function syncItemsWeb()
     {
-        // get all items from priority
-        $response = $this->makeRequest('GET', 'LOGPART');
 
+        $single_sku = $this->option('sync_items_web');
+        $url_addition = '';
+        if(!empty($single_sku)){
+            $url_addition = '?$filter=PARTNAME eq \''.$single_sku.'\'';
+        }
+        // get all items from priority
+        $response = $this->makeRequest('GET', 'LOGPART'.$url_addition);
         if (!$response['status']) {
-            /**
-             * t149
-             */
             $this->sendEmailError(
                 $this->option('email_error_sync_items_web'),
                 'Error Sync Items Web',
                 $response['body']
             );
-
         }
-
         $data = json_decode($response['body_raw'], true);
-
         $SKU = []; // Priority items SKU numbers
-
         // collect all SKU numbers
         foreach($data['value'] as $item) {
             $SKU[] = $item['PARTNAME'];
         }
-
         // get all products from woocommerce
-        $products = get_posts(['post_type' => 'product', 'posts_per_page' => -1]);
-
+        $products = get_posts(['post_type' => array('product', 'product_variation'),
+                               'post_status' => array('publish'),
+                               'posts_per_page' => -1]);
+        // get single product according to option
+        $args = array(
+            'post_type'		=>	array('product', 'product_variation'),
+            'post_status' => array('publish'),
+            'meta_query'	=>	array(
+                array(
+                    'key'       => '_sku',
+                    'value'	=>	$single_sku
+                )
+            )
+        );
+        if(!empty($single_sku)){
+            $products = get_posts($args);
+        }
         $requests      = [];
         $json_requests = [];
 
@@ -1578,16 +1590,32 @@ class WooAPI extends \PriorityAPI\API
             $meta   = get_post_meta($product->ID);
             $method = in_array($meta['_sku'][0], $SKU) ? 'PATCH' : 'POST';
 
-            $json = json_encode([
+            $terms = get_the_terms(($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'product_cat' );
+            $attributes = wc_get_product($product->ID)->get_attributes();
+            $product_attr = get_post_meta($product->ID, '_product_attributes' );
+            foreach ($product_attr as $attr) {
+                foreach ($attr as $attribute) {
+                    $attrnames = str_replace("pa_", "", $attribute['name']);
+                }
+            }
+            $body =[
                 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
                 'BASEPLPRICE' => (float) $meta['_regular_price'][0],
-                'INVFLAG'     => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N'
-            ]);
+                'INVFLAG'     => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N',
+                'SPEC1'       => $terms[0]->name
+            ];
+            // here I need to apply filter to manipulate the json
+            $body = apply_filters('simply_sync_items_to_priority',$body);
 
-
-            $this->makeRequest($method, 'LOGPART', ['body' => $json], $this->option('log_items_web', true));
-
+            $res = $this->makeRequest($method, 'LOGPART', ['body' => json_encode($body)], $this->option('log_items_web', true));
+            if (!$res['status']) {
+                $this->sendEmailError(
+                    $this->option('email_error_sync_items_web'),
+                    'Error Sync Items Web',
+                    $res['body']
+                );
+            }
         }
 
         // add timestamp
@@ -2322,7 +2350,6 @@ class WooAPI extends \PriorityAPI\API
 
     }
     /* sync over the counter invoice EINVOICES */
-
     public function syncOrder($id)
     {
         if(isset(WC()->session)){
@@ -2939,7 +2966,6 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncPayment($order_id,$optional)
     {
-
         $order = new \WC_Order($order_id);
         $priority_customer_number = get_user_meta( $order->get_customer_id(), 'priority_customer_number', true );
         if(!empty($optional['custname'])){
@@ -2952,13 +2978,11 @@ class WooAPI extends \PriorityAPI\API
             'BOOKNUM' => $order->get_order_number(),
 
         ];
-
         // currency
         if (class_exists('WOOCS')) {
             global $WOOCS;
             $data['CODE'] = $WOOCS->current_currency;
         }
-
         // cash payment
         if(strtolower($order->get_payment_method()) == 'cod') {
 
@@ -2970,7 +2994,6 @@ class WooAPI extends \PriorityAPI\API
             $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order,false);
 
         }
-
         foreach ($order->get_items() as $item) {
             $ivnum = $item->get_meta('product-ivnum');
             $data['TFNCITEMS_SUBFORM'][] = [
@@ -3465,8 +3488,10 @@ class WooAPI extends \PriorityAPI\API
             $coupon = new \WC_Coupon($coupon_code);
             $discount_type = $coupon->get_discount_type(); // Get coupon discount type
             $coupon_amount = $coupon->get_amount(); // Get coupon amount
+           // $coupon_des = $coupon->get_name.''.$coupon->get_description();
             $data['ORDERITEMS_SUBFORM'][] = [
             'PARTNAME' => '000', // change to other item
+          //  'PDES' => $coupon_des,
             'VATPRICE' => -1* floatval($coupon_amount),
             'TQUANT'   => -1,
             ];
