@@ -67,18 +67,18 @@ class Priority_receipt extends \PriorityAPI\API{
 
 		if(isset($_POST['from-date']) && isset($_POST['to-date'])) {
 			$fdate = date(DATE_ATOM, strtotime($_POST['from-date']));
-			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']));
+			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']. ' +1 day'));
 
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-			$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+			$additionalurl = 'TINVOICES?$filter=IVDATE ge '.$from_date.' and IVDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
 		} else {
 			//by default, get invoices from beginning of year till today
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+			$additionalurl = 'TINVOICES?$filter=IVDATE ge '.$begindate.' and IVDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
 			
 		}
 		
@@ -91,8 +91,8 @@ class Priority_receipt extends \PriorityAPI\API{
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
 		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
 		echo "<form class='priority_form' method='POST'>";
-		echo __('FROM:','p18w')." <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' required />";
-		echo __('TO:','p18w')." <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' required />";
+		echo __('FROM:','p18w')." <input type='text' name='from-date' id='from-date' placeholder='dd/mm/yyyy' value='".$in_fdata."' required/>";
+		echo __('TO:','p18w')." <input type='text' name='to-date' id='to-date' placeholder='dd/mm/yyyy' value='".$in_tdata."' required/>";
 		echo "<input type='submit' value='".__('submit','p18w')."' name='date'/>";
 		echo "</form>";
 		echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_receipt&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
@@ -131,17 +131,17 @@ class Priority_receipt extends \PriorityAPI\API{
 		
 		if(!empty($_REQUEST['from_date']) && !empty($_REQUEST['to_date'])) {
 			$fdate = date(DATE_ATOM, strtotime($_REQUEST['from_date']));
-			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']));
+			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']. ' +1 day'));
 			
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-        	$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$from_date.' and IVDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+        	$additionalurl = 'TINVOICES?$filter=IVDATE ge '.$from_date.' and IVDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
 		} else {
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'TINVOICES?$filter=IVDATE gt '.$begindate.' and IVDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
+			$additionalurl = 'TINVOICES?$filter=IVDATE ge '.$begindate.' and IVDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' &$select=IVNUM,DEBIT,IVTYPE,ACCNAME,QPRICE,IVDATE&$expand=TPAYMENT2_SUBFORM($select=PAYMENTCODE,PAYMENTNAME,QPRICE)';
 			
 		}
 

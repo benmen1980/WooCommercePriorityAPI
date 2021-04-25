@@ -39,8 +39,8 @@ jQuery(document).ready(function($) {
 		}
 	});
 
-	jQuery( "#from-date" ).datepicker();
-	jQuery( "#to-date" ).datepicker();
+	jQuery( "#from-date" ).datepicker({dateFormat: 'dd-mm-yy'});
+	jQuery( "#to-date" ).datepicker({dateFormat: 'dd-mm-yy'});
 
 	jQuery.browser = {};
 	(function () {

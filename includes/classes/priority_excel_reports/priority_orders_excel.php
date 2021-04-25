@@ -68,12 +68,12 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		// get the date inputs
 		if(isset($_POST['from-date']) && isset($_POST['to-date'])) {
 			$fdate = date(DATE_ATOM, strtotime($_POST['from-date']));
-			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']));
+			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']. ' +1 day'));
 
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-			$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
         	
 		} else 
 		//by default enter date from begin of year to today
@@ -81,7 +81,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'ORDERS?$filter=CURDATE gt '.$begindate.' and CURDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 
@@ -94,8 +94,8 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
 		$in_tdata = isset($_POST['to-date']) ? $_POST['to-date'] : '';
 		echo "<form class='priority_form' method='POST'>";
-		echo __('FROM:','p18w')." <input type='text' name='from-date' id='from-date' placeholder='mm/dd/yyyy' value='".$in_fdata."' required />";
-		echo __('TO:','p18w')." <input type='text' name='to-date' id='to-date' placeholder='mm/dd/yyyy' value='".$in_tdata."' required />";
+		echo __('FROM:','p18w')." <input type='text' name='from-date' id='from-date' placeholder='dd/mm/yyyy' value='".$in_fdata."' required />";
+		echo __('TO:','p18w')." <input type='text' name='to-date' id='to-date' placeholder='dd/mm/yyyy' value='".$in_tdata."' required/>";
 		echo "<input type='submit' value='".__('submit','p18w')."' name='date'/>";
 		echo "</form>";
 		echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
@@ -133,16 +133,16 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		
 		if(!empty($_REQUEST['from_date']) && !empty($_REQUEST['to_date'])) {
 			$fdate = date(DATE_ATOM, strtotime($_REQUEST['from_date']));
-			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']));
+			$tdate = date(DATE_ATOM, strtotime($_REQUEST['to_date']. ' +1 day'));
 			
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   		$additionalurl = 'ORDERS?$filter=CURDATE gt '.$from_date.' and CURDATE lt '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		} else {
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
-			$additionalurl = 'ORDERS?$filter=CURDATE gt '.$begindate.' and CURDATE lt '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
