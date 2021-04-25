@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-14 09:00+0000\n"
+"POT-Creation-Date: 2021-04-19 08:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -192,4 +192,19 @@ msgid "FROM:"
 msgstr ""
 
 msgid "TO:"
+msgstr ""
+
+msgid "Priority Customer Documents"
+msgstr ""
+
+msgid "File Name"
+msgstr ""
+
+msgid "File Path"
+msgstr ""
+
+msgid "Suffix"
+msgstr ""
+
+msgid "Pay now"
 msgstr ""
