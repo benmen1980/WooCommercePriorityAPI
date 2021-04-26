@@ -135,6 +135,29 @@ class Obligo extends \PriorityAPI\API{
 	// simply pay module
     function simplypay(){
 	    if(isset($_GET['c'])){
+	        global $wpdb;
+	        $sql_result = $wpdb->get_results(
+	                'select
+                            p.order_id,
+                            p.order_item_id,
+                            p.order_item_name,
+                            p.order_item_type,
+                            pm.meta_value
+                            
+                            from
+                            wp_woocommerce_order_items as p,
+                            wp_woocommerce_order_itemmeta as pm
+                            where order_item_type = \'line_item\' 
+                            and p.order_item_id = pm.order_item_id
+                            and pm.meta_key = \'product-ivnum\' 
+                            and p.order_item_id = pm.order_item_id 
+                            and pm.meta_value = \''.$_GET['i'].'\'
+                            group by
+                            p.order_item_id'
+            );
+	        if(sizeof($sql_result)>0){
+	            wp_die(__('This invoice already been payed!','simply'));
+            }
 		    $cart_item_data['_other_options']['product-price'] = $_GET['pr'] ;
 		    $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
 		    WC()->session->set(
@@ -264,7 +287,6 @@ class Obligo extends \PriorityAPI\API{
 	}
 	return 'Recipet opened...';
 }
-
 	function add_search_form($items, $args) {
 		$session = WC()->session->get('session_vars');
         if($session['ordertype']=='Recipe'){
@@ -275,7 +297,6 @@ class Obligo extends \PriorityAPI\API{
         }
 		return $items;
 	}
-
 	function skyverge_empty_cart_notice() {
 
 		if ( WC()->cart->get_cart_contents_count() == 0 ) {
