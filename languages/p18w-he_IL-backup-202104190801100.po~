@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2021-04-25 09:22+0000\n"
+"PO-Revision-Date: 2021-03-16 11:37+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -110,9 +110,6 @@ msgstr "מספר הזמנה"
 msgid "Part Name"
 msgstr "מקט מוצר"
 
-msgid "Pay now"
-msgstr "שלם עכשיו"
-
 #: includes/classes/priority_receipt/priority_receipt.php:96
 msgid "PAYMENT CODE"
 msgstr "קוד תשלום"
@@ -198,9 +195,6 @@ msgstr "סה\"כ"
 
 msgid "TO:"
 msgstr "עד תאריך:"
-
-msgid "Total Payment:"
-msgstr "סה\"כ לתשלום:"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94

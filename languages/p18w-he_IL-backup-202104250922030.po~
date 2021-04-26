@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2021-04-25 09:22+0000\n"
+"PO-Revision-Date: 2021-04-19 08:01+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -198,9 +198,6 @@ msgstr "סה\"כ"
 
 msgid "TO:"
 msgstr "עד תאריך:"
-
-msgid "Total Payment:"
-msgstr "סה\"כ לתשלום:"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94
