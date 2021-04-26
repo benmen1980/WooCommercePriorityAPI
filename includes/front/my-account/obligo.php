@@ -145,8 +145,8 @@ class Obligo extends \PriorityAPI\API{
                             pm.meta_value
                             
                             from
-                            wp_woocommerce_order_items as p,
-                            wp_woocommerce_order_itemmeta as pm
+                            '.$wpdb->prefix.'woocommerce_order_items as p,
+                            '.$wpdb->prefix.'woocommerce_order_itemmeta as pm
                             where order_item_type = \'line_item\' 
                             and p.order_item_id = pm.order_item_id
                             and pm.meta_key = \'product-ivnum\' 
