@@ -110,16 +110,24 @@ class Obligo extends \PriorityAPI\API{
 		$data = $_POST['data'];
 		array_shift($data);
 		$response = true;
+		$product_ivnum = array();
+		foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
+			$product_ivnum[] = $values['_other_options']['product-ivnum'];
+		}
 		foreach ( $data as $key => $value ) {
 		        $arr= explode('#',$value['name']);
 				$cart_item_data = [];
 				$cart_item_data['_other_options']['product-price'] = $arr[0] ;
 				$cart_item_data['_other_options']['product-ivnum'] = $arr[1] ;
-				$product_id = wc_get_product_id_by_sku('PAYMENT');
-				$cart           = WC()->cart->add_to_cart( $product_id, 1, null, null, $cart_item_data );
-                if(!$cart){
-                    $response = false;
-                }
+				
+				//check that this item is not already in cart
+				if(!(in_array($arr[1], $product_ivnum))){
+					$product_id = wc_get_product_id_by_sku('PAYMENT');
+					$cart           = WC()->cart->add_to_cart( $product_id, 1, '0', array(), $cart_item_data );
+				}
+				if(!$cart){
+					$response = false;
+				}
 		}
 		if($response){
 			WC()->session->set(
@@ -261,12 +269,21 @@ class Obligo extends \PriorityAPI\API{
 		echo "</tr>";
 		global $woocommerce;
 		$items     = $woocommerce->cart->get_cart();
-		$cartcheck = empty( $items ) ? '' : 'disabled';
+		$retrive_data = WC()->session->get( 'session_vars' );
+		if((!empty($retrive_data ) && ($retrive_data['ordertype'] =="Recipe")) || empty( $items )){
+			$cartcheck = '';
+		}
+		else{
+			$cartcheck = 'disabled="disabled"';
+		}
+		if($cartcheck == 'disabled="disabled"'){
+			echo '<p>'.__('Please empty your bag first!','p18w').'</p>';
+		}
 		$i         = 1;
 		foreach ( $data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value ) {
 			echo "<tr>";
 			$arr = array( 'sum' => $value->SUM1, 'ivnum' => $value->IVNUM );
-			echo '<td><input type="checkbox" name="'.$value->SUM1 .'#'.$value->IVNUM.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' $cartcheck value="obligo_chk_sum' . $i . '"></td>';
+			echo '<td><input type="checkbox" '.$cartcheck.' name="'.$value->SUM1 .'#'.$value->IVNUM.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' value="obligo_chk_sum' . $i . '"></td>';
 			//echo "<input type='hidden'name='obligo_chk_sum" . $i . "' value='" . $value->SUM1 . "'>";
 			//echo "<input type='hidden'name='obligo_chk_ivnum" . $i . "' value='" . $value->IVNUM . "'>";
 
