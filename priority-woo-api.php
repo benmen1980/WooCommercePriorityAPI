@@ -109,8 +109,12 @@ register_deactivation_hook(P18AW_SELF, function(){
 
 // hook up
 add_action('plugins_loaded', function(){
-
-    $plugins = get_option('active_plugins');
+    if(is_multisite()){
+        $blog_id = \get_current_blog_id();
+        $plugins = get_blog_option($blog_id, 'active_plugins');
+    }else{
+        $plugins = get_option('active_plugins');
+    }
 
     // check for PriorityAPI
     
