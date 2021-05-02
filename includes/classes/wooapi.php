@@ -1039,6 +1039,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = '';
         $search_field = 'PARTNAME';
         $is_update_products = (bool)true;
+
         // config
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
@@ -1052,8 +1053,8 @@ class WooAPI extends \PriorityAPI\API
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
-        $url_addition = 'UDATE ge '.$bod;
-        $response = $this->makeRequest('GET', 'LOGPART?$filter='.urlencode($url_addition.' '.$url_addition_config).'&$expand=PARTUNSPECS_SUBFORM',[], $this->option('log_items_priority', true));
+        $url_addition = 'UDATE ge '.urlencode($bod);
+        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1212,20 +1213,21 @@ class WooAPI extends \PriorityAPI\API
                 */
                 update_post_meta($id, '_product_attributes', $thedata);
                 // sync image
-                $is_load_image = json_decode($config->is_load_image);
-                if(false == $is_load_image){
-                    continue ;
-                }
+                 $is_load_image = json_decode($config->is_load_image);
+                 if(false == $is_load_image){
+                     continue ;
+                 }
                 $sku =  $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
-                    $priority_image_path = $item['EXTFILENAME'];
-                    $images_url =  'https://'. $this->option('url').'/primail';
-                    $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
+                    $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
+                    $priority_image_path = str_replace('\\', '/', $priority_image_path); // "../../system/mail/pics/00093.jpg"
+                    $images_url =  'https://'. $this->option('url').'/primail'; //  https://priority.win-israel.co.il/primail
+                    $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path ); 
                     $file_path = $item['EXTFILENAME'];
                     $file_info = pathinfo( $file_path );
-                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
+                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename']; // "http://localhost/woocommerce/wp-content/uploads/2021/04/00093.jpg"
                     $attach_id = attachment_url_to_postid($url);
                     if($attach_id != 0){
                     }
@@ -1296,8 +1298,7 @@ class WooAPI extends \PriorityAPI\API
         $response_data = json_decode($response['body_raw'], true);
         foreach($response_data['value'] as $item) {
             $sku =  $item['PARTNAME'];
-            $main_attach_id = [];
-            $attachments = [$main_attach_id];
+            
             //$product_id = wc_get_product_id_by_sku($sku);
 
             $args = array(
@@ -1309,6 +1310,7 @@ class WooAPI extends \PriorityAPI\API
                     )
                 )
             );
+            $product_id = 0;
             $my_query = new \WP_Query( $args );
             if ( $my_query->have_posts() ) {
                 $my_query->the_post();
@@ -1320,6 +1322,11 @@ class WooAPI extends \PriorityAPI\API
             //**********
             $product = new \WC_Product($product_id);
             $product_media = $product->get_gallery_image_ids();
+
+            //$main_attach_id = [];
+            //$attachments = [$main_attach_id];
+            $attachments = [];
+            
             echo 'Starting process for product '.$sku.'<br>';
 
             foreach ( $item['PARTEXTFILE_SUBFORM'] as $attachment ) {
@@ -1336,7 +1343,7 @@ class WooAPI extends \PriorityAPI\API
                     if($id){
                         echo $file_path . ' already exists in media, add to product... <br>';
                         $is_existing_file = true;
-                        array_push( $attachments, $id );
+                        array_push( $attachments,  (int)$id );
                         continue;
                     }
                     // if is a new file, download from Priority and push to array
@@ -1344,17 +1351,18 @@ class WooAPI extends \PriorityAPI\API
                         $images_url =  'https://'. $this->option('url').'/primail';
                         echo 'File '.$file_path.' not exsits, downloading from '.$images_url,'<br>';
                         $priority_image_path = $file_path;
+                        $priority_image_path = str_replace('\\', '/', $priority_image_path);
                         $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path );
                         $thumb_id = download_attachment( $sku, $product_full_url );
-                        array_push( $attachments, $thumb_id );
+                        array_push( $attachments,  (int)$thumb_id );
                     };
                 }
             };
             //  add here merge to files that exists in wp and not exists in the response from API
             $image_id_array = array_merge($product_media, $attachments);
-            // https://stackoverflow.com/questions/43521429/add-multiple-images-to-woocommerce-product
-            update_post_meta($product_id, '_product_image_gallery',$image_id_array);
-
+                // https://stackoverflow.com/questions/43521429/add-multiple-images-to-woocommerce-product
+            //update_post_meta($product_id, '_product_image_gallery',$image_id_array); not correct can not pass array
+            update_post_meta($product_id, '_product_image_gallery',implode(',',$image_id_array));
         }
         $output_string = ob_get_contents();
         ob_end_clean();

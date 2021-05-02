@@ -24,7 +24,7 @@ jQuery(document).ready(function($) {
 				}
 				});
 			}
-			jQuery(".total_payment_checked").text(($total_check_sum/1000).toFixed(3));
+			jQuery(".total_payment_checked").text(($total_check_sum).toFixed(2));
 
 		});
 	});

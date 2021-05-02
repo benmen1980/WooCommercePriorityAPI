@@ -149,6 +149,19 @@ add_action('plugins_loaded', function(){
                 require P18AW_CLASSES_DIR . 'priority_documents/priority_documents.php';
                 \priority_documents::instance()->run();
 
+                //load prority documents(return from customer)
+                require P18AW_CLASSES_DIR . 'priority_delivery_customer/priority_delivery_customer.php';
+                \priority_delivery_customer::instance()->run();
+
+                
+                //load prority documents(return from customer)
+                require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
+                \priority_return_customer::instance()->run();
+
+                //load prority central invoices
+                require P18AW_CLASSES_DIR . 'priority_cinvoices/priority_cinvoices.php';
+                \priority_cinvoices::instance()->run();
+
                 require P18AW_ADMIN_DIR . 'packs.php';
                 if (WooAPI::instance()->option('sites')) {
                     include_once dirname(__FILE__) . '/includes/front/sites/sites.php';
