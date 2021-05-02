@@ -109,9 +109,10 @@ register_deactivation_hook(P18AW_SELF, function(){
 
 // hook up
 add_action('plugins_loaded', function(){
+
     if(is_multisite()){
         $blog_id = \get_current_blog_id();
-        $plugins = get_blog_option($blog_id, 'active_plugins');
+        $plugins = \get_blog_option($blog_id, 'active_plugins');
     }else{
         $plugins = get_option('active_plugins');
     }
@@ -155,8 +156,8 @@ add_action('plugins_loaded', function(){
 
                 
                 //load prority documents(return from customer)
-                require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
-                \priority_return_customer::instance()->run();
+               // require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
+             //   \priority_return_customer::instance()->run();
 
                 //load prority central invoices
                 require P18AW_CLASSES_DIR . 'priority_cinvoices/priority_cinvoices.php';
