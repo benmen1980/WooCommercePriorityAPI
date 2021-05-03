@@ -51,7 +51,7 @@ class Priority_delivery_customer extends \PriorityAPI\API{
 
 			<div class="woocommerce-MyAccount-content-priority-orders">
 
-				<p><?php _e('Priority Documents','p18w'); ?></p>
+				<p><?php _e('Priority Delivery Customer','p18w'); ?></p>
 				<?php do_action('p18a_request_front_prioritydelivery'); ?>
 
 			</div>
