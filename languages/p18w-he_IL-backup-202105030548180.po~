@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2021-04-25 09:22+0000\n"
+"PO-Revision-Date: 2021-05-03 05:47+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -25,6 +25,9 @@ msgstr "תאריך למאזן"
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "BOOK Number"
 msgstr "מספר פנקס"
+
+msgid "CDES"
+msgstr "פרטים"
 
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Customer Name"
@@ -55,6 +58,12 @@ msgstr "מחיר מוזל"
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "DISPRICE"
 msgstr "מחיר הנחה"
+
+msgid "DISPRICEEXCVAT"
+msgstr ""
+
+msgid "Error, duplicate 1: DISPRICEEXCVAT"
+msgstr ""
 
 msgid "Export Excel"
 msgstr "ייצוא לאקסל"
@@ -90,6 +99,9 @@ msgstr "סוג חשבונית"
 #: includes/classes/wooapi.php:124
 msgid "Login to see prices"
 msgstr "התחבר כדי לראות מחירים"
+
+msgid "New message"
+msgstr ""
 
 #: includes/front/my-account/obligo.php:50
 #: includes/front/my-account/obligo.php:60
@@ -139,8 +151,17 @@ msgstr ""
 msgid "Price"
 msgstr "מחיר"
 
+msgid "Priority Cinvoices"
+msgstr "חשבוניות מרכזת פריוריטי"
+
 msgid "Priority Customer Documents"
 msgstr "מסמכי לקוחות פריוריטי"
+
+msgid "Priority delivery"
+msgstr "תעודות משלוח פריוריטי"
+
+msgid "Priority Delivery Customer"
+msgstr "תעודות משלוח פריוריטי"
 
 #: includes/classes/priority_invoices/priority_invoices.php:44
 #: includes/classes/priority_invoices/priority_invoices.php:54
@@ -156,6 +177,12 @@ msgstr "הזמנות פריוריטי"
 #: includes/classes/priority_receipt/priority_receipt.php:54
 msgid "Priority Receipts"
 msgstr "קבלות פריוריטי"
+
+msgid "Priority return"
+msgstr "החזרות מלקוחות פריוריטי"
+
+msgid "Priority Return Customer"
+msgstr "החזרות מלקוחות פריוריטי"
 
 #. Name of the plugin
 msgid "Priority Woocommerce API"
@@ -206,6 +233,9 @@ msgstr "סה\"כ לתשלום:"
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Total Price"
 msgstr "סה\"כ מחיר"
+
+msgid "Total Price Include VAT"
+msgstr ""
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94
