@@ -2141,6 +2141,9 @@ class WooAPI extends \PriorityAPI\API
             $data['CARDNUM']     = $cardnum;
         //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
         }
+        if($is_order){
+            $data['EMAIL'] = $order->get_billing_email();
+        }
         return $data;
     }
     public function post_prospect($order)
