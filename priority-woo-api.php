@@ -156,8 +156,8 @@ add_action('plugins_loaded', function(){
 
                 
                 //load prority documents(return from customer)
-               // require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
-             //   \priority_return_customer::instance()->run();
+                require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
+                \priority_return_customer::instance()->run();
 
                 //load prority central invoices
                 require P18AW_CLASSES_DIR . 'priority_cinvoices/priority_cinvoices.php';

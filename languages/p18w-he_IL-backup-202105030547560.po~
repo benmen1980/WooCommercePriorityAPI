@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2021-04-19 08:01+0000\n"
+"PO-Revision-Date: 2021-05-03 05:41+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -139,8 +139,17 @@ msgstr ""
 msgid "Price"
 msgstr "מחיר"
 
+msgid "Priority Cinvoices"
+msgstr "חשבוניות מרכזת פריוריטי"
+
 msgid "Priority Customer Documents"
 msgstr "מסמכי לקוחות פריוריטי"
+
+msgid "Priority delivery"
+msgstr "תעודות משלוח פריוריטי"
+
+msgid "Priority Delivery Customer"
+msgstr "תעודות משלוח פריוריטי"
 
 #: includes/classes/priority_invoices/priority_invoices.php:44
 #: includes/classes/priority_invoices/priority_invoices.php:54
@@ -156,6 +165,12 @@ msgstr "הזמנות פריוריטי"
 #: includes/classes/priority_receipt/priority_receipt.php:54
 msgid "Priority Receipts"
 msgstr "קבלות פריוריטי"
+
+msgid "Priority return"
+msgstr "החזרות מלקוחות פריוריטי"
+
+msgid "Priority Return Customer"
+msgstr "החזרות מלקוחות פריוריטי"
 
 #. Name of the plugin
 msgid "Priority Woocommerce API"
@@ -198,6 +213,9 @@ msgstr "סה\"כ"
 
 msgid "TO:"
 msgstr "עד תאריך:"
+
+msgid "Total Payment:"
+msgstr "סה\"כ לתשלום:"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94
