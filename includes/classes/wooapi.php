@@ -1045,42 +1045,38 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
         $daysback = (int)$config->days_back;
+        $synclongtext = $config->synclongtext;
         $url_addition_config = $config->additional_url;
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_update_products = json_decode($config->is_update_products);
-        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
-        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = 'UDATE ge '.urlencode($bod);
-        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM',[], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
             foreach($response_data['value'] as $item) {
                 // add long text from Priority
-                /*
 	            $content = '';
 	            $post_content = '';
 	            if(isset($item['PARTTEXT_SUBFORM']) ) {
 		            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
-			            $content .= $text['TEXT'];
+                        $content .= $text;
 		            }
-		            $content = str_replace("pdir","p dir",$content);
-		            $cleancontent = explode("</style>",$content);
-
-		            $post_content = $cleancontent[1];
 	            }
-                */
                 $data = [
                     'post_author' => 1,
-                    'post_content' =>  (isset($cleancontent[1]) ?  $cleancontent[1] : 'no content'),
+                    //'post_content' =>  $content,
                     'post_status'  => $this->option('item_status'),
                     'post_title'   => $item['PARTDES'],
                     'post_parent'  => '',
                     'post_type'    => 'product',
                 ];
+	            if($synclongtext){
+                    $data['post_content'] = $content;
+                }
                 // if product exsits, update
                 $search_by_value = $item[$search_field];
                 $args = array(
@@ -1117,17 +1113,33 @@ class WooAPI extends \PriorityAPI\API
                     $id = $product_id;
                     global $wpdb;
                     // @codingStandardsIgnoreStart
-                    $wpdb->query(
-                        $wpdb->prepare(
-                            "
+                    if($synclongtext){
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "
+							UPDATE $wpdb->posts
+							SET post_title = '%s',
+							post_content = '%s'
+							WHERE ID = '%s'
+							",
+                                $item['PARTDES'],
+                                $content,
+                                $id
+                            )
+                        );
+                    }else{
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "
 							UPDATE $wpdb->posts
 							SET post_title = '%s'
 							WHERE ID = '%s'
 							",
-                            $item['PARTDES'],
-                            $id
-                        )
-                    );
+                                $item['PARTDES'],
+                                $id
+                            )
+                        );
+                    }
                 } else {
                     // Insert product
                     $id = wp_insert_post($data);
