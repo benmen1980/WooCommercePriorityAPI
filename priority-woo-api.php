@@ -20,7 +20,7 @@
 namespace PriorityWoocommerceAPI;
 
 // Priority Woocommerce API
-define('P18AW_VERSION'       , '1.107');
+define('P18AW_VERSION'       , '1.07');
 define('P18AW_SELF'          , __FILE__);
 define('P18AW_URI'           , plugin_dir_url(__FILE__));
 define('P18AW_DIR'           , plugin_dir_path(__FILE__)); 
