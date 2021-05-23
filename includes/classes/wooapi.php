@@ -383,26 +383,10 @@ class WooAPI extends \PriorityAPI\API
                             break;
 
                         case 'order_meta';
-                            $term_name = 'TWISTER';
-                            $taxonomy  = 'pa_שם-המחזיק';
-                            $term_slug = get_term_by('name', $term_name, $taxonomy )->slug;
-                            $data = $term_slug;
-                        /*
                             $id = $_GET['ord'];
                             $order = new \WC_Order($id);
-                            foreach( $order->get_coupon_codes() as $coupon_code ) {
-                                // Get the WC_Coupon object
-                                $coupon = new \WC_Coupon($coupon_code);
-                                $discount_type = $coupon->get_discount_type(); // Get coupon discount type
-                                $coupon_amount = $coupon->get_amount(); // Get coupon amount
-                                $data = $discount_type.' '.$coupon_amount.',<br>';
-
-                            }
-                        */
-                        highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
-
-
-
+                            $data = get_post_meta($_GET['ord']);
+                            highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'customersProducts';
                             include P18AW_ADMIN_DIR . 'customersProducts.php';
@@ -529,33 +513,20 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
                 $this->updateOption('obligo',              $this->post('obligo'));
                 $this->updateOption('setting-config',              $this->post('setting-config'));
-
-
-
-
-
-
-
-
-
                 // save shipping conversion table
                 if($this->post('shipping')) {
                     foreach ( $this->post( 'shipping' ) as $key => $value ) {
                         $this->updateOption( 'shipping_' . $key, $value );
                     }
                 }
-
                 // save payment conversion table
                 if($this->post( 'payment' )) {
                     foreach ( $this->post( 'payment' ) as $key => $value ) {
                         $this->updateOption( 'payment_' . $key, $value );
                     }
                 }
-
                 $this->notify('Settings saved');
-
             }
-
             // save sync settings
             if ($this->post('p18aw-save-sync') && wp_verify_nonce($this->post('p18aw-nonce'), 'save-sync')) {
                 $this->updateOption('log_items_priority',                   $this->post('log_items_priority'));
