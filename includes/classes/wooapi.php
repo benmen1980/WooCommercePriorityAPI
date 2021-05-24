@@ -1706,21 +1706,19 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-
                     $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[4];
                     if(!empty($statuses)){
                         $stock -= $this->get_items_total_by_status($product_id);
                         $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
                     }
-
-                    $stock = apply_filters( 'simply_sync_inventory_priority', $item );
-
+                    $item['stock'] = $stock;
+                    $item = apply_filters('simply_sync_inventory_priority',$item);
+                    $stock = $item['stock'];
                     update_post_meta($product_id, '_stock', $stock);
                     // set stock status
                     if (intval($stock) > 0) {
                        // update_post_meta($product_id, '_stock_status', 'instock');
                        $stock_status = 'instock';
-
                     } else {
                        // update_post_meta($product_id, '_stock_status', 'outofstock');
                         $stock_status = 'outofstock';
@@ -1729,12 +1727,9 @@ class WooAPI extends \PriorityAPI\API
                    // $variation->set_stock_status($stock_status);
                     $variation->save();
                 }
-
             }
-
             // add timestamp
             $this->updateOption('inventory_priority_update', time());
-
         } else {
             /**
              * t149
@@ -1744,9 +1739,7 @@ class WooAPI extends \PriorityAPI\API
                 'Error Sync Inventory Priority',
                 $response['body']
             );
-
         }
-
     }
     public function syncPacksPriority()
     {
