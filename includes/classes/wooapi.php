@@ -1168,14 +1168,39 @@ class WooAPI extends \PriorityAPI\API
                         'is_visible' => '1',
                         'is_taxonomy' => '1'
                     );
-                    // this cose moved to end, to update after all attributes
-                    //update_post_meta($id, '_product_attributes', $thedata);
                 }
-                // custom attributes
-                $item['id'] = $id;
-                $item['the_data'] = $thedata;
-                $item = apply_filters('simply_sync_attribute_from_priority',$item);
-                $thedata = $item['the_data'];
+                /* loop over array of custom attributes */
+                $custom_attrs = [
+                        /*
+                        ['צבע','color33','SPEC5'],
+                        ['AAA','color34','SPEC6'],
+                        ['BBB','color35','SPEC7'],
+                        */
+                ];
+                $custom_attrs = apply_filters('simply_add_custom_attributes',$custom_attrs);
+                foreach ($custom_attrs as $attr){
+                    $attr_name = $attr[0];
+                    $attr_slug = $attr[1];
+                    $attr_value = $item[$attr[2]];
+                    if(!is_attribute_exists($attr_slug)) {
+                        $attribute_id = wc_create_attribute(
+                            array(
+                                'name' => $attr_name,
+                                'slug' => $attr_slug,
+                                'type' => 'select',
+                                'order_by' => 'menu_order',
+                                'has_archives' => 0,
+                            )
+                        );
+                    }
+                    wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
+                    $thedata['pa_'.$attr_slug] = array(
+                        'name' => 'pa_'.$attr_slug,
+                        'value' => $attr_value,
+                        'is_visible' => '1',
+                        'is_taxonomy' => '1'
+                    );
+                }
                 update_post_meta($id, '_product_attributes', $thedata);
                 // add code like this in functions.php to import attributes, see docs for details
                 /*
