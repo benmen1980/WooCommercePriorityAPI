@@ -991,7 +991,7 @@ class WooAPI extends \PriorityAPI\API
     /**
      * sync items from priority
      */
-    private function is_attribute_exists($slug){
+    public function is_attribute_exists($slug){
         $is_attr_exists = false;
         $attribute_taxonomies = wc_get_attribute_taxonomies();
         if ( $attribute_taxonomies ) {
@@ -1168,9 +1168,16 @@ class WooAPI extends \PriorityAPI\API
                         'is_visible' => '1',
                         'is_taxonomy' => '1'
                     );
-                    update_post_meta($id, '_product_attributes', $thedata);
+                    // this cose moved to end, to update after all attributes
+                    //update_post_meta($id, '_product_attributes', $thedata);
                 }
-                // add spec 5 as attribute
+                // custom attributes
+                $item['id'] = $id;
+                $item['the_data'] = $thedata;
+                $item = apply_filters('simply_sync_attribute_from_priority',$item);
+                $thedata = $item['the_data'];
+                update_post_meta($id, '_product_attributes', $thedata);
+                // add code like this in functions.php to import attributes, see docs for details
                 /*
                 $attr_name = 'סוג הצגה';
                 $attr_slug = spec5;
@@ -1194,7 +1201,6 @@ class WooAPI extends \PriorityAPI\API
                     'is_taxonomy' => '1'
                 );
                 */
-                update_post_meta($id, '_product_attributes', $thedata);
                 // sync image
                  $is_load_image = json_decode($config->is_load_image);
                  if(false == $is_load_image){
@@ -1589,6 +1595,7 @@ class WooAPI extends \PriorityAPI\API
                     $attrnames = str_replace("pa_", "", $attribute['name']);
                 }
             }
+            var_dump($meta);
             $body =[
                 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
