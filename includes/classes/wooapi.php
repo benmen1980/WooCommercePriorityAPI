@@ -397,8 +397,10 @@ class WooAPI extends \PriorityAPI\API
                         case 'packs';
                             $this->syncPacksPriority();
                             break;
+                        case 'syncItemsPriority';
+                            $this->syncItemsPriority();
+                            break;
                         default:
-
                             include P18AW_ADMIN_DIR . 'settings.php';
                     }
 
@@ -1613,6 +1615,13 @@ class WooAPI extends \PriorityAPI\API
             $method = in_array($meta['_sku'][0], $SKU) ? 'PATCH' : 'POST';
 
             $terms = get_the_terms(($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'product_cat' );
+
+            foreach ( $terms as $term ) {
+                $cat_id = $term->id;
+            }
+            $attr = get_the_terms ( ($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'pa_size' );
+            $size = $attr[0]->name;
+
             $attributes = wc_get_product($product->ID)->get_attributes();
             $product_attr = get_post_meta($product->ID, '_product_attributes' );
             foreach ($product_attr as $attr) {
@@ -1620,7 +1629,7 @@ class WooAPI extends \PriorityAPI\API
                     $attrnames = str_replace("pa_", "", $attribute['name']);
                 }
             }
-            var_dump($meta);
+           //
             $body =[
                 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
@@ -1629,7 +1638,10 @@ class WooAPI extends \PriorityAPI\API
                 'SPEC1'       => $terms[0]->name
             ];
             // here I need to apply filter to manipulate the json
+
+            $body['product'] = $product;
             $body = apply_filters('simply_sync_items_to_priority',$body);
+            unset($body['product']);
 
             $res = $this->makeRequest($method, 'LOGPART', ['body' => json_encode($body)], $this->option('log_items_web', true));
             if (!$res['status']) {
