@@ -1015,7 +1015,7 @@ class WooAPI extends \PriorityAPI\API
 
         // config
         $raw_option = $this->option('sync_items_priority_config');
-        $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
+        $raw_option = str_replace(array( "\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
         $daysback = (int)$config->days_back;
         $synclongtext = $config->synclongtext;
@@ -1184,7 +1184,7 @@ class WooAPI extends \PriorityAPI\API
                     $attr_name = $attr[0];
                     $attr_slug = $attr[1];
                     $attr_value = $item[$attr[2]];
-                    if(!is_attribute_exists($attr_slug)) {
+                    if(!$this->is_attribute_exists($attr_slug)) {
                         $attribute_id = wc_create_attribute(
                             array(
                                 'name' => $attr_name,
@@ -1238,12 +1238,16 @@ class WooAPI extends \PriorityAPI\API
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
-                    $priority_image_path = str_replace('\\', '/', $priority_image_path); // "../../system/mail/pics/00093.jpg"
-                    $images_url =  'https://'. $this->option('url').'/primail'; //  https://priority.win-israel.co.il/primail
+                    $priority_image_path = str_replace('\\', '/', $priority_image_path);
+                    $images_url =  'https://'. $this->option('url').'/primail';
+                    $image_base_url = $config->image_base_url;
+                    if(!empty($image_base_url )){
+                        $images_url = $image_base_url;
+                    }
                     $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path ); 
                     $file_path = $item['EXTFILENAME'];
                     $file_info = pathinfo( $file_path );
-                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename']; // "http://localhost/woocommerce/wp-content/uploads/2021/04/00093.jpg"
+                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
                     $attach_id = attachment_url_to_postid($url);
                     if($attach_id != 0){
                     }
@@ -1638,11 +1642,9 @@ class WooAPI extends \PriorityAPI\API
                 'SPEC1'       => $terms[0]->name
             ];
             // here I need to apply filter to manipulate the json
-
             $body['product'] = $product;
             $body = apply_filters('simply_sync_items_to_priority',$body);
             unset($body['product']);
-
             $res = $this->makeRequest($method, 'LOGPART', ['body' => json_encode($body)], $this->option('log_items_web', true));
             if (!$res['status']) {
                 $this->sendEmailError(
@@ -1696,7 +1698,7 @@ class WooAPI extends \PriorityAPI\API
         if($this->option('variation_field')) {
           //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
+        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' and PARTNAME eq \'699858559091\'&$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
 
         // check response status
         if ($response['status']) {
