@@ -88,6 +88,9 @@ class Obligo extends \PriorityAPI\API{
 
 		//check all orders that have payment item
 		add_action( 'woocommerce_thankyou', [$this,'check_payment_order']);
+
+		//redirect cart to checkout if  תשלום חוב
+		add_action( 'template_redirect', [$this,'redirect_visitor']);
 	}
 	/****** add same item with different price to cart *********/
 	/*****************************************/
@@ -384,6 +387,19 @@ class Obligo extends \PriorityAPI\API{
 				'ordertype' => ''));
 	
 	}
+
+	function redirect_visitor(){
+        if ( is_page( 'cart' ) || is_cart() ) {
+            $retrive_data = WC()->session->get( 'session_vars' );
+            // check if תשלום חוב session is set
+            if(!empty($retrive_data ) && ($retrive_data['ordertype'] == "Recipe")){
+                global $woocommerce;
+                $checkout_url = $woocommerce->cart->get_checkout_url();
+                wp_safe_redirect($checkout_url);
+                exit;
+            }
+        }
+    }
 }
 
 
