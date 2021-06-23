@@ -85,6 +85,9 @@ class Obligo extends \PriorityAPI\API{
 
 		// update order item by cart item data
 		add_action( 'woocommerce_checkout_create_order_line_item', [$this,'custom_field_update_order_item_meta'], 20, 4 );
+
+		//check all orders that have payment item
+		add_action( 'woocommerce_thankyou', [$this,'check_payment_order']);
 	}
 	/****** add same item with different price to cart *********/
 	/*****************************************/
@@ -95,8 +98,9 @@ class Obligo extends \PriorityAPI\API{
 
 		wp_localize_script( 'ajax-script', 'my_ajax_object',
 			array( 'ajax_url' => admin_url( 'admin-ajax.php' ),
-			       'woo_cart_url' => get_permalink( wc_get_page_id( 'cart' ) )
-                  )
+				'woo_checkout_url' => wc_get_checkout_url()
+				//'woo_cart_url' => get_permalink( wc_get_page_id( 'cart' ) )
+			)
         );
 	}
 	public function add_item_from_url(){
@@ -132,8 +136,8 @@ class Obligo extends \PriorityAPI\API{
 		if($response){
 			WC()->session->set(
 				'session_vars',
-				array(
-					'ordertype' => 'Recipe'));
+				array('ordertype' => 'Recipe' )
+			);
         }
 		$data = [$response];
 		wp_send_json_success($data);
@@ -273,20 +277,30 @@ class Obligo extends \PriorityAPI\API{
 		global $woocommerce;
 		$items     = $woocommerce->cart->get_cart();
 		$retrive_data = WC()->session->get( 'session_vars' );
-		if((!empty($retrive_data ) && ($retrive_data['ordertype'] =="Recipe")) || empty( $items )){
-			$cartcheck = '';
-		}
-		else{
-			$cartcheck = 'disabled="disabled"';
-		}
-		if($cartcheck == 'disabled="disabled"'){
-			echo '<p>'.__('Please empty your bag first!','p18w').'</p>';
-		}
+		$retrieve_ivnum = WC()->session->get( 'pdt_ivnum' );
+
 		$i         = 1;
 		foreach ( $data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value ) {
 			echo "<tr>";
 			$arr = array( 'sum' => $value->SUM1, 'ivnum' => $value->IVNUM );
-			echo '<td><input type="checkbox" '.$cartcheck.' name="'.$value->SUM1 .'#'.$value->IVNUM.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' value="obligo_chk_sum' . $i . '"></td>';
+			//check if already pay for this ivnum
+			if(in_array($value->IVNUM,$retrieve_ivnum))	{
+				$disabled = 'disabled="disabled"';
+			}
+			else{
+				$disabled = '';
+				if(!empty($items) && ($retrive_data['ordertype'] =='')){
+					$cartcheck = 'disabled="disabled"';
+				}
+				elseif((!empty($retrive_data ) && ($retrive_data['ordertype'] =="Recipe")) || empty( $items )){
+					$cartcheck = '';
+				}
+			}
+			if($cartcheck == 'disabled="disabled"'){
+				echo '<p>'.__('Please empty your bag first!','p18w').'</p>';
+				//continue;
+			}
+			echo '<td><input type="checkbox" '.$cartcheck.' '.$disabled. ' name="'.$value->SUM1 .'#'.$value->IVNUM.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' value="obligo_chk_sum' . $i . '"></td>';
 			//echo "<input type='hidden'name='obligo_chk_sum" . $i . "' value='" . $value->SUM1 . "'>";
 			//echo "<input type='hidden'name='obligo_chk_ivnum" . $i . "' value='" . $value->IVNUM . "'>";
 
@@ -342,6 +356,33 @@ class Obligo extends \PriorityAPI\API{
 			$item->update_meta_data( __('product-ivnum'), $ivnum );
 
 		//return $cart_item_data;
+	}
+
+	
+	function check_payment_order(){
+		global $wpdb;
+		$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}posts WHERE post_type LIKE 'shop_order'");
+		$pdt_ivnums = array();
+		// Loop through each order post object
+		foreach( $results as $result ){
+			$order_id = $result->ID; // The Order ID
+			$order = new WC_Order( $order_id );
+			if (empty($order)) return false;
+			$items = $order->get_items();
+			foreach ( $order->get_items() as $item_id => $item ) {
+				$product_ivnum = $item->get_meta('product-ivnum');
+				$pdt_ivnums[] = $product_ivnum;
+				//put in session all 'payment' items from all order after checkout
+				WC()->session->set(
+					'pdt_ivnum',$pdt_ivnums);
+			}  
+		}
+		//after checkout, empty ordertype session
+		WC()->session->set(
+			'session_vars',
+			array(
+				'ordertype' => ''));
+	
 	}
 }
 
