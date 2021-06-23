@@ -383,26 +383,10 @@ class WooAPI extends \PriorityAPI\API
                             break;
 
                         case 'order_meta';
-                            $term_name = 'TWISTER';
-                            $taxonomy  = 'pa_שם-המחזיק';
-                            $term_slug = get_term_by('name', $term_name, $taxonomy )->slug;
-                            $data = $term_slug;
-                        /*
                             $id = $_GET['ord'];
                             $order = new \WC_Order($id);
-                            foreach( $order->get_coupon_codes() as $coupon_code ) {
-                                // Get the WC_Coupon object
-                                $coupon = new \WC_Coupon($coupon_code);
-                                $discount_type = $coupon->get_discount_type(); // Get coupon discount type
-                                $coupon_amount = $coupon->get_amount(); // Get coupon amount
-                                $data = $discount_type.' '.$coupon_amount.',<br>';
-
-                            }
-                        */
-                        highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
-
-
-
+                            $data = get_post_meta($_GET['ord']);
+                            highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'customersProducts';
                             include P18AW_ADMIN_DIR . 'customersProducts.php';
@@ -413,8 +397,10 @@ class WooAPI extends \PriorityAPI\API
                         case 'packs';
                             $this->syncPacksPriority();
                             break;
+                        case 'syncItemsPriority';
+                            $this->syncItemsPriority();
+                            break;
                         default:
-
                             include P18AW_ADMIN_DIR . 'settings.php';
                     }
 
@@ -529,33 +515,20 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('mailing_list_field',  $this->post('mailing_list_field'));
                 $this->updateOption('obligo',              $this->post('obligo'));
                 $this->updateOption('setting-config',              $this->post('setting-config'));
-
-
-
-
-
-
-
-
-
                 // save shipping conversion table
                 if($this->post('shipping')) {
                     foreach ( $this->post( 'shipping' ) as $key => $value ) {
                         $this->updateOption( 'shipping_' . $key, $value );
                     }
                 }
-
                 // save payment conversion table
                 if($this->post( 'payment' )) {
                     foreach ( $this->post( 'payment' ) as $key => $value ) {
                         $this->updateOption( 'payment_' . $key, $value );
                     }
                 }
-
                 $this->notify('Settings saved');
-
             }
-
             // save sync settings
             if ($this->post('p18aw-save-sync') && wp_verify_nonce($this->post('p18aw-nonce'), 'save-sync')) {
                 $this->updateOption('log_items_priority',                   $this->post('log_items_priority'));
@@ -1020,7 +993,7 @@ class WooAPI extends \PriorityAPI\API
     /**
      * sync items from priority
      */
-    private function is_attribute_exists($slug){
+    public function is_attribute_exists($slug){
         $is_attr_exists = false;
         $attribute_taxonomies = wc_get_attribute_taxonomies();
         if ( $attribute_taxonomies ) {
@@ -1042,45 +1015,41 @@ class WooAPI extends \PriorityAPI\API
 
         // config
         $raw_option = $this->option('sync_items_priority_config');
-        $raw_option = str_replace(array('.',  "\n", "\t", "\r"), '', $raw_option);
+        $raw_option = str_replace(array( "\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
         $daysback = (int)$config->days_back;
+        $synclongtext = $config->synclongtext;
         $url_addition_config = $config->additional_url;
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_update_products = json_decode($config->is_update_products);
-        //$response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'', [], $this->option('log_items_priority', true));
-        // $response = $this->makeRequest('GET', 'LOGPART?$filter='.$this->option('variation_field').' eq \'\' and ROYY_ISUDATE eq \'Y\'&$expand=PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = 'UDATE ge '.urlencode($bod);
-        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM',[], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
             foreach($response_data['value'] as $item) {
                 // add long text from Priority
-                /*
 	            $content = '';
 	            $post_content = '';
 	            if(isset($item['PARTTEXT_SUBFORM']) ) {
 		            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
-			            $content .= $text['TEXT'];
+                        $content .= $text;
 		            }
-		            $content = str_replace("pdir","p dir",$content);
-		            $cleancontent = explode("</style>",$content);
-
-		            $post_content = $cleancontent[1];
 	            }
-                */
                 $data = [
                     'post_author' => 1,
-                    'post_content' =>  (isset($cleancontent[1]) ?  $cleancontent[1] : 'no content'),
+                    //'post_content' =>  $content,
                     'post_status'  => $this->option('item_status'),
                     'post_title'   => $item['PARTDES'],
                     'post_parent'  => '',
                     'post_type'    => 'product',
                 ];
+	            if($synclongtext){
+                    $data['post_content'] = $content;
+                }
                 // if product exsits, update
                 $search_by_value = $item[$search_field];
                 $args = array(
@@ -1117,17 +1086,33 @@ class WooAPI extends \PriorityAPI\API
                     $id = $product_id;
                     global $wpdb;
                     // @codingStandardsIgnoreStart
-                    $wpdb->query(
-                        $wpdb->prepare(
-                            "
+                    if($synclongtext){
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "
+							UPDATE $wpdb->posts
+							SET post_title = '%s',
+							post_content = '%s'
+							WHERE ID = '%s'
+							",
+                                $item['PARTDES'],
+                                $content,
+                                $id
+                            )
+                        );
+                    }else{
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "
 							UPDATE $wpdb->posts
 							SET post_title = '%s'
 							WHERE ID = '%s'
 							",
-                            $item['PARTDES'],
-                            $id
-                        )
-                    );
+                                $item['PARTDES'],
+                                $id
+                            )
+                        );
+                    }
                 } else {
                     // Insert product
                     $id = wp_insert_post($data);
@@ -1185,9 +1170,41 @@ class WooAPI extends \PriorityAPI\API
                         'is_visible' => '1',
                         'is_taxonomy' => '1'
                     );
-                    update_post_meta($id, '_product_attributes', $thedata);
                 }
-                // add spec 5 as attribute
+                /* loop over array of custom attributes */
+                $custom_attrs = [
+                        /*
+                        ['צבע','color33','SPEC5'],
+                        ['AAA','color34','SPEC6'],
+                        ['BBB','color35','SPEC7'],
+                        */
+                ];
+                $custom_attrs = apply_filters('simply_add_custom_attributes',$custom_attrs);
+                foreach ($custom_attrs as $attr){
+                    $attr_name = $attr[0];
+                    $attr_slug = $attr[1];
+                    $attr_value = $item[$attr[2]];
+                    if(!$this->is_attribute_exists($attr_slug)) {
+                        $attribute_id = wc_create_attribute(
+                            array(
+                                'name' => $attr_name,
+                                'slug' => $attr_slug,
+                                'type' => 'select',
+                                'order_by' => 'menu_order',
+                                'has_archives' => 0,
+                            )
+                        );
+                    }
+                    wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
+                    $thedata['pa_'.$attr_slug] = array(
+                        'name' => 'pa_'.$attr_slug,
+                        'value' => $attr_value,
+                        'is_visible' => '1',
+                        'is_taxonomy' => '1'
+                    );
+                }
+                update_post_meta($id, '_product_attributes', $thedata);
+                // add code like this in functions.php to import attributes, see docs for details
                 /*
                 $attr_name = 'סוג הצגה';
                 $attr_slug = spec5;
@@ -1211,7 +1228,6 @@ class WooAPI extends \PriorityAPI\API
                     'is_taxonomy' => '1'
                 );
                 */
-                update_post_meta($id, '_product_attributes', $thedata);
                 // sync image
                  $is_load_image = json_decode($config->is_load_image);
                  if(false == $is_load_image){
@@ -1222,12 +1238,16 @@ class WooAPI extends \PriorityAPI\API
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
-                    $priority_image_path = str_replace('\\', '/', $priority_image_path); // "../../system/mail/pics/00093.jpg"
-                    $images_url =  'https://'. $this->option('url').'/primail'; //  https://priority.win-israel.co.il/primail
+                    $priority_image_path = str_replace('\\', '/', $priority_image_path);
+                    $images_url =  'https://'. $this->option('url').'/primail';
+                    $image_base_url = $config->image_base_url;
+                    if(!empty($image_base_url )){
+                        $images_url = $image_base_url;
+                    }
                     $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path ); 
                     $file_path = $item['EXTFILENAME'];
                     $file_info = pathinfo( $file_path );
-                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename']; // "http://localhost/woocommerce/wp-content/uploads/2021/04/00093.jpg"
+                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
                     $attach_id = attachment_url_to_postid($url);
                     if($attach_id != 0){
                     }
@@ -1599,6 +1619,13 @@ class WooAPI extends \PriorityAPI\API
             $method = in_array($meta['_sku'][0], $SKU) ? 'PATCH' : 'POST';
 
             $terms = get_the_terms(($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'product_cat' );
+
+            foreach ( $terms as $term ) {
+                $cat_id = $term->id;
+            }
+            $attr = get_the_terms ( ($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'pa_size' );
+            $size = $attr[0]->name;
+
             $attributes = wc_get_product($product->ID)->get_attributes();
             $product_attr = get_post_meta($product->ID, '_product_attributes' );
             foreach ($product_attr as $attr) {
@@ -1606,6 +1633,7 @@ class WooAPI extends \PriorityAPI\API
                     $attrnames = str_replace("pa_", "", $attribute['name']);
                 }
             }
+           //
             $body =[
                 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
@@ -1614,8 +1642,9 @@ class WooAPI extends \PriorityAPI\API
                 'SPEC1'       => $terms[0]->name
             ];
             // here I need to apply filter to manipulate the json
+            $body['product'] = $product;
             $body = apply_filters('simply_sync_items_to_priority',$body);
-
+            unset($body['product']);
             $res = $this->makeRequest($method, 'LOGPART', ['body' => json_encode($body)], $this->option('log_items_web', true));
             if (!$res['status']) {
                 $this->sendEmailError(
@@ -1669,7 +1698,7 @@ class WooAPI extends \PriorityAPI\API
         if($this->option('variation_field')) {
           //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
+        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' and PARTNAME eq \'699858559091\'&$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
 
         // check response status
         if ($response['status']) {
@@ -1723,21 +1752,19 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-
                     $statuses =  explode (',',$this->option('sync_inventory_warhsname'))[4];
                     if(!empty($statuses)){
                         $stock -= $this->get_items_total_by_status($product_id);
                         $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
                     }
-
-                    $stock = apply_filters( 'simply_sync_inventory_priority', $item );
-
+                    $item['stock'] = $stock;
+                    $item = apply_filters('simply_sync_inventory_priority',$item);
+                    $stock = $item['stock'];
                     update_post_meta($product_id, '_stock', $stock);
                     // set stock status
                     if (intval($stock) > 0) {
                        // update_post_meta($product_id, '_stock_status', 'instock');
                        $stock_status = 'instock';
-
                     } else {
                        // update_post_meta($product_id, '_stock_status', 'outofstock');
                         $stock_status = 'outofstock';
@@ -1746,12 +1773,9 @@ class WooAPI extends \PriorityAPI\API
                    // $variation->set_stock_status($stock_status);
                     $variation->save();
                 }
-
             }
-
             // add timestamp
             $this->updateOption('inventory_priority_update', time());
-
         } else {
             /**
              * t149
@@ -1761,9 +1785,7 @@ class WooAPI extends \PriorityAPI\API
                 'Error Sync Inventory Priority',
                 $response['body']
             );
-
         }
-
     }
     public function syncPacksPriority()
     {
@@ -2140,6 +2162,9 @@ class WooAPI extends \PriorityAPI\API
             $data['FIRSTPAY'] = (float)$firstpay ;
             $data['CARDNUM']     = $cardnum;
         //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
+        }
+        if($is_order){
+            $data['EMAIL'] = $order->get_billing_email();
         }
         return $data;
     }
