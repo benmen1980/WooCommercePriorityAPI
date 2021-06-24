@@ -3305,8 +3305,8 @@ class WooAPI extends \PriorityAPI\API
                 <td>
                     <input type="text"
                            id="custpricelists"
-                           name="custpricelists[]"
-                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item.' '; }}; ?>"
+                           name="custpricelists"
+                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item['PLNAME'].' '; }}; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3316,8 +3316,8 @@ class WooAPI extends \PriorityAPI\API
                 <td>
                     <input type="text"
                            id="customer_percents"
-                           name="customer_percents[]"
-                           value="<?php if(!empty($customer_percents)){foreach($customer_percents as $item){ echo $item.'% '; }}; ?>"
+                           name="customer_percents"
+                           value="<?php if(!empty($customer_percents)){foreach($customer_percents as $item){ echo $item["PERCENT"].'% '; }}; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3401,7 +3401,7 @@ class WooAPI extends \PriorityAPI\API
                 $data = [
                     'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
                     'user_login' => $username,
-                    'user_pass' => wp_hash_password($password),
+                    'user_pass' => $password,
                     'email'  => $email,
                     'first_name' => $user['CUSTDES'],
                     //'last_name'  => 'Doe',
@@ -3413,6 +3413,7 @@ class WooAPI extends \PriorityAPI\API
                     $data['user_email'] = $email;
                 }
                 $user_id = wp_insert_user($data);
+                wp_set_password( $password, $user_id ); 
                 if(is_wp_error($user_id)){
                     error_log('This is customer with error '.$user['CUSTNAME']);
                 }
