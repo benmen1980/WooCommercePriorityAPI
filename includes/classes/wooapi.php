@@ -3305,8 +3305,8 @@ class WooAPI extends \PriorityAPI\API
                 <td>
                     <input type="text"
                            id="custpricelists"
-                           name="custpricelists"
-                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item["PLNAME"].' '; }}; ?>"
+                           name="custpricelists[]"
+                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item.' '; }}; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3316,8 +3316,8 @@ class WooAPI extends \PriorityAPI\API
                 <td>
                     <input type="text"
                            id="customer_percents"
-                           name="customer_percents"
-                           value="<?php if(!empty($customer_percents)){foreach($customer_percents as $item){ echo $item["PERCENT"].'% '; }}; ?>"
+                           name="customer_percents[]"
+                           value="<?php if(!empty($customer_percents)){foreach($customer_percents as $item){ echo $item.'% '; }}; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3332,6 +3332,15 @@ class WooAPI extends \PriorityAPI\API
 
         if ( ! empty( $_POST['priority_customer_number'] ) ) {
             update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
+        }
+        if ( ! empty( $_POST['priority_mcustomer_number'] ) ) {
+            update_user_meta( $user_id, 'priority_mcustomer_number',  $_POST['priority_mcustomer_number']  );
+        }
+        if ( ! empty( $_POST['custpricelists'] ) ) {
+            update_user_meta( $user_id, 'custpricelists',  $_POST['custpricelists']  );
+        }
+        if ( ! empty( $_POST['customer_percents'] ) ) {
+            update_user_meta( $user_id, 'customer_percents',  $_POST['customer_percents']  );
         }
     }
     function get_shipping_price($order,$is_order){
