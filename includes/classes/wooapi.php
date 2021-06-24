@@ -3336,11 +3336,23 @@ class WooAPI extends \PriorityAPI\API
         if ( ! empty( $_POST['priority_mcustomer_number'] ) ) {
             update_user_meta( $user_id, 'priority_mcustomer_number',  $_POST['priority_mcustomer_number']  );
         }
-        if ( ! empty( $_POST['custpricelists'] ) ) {
-            update_user_meta( $user_id, 'custpricelists',  $_POST['custpricelists']  );
+        if ( isset( $_POST['custpricelists'] ) ) {
+            $custpricelists = $_POST['custpricelists'];
+            $custpricelists_ar = explode(' ', $custpricelists);
+            $custpricelists_result = [];
+            foreach($custpricelists_ar as $key => $cust){
+                $custpricelists_result[]=array('PLNAME'=>$cust);
+            }
+            update_user_meta( $user_id, 'custpricelists',  $custpricelists_result  );
         }
-        if ( ! empty( $_POST['customer_percents'] ) ) {
-            update_user_meta( $user_id, 'customer_percents',  $_POST['customer_percents']  );
+        if ( isset( $_POST['customer_percents'] ) ) {
+            $customer_percents = $_POST['customer_percents'];
+            $customer_percents_ar = explode(' ', $customer_percents);
+            $customer_percents_result = [];
+            foreach($customer_percents_ar as $key => $percent){
+                $customer_percents_result[]=array('PERCENT'=>$percent);
+            }
+            update_user_meta( $user_id, 'customer_percents',  $customer_percents_result  );
         }
     }
     function get_shipping_price($order,$is_order){
