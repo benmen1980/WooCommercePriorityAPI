@@ -3330,7 +3330,7 @@ class WooAPI extends \PriorityAPI\API
                     <input type="text"
                            id="custpricelists"
                            name="custpricelists"
-                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item["PLNAME"].' '; }}; ?>"
+                           value="<?php if(!empty($custpricelists)){foreach($custpricelists as $item){ echo $item['PLNAME'].' '; }}; ?>"
                            class="regular-text"
                     />
                 </td>
@@ -3356,6 +3356,39 @@ class WooAPI extends \PriorityAPI\API
 
         if ( ! empty( $_POST['priority_customer_number'] ) ) {
             update_user_meta( $user_id, 'priority_customer_number',  $_POST['priority_customer_number']  );
+        }
+        else{
+            update_user_meta( $user_id, 'priority_customer_number',  ''  );
+        }
+        if ( ! empty( $_POST['priority_mcustomer_number'] ) ) {
+            update_user_meta( $user_id, 'priority_mcustomer_number',  $_POST['priority_mcustomer_number']  );
+        }
+        else{
+            update_user_meta( $user_id, 'priority_mcustomer_number',  ''  );
+        }
+        if ( isset( $_POST['custpricelists'] ) ) {
+            $custpricelists = $_POST['custpricelists'];
+            $custpricelists_ar = explode(' ', $custpricelists);
+            $custpricelists_result = [];
+            foreach($custpricelists_ar as $key => $cust){
+                $custpricelists_result[]=array('PLNAME'=>$cust);
+            }
+            update_user_meta( $user_id, 'custpricelists',  $custpricelists_result  );
+        }
+        else{
+            update_user_meta( $user_id, 'custpricelists',  ''  );
+        }
+        if ( isset( $_POST['customer_percents'] ) ) {
+            $customer_percents = $_POST['customer_percents'];
+            $customer_percents_ar = explode(' ', $customer_percents);
+            $customer_percents_result = [];
+            foreach($customer_percents_ar as $key => $percent){
+                $customer_percents_result[]=array('PERCENT'=>$percent);
+            }
+            update_user_meta( $user_id, 'customer_percents',  $customer_percents_result  );
+        }
+        else{
+            update_user_meta( $user_id, 'customer_percents',  ''  );
         }
     }
     function get_shipping_price($order,$is_order){
@@ -3416,7 +3449,7 @@ class WooAPI extends \PriorityAPI\API
                 $data = [
                     'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
                     'user_login' => $username,
-                    'user_pass' => wp_hash_password($password),
+                    'user_pass' => $password,
                     'email'  => $email,
                     'first_name' => $user['CUSTDES'],
                     //'last_name'  => 'Doe',
@@ -3428,6 +3461,7 @@ class WooAPI extends \PriorityAPI\API
                     $data['user_email'] = $email;
                 }
                 $user_id = wp_insert_user($data);
+                wp_set_password( $password, $user_id ); 
                 if(is_wp_error($user_id)){
                     error_log('This is customer with error '.$user['CUSTNAME']);
                 }
