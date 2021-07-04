@@ -400,6 +400,10 @@ class WooAPI extends \PriorityAPI\API
                         case 'syncItemsPriority';
                             $this->syncItemsPriority();
                             break;
+                        case 'order_status';
+                            $order_id = 785;
+                            $order = wc_get_order( $order_id );
+                            echo $order->get_status();
                         default:
                             include P18AW_ADMIN_DIR . 'settings.php';
                     }
@@ -1836,14 +1840,14 @@ class WooAPI extends \PriorityAPI\API
         if ($user = get_userdata($id)) {
             $meta = get_user_meta($id);
             $priority_customer_number = 'WEB-'.(string) $user->data->ID;
-            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration
+            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
             if('prospect_email'==$this->option('prospect_field')){
                 $priority_customer_number = $user->data->user_email;
             }
             if('prospect_cellphone'==$this->option('prospect_field')){
                 $priority_customer_number = $meta['billing_phone'][0];
             }
-            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration
+            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
             if('prospect_email'==$this->option('prospect_field')){
                 $priority_customer_number = $user->data->user_email;
             }
@@ -1851,7 +1855,7 @@ class WooAPI extends \PriorityAPI\API
                 $priority_customer_number = $meta['billing_phone'][0];
             }
 
-            */
+
             $json_request = json_encode([
                 'CUSTNAME'    => $priority_customer_number,
                 'CUSTDES'     => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
@@ -2124,6 +2128,15 @@ class WooAPI extends \PriorityAPI\API
             break;
             // tranzila
             case 'tranzila';
+                //$paymentcode = $order->get_meta('cc_Mutag');
+                $payaccount = $order->get_meta('cc_number_tranzila');
+                $ccuid = $order->get_meta('CardcomInternalDealNumber');
+                $validmonth = get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true);
+                $confnum = $order->get_meta('ConfirmationCode');
+                $numpay = $order->get_meta('cc_numofpayments_tranzila');
+                $firstpay = floatval($order->get_meta('cc_firstpayment_tranzila'));
+                $card_type = $order->get_meta('card_type');
+                $payment_type = $order->get_meta('cc_paymenttype_tranzila');
             break;
             // payplus
             case 'payplus';
@@ -2133,6 +2146,16 @@ class WooAPI extends \PriorityAPI\API
                 $validmonth = get_post_meta($order->get_id(),'payplus_exp_date',true);
                 $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
                 $confnum = get_post_meta($order->get_id(),'payplus_voucher_id',true);
+
+                /* there is another plugin for payplu in Munier 27.6.2021 roy
+                 $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
+                  $ccuid = get_post_meta($order->get_id(),'payplus_token_uid',true);
+                  $payaccount = get_post_meta($order->get_id(),'payplus_four_digits',true);
+                  $validmonth = get_post_meta($order->get_id(),'payplus_expiry_month',true) .'/'.get_post_meta($order->get_id(),'payplus_expiry_year',true);
+                  $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
+                  $confnum = get_post_meta($order->get_id(),'payplus_voucher_num',true);
+                 */
+
             break;
             // debug
             case 'debug';
@@ -2292,6 +2315,7 @@ class WooAPI extends \PriorityAPI\API
 
                     // products price lists
                     foreach($list['PARTPRICE2_SUBFORM'] as $product) {
+
 
                         $GLOBALS['wpdb']->insert($table, [
                             'product_sku' => $product['PARTNAME'],
