@@ -3438,20 +3438,30 @@ class WooAPI extends \PriorityAPI\API
                 }
                 $user_id = wp_insert_user($data);
                 wp_set_password( $password, $user_id ); 
+                wp_update_user( array( 'ID' => $user_id, 'email' => $email ) );
+                wp_update_user( array( 'ID' => $user_id, 'user_email' => $email ) );
                 if(is_wp_error($user_id)){
                     error_log('This is customer with error '.$user['CUSTNAME']);
+                    continue;
                 }
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
                 update_user_meta($user_id,'custpricelists',$user['CUSTPLIST_SUBFORM']);
                 update_user_meta($user_id,'priority_mcustomer_number',$user['MCUSTNAME']);
                 update_user_meta($user_id,'customer_percents',$user['CUSTDISCOUNT_SUBFORM']);
-                $customer = new \WC_Customer($user_id);
-                $customer->set_billing_address_1($user['ADDRESS']);
-                $customer->set_billing_address_2($user['ADDRESS2']);
-                $customer->set_billing_city($user['STATE']);
-                $customer->set_billing_phone($user['PHONE']);
-                $customer->set_billing_postcode($user['ZIP']);
-                $customer->save();
+                
+                // $customer = new \WC_Customer($user_id);
+                // $customer->set_billing_address_1($user['ADDRESS']);
+                // $customer->set_billing_address_2($user['ADDRESS2']);
+                // $customer->set_billing_city($user['STATE']);
+                // $customer->set_billing_phone($user['PHONE']);
+                // $customer->set_billing_postcode($user['ZIP']);
+                // $customer->save();
+
+                update_user_meta($user_id,'billing_address_1',$user['ADDRESS']);
+                update_user_meta($user_id,'billing_address_2',$user['ADDRESS2']);
+                update_user_meta($user_id,'billing_city',$user['STATE']);
+                update_user_meta($user_id,'billing_phone',$user['PHONE']);
+                update_user_meta($user_id,'billing_postcode',$user['ZIP']);
             }
         }
     }
