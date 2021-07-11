@@ -2147,7 +2147,7 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
                 $confnum = get_post_meta($order->get_id(),'payplus_voucher_id',true);
 
-                /* there is another plugin for payplu in Munier 27.6.2021 roy
+                /* there is another plugin for payplus in Munier 27.6.2021 roy
                  $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
                   $ccuid = get_post_meta($order->get_id(),'payplus_token_uid',true);
                   $payaccount = get_post_meta($order->get_id(),'payplus_four_digits',true);
@@ -2570,9 +2570,10 @@ class WooAPI extends \PriorityAPI\API
         // additional line cart discount
         if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
             $data['ORDERITEMS_SUBFORM'][] = [
-                'PARTNAME' => '000', // change to other item
-                'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+                $this->get_sku_prioirty_dest_field() => '000', // change to other item
                 'TQUANT'   => -1,
+                'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+
 
             ];
         }
@@ -3417,6 +3418,110 @@ class WooAPI extends \PriorityAPI\API
         }
     }
     function sync_priority_customers_to_wp(){
+
+        // default values
+        $daysback = 1;
+        $url_addition_config = '';
+        // config
+        $json = $this->option('sync_customer_to_wp_user_config');
+        $json = preg_replace('/\r|\n/','',trim($json));
+        $config = json_decode($json);
+        $daysback = (int)$config->days_back;
+        $username_filed = $config->username_field;
+        $password_field = $config->password_field;
+        $url_addition_config = $config->additional_url;
+        $stamp = mktime(0 - $daysback*24, 0, 0);
+        $bod = urlencode(date(DATE_ATOM,$stamp));
+
+        $index = 9000;
+        $step = 1;
+        // $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip=7500&$top=100&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $data = [0];
+
+
+        proc_nice(50);
+        $yourlimit = 100000000;
+        while(sizeof($data) > 0){
+
+            /*
+            $load = sys_getloadavg();
+            if ($load[0] > 0.80 || memory_get_usage() > $yourlimit) {
+                sleep(5);
+            }
+            */
+
+            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip='.$index * $step .'&$top='.$step.'&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+            //$url_addition = 'CUSTOMERS?$filter=CUSTNAME eq \'972000017872\' &$skip='.$index * $step .'&$top='.$step.'&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,ZYOU_RANKDES,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+            $response = $this->makeRequest('GET', $url_addition, [],true);
+            // print_r( $response['status'] );
+            if ($response['status']) {
+                // decode raw response
+                $data = json_decode($response['body_raw'], true)['value'];
+                //  echo 'data:';print_r( $data );
+                foreach($data as $user){
+
+                    $username = $user[$username_filed];
+
+                    $email = $user['EMAIL'];
+                    if (!is_email($email)){
+                        continue;
+                    }
+                    if(!validate_username($username)){
+                        continue;
+                    }
+                    $password = $user[$password_field];
+                    $user_obj = get_user_by('login',$username);
+                    $data = [
+                        'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
+                        'user_login' => $username,
+                        'user_pass' => $password,
+                        'email'  => $email,
+                        'first_name' => $user['CUSTDES'],
+                        //'last_name'  => 'Doe',
+                        'user_nicename' => $user['CUSTDES'],
+                        'display_name' => $user['CUSTDES'],
+                        'role' => 'customer'
+                    ];
+                    if(!isset($user_obj->ID) ){
+                        if(!email_exists($email))
+                            $data['user_email'] = $email;
+                    }
+                    $user_id = wp_insert_user($data);
+                    wp_set_password( $password, $user_id );
+                    //wp_hash_password( $password);
+                    wp_update_user( array( 'ID' => $user_id, 'email' => $email ) );
+                    wp_update_user( array( 'ID' => $user_id, 'user_email' => $email ) );
+                    if(is_wp_error($user_id)){
+                        error_log('This is customer with error '.$user['CUSTNAME']);
+                        continue;
+                    }
+                    update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
+                    update_user_meta($user_id,'custpricelists',$user['CUSTPLIST_SUBFORM']);
+                    update_user_meta($user_id,'priority_mcustomer_number',$user['MCUSTNAME']);
+                    update_user_meta($user_id,'customer_percents',$user['CUSTDISCOUNT_SUBFORM']);
+                    update_user_meta($user_id, 'priority_customer_rank', $user['ZYOU_RANKDES']);
+
+                    update_user_meta($user_id,'billing_address_1',$user['ADDRESS']);
+                    update_user_meta($user_id,'billing_address_2',$user['ADDRESS2']);
+                    update_user_meta($user_id,'billing_city',$user['STATE']);
+                    update_user_meta($user_id,'billing_phone',$user['PHONE']);
+                    update_user_meta($user_id,'billing_postcode',$user['ZIP']);
+
+                    // $customer = new \WC_Customer($user_id);
+                    // $customer->set_billing_address_1($user['ADDRESS']);
+                    // $customer->set_billing_address_2($user['ADDRESS2']);
+                    // $customer->set_billing_city($user['STATE']);
+                    // $customer->set_billing_phone($user['PHONE']);
+                    // $customer->set_billing_postcode($user['ZIP']);
+                    // $customer->save();
+                }
+                $index ++;
+            }
+
+        }
+
+    }
+    function sync_priority_customers_to_wp_orig(){
         // default values
         $daysback = 1;
         $url_addition_config = '';
@@ -3435,6 +3540,7 @@ class WooAPI extends \PriorityAPI\API
         if ($response['status']) {
             // decode raw response
             $data = json_decode($response['body_raw'], true)['value'];
+
             foreach($data as $user){
                 $username = $user[$username_filed];
                 $email = $user['EMAIL'];
