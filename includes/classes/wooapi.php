@@ -2088,7 +2088,7 @@ class WooAPI extends \PriorityAPI\API
                 // data
                 $payaccount = $order_cc_meta['CreditCardNumber'];
                 $ccuid =  $order_cc_meta['Token'];
-                $validmonth =  $order_cc_meta['CreditCardExpDate'];
+                $validmonth =  $order_cc_meta['CreditCardExpDate'] ?? '';
                 $confnum = $order_cc_meta['ConfirmationKey'];
                 $numpay = 1;
                 $firstpay = 0.0;
@@ -2097,7 +2097,7 @@ class WooAPI extends \PriorityAPI\API
             case 'creditguard';
                 $payaccount = $order->get_meta('_ccnumber');
                 $ccuid = $order->get_meta('_creditguard_token');
-                $validmonth = $order->get_meta('_creditguard_expiration');
+                $validmonth = $order->get_meta('_creditguard_expiration') ?? '';
                 $confnum = $order->get_meta('_creditguard_authorization');
                 $numpay = $order->get_meta('_payments');
                 $firstpay = $order->get_meta('_first_payment');
@@ -2107,7 +2107,7 @@ class WooAPI extends \PriorityAPI\API
             case 'creditguard-directpay';
                 $payaccount = $order->get_meta('_cardMask');
                 $ccuid = $order->get_meta('_cardToken');
-                $validmonth = $order->get_meta('_cardExp');
+                $validmonth = $order->get_meta('_cardExp') ?? '';
                 $confnum = $order->get_meta('_authNumber');
                 $numpay = $order->get_meta('_numberOfPayments');
                 $firstpay = $order->get_meta('_firstPayment');
@@ -2119,7 +2119,7 @@ class WooAPI extends \PriorityAPI\API
                 $paymentcode = $order->get_meta('cc_Mutag');
                 $payaccount = $order->get_meta('cc_number');
                 $ccuid = $order->get_meta('CardcomInternalDealNumber');
-                $validmonth = $order->get_meta('cc_Tokef');
+                $validmonth = $order->get_meta('cc_Tokef') ?? '';
                 $confnum = $order->get_meta('CardcomInternalDealNumber');
                 $numpay = $order->get_meta('cc_numofpayments');
                 $firstpay = floatval($order->get_meta('cc_firstpayment'))/100;
@@ -2131,7 +2131,7 @@ class WooAPI extends \PriorityAPI\API
                 //$paymentcode = $order->get_meta('cc_Mutag');
                 $payaccount = $order->get_meta('cc_number_tranzila');
                 $ccuid = $order->get_meta('CardcomInternalDealNumber');
-                $validmonth = get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true);
+                $validmonth = get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true) ?? '';
                 $confnum = $order->get_meta('ConfirmationCode');
                 $numpay = $order->get_meta('cc_numofpayments_tranzila');
                 $firstpay = floatval($order->get_meta('cc_firstpayment_tranzila'));
@@ -2143,7 +2143,7 @@ class WooAPI extends \PriorityAPI\API
                 $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
                 $ccuid = get_post_meta($order->get_id(),'payplus_token',true);
                 $payaccount = get_post_meta($order->get_id(),'payplus_last_four',true);
-                $validmonth = get_post_meta($order->get_id(),'payplus_exp_date',true);
+                $validmonth = get_post_meta($order->get_id(),'payplus_exp_date',true) ?? '';
                 $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
                 $confnum = get_post_meta($order->get_id(),'payplus_voucher_id',true);
 
@@ -2434,6 +2434,7 @@ class WooAPI extends \PriorityAPI\API
             $this->option('order_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
+
 
         ];
         // CDES
