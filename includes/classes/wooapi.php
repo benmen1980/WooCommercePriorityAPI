@@ -1034,7 +1034,7 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = 'UDATE ge '.urlencode($bod);
-        $response = $this->makeRequest('GET', 'LOGPART?$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME,PARTDES,BASEPLPRICE,VATPRICE&$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1243,6 +1243,9 @@ class WooAPI extends \PriorityAPI\API
                  }
                 $sku =  $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
+                $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \''.$item['PARTNAME'].'\'',[], $this->option('log_items_priority', true));
+                $data = json_decode($response['body']);
+                $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
