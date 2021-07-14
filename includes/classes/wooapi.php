@@ -1279,7 +1279,7 @@ class WooAPI extends \PriorityAPI\API
                     $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
                     $priority_version = (float)$this->option('priority-version');
                     if($priority_version >=21.0){
-                        $attach_id = save_uri_as_image($priority_image_path,$item['PARTNAME']);
+                        $attach_id = $this->save_uri_as_image($priority_image_path,$item['PARTNAME']);
                     }else {
                         $attach_id = attachment_url_to_postid($url);
                     }
