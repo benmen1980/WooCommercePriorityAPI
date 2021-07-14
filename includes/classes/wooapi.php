@@ -1243,9 +1243,12 @@ class WooAPI extends \PriorityAPI\API
                  }
                 $sku =  $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
-                $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \''.$item['PARTNAME'].'\'',[], $this->option('log_items_priority', true));
-                $data = json_decode($response['body']);
-                $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
+                $priority_version = (float)$this->option('priority-version');
+                if($priority_version >=21.0){
+                    $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \''.$item['PARTNAME'].'\'',[], $this->option('log_items_priority', true));
+                    $data = json_decode($response['body']);
+                    $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
+                    }
                 if(!empty($item['EXTFILENAME'])
                     && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
@@ -1259,7 +1262,7 @@ class WooAPI extends \PriorityAPI\API
                     $file_path = $item['EXTFILENAME'];
                     $file_info = pathinfo( $file_path );
                     $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
-                    $priority_version = (float)$this->option('priority-version');
+                    //$priority_version = (float)$this->option('priority-version');
                     if($priority_version >=21.0){
                         $attach_id = $this->save_uri_as_image($priority_image_path,$item['PARTNAME']);
                     }else {
