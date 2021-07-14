@@ -404,6 +404,31 @@ class WooAPI extends \PriorityAPI\API
                             $order_id = 785;
                             $order = wc_get_order( $order_id );
                             echo $order->get_status();
+                        case 'test';
+                            echo 'this is just a test'.PHP_EOL;
+                            $curl = curl_init();
+                            curl_setopt_array($curl, array(
+                                CURLOPT_URL => 'https://www.eshbelhost.com/zoom16/odata/Priority/tabz1881.ini/a280221/LOGPART(\'0000253\')',
+                                CURLOPT_RETURNTRANSFER => true,
+                                CURLOPT_ENCODING => '',
+                                CURLOPT_MAXREDIRS => 10,
+                                CURLOPT_TIMEOUT => 0,
+                                CURLOPT_FOLLOWLOCATION => true,
+                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                CURLOPT_CUSTOMREQUEST => 'GET',
+                                CURLOPT_HTTPHEADER => array(
+                                    'X-App-Id: APP006',
+                                    'X-App-Key: F40FFA79343C446A9931BA1177716F04',
+                                    'Authorization: Basic QVBJOkFhMTIzNDU2Nw=='
+                                ),
+                            ));
+                            $response = curl_exec($curl);
+                            curl_close($curl);
+                            $data =json_decode($response);
+                            $image = $data->EXTFILENAME;
+                            echo $image.PHP_EOL;
+                            $this->save_uri_as_image($image,'my-test1');
+                            break;
                         default:
                             include P18AW_ADMIN_DIR . 'settings.php';
                     }
@@ -1252,7 +1277,12 @@ class WooAPI extends \PriorityAPI\API
                     $file_path = $item['EXTFILENAME'];
                     $file_info = pathinfo( $file_path );
                     $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
-                    $attach_id = attachment_url_to_postid($url);
+                    $priority_version = (float)$this->option('priority-version');
+                    if($priority_version >=21.0){
+                        $attach_id = save_uri_as_image($priority_image_path,$item['PARTNAME']);
+                    }else {
+                        $attach_id = attachment_url_to_postid($url);
+                    }
                     if($attach_id != 0){
                     }
                     else{
@@ -2131,7 +2161,7 @@ class WooAPI extends \PriorityAPI\API
                 //$paymentcode = $order->get_meta('cc_Mutag');
                 $payaccount = $order->get_meta('cc_number_tranzila');
                 $ccuid = $order->get_meta('CardcomInternalDealNumber');
-                $validmonth = get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true) ?? '';
+                $validmonth = !empty(get_post_meta($order->get_id(),'expmonth',true)) ? get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true) : '';
                 $confnum = $order->get_meta('ConfirmationCode');
                 $numpay = $order->get_meta('cc_numofpayments_tranzila');
                 $firstpay = floatval($order->get_meta('cc_firstpayment_tranzila'));
@@ -3710,6 +3740,36 @@ class WooAPI extends \PriorityAPI\API
         $fieldname = 'PARTNAME';
         $fieldname = apply_filters( 'simply_set_priority_sku_field', $fieldname );
         return $fieldname;
+    }
+    function save_uri_as_image( $base64_img, $title ) {
+
+        // Upload dir.
+        $upload_dir  = wp_upload_dir();
+        $upload_path = str_replace( '/', DIRECTORY_SEPARATOR, $upload_dir['path'] ) . DIRECTORY_SEPARATOR;
+        $ar = explode(',',$base64_img);
+        $image_data = $ar[0];
+        $file_type = explode(';',explode(':',$image_data)[1])[0];
+        $extension = explode('/',$file_type)[1];
+        $img             = $ar[1];
+        $img             = str_replace( ' ', '+', $img );
+        $decoded         = base64_decode( $img );
+        $filename        = $title .'.'. $extension;
+        //$file_type     = 'image/png';
+        $hashed_filename = md5( $filename . microtime() ) . '_' . $filename;
+
+        // Save the image in the uploads directory.
+        $upload_file = file_put_contents( $upload_path . $hashed_filename, $decoded );
+
+        $attachment = array(
+            'post_mime_type' => $file_type,
+            'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $hashed_filename ) ),
+            'post_content'   => '',
+            'post_status'    => 'inherit',
+            'guid'           => $upload_dir['url'] . '/' . basename( $hashed_filename )
+        );
+
+        $attach_id = wp_insert_attachment( $attachment, $upload_dir['path'] . '/' . $hashed_filename );
+        return $attach_id;
     }
 }
 
