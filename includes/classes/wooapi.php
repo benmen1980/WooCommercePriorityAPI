@@ -406,28 +406,7 @@ class WooAPI extends \PriorityAPI\API
                             echo $order->get_status();
                         case 'test';
                             echo 'this is just a test'.PHP_EOL;
-                            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                                CURLOPT_URL => 'https://www.eshbelhost.com/zoom16/odata/Priority/tabz1881.ini/a280221/LOGPART(\'0000253\')',
-                                CURLOPT_RETURNTRANSFER => true,
-                                CURLOPT_ENCODING => '',
-                                CURLOPT_MAXREDIRS => 10,
-                                CURLOPT_TIMEOUT => 0,
-                                CURLOPT_FOLLOWLOCATION => true,
-                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                CURLOPT_CUSTOMREQUEST => 'GET',
-                                CURLOPT_HTTPHEADER => array(
-                                    'X-App-Id: APP006',
-                                    'X-App-Key: F40FFA79343C446A9931BA1177716F04',
-                                    'Authorization: Basic QVBJOkFhMTIzNDU2Nw=='
-                                ),
-                            ));
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $data =json_decode($response);
-                            $image = $data->EXTFILENAME;
-                            echo $image.PHP_EOL;
-                            $this->save_uri_as_image($image,'my-test1');
+
                             break;
                         default:
                             include P18AW_ADMIN_DIR . 'settings.php';
