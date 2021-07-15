@@ -1,4 +1,7 @@
 <?php
+
+use PriorityWoocommerceAPI\WooAPI;
+
 /**
  * Created by PhpStorm.
  * User: רועי
@@ -91,6 +94,9 @@ class Obligo extends \PriorityAPI\API{
 
 		//redirect cart to checkout if  תשלום חוב
 		add_action( 'template_redirect', [$this,'redirect_visitor']);
+        // modify check out fields
+        add_filter( 'woocommerce_checkout_fields' , [$this,'custom_override_checkout_fields'],10,1 );
+        add_filter( 'woocommerce_checkout_get_value',[$this,'override_checkout__fields'],10,2);
 	}
 	/****** add same item with different price to cart *********/
 	/*****************************************/
@@ -148,6 +154,63 @@ class Obligo extends \PriorityAPI\API{
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
 	// simply pay module
+
+    // remove check out fields
+    function custom_override_checkout_fields( $fields ) {
+        unset($fields['billing']['billing_company']);
+        unset($fields['billing']['billing_address_2']);
+        unset($fields['billing']['billing_country']);
+        return $fields;
+    }
+
+
+    // modify fields
+    function override_checkout__fields($input, $key ) {
+	    // here wee need to get data from  session
+        $retrive_data = WC()->session->get( 'session_vars' );
+        $first_name = $retrive_data['first_name'];
+        $last_name  = $retrive_data['last_name'];
+        $billing_email = $retrive_data['email'];
+        $billing_phone = $retrive_data['phone'];
+        $billing_address_1 = $retrive_data['street_address'];
+        $billing_city      = $retrive_data['city'];
+        $billing_postcode  = $retrive_data['postcode'];
+        global $current_user;
+        switch ($key) :
+            case 'billing_first_name':
+                return $first_name;
+                break;
+            case 'billing_last_name':
+                return $last_name;
+                break;
+            case 'billing_email':
+                return $billing_email;
+                break;
+            case 'billing_phone':
+                return $billing_phone;
+                break;
+            case 'billing_address_1';
+                return $billing_address_1;
+                break;
+            case 'billing_country';
+                return 'Israel';
+                break;
+            case 'billing_company';
+                return '';
+                break;
+            case 'billing_address_2';
+                return '  ';
+                break;
+            case 'billing_city';
+                return $billing_city;
+                break;
+            case 'billing_postcode';
+                return $billing_postcode;
+                break;
+        endswitch;
+    }
+
+//add_filter( 'woocommerce_checkout_fields' , 'override_checkout_email_field' );
     function simplypay(){
 	    if(isset($_GET['c'])){
 	        global $wpdb;
@@ -178,12 +241,25 @@ class Obligo extends \PriorityAPI\API{
             }
 		    $cart_item_data['_other_options']['product-price'] = $_GET['pr'] ;
 		    $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
+		    // get the customer info according to the IVNUM
+            $customer_info = [
+                    'docno' => $_GET['i']
+            ];
+            // need to filter here
+            $customer_info = apply_filters( 'simply_request_data', $customer_info );
 		    WC()->session->set(
 			    'session_vars',
 			    array(
-				    'ordertype' => 'Recipe',
-                 		    'custname'  => isset($_GET['c']) ? $_GET['c'] : null
-                                 )
+				    'ordertype'       => 'Recipe',
+                    'custname'        => isset($_GET['c']) ? $_GET['c'] : null,
+                    'first_name'      => $customer_info['session_first'],
+                    'last_name'       => $customer_info['session_last'],
+                    'street_address'  => $customer_info['session_street'],
+                    'postcode'        => $customer_info['session_post'],
+                    'city'            => $customer_info['session_city'],
+                    'phone'           => $customer_info['123456'],
+                    'email'           => $customer_info['session@gmail.com']
+                     )
 		    );
 		    return $cart_item_data;
 	    }
@@ -238,13 +314,16 @@ class Obligo extends \PriorityAPI\API{
 		if( !empty( $cart_data ) ) {
 			$custom_items = $cart_data;
 		}
+		$item_detail = 'IVNUM_';
+        //require P18AW_CLASSES_DIR . 'wooapi.php';
+        $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+        $item_detail = $config->simply_pay_note ?? 'IVNUM';
 		if( isset( $cart_item['_other_options']['product-ivnum'] ) ) {
-			$custom_items[] = array( "name" => "IVNUM", "value" => $cart_item['_other_options']['product-ivnum'] );
+			$custom_items[] = array( "name" => $item_detail, "value" => $cart_item['_other_options']['product-ivnum'] );
 		}
 		return $custom_items;
 	}
 	function request_front_obligo() {
-
 	$current_user             = wp_get_current_user();
 	$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
 
@@ -352,7 +431,6 @@ class Obligo extends \PriorityAPI\API{
 	function custom_field_update_order_item_meta( $item, $cart_item_key, $values, $order ) {
 		if ( ! isset( $values['_other_options'] ) )
 			return;
-
 		$custom_data = $values['_other_options'];
 		$ivnum = $custom_data['product-ivnum'];
 		if ( $ivnum )
@@ -360,8 +438,6 @@ class Obligo extends \PriorityAPI\API{
 
 		//return $cart_item_data;
 	}
-
-	
 	function check_payment_order(){
 		global $wpdb;
 		$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}posts WHERE post_type LIKE 'shop_order'");
@@ -389,6 +465,7 @@ class Obligo extends \PriorityAPI\API{
 	}
 
 	function redirect_visitor(){
+	    return;
         if ( is_page( 'cart' ) || is_cart() ) {
             $retrive_data = WC()->session->get( 'session_vars' );
             // check if תשלום חוב session is set
