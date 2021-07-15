@@ -1016,6 +1016,7 @@ class WooAPI extends \PriorityAPI\API
     public function syncItemsPriority()
     {
         // default values
+        $priority_version = (float)$this->option('priority-version');
         $daysback = 1;
         $url_addition_config = '';
         $search_field = 'PARTNAME';
@@ -1243,7 +1244,6 @@ class WooAPI extends \PriorityAPI\API
                  }
                 $sku =  $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
-                $priority_version = (float)$this->option('priority-version');
                 if($priority_version >=21.0){
                     $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \''.$item['PARTNAME'].'\'',[], $this->option('log_items_priority', true));
                     $data = json_decode($response['body']);
@@ -1717,7 +1717,7 @@ class WooAPI extends \PriorityAPI\API
         if($this->option('variation_field')) {
           //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$filter= '.urlencode($url_addition).' and PARTNAME eq \'699858559091\'&$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
+        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
 
         // check response status
         if ($response['status']) {
