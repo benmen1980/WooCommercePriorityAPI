@@ -168,13 +168,13 @@ class Obligo extends \PriorityAPI\API{
     function override_checkout__fields($input, $key ) {
 	    // here wee need to get data from  session
         $retrive_data = WC()->session->get( 'session_vars' );
-        $first_name = $retrive_data['first_name'];
-        $last_name  = $retrive_data['last_name'];
-        $billing_email = $retrive_data['email'];
-        $billing_phone = $retrive_data['phone'];
-        $billing_address_1 = $retrive_data['street_address'];
-        $billing_city      = $retrive_data['city'];
-        $billing_postcode  = $retrive_data['postcode'];
+        $first_name = $retrive_data['first_name'] ?? '';
+        $last_name  = $retrive_data['last_name'] ?? '';
+        $billing_email = $retrive_data['email'] ?? '' ;
+        $billing_phone = $retrive_data['phone'] ?? '';
+        $billing_address_1 = $retrive_data['street_address'] ?? '';
+        $billing_city      = $retrive_data['city'] ?? '';
+        $billing_postcode  = $retrive_data['postcode'] ?? '';
         global $current_user;
         switch ($key) :
             case 'billing_first_name':
@@ -239,26 +239,27 @@ class Obligo extends \PriorityAPI\API{
                // wp_redirect( $url );
                // exit;
             }
-		    $cart_item_data['_other_options']['product-price'] = $_GET['pr'] ;
 		    $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
 		    // get the customer info according to the IVNUM
             $customer_info = [
-                    'docno' => $_GET['i']
+                    'docno' => $_GET['i'],
+                    'price' => $_GET['pr']
             ];
             // need to filter here
-            $customer_info = apply_filters( 'simply_request_data', $customer_info );
+            $customer_info = apply_filters( 'simply_request_customer_data', $customer_info );
+            $cart_item_data['_other_options']['product-price'] = $customer_info['price'] ;
 		    WC()->session->set(
 			    'session_vars',
 			    array(
 				    'ordertype'       => 'Recipe',
                     'custname'        => isset($_GET['c']) ? $_GET['c'] : null,
-                    'first_name'      => $customer_info['session_first'],
-                    'last_name'       => $customer_info['session_last'],
-                    'street_address'  => $customer_info['session_street'],
-                    'postcode'        => $customer_info['session_post'],
-                    'city'            => $customer_info['session_city'],
-                    'phone'           => $customer_info['123456'],
-                    'email'           => $customer_info['session@gmail.com']
+                    'first_name'      => $customer_info['first_name'],
+                    'last_name'       => $customer_info['last_name'],
+                    'street_address'  => $customer_info['street'],
+                    'postcode'        => $customer_info['postcode'],
+                    'city'            => $customer_info['city'],
+                    'phone'           => $customer_info['phone'],
+                    'email'           => $customer_info['email']
                      )
 		    );
 		    return $cart_item_data;
