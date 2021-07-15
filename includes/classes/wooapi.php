@@ -2586,9 +2586,9 @@ class WooAPI extends \PriorityAPI\API
                     $this->get_sku_prioirty_dest_field()  => $product->get_sku(),
                     'TQUANT'           => (int) $item->get_quantity(),
                     'VPRICE'           => $discount_type == 'in_line' ? $line_before_discount/(int)$item->get_quantity() : 0.0,
-                    'PERCENT'           => $discount_type == 'in_line' ? $discount : 0.0,
+                    'PERCENT'          => $discount_type == 'in_line' ? $discount : 0.0,
                     'REMARK1'          => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
-                    //'DUEDATE' => date('Y-m-d', strtotime($campaign_duedate)),
+                    'DUEDATE'          => date('Y-m-d'),
                 ];
                 if($discount_type != 'in_line'){
                     $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM'])-1]['VATPRICE' ]= $line_before_discount + $line_tax;
@@ -2600,8 +2600,9 @@ class WooAPI extends \PriorityAPI\API
         if($discount_type == 'additional_line' && ($order->get_discount_total()+$order->get_discount_tax()>0)){
             $data['ORDERITEMS_SUBFORM'][] = [
                 $this->get_sku_prioirty_dest_field() => '000', // change to other item
-                'TQUANT'   => -1,
-                'VATPRICE' => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+                'TQUANT'           => -1,
+                'VATPRICE'         => -1* floatval($order->get_discount_total()+$order->get_discount_tax()),
+                'DUEDATE'          => date('Y-m-d'),
 
 
             ];
@@ -3439,7 +3440,8 @@ class WooAPI extends \PriorityAPI\API
                 // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
                 'PARTNAME' => $this->option('shipping_' . $method_id . '_' . $instance_id, $default_product),
                 'TQUANT' => 1,
-                $price_filed => floatval($shipping_price)
+                $price_filed => floatval($shipping_price),
+                'DUEDATE'          => date('Y-m-d')
             ];
             return $data;
         }else{
