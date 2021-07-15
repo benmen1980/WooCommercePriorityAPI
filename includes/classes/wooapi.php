@@ -2153,6 +2153,19 @@ class WooAPI extends \PriorityAPI\API
                 $card_type = $order->get_meta('card_type');
                 $payment_type = $order->get_meta('cc_paymenttype_tranzila');
             break;
+            // gobit
+            case 'gobit';
+                //$paymentcode = $order->get_meta('cc_Mutag');
+                $payaccount = $order->get_meta('_ccno');
+                $ccuid = $order->get_meta('tranzila_authnr');
+                $validmonth = !empty(get_post_meta($order->get_id(),'expmonth',true)) ? get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true) : '';
+                $confnum = $order->get_meta('_confirmationcode');
+                $numpay = $order->get_meta('cc_numofpayments_tranzila');
+                //$firstpay = floatval($order->get_meta('cc_firstpayment_tranzila'));
+                $card_type = $order->get_meta('_cardtypeid');
+                $card_type_desc = $order->get_meta('_cardtype');;
+                $payment_type = $order->get_meta('cc_paymenttype_tranzila');
+                break;
             // payplus
             case 'payplus';
                 $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
@@ -2186,7 +2199,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
        $data=[
-            'PAYMENTCODE' => $paymentcode,
+            'PAYMENTCODE' => $card_type ?? $paymentcode,
             'PAYACCOUNT'  => substr($payaccount,strlen($payaccount) -4,4),
             'VALIDMONTH'  => $validmonth,
             'QPRICE'      => floatval($order->get_total()),
