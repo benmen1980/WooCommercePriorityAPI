@@ -317,7 +317,7 @@ class Obligo extends \PriorityAPI\API{
 		}
 		$item_detail = 'IVNUM_';
         //require P18AW_CLASSES_DIR . 'wooapi.php';
-        $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+        $config = json_decode(stripslashes($this->option('setting-config')));
         $item_detail = $config->simply_pay_note ?? 'IVNUM';
 		if( isset( $cart_item['_other_options']['product-ivnum'] ) ) {
 			$custom_items[] = array( "name" => $item_detail, "value" => $cart_item['_other_options']['product-ivnum'] );
