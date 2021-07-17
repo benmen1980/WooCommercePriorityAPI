@@ -29,7 +29,7 @@ class Obligo extends \PriorityAPI\API{
 	{
 		add_filter( 'woocommerce_get_item_data', [$this,'render_custom_data_on_cart_checkout'], 10, 2 );
 		add_filter( 'woocommerce_add_cart_item_data',[$this,'split_product_individual_cart_items'], 10, 2 );
-		if(isset($_GET['c'])){
+		if(isset($_GET['c'])||isset($_GET['i'])){
 			add_filter( 'wc_add_to_cart_message_html', [$this,'remove_add_to_cart_message']);
             // remove this if you want to allow adding paymnets to cart with different iv or price
             add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
@@ -212,7 +212,7 @@ class Obligo extends \PriorityAPI\API{
 
 //add_filter( 'woocommerce_checkout_fields' , 'override_checkout_email_field' );
     function simplypay(){
-	    if(isset($_GET['c'])){
+	    if(isset($_GET['i'])){
 	        global $wpdb;
 	        $sql_result = $wpdb->get_results(
 	                'select
@@ -220,8 +220,7 @@ class Obligo extends \PriorityAPI\API{
                             p.order_item_id,
                             p.order_item_name,
                             p.order_item_type,
-                            pm.meta_value
-                            
+                            pm.meta_value                            
                             from
                             '.$wpdb->prefix.'woocommerce_order_items as p,
                             '.$wpdb->prefix.'woocommerce_order_itemmeta as pm
