@@ -233,7 +233,7 @@ class Obligo extends \PriorityAPI\API{
                             p.order_item_id'
             );
 	        if(sizeof($sql_result)>0){
-	            wp_die(__('This invoice had already been payed!','simply'));
+	           // wp_die(__('This invoice had already been payed!','simply'));
                // $url = home_url().'/duplicate-invoice';
                // wp_redirect( $url );
                // exit;

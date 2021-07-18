@@ -3099,14 +3099,8 @@ class WooAPI extends \PriorityAPI\API
             // for Priority version 19.1
             $data['TINVOICESTEXT_SUBFORM'][] =   ['TEXT' => $order->get_customer_note()];
         }
-
-
-
-
-
         // billing customer details
         $customer_data = [
-
             'PHONE'    => $order->get_billing_phone(),
             'EMAIL'       => $order->get_billing_email(),
             'ADRS'        => $order->get_billing_address_1(),
@@ -3116,10 +3110,12 @@ class WooAPI extends \PriorityAPI\API
             'ZIP'         => $order->get_billing_postcode(),
         ];
         $data['TINVOICESCONT_SUBFORM'][] = $customer_data;
-
+        $data['doctype'] = 'TINVOICES';
         $data = apply_filters( 'simply_request_data', $data );
+        $doctype = $data['doctype'];
+        unset($data['doctype']);
         // make request
-        $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)],true);
+        $response = $this->makeRequest('POST', $doctype, ['body' => json_encode($data)],true);
         if ($response['code']<=201) {
             /*
              $body_array = json_decode($response["body"],true);
@@ -3148,7 +3144,6 @@ class WooAPI extends \PriorityAPI\API
         }
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
-
     }
     /**
      * Sync receipts for completed orders
