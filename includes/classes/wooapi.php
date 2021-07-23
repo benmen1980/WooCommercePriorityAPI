@@ -131,7 +131,7 @@ class WooAPI extends \PriorityAPI\API
              \obligo::instance()->run();
          }*/
         // Sync customer and order data after order is proccessed
-        add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
+        //add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
 
@@ -150,7 +150,7 @@ class WooAPI extends \PriorityAPI\API
             // add overall customer discount
             add_action( 'woocommerce_cart_calculate_fees', [$this,'add_customer_discount'] );
             // filter products regarding to price list
-            // add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
+            add_filter( 'loop_shop_post_in', [ $this, 'filterProductsByPriceList' ], 9999 );
             // filter product price regarding to price list
             add_filter( 'woocommerce_product_get_price', [ $this, 'filterPrice' ], 10, 2 );
 
@@ -2145,7 +2145,7 @@ class WooAPI extends \PriorityAPI\API
             case 'tranzila';
                 //$paymentcode = $order->get_meta('cc_Mutag');
                 $payaccount = $order->get_meta('cc_number_tranzila');
-                $ccuid = $order->get_meta('CardcomInternalDealNumber');
+                $ccuid = $order->get_meta('tranzila_cc_last_4');
                 $validmonth = !empty(get_post_meta($order->get_id(),'expmonth',true)) ? get_post_meta($order->get_id(),'expmonth',true) .'/'.get_post_meta($order->get_id(),'expyear',true) : '';
                 $confnum = $order->get_meta('ConfirmationCode');
                 $numpay = $order->get_meta('cc_numofpayments_tranzila');
@@ -2163,7 +2163,7 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = $order->get_meta('cc_numofpayments_tranzila');
                 //$firstpay = floatval($order->get_meta('cc_firstpayment_tranzila'));
                 $card_type = $order->get_meta('_cardtypeid');
-                $card_type_desc = $order->get_meta('_cardtype');;
+                $card_type_desc = $order->get_meta('_cardtype');
                 $payment_type = $order->get_meta('cc_paymenttype_tranzila');
                 break;
             // payplus
@@ -2513,13 +2513,15 @@ class WooAPI extends \PriorityAPI\API
             'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
             'PHONENUM'    => $order->get_billing_phone(),
-            'EMAIL'       => $order->get_billing_email(),
-            'CELLPHONE'   => $order->get_billing_phone(),
             'ADDRESS'     => $order->get_shipping_address_1(),
             'ADDRESS2'    => $order->get_shipping_address_2(),
             'STATE'       => $order->get_shipping_city(),
             'ZIP'         => $order->get_shipping_postcode(),
         ];
+        if($priority_version>19.1){
+            $shipping_data['EMAIL']     = $order->get_billing_email();
+            $shipping_data['CELLPHONE'] = $order->get_billing_phone();
+        }
 
         // add second address if entered
         if ( ! empty($order->get_shipping_address_2())) {
