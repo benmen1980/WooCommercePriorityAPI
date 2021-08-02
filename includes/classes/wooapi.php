@@ -394,6 +394,9 @@ class WooAPI extends \PriorityAPI\API
                         case 'sync_attachments';
                             include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
                             break;
+                        case 'sync-customer';
+                            $this->syncCustomer(7);
+                            break;
                         case 'packs';
                             $this->syncPacksPriority();
                             break;
@@ -1035,7 +1038,7 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $url_addition = 'UDATE ge '.urlencode($bod);
-        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME,PARTDES,BASEPLPRICE,VATPRICE&$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,'.$config->categories.'&$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1263,7 +1266,8 @@ class WooAPI extends \PriorityAPI\API
                     $file_info = pathinfo( $file_path );
                     $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
                     //$priority_version = (float)$this->option('priority-version');
-                    if($priority_version >=21.0){
+                    $is_uri = !strpos($product_full_url, 'http');
+                    if($priority_version >=21.0 && $is_uri){
                         $attach_id = $this->save_uri_as_image($priority_image_path,$item['PARTNAME']);
                     }else {
                         $attach_id = attachment_url_to_postid($url);
@@ -1884,10 +1888,12 @@ class WooAPI extends \PriorityAPI\API
             ]);
 
             $method = isset($meta['priority_customer_number']) ? 'PATCH' : 'POST';
-
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
-
-            update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
+            if($method =='POST') {
+                $data = json_decode($response['body']);
+                $priority_customer_number = $data->CUSTNAME;
+                update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
+            }
             // set priority customer id
             if ($response['status']) {
 
@@ -2255,8 +2261,19 @@ class WooAPI extends \PriorityAPI\API
     public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
+        // sync payments
+        if(isset(WC()->session)){
+            $session = WC()->session->get('session_vars');
+            if($session['ordertype']=='Recipe') {
+                $optional = array(
+                    "custname" => $session['custname']
+                );
+                $this->syncPayment($order_id,$optional);
+                return;
+            }
+        }
         $this->syncCustomer($order->get_user()->ID);
-        // checck order status against config
+        // check order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
         if(!isset($config->order_statuses)){
             $is_status = true;
@@ -2290,16 +2307,6 @@ class WooAPI extends \PriorityAPI\API
             // sync receipts
             if($this->option('post_receipt_checkout')) {
                 $this->syncReceipt($order_id);
-            }
-        }
-        // sync payments
-        if(isset(WC()->session)){
-        $session = WC()->session->get('session_vars');
-            if($session['ordertype']=='Recipe') {
-                $optional = array(
-                    "custname" => $session['custname']
-                );
-                $this->syncPayment($order_id,$optional);
             }
         }
     }
@@ -3711,7 +3718,7 @@ class WooAPI extends \PriorityAPI\API
             return;
         };
         foreach($percentages as $item){
-            $percentage =+ $item['PERCENT'];
+            $percentage =+ is_numeric($item['PERCENT']) ? $item['PERCENT'] : 0.0;
         }
         $subtotal = $woocommerce->cart->get_subtotal() + $woocommerce->cart->get_subtotal_tax();
         $discount_price = $percentage * $subtotal / 100;

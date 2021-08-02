@@ -160,6 +160,7 @@ class Obligo extends \PriorityAPI\API{
         unset($fields['billing']['billing_company']);
         unset($fields['billing']['billing_address_2']);
         unset($fields['billing']['billing_country']);
+        unset($fields['billing']['billing_state']);
         return $fields;
     }
 
@@ -233,10 +234,12 @@ class Obligo extends \PriorityAPI\API{
                             p.order_item_id'
             );
 	        if(sizeof($sql_result)>0){
-	           // wp_die(__('This invoice had already been payed!','simply'));
-               // $url = home_url().'/duplicate-invoice';
-               // wp_redirect( $url );
-               // exit;
+	            if(empty($_GET['debug'])) {
+                    wp_die(__('This invoice had already been payed!', 'simply'));
+                    $url = home_url() . '/duplicate-invoice';
+                    wp_redirect($url);
+                    exit;
+                }
             }
 		    $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
 		    // get the customer info according to the IVNUM
@@ -258,7 +261,8 @@ class Obligo extends \PriorityAPI\API{
                     'postcode'        => $customer_info['postcode'],
                     'city'            => $customer_info['city'],
                     'phone'           => $customer_info['phone'],
-                    'email'           => $customer_info['email']
+                    'email'           => $customer_info['email'],
+                    'data'            => $customer_info['data']  // for extra custom fields
                      )
 		    );
 		    return $cart_item_data;
