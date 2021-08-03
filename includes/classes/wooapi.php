@@ -3486,7 +3486,7 @@ class WooAPI extends \PriorityAPI\API
             }
             */
 
-            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip='.$index * $step .'&$top='.$step.'&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip='.$index * $step .'&$top='.$step.'&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
             //$url_addition = 'CUSTOMERS?$filter=CUSTNAME eq \'972000017872\' &$skip='.$index * $step .'&$top='.$step.'&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,ZYOU_RANKDES,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
             $response = $this->makeRequest('GET', $url_addition, [],true);
             // print_r( $response['status'] );
