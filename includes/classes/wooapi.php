@@ -3468,26 +3468,8 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = $config->additional_url;
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = urlencode(date(DATE_ATOM,$stamp));
+            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.'&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
 
-        $index = 9000;
-        $step = 1;
-        // $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip=7500&$top=100&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
-        $data = [0];
-
-
-        proc_nice(50);
-        $yourlimit = 100000000;
-        while(sizeof($data) > 0){
-
-            /*
-            $load = sys_getloadavg();
-            if ($load[0] > 0.80 || memory_get_usage() > $yourlimit) {
-                sleep(5);
-            }
-            */
-
-            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip='.$index * $step .'&$top='.$step.'&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
-            //$url_addition = 'CUSTOMERS?$filter=CUSTNAME eq \'972000017872\' &$skip='.$index * $step .'&$top='.$step.'&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,ZYOU_RANKDES,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
             $response = $this->makeRequest('GET', $url_addition, [],true);
             // print_r( $response['status'] );
             if ($response['status']) {
@@ -3554,7 +3536,6 @@ class WooAPI extends \PriorityAPI\API
                 $index ++;
             }
 
-        }
 
     }
     function sync_priority_customers_to_wp_orig(){
