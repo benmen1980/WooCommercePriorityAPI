@@ -1037,8 +1037,9 @@ class WooAPI extends \PriorityAPI\API
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
-        $url_addition = 'UDATE ge '.urlencode($bod);
-        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,'.$config->categories.'&$filter='.$url_addition.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
+        $date_filter = 'UDATE ge '.urlencode($bod);
+        $select = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG';
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$select.'&$filter='.$date_filter.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -3485,7 +3486,7 @@ class WooAPI extends \PriorityAPI\API
             }
             */
 
-            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip='.$index * $step .'&$top='.$step.'&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+            $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge '.$bod.' '.$url_addition_config.' &$skip='.$index * $step .'&$top='.$step.'&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
             //$url_addition = 'CUSTOMERS?$filter=CUSTNAME eq \'972000017872\' &$skip='.$index * $step .'&$top='.$step.'&$select=ZYOU_WEBUSERNAME,ZYOU_PASSWORD,ZYOU_RANKDES,EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
             $response = $this->makeRequest('GET', $url_addition, [],true);
             // print_r( $response['status'] );
