@@ -1889,6 +1889,8 @@ class WooAPI extends \PriorityAPI\API
             ]);
 
             $method = isset($meta['priority_customer_number']) ? 'PATCH' : 'POST';
+
+
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
             if($method =='POST') {
                 $data = json_decode($response['body']);
@@ -2638,32 +2640,15 @@ class WooAPI extends \PriorityAPI\API
 
         if ($response['code']<=201) {
             $body_array = json_decode($response["body"],true);
-
             $ord_status = $body_array["ORDSTATUSDES"];
             $ord_number = $body_array["ORDNAME"];
             $order->update_meta_data('priority_order_status',$ord_status);
             $order->update_meta_data('priority_order_number',$ord_number);
             $order->save();
-        }
-        if($response['code'] >= 400){
-            $body_array = json_decode($response["body"],true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_order_status',$response["body"]);
-            // $order->update_meta_data('priority_ordnumber',$ord_number);
+        }else{
+            $message = json_encode($response);
+            $order->update_meta_data('priority_order_status',$message);
             $order->save();
-        }
-
-        if (!$response['status']||$response['code'] >= 400) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                $this->option('email_error_sync_orders_web'),
-                'Error Sync Orders',
-                $response['body']
-            );
         }
         // add timestamp
         return $response;
@@ -3757,5 +3742,6 @@ class WooAPI extends \PriorityAPI\API
         $attach_id = wp_insert_attachment( $attachment, $upload_dir['path'] . '/' . $hashed_filename );
         return $attach_id;
     }
+
 }
 
