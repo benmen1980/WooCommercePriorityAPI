@@ -4,12 +4,8 @@
  * @author      Ante Laca <ante.laca@gmail.com>
  * @copyright   2018 Roi Holdings
  */
-
 namespace PriorityWoocommerceAPI;
-
-
 use PHPMailer\PHPMailer\Exception;
-
 class WooAPI extends \PriorityAPI\API
 {
     private static $instance; // api instance
@@ -395,7 +391,8 @@ class WooAPI extends \PriorityAPI\API
                             include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
                             break;
                         case 'sync-customer';
-                            $this->syncCustomer(7);
+                            $data = $this->syncCustomer($_GET['customer_id']);
+                            highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'packs';
                             $this->syncPacksPriority();
@@ -3122,6 +3119,7 @@ class WooAPI extends \PriorityAPI\API
              $order->save();
             */
         }
+        /*
         if($response['code'] >= 400){
             $body_array = json_decode($response["body"],true);
             $this->sendEmailError(
@@ -3137,6 +3135,7 @@ class WooAPI extends \PriorityAPI\API
                 $response['body']
             );
         }
+        */
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
     }

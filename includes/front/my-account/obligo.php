@@ -1,17 +1,13 @@
 <?php
-
 use PriorityWoocommerceAPI\WooAPI;
-
 /**
  * Created by PhpStorm.
  * User: רועי
  * Date: 05/07/2020
  * Time: 23:51
  */
-
 class Obligo extends \PriorityAPI\API{
 	private static $instance; // api instance
-
 	public static function instance()
 	{
 		if (is_null(static::$instance)) {
@@ -24,7 +20,6 @@ class Obligo extends \PriorityAPI\API{
 	{
 		//return is_admin() ? $this->backend(): $this->frontend();
 	}
-
 	private function __construct()
 	{
 		add_filter( 'woocommerce_get_item_data', [$this,'render_custom_data_on_cart_checkout'], 10, 2 );
@@ -100,7 +95,6 @@ class Obligo extends \PriorityAPI\API{
 	}
 	/****** add same item with different price to cart *********/
 	/*****************************************/
-
 	public function my_enqueue() {
 
 		wp_enqueue_script( 'ajax-script',  plugin_dir_url(__FILE__).'/my-account.js', array('jquery') );
@@ -154,7 +148,6 @@ class Obligo extends \PriorityAPI\API{
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
 	// simply pay module
-
     // remove check out fields
     function custom_override_checkout_fields( $fields ) {
         unset($fields['billing']['billing_company']);
@@ -163,8 +156,6 @@ class Obligo extends \PriorityAPI\API{
         unset($fields['billing']['billing_state']);
         return $fields;
     }
-
-
     // modify fields
     function override_checkout__fields($input, $key ) {
 	    // here wee need to get data from  session
@@ -210,7 +201,6 @@ class Obligo extends \PriorityAPI\API{
                 break;
         endswitch;
     }
-
 //add_filter( 'woocommerce_checkout_fields' , 'override_checkout_email_field' );
     function simplypay(){
 	    if(isset($_GET['i'])){
@@ -271,7 +261,6 @@ class Obligo extends \PriorityAPI\API{
 	function remove_add_to_cart_message( $message ){
 		return '';
 	}
-
     function simply_custom_add_to_cart_before( $cart_item_data ) {
 
         global $woocommerce;
