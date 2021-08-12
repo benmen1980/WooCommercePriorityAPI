@@ -65,7 +65,7 @@ class Priority_cinvoices extends \PriorityAPI\API{
 		$current_user             = wp_get_current_user();
 		$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
 		
-		// get the date inputs
+		// get the date input
 		if(isset($_POST['from-date']) && isset($_POST['to-date'])) {
 			$fdate = date(DATE_ATOM, strtotime($_POST['from-date']));
 			$tdate = date(DATE_ATOM, strtotime($_POST['to-date']. ' +1 day'));
