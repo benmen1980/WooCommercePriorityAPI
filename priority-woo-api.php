@@ -119,10 +119,10 @@ add_action('plugins_loaded', function(){
 
     // check for PriorityAPI
     
-     if (in_array('PriorityAPI/priority18-api.php', $plugins)) {
+     if (is_plugin_active('PriorityAPI/priority18-api.php') {
 
         // and check for Woocommerce
-        if (in_array('woocommerce/woocommerce.php', $plugins)) {
+        if (is_plugin_active('woocommerce/woocommerce.php') {
             
 	    load_plugin_textdomain( 'p18w', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
 
