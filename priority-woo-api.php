@@ -118,11 +118,11 @@ add_action('plugins_loaded', function(){
     }
 
     // check for PriorityAPI
-    
-     if (is_plugin_active('PriorityAPI/priority18-api.php') {
+    include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+     if (is_plugin_active('PriorityAPI/priority18-api.php')) {
 
         // and check for Woocommerce
-        if (is_plugin_active('woocommerce/woocommerce.php') {
+        if (is_plugin_active('woocommerce/woocommerce.php')) {
             
 	    load_plugin_textdomain( 'p18w', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
 

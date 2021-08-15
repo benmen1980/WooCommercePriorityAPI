@@ -394,6 +394,10 @@ class WooAPI extends \PriorityAPI\API
                             $data = $this->syncCustomer($_GET['customer_id']);
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
+                        case 'sync-prospect';
+                            $data = $this->post_prospect($_GET['ord']);
+                            highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+                            break;
                         case 'packs';
                             $this->syncPacksPriority();
                             break;
