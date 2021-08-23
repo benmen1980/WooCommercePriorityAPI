@@ -103,13 +103,8 @@ register_deactivation_hook(P18AW_SELF, function(){
     # $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
     
 });
-
-
-
-
 // hook up
 add_action('plugins_loaded', function(){
-
     if(is_multisite()){
         $blog_id = \get_current_blog_id();
         $plugins = \get_blog_option($blog_id, 'active_plugins');

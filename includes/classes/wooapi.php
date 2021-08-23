@@ -2209,7 +2209,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
        $data=[
-            'PAYMENTCODE' => $card_type ?? $paymentcode,
+           'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
             'PAYACCOUNT'  => substr($payaccount,strlen($payaccount) -4,4),
             'VALIDMONTH'  => $validmonth,
             'QPRICE'      => floatval($order->get_total()),
@@ -2288,12 +2288,6 @@ class WooAPI extends \PriorityAPI\API
         if(empty(get_post_meta($order_id,'_post_done',true)) && $is_status){
             // get order
             update_post_meta($order_id,'_post_done',true);
-
-            // sync customer if it's signed in / registered
-            // guest user will have id 0
-            /*if ($customer_id = $order->get_customer_id()) {
-                $this->syncCustomer($customer_id);
-            }*/
             // sync order
             if($this->option('post_order_checkout')) {
                 $this->syncOrder( $order_id );
