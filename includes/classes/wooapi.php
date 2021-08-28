@@ -1887,6 +1887,7 @@ class WooAPI extends \PriorityAPI\API
                 'ZIP'         => isset($meta['billing_postcode'])  ? $meta['billing_postcode'][0] : '',
                 'COUNTRYNAME' => isset($meta['billing_country'])   ? $this->countries[$meta['billing_country'][0]] : '',
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
+                'EDOCUMENTS'  => 'Y',
             ]);
 
             $method = isset($meta['priority_customer_number']) ? 'PATCH' : 'POST';
