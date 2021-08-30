@@ -966,6 +966,7 @@ class WooAPI extends \PriorityAPI\API
         //add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
         //add_action( 'woocommerce_rest_insert_shop_order_object', [ $this, 'post_order_status_to_priority' ],10);
         //add_action( 'woocommerce_new_order', [ $this, 'syncDataAfterOrder' ]);
+        add_action( 'woocommerce_order_status_changed', [ $this, 'syncReceiptAfterOrder' ]);
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
         add_action( 'woocommerce_order_status_changed', [ $this, 'post_order_status_to_priority' ],10);
     }
@@ -2262,6 +2263,22 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         $this->updateOption('time_stamp_cron_prospect', time());
         return $priority_customer_number;
+    }
+    public function syncReceiptAfterOrder($order_id)
+    {
+
+        $order = new \WC_Order($order_id);
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        if(isset($config->post_receipt)!=true){return;}
+        if($order->get_status()=="completed") {
+            if (empty(get_post_meta($order_id, '_payment_done', true))) {
+                // get to order _payment_done with true
+                update_post_meta($order_id, '_payment_done', true);
+                // sync receipts
+                $this->syncReceipt($order_id);
+
+            }
+        }
     }
     public function syncDataAfterOrder($order_id)
     {
