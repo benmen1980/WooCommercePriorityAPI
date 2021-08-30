@@ -127,7 +127,7 @@ class WooAPI extends \PriorityAPI\API
              \obligo::instance()->run();
          }*/
         // Sync customer and order data after order is proccessed
-        //add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
+        //add_action( 'woocommerce_thankyou', [ $this, '' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
 
