@@ -1661,7 +1661,7 @@ class WooAPI extends \PriorityAPI\API
             }
            //
             $body =[
-                'PARTNAME'    => $meta['_sku'][0],
+               // 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
                 'BASEPLPRICE' => (float) $meta['_regular_price'][0],
                 'INVFLAG'     => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N',
@@ -1671,7 +1671,21 @@ class WooAPI extends \PriorityAPI\API
             $body['product'] = $product;
             $body = apply_filters('simply_sync_items_to_priority',$body);
             unset($body['product']);
-            $res = $this->makeRequest($method, 'LOGPART', ['body' => json_encode($body)], $this->option('log_items_web', true));
+            if($method=="PATCH") {
+                if ($single_sku == "") {
+                    $sku = $meta['_sku'][0];
+                } else {
+                    $sku = $single_sku;
+                }
+                $url =  "LOGPART('$sku')";
+            }
+            else if ($method=="POST")
+            {
+                $body ['PARTNAME']=$meta['_sku'][0];
+                $url="LOGPART";
+
+            }
+            $res = $this->makeRequest($method, $url, ['body' => json_encode($body)], $this->option('log_items_web', true));
             if (!$res['status']) {
                 $this->sendEmailError(
                     $this->option('email_error_sync_items_web'),
