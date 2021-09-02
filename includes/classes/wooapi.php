@@ -1040,8 +1040,9 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $date_filter = 'UDATE ge '.urlencode($bod);
-        $select = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG';
-        $response = $this->makeRequest('GET', 'LOGPART?$select='.$select.'&$filter='.$date_filter.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG';
+        $data = apply_filters( 'simply_syncItemsPriority_data', $data );
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$date_filter.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1142,6 +1143,7 @@ class WooAPI extends \PriorityAPI\API
                 // And finally (optionally if needed)
                 wc_delete_product_transients( $id ); // Clear/refresh the variation cache
                 // update product price
+                $item = apply_filters( 'simply_syncItemsPriority_item', $item );
                 $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
 		    $my_product = new \WC_Product( $id );
@@ -1738,8 +1740,9 @@ class WooAPI extends \PriorityAPI\API
         if($this->option('variation_field')) {
           //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
-
+        $data['select'] = 'PARTNAME';
+        $data = apply_filters( 'simply_syncItemsPriority_data', $data );
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
         // check response status
         if ($response['status']) {
 
