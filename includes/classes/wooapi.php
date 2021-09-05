@@ -1152,7 +1152,9 @@ class WooAPI extends \PriorityAPI\API
                     $my_product->save();
                     //update_post_meta($id, '_regular_price', $pri_price);
                     //update_post_meta($id, '_price',$pri_price );
-                    update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
+                    if(!empty($item['INVFLAG'])) {
+                        update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
+                    }
                     // update categories
                     $categories = [];
                     foreach (explode(',',$config->categories) as $cat){
