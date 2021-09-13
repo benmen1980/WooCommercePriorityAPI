@@ -1803,7 +1803,7 @@ class WooAPI extends \PriorityAPI\API
                         $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
                     }
                     $item['stock'] = $stock;
-                    $item = apply_filters('simply_syncInventoryPriority_item',$item);
+                    $item = apply_filters('simply_sync_inventory_priority',$item);
                     $stock = $item['stock'];
                     update_post_meta($product_id, '_stock', $stock);
                     // set stock status
