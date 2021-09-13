@@ -1743,7 +1743,7 @@ class WooAPI extends \PriorityAPI\API
           //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
         $data['select'] = 'PARTNAME';
-        $data = apply_filters( 'simply_syncItemsPriority_data', $data );
+        $data = apply_filters( 'simply_syncInventoryPriority_data', $data );
         $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
         // check response status
         if ($response['status']) {
