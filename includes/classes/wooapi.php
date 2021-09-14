@@ -127,7 +127,7 @@ class WooAPI extends \PriorityAPI\API
              \obligo::instance()->run();
          }*/
         // Sync customer and order data after order is proccessed
-        //add_action( 'woocommerce_thankyou', [ $this, 'syncDataAfterOrder' ],9999 );
+        //add_action( 'woocommerce_thankyou', [ $this, '' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
 
@@ -977,6 +977,7 @@ class WooAPI extends \PriorityAPI\API
         //add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ],9999);
         //add_action( 'woocommerce_rest_insert_shop_order_object', [ $this, 'post_order_status_to_priority' ],10);
         //add_action( 'woocommerce_new_order', [ $this, 'syncDataAfterOrder' ]);
+        add_action( 'woocommerce_order_status_changed', [ $this, 'syncReceiptAfterOrder' ]);
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
         add_action( 'woocommerce_order_status_changed', [ $this, 'post_order_status_to_priority' ],10);
     }
@@ -1050,8 +1051,9 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback*24, 0, 0);
         $bod = date(DATE_ATOM,$stamp);
         $date_filter = 'UDATE ge '.urlencode($bod);
-        $select = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG';
-        $response = $this->makeRequest('GET', 'LOGPART?$select='.$select.'&$filter='.$date_filter.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG';
+        $data = apply_filters( 'simply_syncItemsPriority_data', $data );
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$date_filter.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1152,6 +1154,7 @@ class WooAPI extends \PriorityAPI\API
                 // And finally (optionally if needed)
                 wc_delete_product_transients( $id ); // Clear/refresh the variation cache
                 // update product price
+                $item = apply_filters( 'simply_syncItemsPriority_item', $item );
                 $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
 		    $my_product = new \WC_Product( $id );
@@ -1160,7 +1163,9 @@ class WooAPI extends \PriorityAPI\API
                     $my_product->save();
                     //update_post_meta($id, '_regular_price', $pri_price);
                     //update_post_meta($id, '_price',$pri_price );
-                    update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
+                    if(!empty($item['INVFLAG'])) {
+                        update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
+                    }
                     // update categories
                     $categories = [];
                     foreach (explode(',',$config->categories) as $cat){
@@ -1671,7 +1676,7 @@ class WooAPI extends \PriorityAPI\API
             }
            //
             $body =[
-                'PARTNAME'    => $meta['_sku'][0],
+               // 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
                 'BASEPLPRICE' => (float) $meta['_regular_price'][0],
                 'INVFLAG'     => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N',
@@ -1681,7 +1686,21 @@ class WooAPI extends \PriorityAPI\API
             $body['product'] = $product;
             $body = apply_filters('simply_sync_items_to_priority',$body);
             unset($body['product']);
-            $res = $this->makeRequest($method, 'LOGPART', ['body' => json_encode($body)], $this->option('log_items_web', true));
+            if($method=="PATCH") {
+                if ($single_sku == "") {
+                    $sku = $meta['_sku'][0];
+                } else {
+                    $sku = $single_sku;
+                }
+                $url =  "LOGPART('$sku')";
+            }
+            else if ($method=="POST")
+            {
+                $body ['PARTNAME']=$meta['_sku'][0];
+                $url="LOGPART";
+
+            }
+            $res = $this->makeRequest($method, $url, ['body' => json_encode($body)], $this->option('log_items_web', true));
             if (!$res['status']) {
                 $this->sendEmailError(
                     $this->option('email_error_sync_items_web'),
@@ -1734,8 +1753,9 @@ class WooAPI extends \PriorityAPI\API
         if($this->option('variation_field')) {
           //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
-
+        $data['select'] = 'PARTNAME';
+        $data = apply_filters( 'simply_syncInventoryPriority_data', $data );
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
         // check response status
         if ($response['status']) {
 
@@ -2273,6 +2293,22 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         $this->updateOption('time_stamp_cron_prospect', time());
         return $priority_customer_number;
+    }
+    public function syncReceiptAfterOrder($order_id)
+    {
+
+        $order = new \WC_Order($order_id);
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        if(isset($config->post_receipt)!=true){return;}
+        if($order->get_status()=="completed") {
+            if (empty(get_post_meta($order_id, '_payment_done', true))) {
+                // get to order _payment_done with true
+                update_post_meta($order_id, '_payment_done', true);
+                // sync receipts
+                $this->syncReceipt($order_id);
+
+            }
+        }
     }
     public function syncDataAfterOrder($order_id)
     {
