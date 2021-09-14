@@ -130,8 +130,6 @@ class WooAPI extends \PriorityAPI\API
         //add_action( 'woocommerce_thankyou', [ $this, '' ],9999 );
         add_action( 'woocommerce_payment_complete', [ $this, 'syncDataAfterOrder' ],9999 );
         add_action( 'woocommerce_order_status_changed', [ $this, 'syncDataAfterOrder' ]);
-
-
         // custom check out fields
         //add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
         add_action('woocommerce_checkout_process', array($this,'my_custom_checkout_field_process'));
