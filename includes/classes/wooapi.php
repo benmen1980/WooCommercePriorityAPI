@@ -383,6 +383,17 @@ class WooAPI extends \PriorityAPI\API
                             $order = new \WC_Order($id);
                             $data = get_post_meta($_GET['ord']);
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+
+
+                            $id = $_GET['ord'];
+                            $inst = get_post_meta($id,'מקור',true);
+                            foreach ( $order->get_items() as $item_id => $item ) {
+                                if(!empty($item->get_meta('מקור'))){
+                                    $inst = $item->get_meta('מקור');
+                                    continue;
+                                }
+                            }
+
                             break;
                         case 'customersProducts';
                             include P18AW_ADMIN_DIR . 'customersProducts.php';
@@ -1890,7 +1901,7 @@ class WooAPI extends \PriorityAPI\API
                 'EDOCUMENTS'  => 'Y',
             ]);
 
-            $method = isset($meta['priority_customer_number']) ? 'PATCH' : 'POST';
+            $method = !empty($meta['priority_customer_number']) ? 'PATCH' : 'POST';
 
 
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
@@ -2266,17 +2277,6 @@ class WooAPI extends \PriorityAPI\API
     public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
-        // sync payments
-        if(isset(WC()->session)){
-            $session = WC()->session->get('session_vars');
-            if($session['ordertype']=='Recipe') {
-                $optional = array(
-                    "custname" => $session['custname']
-                );
-                $this->syncPayment($order_id,$optional);
-                return;
-            }
-        }
         $this->syncCustomer($order->get_user()->ID);
         // check order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
@@ -2287,6 +2287,17 @@ class WooAPI extends \PriorityAPI\API
             $is_status = in_array($order->get_status(),$statuses);
         }
         if(empty(get_post_meta($order_id,'_post_done',true)) && $is_status){
+            // sync payments
+            if(isset(WC()->session)){
+                $session = WC()->session->get('session_vars');
+                if($session['ordertype']=='Recipe') {
+                    $optional = array(
+                        "custname" => $session['custname']
+                    );
+                    $this->syncPayment($order_id,$optional);
+                    return;
+                }
+            }
             // get order
             update_post_meta($order_id,'_post_done',true);
             // sync order
@@ -3108,19 +3119,13 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', $doctype, ['body' => json_encode($data)],true);
         if ($response['code']<=201) {
-            /*
              $body_array = json_decode($response["body"],true);
-
              $ord_status = $body_array["STATDES"];
              $ord_number = $body_array["IVNUM"];
-             $order->update_meta_data('priority_invoice_status',$ord_status);
-             $order->update_meta_data('priority_invoice_number',$ord_number);
-             $order->save();
-            */
         }
-        /*
         if($response['code'] >= 400){
             $body_array = json_decode($response["body"],true);
+            $ord_status = $body_array;
             $this->sendEmailError(
                 [$this->option('email_error_sync_einvoices_web')],
                 'Error Sync payment',
@@ -3128,13 +3133,16 @@ class WooAPI extends \PriorityAPI\API
             );
         }
         if (!$response['status']) {
+            $ord_status = $response['body'];
             $this->sendEmailError(
                 [$this->option('email_error_sync_einvoices_web')],
                 'Error Sync payment',
                 $response['body']
             );
         }
-        */
+        $order->update_meta_data('priority_recipe_status',$ord_status);
+        $order->update_meta_data('priority_recipe_number',$ord_number);
+        $order->save();
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
     }
