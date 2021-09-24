@@ -2324,10 +2324,7 @@ class WooAPI extends \PriorityAPI\API
             update_post_meta($order_id,'_post_done',true);
             // sync payments
             $is_payment = !empty(get_post_meta($order_id,'priority_custname',true));
-
             if($is_payment){
-
-
                     $optional = array(
                         "custname" => get_post_meta($order_id,'priority_custname',true)
                     );
