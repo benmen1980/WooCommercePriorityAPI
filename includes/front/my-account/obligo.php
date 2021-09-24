@@ -24,15 +24,15 @@ class Obligo extends \PriorityAPI\API{
 	{
 		add_filter( 'woocommerce_get_item_data', [$this,'render_custom_data_on_cart_checkout'], 10, 2 );
 		add_filter( 'woocommerce_add_cart_item_data',[$this,'split_product_individual_cart_items'], 10, 2 );
+		/*
 		if(isset($_GET['c'])||isset($_GET['i'])){
 			add_filter( 'wc_add_to_cart_message_html', [$this,'remove_add_to_cart_message']);
             // remove this if you want to allow adding paymnets to cart with different iv or price
-            add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
+           // add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
         }
-		if(isset($_GET['currency'])){
-            add_filter( 'woocommerce_currency',[$this,'simply_change_existing_currency_symbol'],9999,2 );
-        }
-		add_filter( 'woocommerce_add_cart_item_data',[$this,'simplypay'], 10, 2 );
+		*/
+
+		//add_filter( 'woocommerce_add_cart_item_data',[$this,'simplypay'], 10, 2 );
 		add_action( 'woocommerce_before_calculate_totals', [$this,'add_custom_price']);
 		add_action( 'p18a_request_front_obligo',[$this,'request_front_obligo']);
 
@@ -90,8 +90,8 @@ class Obligo extends \PriorityAPI\API{
 		//redirect cart to checkout if  תשלום חוב
 		add_action( 'template_redirect', [$this,'redirect_visitor']);
         // modify check out fields
-        add_filter( 'woocommerce_checkout_fields' , [$this,'custom_override_checkout_fields'],10,1 );
-        add_filter( 'woocommerce_checkout_get_value',[$this,'override_checkout__fields'],10,2);
+        //add_filter( 'woocommerce_checkout_fields' , [$this,'custom_override_checkout_fields'],10,1 );
+        //add_filter( 'woocommerce_checkout_get_value',[$this,'override_checkout__fields'],10,2);
 	}
 	/****** add same item with different price to cart *********/
 	/*****************************************/
@@ -113,7 +113,6 @@ class Obligo extends \PriorityAPI\API{
 		$cart           = WC()->cart->add_to_cart( $product_id, 1, null, null, $cart_item_data );
     }
 	public function my_action() {
-
 		$data = $_POST['data'];
 		array_shift($data);
 		$response = true;
@@ -147,16 +146,17 @@ class Obligo extends \PriorityAPI\API{
 
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
-	// simply pay module
+	// simply pay module moved to separate file simplypay/simplypay.php
     // remove check out fields
-    function custom_override_checkout_fields( $fields ) {
+    /*function custom_override_checkout_fields( $fields ) {
         unset($fields['billing']['billing_company']);
         unset($fields['billing']['billing_address_2']);
         unset($fields['billing']['billing_country']);
         unset($fields['billing']['billing_state']);
         return $fields;
-    }
+    }*/
     // modify fields
+    /*
     function override_checkout__fields($input, $key ) {
 	    // here wee need to get data from  session
         $retrive_data = WC()->session->get( 'session_vars' );
@@ -201,7 +201,9 @@ class Obligo extends \PriorityAPI\API{
                 break;
         endswitch;
     }
+    */
 //add_filter( 'woocommerce_checkout_fields' , 'override_checkout_email_field' );
+/*
     function simplypay(){
 	    if(isset($_GET['i'])){
 	        global $wpdb;
@@ -271,6 +273,7 @@ class Obligo extends \PriorityAPI\API{
     function simply_change_existing_currency_symbol(  $currency ) {
         return $_GET['currency']; // <=== HERE define the targeted currency code
     }
+*/
     // end simply pay
 	function split_product_individual_cart_items( $cart_item_data, $product_id ){
 		if(isset($_POST['obligoSubmit'])){

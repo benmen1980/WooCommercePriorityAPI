@@ -8,7 +8,7 @@
 * Plugin Name: Priority Woocommerce API 
 * Plugin URI: http://simplyCT.co.il
 * Description: Priority Woocommerce API extension
-* Version: 1.08
+* Version: 1.09
 * Author: SimplyCT
 * Author URI: http://www.simplyCT.co.il
 * Licence: GPLv2
@@ -20,7 +20,7 @@
 namespace PriorityWoocommerceAPI;
 
 // Priority Woocommerce API
-define('P18AW_VERSION'       , '1.08');
+define('P18AW_VERSION'       , '1.09');
 define('P18AW_SELF'          , __FILE__);
 define('P18AW_URI'           , plugin_dir_url(__FILE__));
 define('P18AW_DIR'           , plugin_dir_path(__FILE__)); 
@@ -124,9 +124,16 @@ add_action('plugins_loaded', function(){
             require P18AW_CLASSES_DIR . 'wooapi.php';
             
             WooAPI::instance()->run();
-
+            // load simplypay
+            $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+            $simplypay = $config->simplypay == 'true';
+            if($simplypay){
+                require P18AW_FRONT_DIR . 'simplypay/simplypay.php';
+                \simplypay::instance()->run();
+            }
 	        // load obligo
-	        if(WooAPI::instance()->option('obligo')) {
+            $obligo = WooAPI::instance()->option('obligo') == true ;
+	        if($obligo) {
                 require P18AW_FRONT_DIR . 'my-account/obligo.php';
                 \obligo::instance()->run();
                 //load prority orders excel

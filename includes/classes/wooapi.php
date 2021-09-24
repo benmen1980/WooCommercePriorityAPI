@@ -2231,7 +2231,7 @@ class WooAPI extends \PriorityAPI\API
                 $validmonth =  '01/25';
                 $ccuid = '1234';
                 $confnum = '987654321';
-                $numpay = 1;
+                $numpay = '';
                 $firstpay = 0.0;
                 $cardnum = '';
             break;
@@ -2311,7 +2311,6 @@ class WooAPI extends \PriorityAPI\API
     public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
-        $this->syncCustomer($order->get_user()->ID);
         // check order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
         if(!isset($config->order_statuses)){
@@ -2321,19 +2320,21 @@ class WooAPI extends \PriorityAPI\API
             $is_status = in_array($order->get_status(),$statuses);
         }
         if(empty(get_post_meta($order_id,'_post_done',true)) && $is_status){
+            // get order
+            update_post_meta($order_id,'_post_done',true);
             // sync payments
-            if(isset(WC()->session)){
-                $session = WC()->session->get('session_vars');
-                if($session['ordertype']=='Recipe') {
+            $is_payment = !empty(get_post_meta($order_id,'priority_custname',true));
+
+            if($is_payment){
+
+
                     $optional = array(
-                        "custname" => $session['custname']
+                        "custname" => get_post_meta($order_id,'priority_custname',true)
                     );
                     $this->syncPayment($order_id,$optional);
                     return;
-                }
             }
-            // get order
-            update_post_meta($order_id,'_post_done',true);
+            $this->syncCustomer($order->get_user()->ID);
             // sync order
             if($this->option('post_order_checkout')) {
                 $this->syncOrder( $order_id );
