@@ -1918,7 +1918,7 @@ class WooAPI extends \PriorityAPI\API
             $request=apply_filters('simply_syncCustomer',$request);
             unset($request["id"]);
             $json_request= json_encode($request);
-            $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
+            $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], true);
             if($method =='POST') {
                 $data = json_decode($response['body']);
                 $priority_customer_number = $data->CUSTNAME;
