@@ -1900,7 +1900,7 @@ class WooAPI extends \PriorityAPI\API
             }
 
 
-            $json_request = json_encode([
+            $request = [
                 'CUSTNAME'    => $priority_customer_number,
                 'CUSTDES'     => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
                 'EMAIL'       => $user->data->user_email,
@@ -1911,13 +1911,13 @@ class WooAPI extends \PriorityAPI\API
                 'COUNTRYNAME' => isset($meta['billing_country'])   ? $this->countries[$meta['billing_country'][0]] : '',
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS'  => 'Y',
-            ]);
+            ];
 
             $method = !empty($meta['priority_customer_number']) ? 'PATCH' : 'POST';
-            $json_request["id"]=$id;
-            $json_request=apply_filters('simply_syncCustomer',$json_request);
-            unset($json_request["id"]);
-            $json_request= json_encode($json_request);
+            $request["id"]=$id;
+            $request=apply_filters('simply_syncCustomer',$request);
+            unset($request["id"]);
+            $json_request= json_encode($request);
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
             if($method =='POST') {
                 $data = json_decode($response['body']);
