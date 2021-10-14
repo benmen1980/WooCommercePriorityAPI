@@ -131,9 +131,9 @@ class simplypay extends \PriorityAPI\API{
             case 'billing_address_1';
                 return $billing_address_1;
                 break;
-            case 'billing_country';
+           /* case 'billing_country';
                 return 'Israel';
-                break;
+                break;*/
             case 'billing_company';
                 return '';
                 break;
@@ -171,7 +171,7 @@ class simplypay extends \PriorityAPI\API{
             );
             if(sizeof($sql_result)>0){
                 if(empty($_GET['debug'])) {
-                    wp_die(__('This invoice had already been payed!', 'simply'));
+                    wp_die(__('This invoice had already been paid!', 'simply'));
                     $url = home_url() . '/duplicate-invoice';
                     wp_redirect($url);
                     exit;

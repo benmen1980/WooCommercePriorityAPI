@@ -136,9 +136,10 @@ class WooAPI extends \PriorityAPI\API
         add_action( 'woocommerce_checkout_update_order_meta',array($this,'my_custom_checkout_field_update_order_meta' ));
         // sync user to priority after registration
         if ( $this->option( 'post_customers' ) == true ) {
-            //add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
-            //add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
-            //add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
+            add_action( 'user_register', [ $this, 'syncCustomer' ],999 );
+            add_action( 'user_new_form', [ $this, 'syncCustomer' ],999 );
+            add_action( 'woocommerce_save_account_details', [ $this, 'syncCustomer' ],999 );
+            add_action( 'woocommerce_customer_save_address', [ $this, 'syncCustomer' ],999 );
         }
         if ( $this->option( 'sell_by_pl' ) == true ) {
             // add overall customer discount
@@ -1756,13 +1757,9 @@ class WooAPI extends \PriorityAPI\API
         $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter= '.urlencode($url_addition).' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
         // check response status
         if ($response['status']) {
-
             $data = json_decode($response['body_raw'], true);
-
             foreach($data['value'] as $item) {
-
                 // if product exsits, update
-
                 $option_filed = explode (',',$this->option('sync_inventory_warhsname'))[2] ;
                 $field = (!empty($option_filed) ? $option_filed : 'PARTNAME');
                 $args = array(
@@ -1779,13 +1776,10 @@ class WooAPI extends \PriorityAPI\API
                     while ( $my_query->have_posts() ) {
                         $my_query->the_post();
                         $product_id = get_the_ID();
-
-
                     }
                 }else{
                     $product_id = 0;
                 }
-
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
                 if(!$product_id == 0){
                     // update_post_meta($product_id, '_sku', $item['PARTNAME']);
@@ -2254,6 +2248,9 @@ class WooAPI extends \PriorityAPI\API
             $data['CARDNUM']     = $cardnum;
         //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
         }
+        if(!$is_order){
+            $data['PAYDATE']       = date('Y-m-d');
+        }
         if($is_order){
             $data['EMAIL'] = $order->get_billing_email();
         }
@@ -2466,7 +2463,7 @@ class WooAPI extends \PriorityAPI\API
                 }
 
                 // add timestamp
-                $this->updateOption('pricelist_priority_update', time());
+                $this->updateOption('sites_priority_update', time());
 
             }
 
@@ -2475,8 +2472,8 @@ class WooAPI extends \PriorityAPI\API
              * t149
              */
             $this->sendEmailError(
-                $this->option('email_error_sync_pricelist_priority'),
-                'Error Sync Price Lists Priority',
+                $this->option('email_error_sync_site_priority'),
+                'Error Sync Sites Priority',
                 $response['body']
             );
 
