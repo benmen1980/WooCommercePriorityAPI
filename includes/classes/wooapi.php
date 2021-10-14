@@ -1914,8 +1914,10 @@ class WooAPI extends \PriorityAPI\API
             ]);
 
             $method = !empty($meta['priority_customer_number']) ? 'PATCH' : 'POST';
-
-
+            $json_request["id"]=$id;
+            $json_request=apply_filters('simply_syncCustomer',$json_request);
+            unset($json_request["id"]);
+            $json_request= json_encode($json_request);
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
             if($method =='POST') {
                 $data = json_decode($response['body']);
@@ -2520,6 +2522,7 @@ class WooAPI extends \PriorityAPI\API
         $cart_discount = floatval($order->get_total_discount());
         $cart_discount_tax = floatval($order->get_discount_tax());
         $order_total = floatval($order->get_subtotal()+ $order->get_shipping_total());
+       if($order_total!=0)
         $order_discount = ($cart_discount/$order_total) * 100.0;
         if('header' == $discount_type){
             $data['PERCENT'] = $order_discount;
