@@ -3466,7 +3466,7 @@ class WooAPI extends \PriorityAPI\API
             $shipping_price = $data['total'];
             $data = [
                 // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-                'PARTNAME' => $this->option('shipping_' . $method_id . '_' . $instance_id, $default_product),
+                $this->get_sku_prioirty_dest_field()  => $this->option('shipping_' . $method_id . '_' . $instance_id, $default_product),
                 'TQUANT' => 1,
                 $price_filed => floatval($shipping_price),
                 'DUEDATE'          => date('Y-m-d')
