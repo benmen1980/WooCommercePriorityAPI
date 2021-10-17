@@ -126,7 +126,7 @@ add_action('plugins_loaded', function(){
             WooAPI::instance()->run();
             // load simplypay
             $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
-            $simplypay = $config->simplypay == 'true';
+            $simplypay = (!empty($config) ? ($config->simplypay == 'true') : false);
             if($simplypay){
                 require P18AW_FRONT_DIR . 'simplypay/simplypay.php';
                 \simplypay::instance()->run();
