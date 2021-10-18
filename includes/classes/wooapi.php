@@ -1912,8 +1912,8 @@ class WooAPI extends \PriorityAPI\API
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS'  => 'Y',
             ];
-
-            $method = !empty($meta['priority_customer_number']) ? 'PATCH' : 'POST';
+            $priority_cust_from_wc = get_post_meta($id,'priority_customer_number',true);
+            $method = !empty($priority_cust_from_wc) ? 'PATCH' : 'POST';
             $request["id"]=$id;
             $request=apply_filters('simply_syncCustomer',$request);
             unset($request["id"]);
@@ -1937,6 +1937,7 @@ class WooAPI extends \PriorityAPI\API
             // add timestamp
             $this->updateOption('post_customers', time());
         }
+        return $response;
     }
     public function syncPriorityOrderStatus(){
 
@@ -2330,7 +2331,10 @@ class WooAPI extends \PriorityAPI\API
                     $this->syncPayment($order_id,$optional);
                     return;
             }
-            $this->syncCustomer($order->get_user()->ID);
+            // customer
+            $post_cusotmer = $this->option( 'post_customers' );
+            $user_id = $order->get_user_id();
+            if($post_cusotmer && $user_id != 0) $this->syncCustomer($order->get_user()->ID);
             // sync order
             if($this->option('post_order_checkout')) {
                 $this->syncOrder( $order_id );
@@ -2685,7 +2689,7 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_order_number',$ord_number);
             $order->save();
         }else{
-            $message = json_encode($response);
+            $message = $response['message'].''.json_encode($response);
             $order->update_meta_data('priority_order_status',$message);
             $order->save();
         }
@@ -2867,22 +2871,17 @@ class WooAPI extends \PriorityAPI\API
         }
         if($response['code'] >= 400){
             $body_array = json_decode($response["body"],true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_invoice_status',$response["body"]);
-            // $order->update_meta_data('priority_ordnumber',$ord_number);
+            $order->update_meta_data('priority_invoice_status',$response['message'].' '.$response["body"]);
             $order->save();
         }
 
         if (!$response['status']||$response['code'] >= 400) {
-            /**
-             * t149
-             */
+            $order->update_meta_data('priority_invoice_status',$response['message']);
+            $order->save();
             $this->sendEmailError(
                 $this->option('email_error_sync_ainvoices_priority'),
                 'Error Sync Sales Invoice',
-                $response['body']
+                $response['message'].' '.$response['body']
             );
         }
         // add timestamp
