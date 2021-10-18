@@ -1898,7 +1898,11 @@ class WooAPI extends \PriorityAPI\API
             if('prospect_cellphone'==$this->option('prospect_field')){
                 $priority_customer_number = $meta['billing_phone'][0];
             }
-
+            // if already assigned value it is stronger
+            $priority_cust_from_wc = get_post_meta($id,'priority_customer_number',true);
+            if(!empty($priority_cust_from_wc)){
+                $priority_customer_number = $priority_cust_from_wc;
+            }
 
             $request = [
                 'CUSTNAME'    => $priority_customer_number,
@@ -1912,7 +1916,6 @@ class WooAPI extends \PriorityAPI\API
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS'  => 'Y',
             ];
-            $priority_cust_from_wc = get_post_meta($id,'priority_customer_number',true);
             $method = !empty($priority_cust_from_wc) ? 'PATCH' : 'POST';
             $request["id"]=$id;
             $request=apply_filters('simply_syncCustomer',$request);
@@ -3472,7 +3475,7 @@ class WooAPI extends \PriorityAPI\API
                 'TQUANT' => 1,
                 $price_filed => floatval($shipping_price)
             ];
-            if($is_order) $data['DUEDATE'] = date('Y-m-d');
+            if($is_order) $data += ['DUEDATE' => date('Y-m-d')];
             return $data;
         }else{
             return null;
