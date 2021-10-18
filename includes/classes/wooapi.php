@@ -2039,6 +2039,9 @@ class WooAPI extends \PriorityAPI\API
                 $cust_number = $this->post_prospect($order);
             }
         }
+        $cust_data = [$order,$cust_number,$this];
+        $cust_data = apply_filters( 'simply_modify_customer_number', $cust_data );
+        $cust_number = $cust_data[1];
         return $cust_number;
     }
     public function syncOrders(){
