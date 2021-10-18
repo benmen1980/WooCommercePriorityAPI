@@ -2559,8 +2559,8 @@ class WooAPI extends \PriorityAPI\API
         // shop address debug
 
         $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
-            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+            'NAME' => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),/* איש קשר */
+            'CUSTDES' => (!empty($order_user)) ? $order_user->user_firstname . ' ' . $order_user->user_lastname : ($order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name()) ,/*שם*/
             'PHONENUM'    => $order->get_billing_phone(),
             'ADDRESS'     => $order->get_shipping_address_1(),
             'ADDRESS2'    => $order->get_shipping_address_2(),
@@ -2755,8 +2755,8 @@ class WooAPI extends \PriorityAPI\API
         // shipping
         // shop address debug
         $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
-            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+            'NAME' => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),/* איש קשר */
+            'CUSTDES' => (!empty($order_user)) ? $order_user->user_firstname . ' ' . $order_user->user_lastname : ($order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name()) ,/*שם*/
             'PHONENUM'    => $order->get_billing_phone(),
             'EMAIL'       => $order->get_billing_email(),
             'CELLPHONE'   => $order->get_billing_phone(),
@@ -2937,8 +2937,8 @@ class WooAPI extends \PriorityAPI\API
 
         // shipping
         $shipping_data = [
-            'NAME'        => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
-            'CUSTDES'     => $order_user->user_firstname . ' ' . $order_user->user_lastname,
+            'NAME' => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),/* איש קשר */
+            'CUSTDES' => (!empty($order_user)) ? $order_user->user_firstname . ' ' . $order_user->user_lastname : ($order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name()) ,/*שם*/
             'PHONENUM'    => $order->get_billing_phone(),
             'EMAIL'       => $order->get_billing_email(),
             'CELLPHONE'   => $order->get_billing_phone(),
