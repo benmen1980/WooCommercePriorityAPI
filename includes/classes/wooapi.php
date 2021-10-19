@@ -1661,7 +1661,7 @@ class WooAPI extends \PriorityAPI\API
             $terms = get_the_terms(($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'product_cat' );
 
             foreach ( $terms as $term ) {
-                $cat_id = $term->id;
+                $cat_id = $term->term_id;
             }
             $attr = get_the_terms ( ($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'pa_size' );
             $size = $attr[0]->name;
