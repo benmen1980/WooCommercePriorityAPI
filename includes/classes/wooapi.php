@@ -1663,17 +1663,18 @@ class WooAPI extends \PriorityAPI\API
             foreach ( $terms as $term ) {
                 $cat_id = $term->term_id;
             }
-            $attr = get_the_terms ( ($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'pa_size' );
-            $size = $attr[0]->name;
+            // Unused code that overrides the function
+//            $attr = get_the_terms ( ($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'pa_size' );
+//            $size = $attr[0]->name;
+//
+//            $attributes = wc_get_product($product->ID)->get_attributes();
+//            $product_attr = get_post_meta($product->ID, '_product_attributes' );
+//            foreach ($product_attr as $attr) {
+//                foreach ($attr as $attribute) {
+//                    $attrnames = str_replace("pa_", "", $attribute['name']);
+//                }
+//            }
 
-            $attributes = wc_get_product($product->ID)->get_attributes();
-            $product_attr = get_post_meta($product->ID, '_product_attributes' );
-            foreach ($product_attr as $attr) {
-                foreach ($attr as $attribute) {
-                    $attrnames = str_replace("pa_", "", $attribute['name']);
-                }
-            }
-           //
             $body =[
                // 'PARTNAME'    => $meta['_sku'][0],
                 'PARTDES'     => $product->post_title,
