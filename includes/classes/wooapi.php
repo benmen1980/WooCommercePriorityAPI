@@ -2526,7 +2526,7 @@ class WooAPI extends \PriorityAPI\API
         ];
         // CDES
         if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
-            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+            $data['CDES'] = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         }
 
         // cart discount header
