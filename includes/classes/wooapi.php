@@ -2680,7 +2680,9 @@ class WooAPI extends \PriorityAPI\API
         // payment info
         $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order,true);
         // filter
+        $data["orderId"]=$id;
         $data = apply_filters( 'simply_request_data', $data );
+        unset($data["orderId"]);
         $config = json_decode(stripslashes($this->option('setting-config')));
         if(!empty($config->formname)){
             $form_name = $config->formname;
