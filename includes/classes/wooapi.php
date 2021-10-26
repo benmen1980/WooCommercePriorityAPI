@@ -2283,6 +2283,7 @@ class WooAPI extends \PriorityAPI\API
             'ZIP'         => $order->get_shipping_postcode(),
             'PHONE'       => $order->get_billing_phone(),
         ]);
+        //apply_filters
         $json_request=apply_filters('simply_post_prospect',$json_request);
         $method = 'POST';
         $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
