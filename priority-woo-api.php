@@ -71,7 +71,7 @@ register_activation_hook(P18AW_SELF, function(){
         id  INT AUTO_INCREMENT,
         blog_id INT,
         sitecode VARCHAR(32),
-        sitedesc VARCHAR(32),
+        sitedesc VARCHAR(80),
         customer_number VARCHAR(30),
         address1 VARCHAR(80),
         PRIMARY KEY  (id)
