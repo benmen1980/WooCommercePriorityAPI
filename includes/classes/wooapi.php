@@ -2140,6 +2140,35 @@ class WooAPI extends \PriorityAPI\API
         $paymentcode = $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method());
 
         switch($gateway){
+            //yaad-sarig
+            case 'yaad-sarig';
+                $yaad_credit_card_payment = $order->get_meta('yaad_credit_card_payment');
+                $strArr = explode('&', $yaad_credit_card_payment);
+                $var = $strArr[14];
+                $s = explode('=', $var);
+                $ccuid = $s[1];
+                $var = $strArr[14];
+                $s = explode('=', $var);
+                $payaccount =$s[1];
+                $var = $strArr[20];
+                $s = explode('=', $var);
+                $validmonth =$s[1];
+                $var = $strArr[3];
+                $s = explode('=', $var);
+                $confnum = $s[1];
+                $var = $strArr[10];
+                $s = explode('=', $var);
+                $numpay = $s[1];
+                $var = $strArr[10];
+                $s = explode('=', $var);
+                $firstpay = s[1];
+                $var = $strArr[13];
+                $s = explode('=', $var);
+                $card_type = $s[1];
+                $var = $strArr[12];
+                $s = explode('=', $var);
+                $payment_type = $s[1];
+                break;
             // pelecard
             case 'pelecard';
                 $order_cc_meta = $order->get_meta('_transaction_data');
