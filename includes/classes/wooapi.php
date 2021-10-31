@@ -405,7 +405,7 @@ class WooAPI extends \PriorityAPI\API
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'sync-prospect';
-                            $data = $this->post_prospect($_GET['ord']);
+                            $data = $this->syncProspect($_GET['ord']);
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'packs';
@@ -2041,7 +2041,7 @@ class WooAPI extends \PriorityAPI\API
             $cust_number = $walk_in_customer;
             // check prospect
             if($this->option('post_prospect')){
-                $cust_number = $this->post_prospect($order);
+                $cust_number = $this->syncProspect($order);
             }
         }
         $cust_data = [$order,$cust_number,$this];
@@ -2266,7 +2266,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $data;
     }
-    public function post_prospect($order)
+    public function syncProspect($order)
     {
         if('prospect_email'==$this->option('prospect_field')){
             $priority_customer_number = $order->get_billing_email();
