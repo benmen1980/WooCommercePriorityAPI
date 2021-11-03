@@ -1926,7 +1926,7 @@ class WooAPI extends \PriorityAPI\API
             if($method =='POST') {
                 $data = json_decode($response['body']);
                 $priority_customer_number = $data->CUSTNAME;
-                add_user_meta($id, 'priority_customer_number', $priority_customer_number);
+                 add_user_meta($id, 'priority_customer_number', $priority_customer_number);
             }
             // set priority customer id
             if ($response['status']) {
