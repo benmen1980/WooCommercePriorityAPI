@@ -2029,25 +2029,81 @@ class WooAPI extends \PriorityAPI\API
         // end
         $this->updateOption('auto_sync_order_status_priority_update', time());
     }
-    public function getPriorityCustomer($order){
+    public function getPriorityCustomer(&$order){
+        /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
+        $order_id = $order->get_id();
+        if(!empty(get_post_meta($order_id,'cust_name',true)))
+        {
+            $response['args']['body']=get_post_meta($order_id,'cust_name',true);
+            $response['message']="Exists cust_name";
+            $response['body']="";
+            return $response;
+        }
+        $cust_data = [$order,null,$this];
+        $cust_data = apply_filters( 'simply_modify_customer_number', $cust_data );
+        if(!empty($cust_data[1]))
+        {
+            $cust_number = $cust_data[1];
+            add_post_meta($order_id,'cust_name',$cust_number);
+            $response['args']['body']=get_post_meta($order_id,'cust_name',true);
+            $response['message']="simply_modify_customer_number";
+            $response['body']="";
+            return $response;
+        }
+        /*  לקוח מזדמן */
         $cust_numbers = explode('|',$this->option('walkin_number'));
         $country = (!empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country());
         $walk_in_customer = (($country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1]))  ? $cust_numbers[1] : $cust_numbers[0]);
         $walk_in_customer = !empty($walk_in_customer) ? $walk_in_customer : $cust_numbers[0];
-        if ($order->get_customer_id()) {
-            $cust_number = get_user_meta($order->get_customer_id(),'priority_customer_number',true);
-            $cust_number = (!empty($cust_number) ? $cust_number : $walk_in_customer);
-        } else {
-            $cust_number = $walk_in_customer;
-            // check prospect
-            if($this->option('post_prospect')){
-                $cust_number = $this->syncProspect($order);
+        /*   אם מסומן צק בוקס של register customer */
+        if($this->option('post_customers'))
+        {
+            if ($order->get_customer_id()) {
+                $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
+                /* אם אין לו מספר אז תיצור אותו */
+                if(empty($cust_number)) {
+                    $response = $this->syncCustomer($order->get_customer_id());
+                    if ($response['code'] == '201')
+                    {
+                        $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
+                        add_post_meta($order_id,'cust_name',$cust_number);
+                        $response['args']['body']="Registered Customers";
+                        $response['message']="add Registered Customers To Priority With cust_name";
+                        $response['body']= get_post_meta($order_id,'cust_name',true);
+                        return $response;
+                    }
+                    else
+                    {
+                        $response['args']['body']="Eror in created New Registered Customer";
+                        $response['message']="add Registered Customers To Priority With cust_name";
+                        $response['body']= $response["code"];
+                        return $response;
+                    }
+                }
+                else{
+                    add_post_meta($order_id,'cust_name',$cust_number);
+                    $response['args']['body']="Registered Customers Exists";
+                    $response['message']="Registered Customer Exists In Priority With cust_name";
+                    $response['body']= get_post_meta($order_id,'cust_name',true);
+                    return $response;
+                }
             }
         }
-        $cust_data = [$order,$cust_number,$this];
-        $cust_data = apply_filters( 'simply_modify_customer_number', $cust_data );
-        $cust_number = $cust_data[1];
-        return $cust_number;
+        /*  אם מסומן צק בוקס של prospect */
+        if($this->option('post_prospect')){
+            $cust_number = $this->syncProspect($order);
+            add_post_meta($order_id,'cust_name',$cust_number);
+            $response['args']['body']=get_post_meta($order_id,'cust_name',true);
+            $response['message']="simply_modify_customer_number";
+            $response['body']="";
+            return $response;
+        }
+        // walk in customer
+        update_post_meta($order_id,'cust_name',$walk_in_customer);
+        $response['args']['body']=get_post_meta($order_id,'cust_name',true);
+        $response['message']="walk_in_customer";
+        $response['body']="";
+        return $response;
     }
     public function syncOrders(){
         $query = new \WC_Order_Query( array(
@@ -2318,7 +2374,8 @@ class WooAPI extends \PriorityAPI\API
         $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
         // set priority customer id
         if ($response['status']) {
-
+            $data = json_decode($response['body']);
+            $priority_customer_number = $data->CUSTNAME;
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_customers_web'),
@@ -2544,7 +2601,7 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($raw_option));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        $cust_number = $this->getPriorityCustomer($order);
+        $cust_number = get_post_meta($order->get_id(),'cust_name',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -2753,7 +2810,7 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($this->option('setting-config')));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        $cust_number = $this->getPriorityCustomer($order);
+        $cust_number = get_post_meta($order->get_id(),'cust_name',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -2934,7 +2991,8 @@ class WooAPI extends \PriorityAPI\API
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
         $user_meta = get_user_meta($user_id);
-        $cust_number = $this->getPriorityCustomer($order);
+        $cust_number = get_post_meta($order->get_id(),'cust_name',true);
+
         $data = [
             'CUSTNAME'  => $cust_number,
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
@@ -3067,7 +3125,7 @@ class WooAPI extends \PriorityAPI\API
 
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-        $cust_number = $this->getPriorityCustomer($order);
+        $cust_number = get_post_meta($order->get_id(),'cust_name',true);
         $data = [
             'CUSTNAME' => $cust_number,
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
