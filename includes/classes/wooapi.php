@@ -2607,6 +2607,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME' => $cust_number,
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('order_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
@@ -2614,10 +2615,10 @@ class WooAPI extends \PriorityAPI\API
 
 
         ];
-        // CDES
-        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
-            $data['CDES'] = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        }
+//        // CDES
+//        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+//            $data['CDES'] = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+//        }
 
         // cart discount header
         $cart_discount = floatval($order->get_total_discount());
@@ -2816,6 +2817,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME' => $cust_number,
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'IVDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('ainvoice_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
@@ -2823,9 +2825,9 @@ class WooAPI extends \PriorityAPI\API
 
         ];
         // CDES
-        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
-            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        }
+//        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+//            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+//        }
         // cart discount header
         $cart_discount = floatval($order->get_total_discount());
         $cart_discount_tax = floatval($order->get_discount_tax());
@@ -2997,17 +2999,18 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME'  => $cust_number,
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('otc_order_field') => $order->get_order_number(),
 
         ];
         // CDES
-        if(
-            (empty($order->get_customer_id()) && !$this->option('post_prospect')) ||
-            (true != $this->option( 'post_customers' )&& $order->get_customer_id())
-        ){
-            $data['CDES'] = empty($order->get_billing_company()) ? $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() : $order->get_billing_company();
-        }
+//        if(
+//            (empty($order->get_customer_id()) && !$this->option('post_prospect')) ||
+//            (true != $this->option( 'post_customers' )&& $order->get_customer_id())
+//        ){
+//            $data['CDES'] = empty($order->get_billing_company()) ? $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() : $order->get_billing_company();
+//        }
 
         // order comments
         $priority_version = (float)$this->option('priority-version');
@@ -3130,14 +3133,15 @@ class WooAPI extends \PriorityAPI\API
         $cust_number = get_post_meta($order->get_id(),'cust_name',true);
         $data = [
             'CUSTNAME' => $cust_number,
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('receipt_order_field') => $order->get_order_number(),
 
         ];
         // CDES
-        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
-            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        }
+//        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+//            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+//        }
         // ORDNAME
         $order_number = get_post_meta($order_id, 'priority_order_number', true);
         if(!empty($order_number)){
