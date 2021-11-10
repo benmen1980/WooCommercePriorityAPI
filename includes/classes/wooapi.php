@@ -1916,6 +1916,7 @@ class WooAPI extends \PriorityAPI\API
                 'COUNTRYNAME' => isset($meta['billing_country'])   ? $this->countries[$meta['billing_country'][0]] : '',
                 'PHONE'       => isset($meta['billing_phone'])     ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS'  => 'Y',
+                'NSFLAG'=>'Y',
             ];
             $method = !empty($priority_cust_from_wc) ? 'PATCH' : 'POST';
             $request["id"]=$id;
@@ -2367,6 +2368,7 @@ class WooAPI extends \PriorityAPI\API
             'STATEA'      => $order->get_billing_city(),
             'ZIP'         => $order->get_shipping_postcode(),
             'PHONE'       => $order->get_billing_phone(),
+            'NSFLAG'=>'Y',
         ]);
         //apply_filters
         $json_request=apply_filters('simply_post_prospect',$json_request);
