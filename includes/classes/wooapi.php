@@ -1924,15 +1924,14 @@ class WooAPI extends \PriorityAPI\API
             unset($request["id"]);
             $json_request= json_encode($request);
             $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], true);
-            if($method =='POST') {
+            if ($method == 'POST' && $response['code'] == '201')
+            {
                 $data = json_decode($response['body']);
                 $priority_customer_number = $data->CUSTNAME;
-                update_user_meta($id, 'priority_customer_number', $priority_customer_number, true);
+                update_user_meta($id, 'priority_customer_number', $priority_customer_number);
             }
             // set priority customer id
-            if ($response['status']) {
-
-            } else {
+              else {
                 $this->sendEmailError(
                     $this->option('email_error_sync_customers_web'),
                     'Error Sync Customers',
@@ -2822,7 +2821,6 @@ class WooAPI extends \PriorityAPI\API
             $this->option('ainvoice_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
-
         ];
         // CDES
 //        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
