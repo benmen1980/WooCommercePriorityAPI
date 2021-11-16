@@ -1607,60 +1607,70 @@ class WooAPI extends \PriorityAPI\API
      * sync items from web to priority
      *
      */
-     public function syncItemsWeb()
+    public function syncItemsWeb()
     {
-
-        $single_sku = $this->option('sync_items_web');
+        $single_sku = explode(',', $this->option('sync_items_web'))[0];
+        $daysback_options = explode(',', $this->option('sync_items_web'))[1];
+        $daysback = intval(!empty($daysback_options) ? $daysback_options : 1); // change days back to get inventory of prev days
+        $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $url_addition = '';
-        if(!empty($single_sku)){
-            $url_addition = '?$filter=PARTNAME eq \''.$single_sku.'\'';
+        $SKU = [];
+        if (!empty($single_sku)) {
+            $url_addition = '&$filter=PARTNAME eq \'' . $single_sku . '\'';
         }
         // get all items from priority
-        $response = $this->makeRequest('GET', 'LOGPART'.$url_addition);
+        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME' . $url_addition);
         if (!$response['status']) {
             $this->sendEmailError(
                 $this->option('email_error_sync_items_web'),
                 'Error Sync Items Web',
                 $response['body']
             );
+        } else {
+            $data = json_decode($response['body_raw'], true);
+            // Priority items SKU numbers
+            // collect all SKU numbers
+            foreach ($data['value'] as $item) {
+                $SKU[] = $item['PARTNAME'];
+            }
         }
-        $data = json_decode($response['body_raw'], true);
-        $SKU = []; // Priority items SKU numbers
-        // collect all SKU numbers
-        foreach($data['value'] as $item) {
-            $SKU[] = $item['PARTNAME'];
-        }
-        // get all products from woocommerce
-        $products = get_posts(['post_type' => array('product', 'product_variation'),
-                               'post_status' => array('publish'),
-                               'posts_per_page' => -1]);
         // get single product according to option
-        $args = array(
-            'post_type'		=>	array('product', 'product_variation'),
-            'post_status' => array('publish'),
-            'meta_query'	=>	array(
-                array(
-                    'key'       => '_sku',
-                    'value'	=>	$single_sku
+        if (!empty($single_sku)) {
+            $args=[
+                'post_type' => array('product', 'product_variation'),
+                'post_status' => array('publish'),
+                'meta_query' => array(
+                    array(
+                        'key' => '_sku',
+                        'value' => $single_sku
+                    )
                 )
-            )
-        );
-        if(!empty($single_sku)){
-            $products = get_posts($args);
+            ];
+        } else {
+            $year = date('Y', $stamp);
+            $month = date('m', $stamp);
+            $day = date('d', $stamp);
+            $args=['post_type' => array('product', 'product_variation'),
+                'post_status' => array('publish'),
+                'posts_per_page' => -1,
+                'date_query' => [
+                    'column' => 'post_modified',
+                    'after' => [
+                        'year' => $year,
+                        'month' => $month,
+                        'day' => $day,
+                    ],]];
         }
-        $requests      = [];
+        $products = get_posts($args);
+        $requests = [];
         $json_requests = [];
-
-
         // loop trough products
-        foreach($products as $product) {
+        foreach ($products as $product) {
 
-            $meta   = get_post_meta($product->ID);
+            $meta = get_post_meta($product->ID);
             $method = in_array($meta['_sku'][0], $SKU) ? 'PATCH' : 'POST';
-
-            $terms = get_the_terms(($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'product_cat' );
-
-            foreach ( $terms as $term ) {
+            $terms = get_the_terms(($product->post_type == 'product_variation' ? $product->post_parent : $product->ID), 'product_cat');
+            foreach ($terms as $term) {
                 $cat_id = $term->term_id;
             }
             // Unused code that overrides the function
@@ -1674,30 +1684,29 @@ class WooAPI extends \PriorityAPI\API
 //                    $attrnames = str_replace("pa_", "", $attribute['name']);
 //                }
 //            }
-              //
-            $body =[
-               // 'PARTNAME'    => $meta['_sku'][0],
-                'PARTDES'     => $product->post_title,
-                'BASEPLPRICE' => (float) $meta['_regular_price'][0],
-                'INVFLAG'     => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N',
-                'SPEC1'       => $terms[0]->name
+            $body = [
+                'PARTNAME' => $meta['_sku'][0],
+                'PARTDES' => $product->post_title,
+                'BASEPLPRICE' => (float)$meta['_regular_price'][0],
+                'INVFLAG' => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N',
+                'SPEC1' => $terms[0]->name
             ];
             // here I need to apply filter to manipulate the json
             $body['product'] = $product;
-            $body = apply_filters('simply_sync_items_to_priority',$body);
+            $body = apply_filters('simply_sync_items_to_priority', $body);
             unset($body['product']);
-            if($method=="PATCH") {
+            if ($method == "PATCH") {
                 if ($single_sku == "") {
                     $sku = $meta['_sku'][0];
                 } else {
                     $sku = $single_sku;
                 }
-                $url =  "LOGPART('$sku')";
-            }
-            else if ($method=="POST")
-            {
-                $body ['PARTNAME']=$meta['_sku'][0];
-                $url="LOGPART";
+                $url = "LOGPART('$sku')";
+                unset($body ['PARTNAME']);
+            } else if ($method == "POST") {
+                if(empty($body['PARTNAME']))
+                    continue;
+                $url = "LOGPART";
 
             }
             $res = $this->makeRequest($method, $url, ['body' => json_encode($body)], $this->option('log_items_web', true));
@@ -2428,9 +2437,7 @@ class WooAPI extends \PriorityAPI\API
                     return;
             }
             // customer
-            $post_cusotmer = $this->option( 'post_customers' );
-            $user_id = $order->get_user_id();
-            if($post_cusotmer && $user_id != 0) $this->syncCustomer($order->get_user()->ID);
+            $this->getPriorityCustomer($order);
             // sync order
             if($this->option('post_order_checkout')) {
                 $this->syncOrder( $order_id );
