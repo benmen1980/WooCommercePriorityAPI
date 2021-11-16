@@ -2428,9 +2428,7 @@ class WooAPI extends \PriorityAPI\API
                     return;
             }
             // customer
-            $post_cusotmer = $this->option( 'post_customers' );
-            $user_id = $order->get_user_id();
-            if($post_cusotmer && $user_id != 0) $this->syncCustomer($order->get_user()->ID);
+            $this->getPriorityCustomer($order);
             // sync order
             if($this->option('post_order_checkout')) {
                 $this->syncOrder( $order_id );
