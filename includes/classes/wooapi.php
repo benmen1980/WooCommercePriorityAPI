@@ -1798,6 +1798,10 @@ class WooAPI extends \PriorityAPI\API
 
                     // get the stock by specific warehouse
                     $wh_name = explode (',',$this->option('sync_inventory_warhsname'))[0];
+                    if(!empty($wh_name))
+                    {
+                        $stock = 0;
+                    }
                     $foo =$this->option('sync_inventory_warhsname');
                     $foo2 = explode (',',$this->option('sync_inventory_warhsname'))[1];
                     $is_deduct_order = explode (',',$this->option('sync_inventory_warhsname'))[1] == 'ORDER';
