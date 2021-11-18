@@ -24,15 +24,6 @@ class Obligo extends \PriorityAPI\API{
 	{
 		add_filter( 'woocommerce_get_item_data', [$this,'render_custom_data_on_cart_checkout'], 10, 2 );
 		add_filter( 'woocommerce_add_cart_item_data',[$this,'split_product_individual_cart_items'], 10, 2 );
-		/*
-		if(isset($_GET['c'])||isset($_GET['i'])){
-			add_filter( 'wc_add_to_cart_message_html', [$this,'remove_add_to_cart_message']);
-            // remove this if you want to allow adding paymnets to cart with different iv or price
-           // add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
-        }
-		*/
-
-		//add_filter( 'woocommerce_add_cart_item_data',[$this,'simplypay'], 10, 2 );
 		add_action( 'woocommerce_before_calculate_totals', [$this,'add_custom_price']);
 		add_action( 'p18a_request_front_obligo',[$this,'request_front_obligo']);
 
@@ -40,6 +31,9 @@ class Obligo extends \PriorityAPI\API{
         // JS
 		add_action( 'wp_ajax_my_action',[$this,'my_action']);
 		add_action( 'wp_enqueue_scripts', [$this,'my_enqueue']);
+
+		add_action( 'wp_ajax_unset_customer_payment_session', [$this,'unset_customer_payment_session'] );
+		//add_action( 'wp_ajax_nopriv_unset_customer_payment_session', [$this,'unset_customer_payment_session'] );
 
 		add_action('init', function() {
 			add_rewrite_endpoint('obligo', EP_ROOT | EP_PAGES);
@@ -79,16 +73,27 @@ class Obligo extends \PriorityAPI\API{
 
 		// menu manipulation
 		add_filter('wp_nav_menu_items', [$this,'add_search_form'], 999, 999);
+
 		add_action( 'woocommerce_check_cart_items', [$this,'skyverge_empty_cart_notice']);
+
+
+
+		add_action( 'wp_head', [$this,'add_content_after_header']);
 
 		// update order item by cart item data
 		add_action( 'woocommerce_checkout_create_order_line_item', [$this,'custom_field_update_order_item_meta'], 20, 4 );
 
 		//check all orders that have payment item
 		add_action( 'woocommerce_thankyou', [$this,'check_payment_order']);
+		//after payment obligo, put back products to bag , products from session
+		add_action( 'woocommerce_thankyou', [ $this, 'create_order' ] );
 
 		//redirect cart to checkout if  תשלום חוב
 		add_action( 'template_redirect', [$this,'redirect_visitor']);
+
+		//disable add to cart button if תשלום חוב
+		add_filter( 'woocommerce_is_purchasable', [$this,'disable_add_to_cart_if_obligo_set'], 10, 2 );
+
         // modify check out fields
         //add_filter( 'woocommerce_checkout_fields' , [$this,'custom_override_checkout_fields'],10,1 );
         //add_filter( 'woocommerce_checkout_get_value',[$this,'override_checkout__fields'],10,2);
@@ -96,22 +101,23 @@ class Obligo extends \PriorityAPI\API{
 	/****** add same item with different price to cart *********/
 	/*****************************************/
 	public function my_enqueue() {
-
 		wp_enqueue_script( 'ajax-script',  plugin_dir_url(__FILE__).'/my-account.js', array('jquery') );
+		wp_enqueue_style( 'obligo-style', plugin_dir_url(__FILE__).'/obligo-style.css', time() );
 
 		wp_localize_script( 'ajax-script', 'my_ajax_object',
 			array( 'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'woo_checkout_url' => wc_get_checkout_url()
+				'woo_checkout_url' => wc_get_checkout_url(),
+				'woo_home_url' => get_home_url()
 				//'woo_cart_url' => get_permalink( wc_get_page_id( 'cart' ) )
 			)
         );
 	}
-	public function add_item_from_url(){
-		$cart_item_data['_other_options']['product-price'] = 177.77 ;
-		$cart_item_data['_other_options']['product-ivnum'] = 'MY_IV000001' ;
-		$product_id = wc_get_product_id_by_sku('PAYMENT');
-		$cart           = WC()->cart->add_to_cart( $product_id, 1, null, null, $cart_item_data );
-    }
+	// public function add_item_from_url(){
+	// 	$cart_item_data['_other_options']['product-price'] = 177.77 ;
+	// 	$cart_item_data['_other_options']['product-ivnum'] = 'MY_IV000001' ;
+	// 	$product_id = wc_get_product_id_by_sku('PAYMENT');
+	// 	$cart           = WC()->cart->add_to_cart( $product_id, 1, null, null, $cart_item_data );
+    // }
 	public function my_action() {
 		$data = $_POST['data'];
 		array_shift($data);
@@ -120,17 +126,48 @@ class Obligo extends \PriorityAPI\API{
 		foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
 			$product_ivnum[] = $values['_other_options']['product-ivnum'];
 		}
+		//unset session cart item 
+		if(isset(WC()->session)){
+			WC()->session->set( 'cart_items', null );
+		}
+		//save in session product in cart , and remove them to add payment product only
+		foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
+			$_product =  wc_get_product( $values['data']->get_id());
+			$pdt_sku = $_product->get_sku();
+			if($pdt_sku != 'PAYMENT'){
+				if(isset(WC()->session)){
+					$retrive_cart_items = WC()->session->get( 'cart_items' );
+					if (!empty($retrive_cart_items)){
+						array_push($retrive_cart_items, [$_product->id,  $values['quantity'],  $variation_id,  $variation,  $cart_item_data ]);
+						WC()->session->set('cart_items', $retrive_cart_items);
+					}
+					else{
+						WC()->session->set('cart_items', array([$_product->id,  $values['quantity'],  $variation_id,  $variation,  $cart_item_data ]));
+					}
+					WC()->cart->remove_cart_item( $cart_item_key );
+
+				}
+			}
+			else{
+				//if already in cart remove it 
+				WC()->cart->remove_cart_item( $cart_item_key );
+			}
+				
+		}
+		//print_r($data);
 		foreach ( $data as $key => $value ) {
 		        $arr= explode('#',$value['name']);
 				$cart_item_data = [];
 				$cart_item_data['_other_options']['product-price'] = $arr[0] ;
 				$cart_item_data['_other_options']['product-ivnum'] = $arr[1] ;
+				$cart_item_data['_other_options']['product-date'] = $arr[2] ;
+                $cart_item_data['_other_options']['product-detail'] = $arr[3] ;
 				
-				//check that this item is not already in cart
-				if(!(in_array($arr[1], $product_ivnum))){
-					$product_id = wc_get_product_id_by_sku('PAYMENT');
-					$cart           = WC()->cart->add_to_cart( $product_id, 1, '0', array(), $cart_item_data );
-				}
+				
+			
+				$product_id = wc_get_product_id_by_sku('PAYMENT');
+				$cart           = WC()->cart->add_to_cart( $product_id, 1, '0', array(), $cart_item_data );
+				
 				if(!$cart){
 					$response = false;
 				}
@@ -138,7 +175,7 @@ class Obligo extends \PriorityAPI\API{
 		if($response){
 			WC()->session->set(
 				'session_vars',
-				array('ordertype' => 'Recipe' )
+				array('ordertype' => 'obligo_payment' )
 			);
         }
 		$data = [$response];
@@ -146,135 +183,25 @@ class Obligo extends \PriorityAPI\API{
 
 		wp_die(); // this is required to terminate immediately and return a proper response
 	}
-	// simply pay module moved to separate file simplypay/simplypay.php
-    // remove check out fields
-    /*function custom_override_checkout_fields( $fields ) {
-        unset($fields['billing']['billing_company']);
-        unset($fields['billing']['billing_address_2']);
-        unset($fields['billing']['billing_country']);
-        unset($fields['billing']['billing_state']);
-        return $fields;
-    }*/
-    // modify fields
-    /*
-    function override_checkout__fields($input, $key ) {
-	    // here wee need to get data from  session
-        $retrive_data = WC()->session->get( 'session_vars' );
-        $first_name = $retrive_data['first_name'] ?? '';
-        $last_name  = $retrive_data['last_name'] ?? '';
-        $billing_email = $retrive_data['email'] ?? '' ;
-        $billing_phone = $retrive_data['phone'] ?? '';
-        $billing_address_1 = $retrive_data['street_address'] ?? '';
-        $billing_city      = $retrive_data['city'] ?? '';
-        $billing_postcode  = $retrive_data['postcode'] ?? '';
-        global $current_user;
-        switch ($key) :
-            case 'billing_first_name':
-                return $first_name;
-                break;
-            case 'billing_last_name':
-                return $last_name;
-                break;
-            case 'billing_email':
-                return $billing_email;
-                break;
-            case 'billing_phone':
-                return $billing_phone;
-                break;
-            case 'billing_address_1';
-                return $billing_address_1;
-                break;
-            case 'billing_country';
-                return 'Israel';
-                break;
-            case 'billing_company';
-                return '';
-                break;
-            case 'billing_address_2';
-                return '  ';
-                break;
-            case 'billing_city';
-                return $billing_city;
-                break;
-            case 'billing_postcode';
-                return $billing_postcode;
-                break;
-        endswitch;
-    }
-    */
-//add_filter( 'woocommerce_checkout_fields' , 'override_checkout_email_field' );
-/*
-    function simplypay(){
-	    if(isset($_GET['i'])){
-	        global $wpdb;
-	        $sql_result = $wpdb->get_results(
-	                'select
-                            p.order_id,
-                            p.order_item_id,
-                            p.order_item_name,
-                            p.order_item_type,
-                            pm.meta_value                            
-                            from
-                            '.$wpdb->prefix.'woocommerce_order_items as p,
-                            '.$wpdb->prefix.'woocommerce_order_itemmeta as pm
-                            where order_item_type = \'line_item\' 
-                            and p.order_item_id = pm.order_item_id
-                            and pm.meta_key = \'product-ivnum\' 
-                            and p.order_item_id = pm.order_item_id 
-                            and pm.meta_value = \''.$_GET['i'].'\'
-                            group by
-                            p.order_item_id'
-            );
-	        if(sizeof($sql_result)>0){
-	            if(empty($_GET['debug'])) {
-                    wp_die(__('This invoice had already been payed!', 'simply'));
-                    $url = home_url() . '/duplicate-invoice';
-                    wp_redirect($url);
-                    exit;
-                }
-            }
-		    $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
-		    // get the customer info according to the IVNUM
-            $customer_info = [
-                    'docno' => $_GET['i'],
-                    'price' => $_GET['pr']
-            ];
-            // need to filter here
-            $customer_info = apply_filters( 'simply_request_customer_data', $customer_info );
-            $cart_item_data['_other_options']['product-price'] = $customer_info['price'] ;
-		    WC()->session->set(
-			    'session_vars',
-			    array(
-				    'ordertype'       => 'Recipe',
-                    'custname'        => isset($_GET['c']) ? $_GET['c'] : null,
-                    'first_name'      => $customer_info['first_name'],
-                    'last_name'       => $customer_info['last_name'],
-                    'street_address'  => $customer_info['street'],
-                    'postcode'        => $customer_info['postcode'],
-                    'city'            => $customer_info['city'],
-                    'phone'           => $customer_info['phone'],
-                    'email'           => $customer_info['email'],
-                    'data'            => $customer_info['data']  // for extra custom fields
-                     )
-		    );
-		    return $cart_item_data;
-	    }
-    }
-	function remove_add_to_cart_message( $message ){
-		return '';
-	}
-    function simply_custom_add_to_cart_before( $cart_item_data ) {
 
-        global $woocommerce;
-        $woocommerce->cart->empty_cart();
-        // Do nothing with the data and return
-        return true;
-    }
-    function simply_change_existing_currency_symbol(  $currency ) {
-        return $_GET['currency']; // <=== HERE define the targeted currency code
-    }
-*/
-    // end simply pay
+	function unset_customer_payment_session(){
+		if(isset(WC()->session)){
+			$retrive_data = WC()->session->get( 'session_vars' );
+			if(!empty($retrive_data['ordertype'] )){
+				WC()->session->set('session_vars',array('ordertype' => '' ));
+				WC()->cart->empty_cart();
+				$retrive_cart_items = WC()->session->get( 'cart_items' );
+				if(!empty($retrive_cart_items)){
+					foreach($retrive_cart_items as $item){
+						$pdt_id = $item[0];
+						$qtty = $item[1];
+						WC()->cart->add_to_cart( $pdt_id, $qtty );
+					}
+				}
+			}
+		}
+	}
+
 	function split_product_individual_cart_items( $cart_item_data, $product_id ){
 		if(isset($_POST['obligoSubmit'])){
 	    $unique_cart_item_key = uniqid();
@@ -320,6 +247,8 @@ class Obligo extends \PriorityAPI\API{
 		return $custom_items;
 	}
 	function request_front_obligo() {
+	
+	
 	$current_user             = wp_get_current_user();
 	$priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
 
@@ -341,13 +270,7 @@ class Obligo extends \PriorityAPI\API{
 		echo "</table>";
 		echo "<form id='simply-obligo' action='' method='post'>";
 
-		echo '<input type="hidden" name="action" value="my_action_obligo" />';?>
-		<p>
-			<?php echo __('Total Payment: ','p18w') ;?>
-			<span class="total_payment_checked">0</span>
-			<span><?php echo get_woocommerce_currency_symbol(); ?></span>
-		</p>
-		<?php echo "<button type='submit' name='obligoSubmit' id='obligoSubmit' style='float: right;' disabled>".__('Pay now','p18w')."</button>";
+		echo '<input type="hidden" name="action" value="my_action_obligo" />';
 
 		echo "<table> <tr>";
 		echo "<th></th><th>".esc_html__('BALDATE','p18w')."</th> <th>".esc_html__('FNCNUM','p18w')."</th> <th>".esc_html__('IVNUM','p18w')."</th> <th>".esc_html__('DETAILS','p18w')."</th> <th>".esc_html__('SUM1','p18w')."</th>";
@@ -357,28 +280,42 @@ class Obligo extends \PriorityAPI\API{
 		$retrive_data = WC()->session->get( 'session_vars' );
 		$retrieve_ivnum = WC()->session->get( 'pdt_ivnum' );
 
+		$pdts_in_cart = array();
+        if(!empty($retrive_data['ordertype'] )){
+            foreach(WC()->cart->get_cart() as $cart_item_key => $cart_item){
+                $pdts_in_cart[] = $cart_item['_other_options']['product-ivnum'];
+            }
+        }
+
 		$i         = 1;
 		foreach ( $data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value ) {
 			echo "<tr>";
 			$arr = array( 'sum' => $value->SUM1, 'ivnum' => $value->IVNUM );
+			
 			//check if already pay for this ivnum
-			if(in_array($value->IVNUM,$retrieve_ivnum))	{
-				$disabled = 'disabled="disabled"';
-			}
-			else{
-				$disabled = '';
-				if(!empty($items) && ($retrive_data['ordertype'] =='')){
-					$cartcheck = 'disabled="disabled"';
+			if(!empty($retrieve_ivnum)){
+				if(in_array($value->IVNUM,$retrieve_ivnum))	{
+					$disabled = 'disabled="disabled"';
 				}
-				elseif((!empty($retrive_data ) && ($retrive_data['ordertype'] =="Recipe")) || empty( $items )){
-					$cartcheck = '';
+				else{
+					$disabled = '';
 				}
 			}
-			if($cartcheck == 'disabled="disabled"'){
-				echo '<p>'.__('Please empty your bag first!','p18w').'</p>';
-				//continue;
+			if(!empty($pdts_in_cart)){
+				if(in_array($value->IVNUM,$pdts_in_cart)){
+					$checked = 'checked';
+				}
+				else{	
+					$checked = '';
+				}
 			}
-			echo '<td><input type="checkbox" '.$cartcheck.' '.$disabled. ' name="'.$value->SUM1 .'#'.$value->IVNUM.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' value="obligo_chk_sum' . $i . '"></td>';
+
+
+			$date = $value->BALDATE;
+            $createDate = new DateTime($date);
+            $strip = $createDate->format('d/m/y');
+
+			echo '<td><input type="checkbox" '.$checked.' '.$disabled. ' name="'.$value->SUM1 .'#'.$value->IVNUM.'#'.$strip.'#'.$value->DETAILS.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' value="obligo_chk_sum' . $i . '"></td>';
 			//echo "<input type='hidden'name='obligo_chk_sum" . $i . "' value='" . $value->SUM1 . "'>";
 			//echo "<input type='hidden'name='obligo_chk_ivnum" . $i . "' value='" . $value->IVNUM . "'>";
 
@@ -398,7 +335,14 @@ class Obligo extends \PriorityAPI\API{
 			echo "</tr>";
 			$i ++;
 		}
-		echo "</table>";
+		echo "</table>"; ?>
+		<p>
+			<?php echo __('Total Payment: ','p18w') ;?>
+			<span class="total_payment_checked">0</span>
+			<span><?php echo get_woocommerce_currency_symbol(); ?></span>
+		</p>
+		<?php echo "<button type='submit' name='obligoSubmit' id='obligoSubmit' style='float: right;' disabled>".__('Pay now','p18w')."</button>";
+
 		echo "</form>";
 
 	}
@@ -406,24 +350,55 @@ class Obligo extends \PriorityAPI\API{
 }
 	function add_search_form($items, $args) {
 		$session = WC()->session->get('session_vars');
-        if($session['ordertype']=='Recipe'){
+        if($session['ordertype']=='obligo_payment'){
 	        $items .= '<li class="menu-item">'
-	                  . '<p><span style="color: #0000ff;"><em>Recipe</em></span></p>'
+	                  . '<p><span style="color: #0000ff;"><em>Obligo payment</em></span></p>'
 
 	                  . '</li>';
         }
 		return $items;
 	}
+
+	function add_content_after_header(){
+		if(isset(WC()->session)){
+			$retrive_data = WC()->session->get( 'session_vars' );
+			if(!empty($retrive_data ) && ($retrive_data['ordertype'] =="obligo_payment")){?>
+				<div class="banner_obligo">
+					<h2>
+						<?php echo __('לתשומת ליבך! הנך נמצא במצב של תשלום חוב','p18w'); ?>
+					</h2>
+					<button class="back-to-purchase">
+						<?php echo __('יציאה ממצב תשלום חוב','p18w'); ?>
+					</button>
+				</div>
+			<?php } 
+		}
+		if(isset(WC()->session)){
+			$retrive_cart_items = WC()->session->get( 'cart_items' );
+			print "<pre>";
+			print_r($retrive_cart_items);
+			print "</pre>";
+		}
+	}
+
+
 	function skyverge_empty_cart_notice() {
 
 		if ( WC()->cart->get_cart_contents_count() == 0 ) {
-			WC()->session->set(
-				'session_vars',
-				array(
-					'ordertype' => ''));
+			if(isset(WC()->session)){
+				WC()->session->set(
+					'session_vars',
+					array(
+						'ordertype' => ''));
+				// $retrive_cart_items = WC()->session->get( 'cart_items' );
+				// if(!empty($retrive_cart_items)){
+				// 	WC()->session->set( 'cart_items', null );
+				// }
+			}
 		}
 
 	}
+
 	function custom_field_update_order_item_meta( $item, $cart_item_key, $values, $order ) {
 		if ( ! isset( $values['_other_options'] ) )
 			return;
@@ -452,20 +427,68 @@ class Obligo extends \PriorityAPI\API{
 					'pdt_ivnum',$pdt_ivnums);
 			}  
 		}
-		//after checkout, empty ordertype session
-		WC()->session->set(
-			'session_vars',
-			array(
-				'ordertype' => ''));
+		//after checkout, empty ordertype session 
+		//remove because we empty session afrer sync payment
+		// WC()->session->set(
+		// 	'session_vars',
+		// 	array(
+		// 		'ordertype' => ''));
 	
 	}
 
+	//after payment obligo, put back products to bag , products from session
+	function create_order( $order_id ){
+		if(isset(WC()->session)){
+			$session = WC()->session->get('session_vars');
+			if($session['ordertype'] =='obligo_payment'){
+				$retrive_cart_items = WC()->session->get( 'cart_items' );
+				if(!empty($retrive_cart_items)){
+					foreach($retrive_cart_items as $item){
+						$pdt_id = $item[0];
+						$qtty = $item[1];
+						WC()->cart->add_to_cart( $pdt_id, $qtty );
+
+					}
+				}
+				//after checkout, empty ordertype session - unset the session after sync payment in wooapi
+				// WC()->session->set(
+				//     'session_vars',
+				//     array(
+				//         'ordertype' => ''));
+				// echo 'cart content';
+				// print_r($retrive_cart_items);
+			}
+			else{
+				$retrive_cart_items = WC()->session->get( 'cart_items' );
+				if(!empty($retrive_cart_items)){
+					WC()->session->set( 'cart_items', null );
+				}
+			}
+		}
+
+	}
+
+	//precent user to add to bag product when תשלום חוב
+	function disable_add_to_cart_if_obligo_set ( $is_purchasable, $product ){
+		
+		$pdt_sku = $product->get_sku();
+		if(isset(WC()->session)){
+			$session = WC()->session->get('session_vars');
+			if($session['ordertype'] =='obligo_payment'){
+				if($pdt_sku != 'PAYMENT'){
+					return false;
+				}
+			}
+		}
+		return $is_purchasable;
+	}
+
+
 	function redirect_visitor(){
-	    return;
         if ( is_page( 'cart' ) || is_cart() ) {
             $retrive_data = WC()->session->get( 'session_vars' );
             // check if תשלום חוב session is set
-            if(!empty($retrive_data ) && ($retrive_data['ordertype'] == "Recipe")){
+            if(!empty($retrive_data ) && ($retrive_data['ordertype'] == "obligo_payment")){
                 global $woocommerce;
                 $checkout_url = $woocommerce->cart->get_checkout_url();
                 wp_safe_redirect($checkout_url);

@@ -1,35 +1,5 @@
 jQuery(document).ready(function($) {
 
-	$total_check_sum = 0;
-	jQuery( ".obligo_checkbox" ).each(function(index) {
-		jQuery(this).on("click", function(){
-			$check_sum = jQuery(this).data('sum');
-			//If the checkbox is checked.
-			if(jQuery(this).is(':checked')){
-				
-				$total_check_sum+=$check_sum;
-				console.log($total_check_sum);
-
-			//Enable the submit button.
-				jQuery('#obligoSubmit').attr("disabled", false);
-			} else{
-				$total_check_sum-=$check_sum;
-				console.log($total_check_sum);
-				//If it is not checked, disable the button.
-				jQuery('#obligoSubmit').attr("disabled", true);
-				jQuery('.obligo_checkbox').each(function(){
-				var jQuerythis = jQuery(this);
-				if (jQuerythis.is(':checked')) {
-					jQuery('#obligoSubmit').attr("disabled", false);
-				}
-				});
-			}
-			jQuery(".total_payment_checked").text(($total_check_sum).toFixed(2));
-
-		});
-	});
-
-
 	// jQuery('.toggle').click(function(){
 	jQuery(document).on('click','.cust-toggle', function() {
 		console.log('clicked');
@@ -51,9 +21,9 @@ jQuery(document).ready(function($) {
 
 		}
 	});
+	if($('#from-date,#to-date').length)
+		jQuery( "#from-date,#to-date" ).datepicker({dateFormat: 'dd-mm-yy'});
 
-	jQuery( "#from-date" ).datepicker({dateFormat: 'dd-mm-yy'});
-	jQuery( "#to-date" ).datepicker({dateFormat: 'dd-mm-yy'});
 
 	jQuery.browser = {};
 	(function () {

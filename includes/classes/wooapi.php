@@ -2438,6 +2438,16 @@ class WooAPI extends \PriorityAPI\API
                         "custname" => get_post_meta($order_id,'priority_custname',true)
                     );
                     $this->syncPayment($order_id,$optional);
+                    //unset session after payment
+                    if(isset(WC()->session)){
+                        $session = WC()->session->get('session_vars');
+                        if($session['ordertype']=='obligo_payment'){
+                            WC()->session->set(
+                                'session_vars',
+                                array(
+                                    'ordertype' => ''));
+                        }
+                    }
                     return;
             }
             // customer
@@ -2598,7 +2608,7 @@ class WooAPI extends \PriorityAPI\API
     {
         if(isset(WC()->session)){
             $session = WC()->session->get('session_vars');
-            if($session['ordertype']=='Recipe'){
+            if($session['ordertype']=='obligo_payment'){
                 return;
             }
         }
@@ -2810,7 +2820,7 @@ class WooAPI extends \PriorityAPI\API
     {
         if(isset(WC()->session)){
             $session = WC()->session->get('session_vars');
-            if($session['ordertype']=='Recipe'){
+            if($session['ordertype']=='obligo_payment'){
                 return;
             }
         }
@@ -3134,6 +3144,12 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncReceipt($order_id)
     {
+        if(isset(WC()->session)){
+            $session = WC()->session->get('session_vars');
+            if($session['ordertype']=='obligo_payment'){
+                return;
+            }
+        }
 
         $order = new \WC_Order($order_id);
 

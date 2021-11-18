@@ -1,0 +1,16 @@
+.banner_obligo{
+    background-color: red;
+    color: #fff;
+    text-align: center;
+    padding: 10px 5px;
+}
+.banner_obligo h2{
+    color:#fff;
+}
+.banner_obligo button{
+    background-color: #fff;
+    color: red;
+}
+.banner_obligo button:hover{
+    opacity: 0.8;
+}
