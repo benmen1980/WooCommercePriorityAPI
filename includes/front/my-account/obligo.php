@@ -373,12 +373,7 @@ class Obligo extends \PriorityAPI\API{
 				</div>
 			<?php } 
 		}
-		if(isset(WC()->session)){
-			$retrive_cart_items = WC()->session->get( 'cart_items' );
-			print "<pre>";
-			print_r($retrive_cart_items);
-			print "</pre>";
-		}
+
 	}
 
 
