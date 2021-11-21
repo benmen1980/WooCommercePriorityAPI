@@ -130,7 +130,7 @@ $format2 = 'd/m/Y H:i:s';
 				</td>
 
 				<td>
-					<input type="text" style="width:300px" name="sync_items_web" form="p18aw-sync" placeholder="Enter SKU to post single product to Priority" value="<?php echo($this->option('sync_items_web'))?>"></input>
+					<input type="text" style="width:300px" name="sync_items_web" form="p18aw-sync" placeholder="enter SKU and days_back specific or default" value="<?php echo($this->option('sync_items_web'))?>"></input>
 				</td>
 			</tr>
 
