@@ -2371,7 +2371,7 @@ class WooAPI extends \PriorityAPI\API
         }else{
             $priority_customer_number = $order->get_billing_phone();
         }
-        $json_request = json_encode([
+        $json_request = [
             'CUSTNAME'    => $priority_customer_number,
             'CUSTDES'     => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'EMAIL'       => $order->get_billing_email(),
@@ -2381,11 +2381,14 @@ class WooAPI extends \PriorityAPI\API
             'ZIP'         => $order->get_shipping_postcode(),
             'PHONE'       => $order->get_billing_phone(),
             'NSFLAG'=>'Y',
-        ]);
+        ];
+
         //apply_filters
+        $json_request['order_id']=$order->get_id();
         $json_request=apply_filters('simply_post_prospect',$json_request);
+        unset($json_request['order_id']);
         $method = 'POST';
-        $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], $this->option('log_customers_web', true));
+        $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => json_encode($json_request)], $this->option('log_customers_web', true));
         // set priority customer id
         if ($response['status']) {
             $data = json_decode($response['body']);
