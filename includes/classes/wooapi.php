@@ -2414,6 +2414,7 @@ class WooAPI extends \PriorityAPI\API
             if (empty(get_post_meta($order_id, '_payment_done', true))) {
                 // get to order _payment_done with true
                 update_post_meta($order_id, '_payment_done', true);
+                $this->getPriorityCustomer($order);
                 // sync receipts
                 $this->syncReceipt($order_id);
 
