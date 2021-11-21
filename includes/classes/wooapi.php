@@ -2631,7 +2631,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME' => $cust_number,
-            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'CURDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('order_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
@@ -2841,7 +2841,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME' => $cust_number,
-            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'IVDATE'  => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('ainvoice_order_field')  => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
@@ -3022,7 +3022,7 @@ class WooAPI extends \PriorityAPI\API
 
         $data = [
             'CUSTNAME'  => $cust_number,
-            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('otc_order_field') => $order->get_order_number(),
 
@@ -3162,7 +3162,7 @@ class WooAPI extends \PriorityAPI\API
         $cust_number = get_post_meta($order->get_id(),'cust_name',true);
         $data = [
             'CUSTNAME' => $cust_number,
-            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'CDES'=>!empty($order->get_billing_company())? $order->get_billing_company():$order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('receipt_order_field') => $order->get_order_number(),
 
