@@ -1208,12 +1208,23 @@ class WooAPI extends \PriorityAPI\API
                         ['BBB','color35','SPEC7'],
                         */
                 ];
-                $custom_attrs = apply_filters('simply_add_custom_attributes',$custom_attrs);
-                foreach ($custom_attrs as $attr){
+                $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
+                foreach ($custom_attrs as $attr) {
+                    $val = $attr[2];
+                    if (is_array($val)) {
+                        $val = array();
+                        foreach ($attr[2] as $v) {
+                            $val[] = $item[$v];
+                        }
+                    } else if (empty($item[$val])) {
+                        continue;
+                    } else {
+                        $attr_value = $item[$val];
+                    }
+
                     $attr_name = $attr[0];
                     $attr_slug = $attr[1];
-                    $attr_value = $item[$attr[2]];
-                    if(!$this->is_attribute_exists($attr_slug)) {
+                    if (!$this->is_attribute_exists($attr_slug)) {
                         $attribute_id = wc_create_attribute(
                             array(
                                 'name' => $attr_name,
@@ -1223,14 +1234,41 @@ class WooAPI extends \PriorityAPI\API
                                 'has_archives' => 0,
                             )
                         );
+                    } else {
+                        $attribute_id = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
                     }
-                    wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
-                    $thedata['pa_'.$attr_slug] = array(
-                        'name' => 'pa_'.$attr_slug,
-                        'value' => $attr_value,
-                        'is_visible' => '1',
-                        'is_taxonomy' => '1'
-                    );
+
+                    if (is_array($val)) {
+                        $taxonomy = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
+                        $val_id = array();
+                        foreach ($val as $option) {
+                            {
+
+                                // Save the possible option value for the attribute which will be used for variation later
+                                wp_set_object_terms($id, $option, $taxonomy, true);
+                                // Get the term ID
+                                $val_id[] = get_term_by('name', $option, $taxonomy)->term_id;
+                            }
+
+                        }
+//
+                        $thedata[$attribute_id] = array(
+                            'name' => $attribute_id,
+                            'value' => $val_id, // Need to be term IDs
+                            'is_visible' => 1,
+                            'is_variation' => 1,
+                            'is_taxonomy' => '1'
+                        );
+
+                    } else {
+                        wp_set_object_terms($id, $attr_value, $attribute_id, false);
+                        $thedata[$attribute_id] = array(
+                            'name' => $attribute_id,
+                            'value' => $attr_value,
+                            'is_visible' => '1',
+                            'is_taxonomy' => '1'
+                        );
+                    }
                 }
                 update_post_meta($id, '_product_attributes', $thedata);
                 // add code like this in functions.php to import attributes, see docs for details
