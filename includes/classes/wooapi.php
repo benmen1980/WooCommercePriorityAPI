@@ -1068,7 +1068,7 @@ class WooAPI extends \PriorityAPI\API
                 $data = [
                     'post_author' => 1,
                     //'post_content' =>  $content,
-                    'post_status'  => $this->option('item_status'),
+                    'post_status' => $item['STATDES']=="לא פעיל"? 'draft': $this->option('item_status'),
                     'post_title'   => $item['PARTDES'],
                     'post_parent'  => '',
                     'post_type'    => 'product',
