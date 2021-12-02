@@ -1039,80 +1039,93 @@ class WooAPI extends \PriorityAPI\API
 
         // config
         $raw_option = $this->option('sync_items_priority_config');
-        $raw_option = str_replace(array( "\n", "\t", "\r"), '', $raw_option);
+        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
-        $daysback = (int)$config->days_back;
+        $daysback = 25;//(int)$config->days_back;
         $synclongtext = $config->synclongtext;
         $url_addition_config = $config->additional_url;
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_update_products = json_decode($config->is_update_products);
         // get the items simply by time stamp of today
-        $stamp = mktime(0 - $daysback*24, 0, 0);
-        $bod = date(DATE_ATOM,$stamp);
-        $date_filter = 'UDATE ge '.urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG';
-        $data = apply_filters( 'simply_syncItemsPriority_data', $data );
-        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$date_filter.' '.$url_addition_config.'&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',[], $this->option('log_items_priority', true));
+        $stamp = mktime(0 - $daysback * 24, 0, 0);
+        $bod = date(DATE_ATOM, $stamp);
+        $date_filter = 'UDATE ge ' . urlencode($bod);
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,
+        SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,
+        SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
+        $data = apply_filters('simply_syncItemsPriority_data', $data);
+        $response = $this->makeRequest('GET', 'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config . '&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
         // check response status
+
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
-            foreach($response_data['value'] as $item) {
+            foreach ($response_data['value'] as $item) {
+
                 // add long text from Priority
-	            $content = '';
-	            $post_content = '';
-	            if(isset($item['PARTTEXT_SUBFORM']) ) {
-		            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
+                $content = '';
+                $post_content = '';
+                if (isset($item['PARTTEXT_SUBFORM'])) {
+                    foreach ($item['PARTTEXT_SUBFORM'] as $text) {
                         $content .= $text;
-		            }
-	            }
+                    }
+                }
                 $data = [
                     'post_author' => 1,
                     //'post_content' =>  $content,
-                    'post_status' => $item['STATDES']=="לא פעיל"? 'draft': $this->option('item_status'),
-                    'post_title'   => $item['PARTDES'],
-                    'post_parent'  => '',
-                    'post_type'    => 'product',
+                    'post_status' => $this->option('item_status'),
+                    'post_title' => $item['PARTDES'],
+                    'post_parent' => '',
+                    'post_type' => 'product',
                 ];
-	            if($synclongtext){
+                if ($synclongtext) {
                     $data['post_content'] = $content;
                 }
                 // if product exsits, update
                 $search_by_value = $item[$search_field];
                 $args = array(
-                    'post_type'		=>	array('product', 'product_variation'),
-                    'post_status' => array('publish',  'draft'),
-                    'meta_query'	=>	array(
+                    'post_type' => array('product', 'product_variation'),
+                    'post_status' => array('publish', 'draft'),
+                    'meta_query' => array(
                         array(
-                            'key'       => '_sku',
-                            'value'	=>	$search_by_value
+                            'key' => '_sku',
+                            'value' => $search_by_value
                         )
                     )
                 );
                 $product_id = 0;
-                $my_query = new \WP_Query( $args );
-                if ( $my_query->have_posts() ) {
-                    while ( $my_query->have_posts() ) {
+                $my_query = new \WP_Query($args);
+                if ($my_query->have_posts()) {
+                    while ($my_query->have_posts()) {
                         $my_query->the_post();
                         $product_id = get_the_ID();
                     }
                 }
                 // if product variation skip
-                if($product_id != 0) {
+                if ($product_id != 0) {
                     $_product = wc_get_product($product_id);
                     if (!$_product->is_type('simple')) {
                         continue;
                     }
                 }
-                if($product_id != 0 && false == $is_update_products){
+                if ($product_id != 0 && false == $is_update_products) {
                     continue;
+                }
+                if ($item['STATDES'] == "לא פעיל") {
+                    if ($product_id != 0) {
+                      //   $_product->delete();
+
+                    } else {
+                        continue;
+                    }
                 }
                 if ($product_id != 0) {
                     $data['ID'] = $product_id;
+
                     // Update post
                     $id = $product_id;
                     global $wpdb;
                     // @codingStandardsIgnoreStart
-                    if($synclongtext){
+                    if ($synclongtext) {
                         $wpdb->query(
                             $wpdb->prepare(
                                 "
@@ -1126,7 +1139,7 @@ class WooAPI extends \PriorityAPI\API
                                 $id
                             )
                         );
-                    }else{
+                    } else {
                         $wpdb->query(
                             $wpdb->prepare(
                                 "
@@ -1143,37 +1156,44 @@ class WooAPI extends \PriorityAPI\API
                     // Insert product
                     $id = wp_insert_post($data);
                     if ($id) {
-                        update_post_meta($id,'_sku',$item[$search_field]);
+                        update_post_meta($id, '_sku', $item[$search_field]);
                         update_post_meta($id, '_stock', 0);
                         update_post_meta($id, '_stock_status', 'outofstock');
                         $out_of_stock_staus = 'outofstock';
-                        wp_set_post_terms( $id, 'outofstock', 'product_visibility', true );
+                        wp_set_post_terms($id, 'outofstock', 'product_visibility', true);
                     }
                 }
+
                 // And finally (optionally if needed)
-                wc_delete_product_transients( $id ); // Clear/refresh the variation cache
+                wc_delete_product_transients($id); // Clear/refresh the variation cache
                 // update product price
-                $item = apply_filters( 'simply_syncItemsPriority_item', $item );
+                $item = apply_filters('simply_syncItemsPriority_item', $item);
                 $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
-		    $my_product = new \WC_Product( $id );
+                    $my_product = new \WC_Product($id);
                     $my_product->set_regular_price($pri_price);
                     //$my_product->set_sale_price( $sales_price);
                     $my_product->save();
                     //update_post_meta($id, '_regular_price', $pri_price);
                     //update_post_meta($id, '_price',$pri_price );
-                    if(!empty($item['INVFLAG'])) {
+                    if (!empty($item['INVFLAG'])) {
                         update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
                     }
-                    // update categories
-                    $categories = [];
-                    foreach (explode(',',$config->categories) as $cat){
-                        if(!empty($item[$cat])) {
-                            array_push($categories, $item[$cat]);
+                    if (!empty($config->categories))
+                    {
+                        // update categories
+                        $categories = [];
+
+                        foreach (explode(',', $config->categories) as $cat) {
+                            if (!empty($item[$cat])) {
+                                array_push($categories, $item[$cat]);
+                            }
+                        }
+                        if (!empty($categories)) {
+                            $terms = $categories;
+                            wp_set_object_terms($id, $terms, 'product_cat');
                         }
                     }
-                    $terms = $categories ;
-                    wp_set_object_terms($id,$terms,'product_cat');
                 }
                 // update attributes
                 unset($thedata);
@@ -1181,49 +1201,6 @@ class WooAPI extends \PriorityAPI\API
                     $attr_name = $attribute['SPECDES'];
                     $attr_slug = strtolower($attribute['SPECNAME']);
                     $attr_value = $attribute['VALUE'];
-                    if(!$this->is_attribute_exists($attr_slug)){
-                        $attribute_id = wc_create_attribute(
-                            array(
-                                'name' => $attr_name,
-                                'slug' => $attr_slug,
-                                'type' => 'select',
-                                'order_by' => 'menu_order',
-                                'has_archives' => 0,
-                            )
-                        );
-                    }
-                    wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
-                    $thedata['pa_'.$attr_slug] = array(
-                        'name' => 'pa_'.$attr_slug,
-                        'value' => '',
-                        'is_visible' => '1',
-                        'is_taxonomy' => '1'
-                    );
-                }
-                /* loop over array of custom attributes */
-                $custom_attrs = [
-                        /*
-                        ['צבע','color33','SPEC5'],
-                        ['AAA','color34','SPEC6'],
-                        ['BBB','color35','SPEC7'],
-                        */
-                ];
-                $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
-                foreach ($custom_attrs as $attr) {
-                    $val = $attr[2];
-                    if (is_array($val)) {
-                        $val = array();
-                        foreach ($attr[2] as $v) {
-                            $val[] = $item[$v];
-                        }
-                    } else if (empty($item[$val])) {
-                        continue;
-                    } else {
-                        $attr_value = $item[$val];
-                    }
-
-                    $attr_name = $attr[0];
-                    $attr_slug = $attr[1];
                     if (!$this->is_attribute_exists($attr_slug)) {
                         $attribute_id = wc_create_attribute(
                             array(
@@ -1234,106 +1211,137 @@ class WooAPI extends \PriorityAPI\API
                                 'has_archives' => 0,
                             )
                         );
-                    } else {
-                        $attribute_id = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
                     }
-
-                    if (is_array($val)) {
-                        $taxonomy = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
-                        $val_id = array();
-                        foreach ($val as $option) {
-                            {
-
-                                // Save the possible option value for the attribute which will be used for variation later
-                                wp_set_object_terms($id, $option, $taxonomy, true);
-                                // Get the term ID
-                                $val_id[] = get_term_by('name', $option, $taxonomy)->term_id;
-                            }
-
-                        }
-//
-                        $thedata[$attribute_id] = array(
-                            'name' => $attribute_id,
-                            'value' => $val_id, // Need to be term IDs
-                            'is_visible' => 1,
-                            'is_variation' => 1,
-                            'is_taxonomy' => '1'
-                        );
-
-                    } else {
-                        wp_set_object_terms($id, $attr_value, $attribute_id, false);
-                        $thedata[$attribute_id] = array(
-                            'name' => $attribute_id,
-                            'value' => $attr_value,
-                            'is_visible' => '1',
-                            'is_taxonomy' => '1'
-                        );
-                    }
-                }
-                update_post_meta($id, '_product_attributes', $thedata);
-                // add code like this in functions.php to import attributes, see docs for details
-                /*
-                $attr_name = 'סוג הצגה';
-                $attr_slug = spec5;
-                $attr_value = $item['SPEC5'];
-                if(!$this->is_attribute_exists($attr_slug)) {
-                    $attribute_id = wc_create_attribute(
-                        array(
-                            'name' => $attr_name,
-                            'slug' => $attr_slug,
-                            'type' => 'select',
-                            'order_by' => 'menu_order',
-                            'has_archives' => 0,
-                        )
+                    wp_set_object_terms($id, $attr_value, 'pa_' . $attr_slug, false);
+                    $thedata['pa_' . $attr_slug] = array(
+                        'name' => 'pa_' . $attr_slug,
+                        'value' => '',
+                        'is_visible' => '1',
+                        'is_taxonomy' => '1'
                     );
                 }
-                wp_set_object_terms($id, $attr_value, 'pa_'.$attr_slug , false);
-                $thedata['pa_'.$attr_slug] = array(
-                    'name' => 'pa_'.$attr_slug,
-                    'value' => '',
-                    'is_visible' => '1',
-                    'is_taxonomy' => '1'
-                );
-                */
+                /* loop over array of custom attributes */
+                $custom_attrs = [];
+
+                $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
+
+                if (!empty($custom_attrs))
+                {
+                    foreach ($custom_attrs as $attr) {
+                        $val = $attr[2];
+                        if (is_array($val)) {
+                            $val = array();
+                            foreach ($attr[2] as $v) {
+                                $val[] = $item[$v];
+                            }
+                        } else if (empty($item[$val])) {
+                            continue;
+                        } else {
+                            $attr_value = $item[$val];
+                        }
+
+                        $attr_name = $attr[0];
+                        $attr_slug = $attr[1];
+                        if (!$this->is_attribute_exists($attr_slug)) {
+                            $attribute_id = wc_create_attribute(
+                                array(
+                                    'name' => $attr_name,
+                                    'slug' => $attr_slug,
+                                    'type' => 'select',
+                                    'order_by' => 'menu_order',
+                                    'has_archives' => 0,
+                                )
+                            );
+                        } else {
+                            $attribute_id = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
+                        }
+
+                        if (is_array($val)) {
+                            $taxonomy = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
+                            $val_id = array();
+                            foreach ($val as $option) {
+                                {
+
+                                    // Save the possible option value for the attribute which will be used for variation later
+                                    wp_set_object_terms($id, $option, $taxonomy, true);
+                                    // Get the term ID
+                                    $val_id[] = get_term_by('name', $option, $taxonomy)->term_id;
+                                }
+
+                            }
+//
+                            $thedata[$attribute_id] = array(
+                                'name' => $attribute_id,
+                                'value' => $val_id, // Need to be term IDs
+                                'is_visible' => 1,
+                                'is_variation' => 1,
+                                'is_taxonomy' => '1'
+                            );
+
+                        } else {
+                            wp_set_object_terms($id, $attr_value, $attribute_id, false);
+                            $thedata[$attribute_id] = array(
+                                'name' => $attribute_id,
+                                'value' => $attr_value,
+                                'is_visible' => '1',
+                                'is_taxonomy' => '1'
+                            );
+                        }
+                    }
+                    if (!empty(($thedata))) {
+                        update_post_meta($id, '_product_attributes', $thedata);
+                    }
+                }
                 // sync image
-                 $is_load_image = json_decode($config->is_load_image);
-                 if(false == $is_load_image){
-                     continue ;
-                 }
-                $sku =  $item[$search_field];
+                $is_load_image = json_decode($config->is_load_image);
+                if (false == $is_load_image) {
+                    continue;
+                }
+                $sku = $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
-                if($priority_version >=21.0){
-                    $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \''.$item['PARTNAME'].'\'',[], $this->option('log_items_priority', true));
+                if ($priority_version >= 21.0) {
+                    $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $item['PARTNAME'] . '\'', [], $this->option('log_items_priority', true));
                     $data = json_decode($response['body']);
                     $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
-                    }
-                if(!empty($item['EXTFILENAME'])
-                    && ($this->option('update_image')==true || !get_the_post_thumbnail_url($id) )){
+                }
+                if (!empty($item['EXTFILENAME'])
+                    && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id)))
+                {
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
                     $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                    $images_url =  'https://'. $this->option('url').'/primail';
+                    $images_url = 'https://' . $this->option('url') . '/primail';
                     $image_base_url = $config->image_base_url;
-                    if(!empty($image_base_url )){
+                    if (!empty($image_base_url)) {
                         $images_url = $image_base_url;
                     }
-                    $product_full_url    = str_replace( '../../system/mail', $images_url, $priority_image_path ); 
+                    $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
                     $file_path = $item['EXTFILENAME'];
-                    $file_info = pathinfo( $file_path );
-                    $url = wp_get_upload_dir()['url'].'/'.$file_info['basename'];
+                    $file_info = pathinfo($file_path);
+                    $url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
                     //$priority_version = (float)$this->option('priority-version');
                     //$is_uri = strpos($product_full_url, 'http') >= 0 ? false : true;
-                    if($priority_version >=21.0 && strpos($product_full_url, 'http') === false){
-                        $attach_id = $this->save_uri_as_image($priority_image_path,$item['PARTNAME']);
-                    }else {
+                    if ($priority_version >= 21.0 && strpos($product_full_url, 'http') === false) {
+                        $file = $this->save_uri_as_image($priority_image_path, $item['PARTNAME']);
+                        $attach_id = $file[0];
+                        $file_name = $file[1];
+                    } else {
+                        $file_path = $item['EXTFILENAME'];
+                        $file_info = pathinfo($file_path);
+                        $url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
                         $attach_id = attachment_url_to_postid($url);
                     }
-                    if($attach_id != 0){
+                    if ($attach_id == NULL) {
+                        continue;
+                    } else if ($attach_id == 0) {
+                        $attach_id = download_attachment($sku, $product_full_url);
                     }
-                    else{
-                        $attach_id           = download_attachment( $sku, $product_full_url );
-                    }
-                    set_post_thumbnail( $id, $attach_id );
+                    $file = wp_get_upload_dir()['url'] . '/' . $file_name;
+                    include $file;
+                    $attach_data = wp_generate_attachment_metadata($attach_id,$file );
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+                    set_post_thumbnail($id, $attach_id);
                 }
+
             }
             // add timestamp
             $this->updateOption('items_priority_update', time());
@@ -1343,7 +1351,9 @@ class WooAPI extends \PriorityAPI\API
                 'Error Sync Items Priority',
                 $response['body']
             );
-        }return $response;
+        }
+
+        return $response;
     }
     public function simply_posts_where( $where, $query ) {
         global $wpdb;
@@ -3920,35 +3930,43 @@ class WooAPI extends \PriorityAPI\API
         $fieldname = apply_filters( 'simply_set_priority_sku_field', $fieldname );
         return $fieldname;
     }
-    function save_uri_as_image( $base64_img, $title ) {
+    function save_uri_as_image($base64_img, $title)
+    {
 
         // Upload dir.
-        $upload_dir  = wp_upload_dir();
-        $upload_path = str_replace( '/', DIRECTORY_SEPARATOR, $upload_dir['path'] ) . DIRECTORY_SEPARATOR;
-        $ar = explode(',',$base64_img);
+        $upload_dir = wp_upload_dir();
+        $upload_path = str_replace('/', DIRECTORY_SEPARATOR, $upload_dir['path']) . DIRECTORY_SEPARATOR;
+        $ar = explode(',', $base64_img);
         $image_data = $ar[0];
-        $file_type = explode(';',explode(':',$image_data)[1])[0];
-        $extension = explode('/',$file_type)[1];
-        $img             = $ar[1];
-        $img             = str_replace( ' ', '+', $img );
-        $decoded         = base64_decode( $img );
-        $filename        = $title .'.'. $extension;
+        $file_type = explode(';', explode(':', $image_data)[1])[0];
+        $extension = explode('/', $file_type)[1];
+        if ($extension != "jpg" && $extension != "png" &&
+            $extension != "jpeg" && $extension != "gif")
+            return [NULL, NULL];
+        $filename = $title . '.' . $extension;
+        $img = $ar[1];
+        $img = str_replace(' ', '+', $img);
+        $decoded = base64_decode($img);
+
+
+
         //$file_type     = 'image/png';
-        $hashed_filename = md5( $filename . microtime() ) . '_' . $filename;
+        $hashed_filename = md5($filename . microtime()) . '_' . $filename;
 
         // Save the image in the uploads directory.
-        $upload_file = file_put_contents( $upload_path . $hashed_filename, $decoded );
+        $upload_file = file_put_contents($upload_path . $filename, $decoded);
 
         $attachment = array(
             'post_mime_type' => $file_type,
-            'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $hashed_filename ) ),
-            'post_content'   => '',
-            'post_status'    => 'inherit',
-            'guid'           => $upload_dir['url'] . '/' . basename( $hashed_filename )
+            'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
+            'post_content' => '',
+            'post_status' => 'inherit',
+            'guid' => $upload_dir['url'] . '/' . basename($filename)
         );
 
-        $attach_id = wp_insert_attachment( $attachment, $upload_dir['path'] . '/' . $hashed_filename );
-        return $attach_id;
+        $attach_id = wp_insert_attachment($attachment, $upload_dir['path'] . '/' . $filename);
+        $file = [$attach_id, $filename];
+        return $file;
     }
 
 }
