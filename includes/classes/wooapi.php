@@ -1041,20 +1041,23 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
-        $daysback = 25;//(int)$config->days_back;
+        $daysback = (int)$config->days_back;
         $synclongtext = $config->synclongtext;
         $url_addition_config = $config->additional_url;
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
+        $is_categories=(!empty($config->categories)?$config->categories:null);
+        $statdes= (!empty($config->statdes) ? $config->statdes : false );
         $is_update_products = json_decode($config->is_update_products);
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,
-        SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,
-        SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
-        $response = $this->makeRequest('GET', 'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config . '&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM', [], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET',
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config . '&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM'
+            , [],
+            $this->option('log_items_priority', true));
         // check response status
 
         if ($response['status']) {
@@ -1110,12 +1113,15 @@ class WooAPI extends \PriorityAPI\API
                 if ($product_id != 0 && false == $is_update_products) {
                     continue;
                 }
-                if ($item['STATDES'] == "לא פעיל") {
-                    if ($product_id != 0) {
-                      //   $_product->delete();
+                if($statdes==true)
+                {
+                    if ($item['STATDES'] == "לא פעיל") {
+                        if ($product_id != 0) {
+                            $_product->delete();
 
-                    } else {
-                        continue;
+                        } else {
+                            continue;
+                        }
                     }
                 }
                 if ($product_id != 0) {
@@ -1179,8 +1185,7 @@ class WooAPI extends \PriorityAPI\API
                     if (!empty($item['INVFLAG'])) {
                         update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
                     }
-                    if (!empty($config->categories))
-                    {
+                    if (!empty($is_categories)) {
                         // update categories
                         $categories = [];
 
@@ -1225,8 +1230,7 @@ class WooAPI extends \PriorityAPI\API
 
                 $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
 
-                if (!empty($custom_attrs))
-                {
+                if (!empty($custom_attrs)) {
                     foreach ($custom_attrs as $attr) {
                         $val = $attr[2];
                         if (is_array($val)) {
@@ -1278,7 +1282,8 @@ class WooAPI extends \PriorityAPI\API
                                 'is_taxonomy' => '1'
                             );
 
-                        } else {
+                        }
+                        else {
                             wp_set_object_terms($id, $attr_value, $attribute_id, false);
                             $thedata[$attribute_id] = array(
                                 'name' => $attribute_id,
@@ -1292,8 +1297,13 @@ class WooAPI extends \PriorityAPI\API
                         update_post_meta($id, '_product_attributes', $thedata);
                     }
                 }
+                //sync Brands
+                $brands = $item;
+                $brands['product'] = $id;
+                apply_filters('simply_add_brands', $brands);
                 // sync image
                 $is_load_image = json_decode($config->is_load_image);
+
                 if (false == $is_load_image) {
                     continue;
                 }
@@ -1305,8 +1315,7 @@ class WooAPI extends \PriorityAPI\API
                     $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
                 }
                 if (!empty($item['EXTFILENAME'])
-                    && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id)))
-                {
+                    && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
                     $priority_image_path = str_replace('\\', '/', $priority_image_path);
                     $images_url = 'https://' . $this->option('url') . '/primail';
@@ -1315,9 +1324,8 @@ class WooAPI extends \PriorityAPI\API
                         $images_url = $image_base_url;
                     }
                     $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
-                    $file_path = $item['EXTFILENAME'];
-                    $file_info = pathinfo($file_path);
-                    $url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
+                    $file_path = $item['EXTFILENAME'];//  $file_info = pathinfo($file_path);
+                    ;//['url'] . '/' . $file_info['basename'];
                     //$priority_version = (float)$this->option('priority-version');
                     //$is_uri = strpos($product_full_url, 'http') >= 0 ? false : true;
                     if ($priority_version >= 21.0 && strpos($product_full_url, 'http') === false) {
@@ -1335,9 +1343,9 @@ class WooAPI extends \PriorityAPI\API
                     } else if ($attach_id == 0) {
                         $attach_id = download_attachment($sku, $product_full_url);
                     }
-                    $file = wp_get_upload_dir()['url'] . '/' . $file_name;
+                    $file = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
                     include $file;
-                    $attach_data = wp_generate_attachment_metadata($attach_id,$file );
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $file);
                     wp_update_attachment_metadata($attach_id, $attach_data);
                     set_post_thumbnail($id, $attach_id);
                 }
