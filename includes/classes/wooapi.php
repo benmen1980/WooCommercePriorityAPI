@@ -1248,7 +1248,7 @@ class WooAPI extends \PriorityAPI\API
                         if (is_array($val)) {
                             $val = array();
                             foreach ($attr[2] as $v) {
-                                if (!empty($val_id)) {
+                                if(($item[$v])!=NULL) {
                                     $val[] = $item[$v];
                                 }
                             }
