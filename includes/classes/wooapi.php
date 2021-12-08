@@ -1043,24 +1043,20 @@ class WooAPI extends \PriorityAPI\API
 
     public function syncItemsPriority()
     {
-        // default values
         $priority_version = (float)$this->option('priority-version');
-        $daysback = 1;
-        $url_addition_config = '';
-        $search_field = 'PARTNAME';
-        $is_update_products = (bool)true;
-
         // config
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
-        $daysback = (int)$config->days_back;
         $synclongtext = $config->synclongtext;
-        $url_addition_config = $config->additional_url;
+        $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
+        $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
         $statdes = (!empty($config->statdes) ? $config->statdes : false);
-        $is_update_products = json_decode($config->is_update_products);
+        $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
+        $brands = (!empty($config->brands) ? $config->brands : false);
+        $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
@@ -1213,53 +1209,12 @@ class WooAPI extends \PriorityAPI\API
                     }
                 }
                 // update attributes
-                unset($thedata);
-                foreach ($item['PARTUNSPECS_SUBFORM'] as $attribute) {
-                    $attr_name = $attribute['SPECDES'];
-                    $attr_slug = strtolower($attribute['SPECNAME']);
-                    $attr_value = $attribute['VALUE'];
-                    if (!$this->is_attribute_exists($attr_slug)) {
-                        $attribute_id = wc_create_attribute(
-                            array(
-                                'name' => $attr_name,
-                                'slug' => $attr_slug,
-                                'type' => 'select',
-                                'order_by' => 'menu_order',
-                                'has_archives' => 0,
-                            )
-                        );
-                    }
-                    wp_set_object_terms($id, $attr_value, 'pa_' . $attr_slug, false);
-                    $thedata['pa_' . $attr_slug] = array(
-                        'name' => 'pa_' . $attr_slug,
-                        'value' => '',
-                        'is_visible' => '1',
-                        'is_taxonomy' => '1'
-                    );
-                }
-                /* loop over array of custom attributes */
-                $custom_attrs = [];
-
-                $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
-
-                if (!empty($custom_attrs)) {
-                    foreach ($custom_attrs as $attr) {
-                        $val = $attr[2];
-                        if (is_array($val)) {
-                            $val = array();
-                            foreach ($attr[2] as $v) {
-                                if(($item[$v])!=NULL) {
-                                    $val[] = $item[$v];
-                                }
-                            }
-                        } else if (empty($item[$val])) {
-                            continue;
-                        } else {
-                            $attr_value = $item[$val];
-                        }
-
-                        $attr_name = $attr[0];
-                        $attr_slug = $attr[1];
+                if ($is_attrs != false) {
+                    unset($thedata);
+                    foreach ($item['PARTUNSPECS_SUBFORM'] as $attribute) {
+                        $attr_name = $attribute['SPECDES'];
+                        $attr_slug = strtolower($attribute['SPECNAME']);
+                        $attr_value = $attribute['VALUE'];
                         if (!$this->is_attribute_exists($attr_slug)) {
                             $attribute_id = wc_create_attribute(
                                 array(
@@ -1270,51 +1225,97 @@ class WooAPI extends \PriorityAPI\API
                                     'has_archives' => 0,
                                 )
                             );
-                        } else {
-                            $attribute_id = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
                         }
+                        wp_set_object_terms($id, $attr_value, 'pa_' . $attr_slug, false);
+                        $thedata['pa_' . $attr_slug] = array(
+                            'name' => 'pa_' . $attr_slug,
+                            'value' => '',
+                            'is_visible' => '1',
+                            'is_taxonomy' => '1'
+                        );
+                    }
+                    /* loop over array of custom attributes */
+                    $custom_attrs = [];
 
-                        if (is_array($val)) {
-                            $taxonomy = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
-                            $val_id = array();
-                            foreach ($val as $option) {
-                                {
+                    $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
 
-                                    // Save the possible option value for the attribute which will be used for variation later
-                                    wp_set_object_terms($id, $option, $taxonomy, true);
-                                    // Get the term ID
-                                    $val_id[] = get_term_by('name', $option, $taxonomy)->term_id;
+                    if (!empty($custom_attrs)) {
+                        foreach ($custom_attrs as $attr) {
+                            $val = $attr[2];
+                            if (is_array($val)) {
+                                $val = array();
+                                foreach ($attr[2] as $v) {
+                                    if (($item[$v]) != NULL) {
+                                        $val[] = $item[$v];
+                                    }
+                                }
+                            } else if (empty($item[$val])) {
+                                continue;
+                            } else {
+                                $attr_value = $item[$val];
+                            }
+
+                            $attr_name = $attr[0];
+                            $attr_slug = $attr[1];
+                            if (!$this->is_attribute_exists($attr_slug)) {
+                                $attribute_id = wc_create_attribute(
+                                    array(
+                                        'name' => $attr_name,
+                                        'slug' => $attr_slug,
+                                        'type' => 'select',
+                                        'order_by' => 'menu_order',
+                                        'has_archives' => 0,
+                                    )
+                                );
+                            } else {
+                                $attribute_id = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
+                            }
+
+                            if (is_array($val)) {
+                                $taxonomy = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
+                                $val_id = array();
+                                foreach ($val as $option) {
+                                    {
+
+                                        // Save the possible option value for the attribute which will be used for variation later
+                                        wp_set_object_terms($id, $option, $taxonomy, true);
+                                        // Get the term ID
+                                        $val_id[] = get_term_by('name', $option, $taxonomy)->term_id;
+                                    }
+
+                                }
+                                if (!empty($val_id)) {
+                                    $thedata[$attribute_id] = array(
+                                        'name' => $attribute_id,
+                                        'value' => $val_id, // Need to be term IDs
+                                        'is_visible' => 1,
+                                        'is_variation' => 1,
+                                        'is_taxonomy' => '1'
+                                    );
                                 }
 
-                            }
-                            if (!empty($val_id)) {
+                            } else {
+                                wp_set_object_terms($id, $attr_value, $attribute_id, false);
                                 $thedata[$attribute_id] = array(
                                     'name' => $attribute_id,
-                                    'value' => $val_id, // Need to be term IDs
-                                    'is_visible' => 1,
-                                    'is_variation' => 1,
+                                    'value' => $attr_value,
+                                    'is_visible' => '1',
                                     'is_taxonomy' => '1'
                                 );
                             }
-
-                        } else {
-                            wp_set_object_terms($id, $attr_value, $attribute_id, false);
-                            $thedata[$attribute_id] = array(
-                                'name' => $attribute_id,
-                                'value' => $attr_value,
-                                'is_visible' => '1',
-                                'is_taxonomy' => '1'
-                            );
                         }
-                    }
-                    if (!empty(($thedata))) {
-                        update_post_meta($id, '_product_attributes', $thedata);
+                        if (!empty(($thedata))) {
+                            update_post_meta($id, '_product_attributes', $thedata);
+                        }
                     }
                 }
                 //sync Brands
-                $brands = $item;
-                $brands['product'] = $id;
-                apply_filters('simply_add_brands', $brands);
+                if (($brands) != false) {
+                    if (!empty($item[$brands]) && $id) {
+                        wp_set_object_terms($id, $item[$brands], 'pwb-brand');
+
+                    }
+                }
                 // sync image
                 $is_load_image = json_decode($config->is_load_image);
 
