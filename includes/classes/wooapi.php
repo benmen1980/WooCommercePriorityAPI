@@ -3789,6 +3789,9 @@ class WooAPI extends \PriorityAPI\API
                     error_log('This is customer with error ' . $user['CUSTNAME']);
                     continue;
                 }
+                $user['user_id']=$user_id;
+                apply_filters('simply_sync_priority_customers_to_wp',$user);
+                unset($user['user_id']);
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
                 update_user_meta($user_id, 'custpricelists', $user['CUSTPLIST_SUBFORM']);
                 update_user_meta($user_id, 'priority_mcustomer_number', $user['MCUSTNAME']);
