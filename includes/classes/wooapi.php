@@ -3733,20 +3733,19 @@ class WooAPI extends \PriorityAPI\API
     function sync_priority_customers_to_wp()
     {
 
-        // default values
-        $daysback = 1;
-        $url_addition_config = '';
+
         // config
         $json = $this->option('sync_customer_to_wp_user_config');
         $json = preg_replace('/\r|\n/', '', trim($json));
         $config = json_decode($json);
-        $daysback = (int)$config->days_back;
+        $daysback = !empty((int)$config->days_back) ? (int)$config->days_back : 1;
+        $statusdate = !empty($config->statusdate) ? 'STATUSDATE' : 'CREATEDDATE';
         $username_filed = $config->username_field;
         $password_field = $config->password_field;
-        $url_addition_config = $config->additional_url;
+        $url_addition_config = !empty($config->additional_url) ? $config->additional_url : '';
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
-        $url_addition = 'CUSTOMERS?$filter=CREATEDDATE ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $url_addition = 'CUSTOMERS?$filter=' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
 
         $response = $this->makeRequest('GET', $url_addition, [], true);
         // print_r( $response['status'] );
@@ -3814,7 +3813,7 @@ class WooAPI extends \PriorityAPI\API
                 // $customer->set_billing_postcode($user['ZIP']);
                 // $customer->save();
             }
-            $index++;
+            //$index++;
         }
 
 
