@@ -1347,18 +1347,20 @@ class WooAPI extends \PriorityAPI\API
                         $file = $this->save_uri_as_image($priority_image_path, $item['PARTNAME']);
                         $attach_id = $file[0];
                         $file_name = $file[1];
+
                     } else {
                         $file_path = $item['EXTFILENAME'];
                         $file_info = pathinfo($file_path);
                         $url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
                         $attach_id = attachment_url_to_postid($url);
                     }
-                    if ($attach_id == NULL) {
-                        continue;
-                    } else if ($attach_id == 0) {
-                        $attach_id = download_attachment($sku, $product_full_url);
+                    if ($attach_id == 0) {
+                        $attach_id = download_attachment($sku, wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name);
                     }
-                    $file = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
+                    else if ($attach_id == null) {
+                        continue;
+                    }
+                    $file = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $file_name;
                     include $file;
                     $attach_data = wp_generate_attachment_metadata($attach_id, $file);
                     wp_update_attachment_metadata($attach_id, $attach_data);
@@ -4024,8 +4026,6 @@ class WooAPI extends \PriorityAPI\API
     {
 
         // Upload dir.
-        $upload_dir = wp_upload_dir();
-        $upload_path = str_replace('/', DIRECTORY_SEPARATOR, $upload_dir['path']) . DIRECTORY_SEPARATOR;
         $ar = explode(',', $base64_img);
         $image_data = $ar[0];
         $file_type = explode(';', explode(':', $image_data)[1])[0];
@@ -4034,29 +4034,36 @@ class WooAPI extends \PriorityAPI\API
             $extension != "jpeg" && $extension != "gif")
             return [NULL, NULL];
         $filename = $title . '.' . $extension;
+        $upload_dir = wp_upload_dir();
+        $upload_path = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $filename;
+        if (file_exists($upload_path)) {
+            return [0, $filename];
+        }
+        if (!is_dir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
+            if (!@mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
+                $error = error_get_last();
+                echo $error['message'];
+            } else  mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT', 0777, true);
+        }
         $img = $ar[1];
         $img = str_replace(' ', '+', $img);
         $decoded = base64_decode($img);
-
-
-        //$file_type     = 'image/png';
-        $hashed_filename = md5($filename . microtime()) . '_' . $filename;
-
         // Save the image in the uploads directory.
-        $upload_file = file_put_contents($upload_path . $filename, $decoded);
+        $upload_file = file_put_contents($upload_path, $decoded);
 
         $attachment = array(
             'post_mime_type' => $file_type,
             'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
             'post_content' => '',
             'post_status' => 'inherit',
-            'guid' => $upload_dir['url'] . '/' . basename($filename)
+            'guid' => $upload_dir['basedir'] . '/' . basename($filename)
         );
 
-        $attach_id = wp_insert_attachment($attachment, $upload_dir['path'] . '/' . $filename);
+        $attach_id = wp_insert_attachment($attachment, $upload_path);
         $file = [$attach_id, $filename];
         return $file;
     }
+
 
 }
 
