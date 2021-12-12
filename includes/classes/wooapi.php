@@ -157,7 +157,7 @@ class WooAPI extends \PriorityAPI\API
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
-            add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
+          //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
             // filter product price regarding to price list
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
 
