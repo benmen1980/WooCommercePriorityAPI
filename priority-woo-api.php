@@ -44,10 +44,10 @@ register_activation_hook(P18AW_SELF, function(){
     $sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
-        product_sku VARCHAR(32),
-        price_list_code VARCHAR(32),
-        price_list_name VARCHAR(256),
-        price_list_currency VARCHAR(6), 
+        product_sku VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price_list_code VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price_list_name VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price_list_currency VARCHAR(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, 
         price_list_price DECIMAL(6,2), 
         PRIMARY KEY  (id)
     )";
@@ -70,10 +70,10 @@ register_activation_hook(P18AW_SELF, function(){
 	$sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
-        sitecode VARCHAR(32),
-        sitedesc VARCHAR(80),
-        customer_number VARCHAR(30),
-        address1 VARCHAR(80),
+        sitecode VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        sitedesc VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        customer_number VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        address1 VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         PRIMARY KEY  (id)
     )";
 
@@ -86,8 +86,8 @@ register_activation_hook(P18AW_SELF, function(){
     $sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
-        custname VARCHAR(32),
-        partname VARCHAR(32),
+        custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        partname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price DECIMAL(6,3),
         PRIMARY KEY  (id)
     )";
