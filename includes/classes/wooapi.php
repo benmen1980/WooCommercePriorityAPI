@@ -420,7 +420,6 @@ class WooAPI extends \PriorityAPI\API
                             echo $order->get_status();
                         case 'test';
                             echo 'this is just a test'.PHP_EOL;
-
                             break;
                         default:
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -3292,7 +3291,7 @@ class WooAPI extends \PriorityAPI\API
     // filter product price
     public function filterPrice($price, $product)
     {
-        $data = $this->getProductDataBySku($product->get_sku());
+        //$data = $this->getProductDataBySku($product->get_sku());
         $user = wp_get_current_user();
         // get the MCUSTNAME if any else get the cust
         $custname = empty(get_user_meta($user->ID,'priority_mcustomer_number',true)) ?  get_user_meta($user->ID,'priority_customer_number',true) : get_user_meta($user->ID,'priority_mcustomer_number',true);
