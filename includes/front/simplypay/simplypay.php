@@ -86,7 +86,7 @@ class simplypay extends \PriorityAPI\API{
         if($response){
             WC()->session->set(
                 'session_vars',
-                array('ordertype' => 'Recipe' )
+                array('ordertype' => 'obligo_payment' )
             );
         }
         $data = [$response];
