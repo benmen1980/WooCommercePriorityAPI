@@ -2811,7 +2811,10 @@ class WooAPI extends \PriorityAPI\API
 
         // get ordered items
         foreach ($order->get_items() as $item) {
-
+            $bool = apply_filters('sync_order_product', $item);
+            if ($bool=='no') {
+                continue;
+            }
             $product = $item->get_product();
 
             $parameters = [];
@@ -3002,6 +3005,10 @@ class WooAPI extends \PriorityAPI\API
         $params = [];
         // get ordered items
         foreach ($order->get_items() as $item) {
+            $bool = apply_filters('sync_order_product', $item);
+            if ($bool=='no') {
+                continue;
+            }
             $product = $item->get_product();
             $parameters = [];
             // get tax
@@ -3176,7 +3183,10 @@ class WooAPI extends \PriorityAPI\API
         $data['SHIPTO2_SUBFORM'] = $shipping_data;
         // get ordered items
         foreach ($order->get_items() as $item) {
-
+            $bool = apply_filters('sync_order_product', $item);
+            if ($bool=='no') {
+                continue;
+            }
             $product = $item->get_product();
 
             $parameters = [];
