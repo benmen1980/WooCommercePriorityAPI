@@ -157,7 +157,7 @@ class WooAPI extends \PriorityAPI\API
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
-          //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
+            //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
             // filter product price regarding to price list
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
 
@@ -1356,8 +1356,7 @@ class WooAPI extends \PriorityAPI\API
                     }
                     if ($attach_id == 0) {
                         $attach_id = download_attachment($sku, wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name);
-                    }
-                    else if ($attach_id == null) {
+                    } else if ($attach_id == null) {
                         continue;
                     }
                     $file = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $file_name;
@@ -2736,6 +2735,9 @@ class WooAPI extends \PriorityAPI\API
 
 
         ];
+        if (!empty($order->get_meta('site',true))) {
+            $data['DCODE'] = $order->get_meta('site');
+        }
 //        // CDES
 //        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
 //            $data['CDES'] = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
@@ -2803,7 +2805,9 @@ class WooAPI extends \PriorityAPI\API
         // get shipping id
         $shipping_method = $order->get_shipping_methods();
         $shipping_method = array_shift($shipping_method);
-        $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
+        if (!empty($shipping_method['method_id'])) {
+            $shipping_method_id = str_replace(':', '_', $shipping_method['method_id']);
+        }
 
         // get parameters
         $params = [];
@@ -2812,7 +2816,7 @@ class WooAPI extends \PriorityAPI\API
         // get ordered items
         foreach ($order->get_items() as $item) {
             $bool = apply_filters('sync_order_product', $item);
-            if ($bool=='no') {
+            if ($bool == 'no') {
                 continue;
             }
             $product = $item->get_product();
@@ -2946,6 +2950,9 @@ class WooAPI extends \PriorityAPI\API
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
         ];
+        if (!empty($order->get_meta('site',true))) {
+            $data['DCODE'] = $order->get_meta('site');
+        }
         // CDES
 //        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
 //            $data['CDES'] = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
@@ -3006,7 +3013,7 @@ class WooAPI extends \PriorityAPI\API
         // get ordered items
         foreach ($order->get_items() as $item) {
             $bool = apply_filters('sync_order_product', $item);
-            if ($bool=='no') {
+            if ($bool == 'no') {
                 continue;
             }
             $product = $item->get_product();
@@ -3184,7 +3191,7 @@ class WooAPI extends \PriorityAPI\API
         // get ordered items
         foreach ($order->get_items() as $item) {
             $bool = apply_filters('sync_order_product', $item);
-            if ($bool=='no') {
+            if ($bool == 'no') {
                 continue;
             }
             $product = $item->get_product();
@@ -3801,8 +3808,8 @@ class WooAPI extends \PriorityAPI\API
                     error_log('This is customer with error ' . $user['CUSTNAME']);
                     continue;
                 }
-                $user['user_id']=$user_id;
-                apply_filters('simply_sync_priority_customers_to_wp',$user);
+                $user['user_id'] = $user_id;
+                apply_filters('simply_sync_priority_customers_to_wp', $user);
                 unset($user['user_id']);
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
                 update_user_meta($user_id, 'custpricelists', $user['CUSTPLIST_SUBFORM']);
