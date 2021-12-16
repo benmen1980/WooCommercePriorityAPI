@@ -79,14 +79,14 @@ function simply_custom_checkout_fields($checkout){
 }
 function simply_custom_checkout_field_process() {
     // Check if set, if its not set add an error.
-    if(isset($_POST['site'])){
-        if ( ! $_POST['site'] && $this->option('sites') == true )
+    if(isset($_POST['simply_site'])){
+        if ( ! $_POST['simply_site'])
             wc_add_notice( __( 'Please enter site.' ), 'error' );
     }
 }
 function simply_custom_checkout_field_update_order_meta( $order_id ) {
-    if ( ! empty( $_POST['site'] ) && $this->option('sites') == true ) {
-        update_post_meta( $order_id, 'site', sanitize_text_field( $_POST['site'] ) );
+    if ( ! empty( $_POST['simply_site'] )  ) {
+        add_post_meta( $order_id, 'site', sanitize_text_field( $_POST['simply_site'] ) );
     }
 }
 //
