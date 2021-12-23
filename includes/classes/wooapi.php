@@ -2876,9 +2876,13 @@ class WooAPI extends \PriorityAPI\API
 
         }
         // additional line cart discount
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        if(!empty($config))
+            $coupon_num=$config->coupon_num;
+        // additional line cart discount
         if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() > 0)) {
             $data['ORDERITEMS_SUBFORM'][] = [
-                $this->get_sku_prioirty_dest_field() => '000', // change to other item
+                $this->get_sku_prioirty_dest_field() => empty($coupon_num)?'000':$coupon_num, // change to other item
                 'TQUANT' => -1,
                 'VATPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax()),
                 'DUEDATE' => date('Y-m-d'),
