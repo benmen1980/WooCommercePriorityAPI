@@ -1359,7 +1359,7 @@ class WooAPI extends \PriorityAPI\API
                     } else if ($attach_id == null) {
                         continue;
                     }
-                    $file = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $file_name;
+                    $file = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
                     include $file;
                     $attach_data = wp_generate_attachment_metadata($attach_id, $file);
                     wp_update_attachment_metadata($attach_id, $attach_data);
