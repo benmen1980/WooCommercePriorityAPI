@@ -1186,6 +1186,9 @@ class WooAPI extends \PriorityAPI\API
                 if ($id) {
                     $my_product = new \WC_Product($id);
                     $my_product->set_regular_price($pri_price);
+                    if (!empty($config->menu_order)) {
+                        $my_product->set_menu_order($item[$config->menu_order]);
+                    }
                     //$my_product->set_sale_price( $sales_price);
                     $my_product->save();
                     //update_post_meta($id, '_regular_price', $pri_price);
