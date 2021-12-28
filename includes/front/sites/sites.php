@@ -69,7 +69,7 @@ function simply_custom_checkout_fields($checkout){
             // actually this parameter just adds "*" to the field
             'class'       => array( 'misha-field', 'form-row-wide' ),
             // array only, read more about classes and styling in the previous step
-            'label'       => __('Priority ERP Order site ','p18a'),
+            'label'       => __('נקודת אספקה ','p18a'),
             'label_class' => 'misha-label',
             // sometimes you need to customize labels, both string and arrays are supported
             'options'     => $finalsites
