@@ -2419,6 +2419,14 @@ class WooAPI extends \PriorityAPI\API
                  */
 
                 break;
+            case 'z-credit';
+                $data = $order->get_meta('zc_response');
+                $data = base64_decode($data);
+                $payaccount = $this->getStringBetween($data, '"CardNum":"', '"');;
+                $ccuid = $this->getStringBetween($data, '"Token":"', '"');
+                $validmonth = $this->getStringBetween($data, '"ExpDate_MMYY":"', '"');
+                $confnum = $this->getStringBetween($data, '"ApprovalNumber":"', '"');
+                break;
             // debug
             case 'debug';
                 $payaccount = '123456789';
@@ -2738,7 +2746,7 @@ class WooAPI extends \PriorityAPI\API
 
 
         ];
-        if (!empty($order->get_meta('site',true))) {
+        if (!empty($order->get_meta('site', true))) {
             $data['DCODE'] = $order->get_meta('site');
         }
 //        // CDES
@@ -2880,12 +2888,12 @@ class WooAPI extends \PriorityAPI\API
         }
         // additional line cart discount
         $config = json_decode(stripslashes($this->option('setting-config')));
-        if(!empty($config))
-            $coupon_num=$config->coupon_num;
+        if (!empty($config))
+            $coupon_num = $config->coupon_num;
         // additional line cart discount
         if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() > 0)) {
             $data['ORDERITEMS_SUBFORM'][] = [
-                $this->get_sku_prioirty_dest_field() => empty($coupon_num)?'000':$coupon_num, // change to other item
+                $this->get_sku_prioirty_dest_field() => empty($coupon_num) ? '000' : $coupon_num, // change to other item
                 'TQUANT' => -1,
                 'VATPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax()),
                 'DUEDATE' => date('Y-m-d'),
@@ -2957,7 +2965,7 @@ class WooAPI extends \PriorityAPI\API
             //'DCODE' => $priority_dep_number, // this is the site in Priority
             //'DETAILS' => $user_department,
         ];
-        if (!empty($order->get_meta('site',true))) {
+        if (!empty($order->get_meta('site', true))) {
             $data['DCODE'] = $order->get_meta('site');
         }
         // CDES
@@ -4088,6 +4096,11 @@ class WooAPI extends \PriorityAPI\API
         return $file;
     }
 
+    public function getStringBetween($str, $from, $to)
+    {
+        $sub = substr($str, strpos($str, $from) + strlen($from), strlen($str));
+        return substr($sub, 0, strpos($sub, $to));
+    }
 
 }
 
