@@ -1,9 +1,9 @@
 <?php
 /**
-* @package     PriorityAPI
-* @author      Ante Laca <ante.laca@gmail.com>
-* @copyright   2018 Roi Holdings
-*/
+ * @package     PriorityAPI
+ * @author      Ante Laca <ante.laca@gmail.com>
+ * @copyright   2018 Roi Holdings
+ */
 
 namespace PriorityWoocommerceAPI;
 
@@ -14,7 +14,7 @@ class CustomersProducts extends \WP_List_Table
     {
         parent::__construct();
     }
-    
+
     public function prepare_items()
     {
 
@@ -24,7 +24,7 @@ class CustomersProducts extends \WP_List_Table
 
         $data = $GLOBALS['wpdb']->get_results('
             SELECT  custname,partname,custpartname
-            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_CustomersParts
+            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_customersparts
             ',
             ARRAY_A
         );
@@ -42,7 +42,7 @@ class CustomersProducts extends \WP_List_Table
 
         $this->_column_headers = [$columns, $hidden, $sortable];
         $this->items = $data;
-    
+
     }
 
     public function get_columns()
@@ -73,8 +73,8 @@ class CustomersProducts extends \WP_List_Table
         switch($name) {
             case 'price_list_name':
 
-	        default:
-		        return $item[$name];
+            default:
+                return $item[$name];
 
         }
     }

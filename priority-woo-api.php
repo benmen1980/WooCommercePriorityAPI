@@ -78,11 +78,23 @@ register_activation_hook(P18AW_SELF, function(){
     )";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    
+
     dbDelta($sql);
 
     /* special price item customer */
     $table = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer';
+    $sql = "CREATE TABLE $table (
+        id  INT AUTO_INCREMENT,
+        blog_id INT,
+        custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        partname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price DECIMAL(6,3) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        PRIMARY KEY  (id)
+    )";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    /* special price product family */
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family';
     $sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
@@ -93,7 +105,25 @@ register_activation_hook(P18AW_SELF, function(){
     )";
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_customersparts';
+    $sql = "CREATE TABLE $table (
 
+id  INT AUTO_INCREMENT,
+
+blog_id INT,
+
+custname VARCHAR(32),
+
+partname VARCHAR(32),
+custpartname VARCHAR(32),
+
+PRIMARY KEY  (id)
+
+)";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+    dbDelta($sql);
 
 });
 
