@@ -1336,7 +1336,13 @@ class WooAPI extends \PriorityAPI\API
                     && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
                     $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                    $images_url = 'https://' . $this->option('url') . '/primail';
+                    if($config->zoom=="true")
+                    {
+                        $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                    }
+                    else {
+                        $images_url = 'https://' . $this->option('url') . '/primail';
+                    }
                     $image_base_url = $config->image_base_url;
                     if (!empty($image_base_url)) {
                         $images_url = $image_base_url;
