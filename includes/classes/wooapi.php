@@ -1859,6 +1859,7 @@ class WooAPI extends \PriorityAPI\API
 //                    $attrnames = str_replace("pa_", "", $attribute['name']);
 //                }
 //            }
+            $product_item = wc_get_product($product->ID);
             $body = [
                 'PARTNAME' => $meta['_sku'][0],
                 'PARTDES' => $product->post_title,
