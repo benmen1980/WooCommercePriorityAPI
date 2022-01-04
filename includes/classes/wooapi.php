@@ -617,6 +617,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('sync_items_priority_config', stripslashes($this->post('sync_items_priority_config')));
                 $this->updateOption('sync_variations_priority_config', stripslashes($this->post('sync_variations_priority_config')));
                 // customer_to_wp_user
+                $this->updateOption('sync_c_products_priority', stripslashes($this->post('sync_c_products_priority')));
                 $this->updateOption('sync_customer_to_wp_user', stripslashes($this->post('sync_customer_to_wp_user')));
                 $this->updateOption('sync_customer_to_wp_user_config', stripslashes($this->post('sync_customer_to_wp_user_config')));
                 $this->updateOption('auto_sync_customer_to_wp_user', stripslashes($this->post('auto_sync_customer_to_wp_user')));
@@ -936,6 +937,13 @@ class WooAPI extends \PriorityAPI\API
                 case 'auto_sync_customer_to_wp_user':
                     try {
                         $this->sync_priority_customers_to_wp();
+                    } catch (Exception $e) {
+                        exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
+                    break;
+                case 'sync_c_products_priority':
+                    try {
+                        $this->syncCustomerProducts();
                     } catch (Exception $e) {
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
@@ -1336,11 +1344,9 @@ class WooAPI extends \PriorityAPI\API
                     && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
                     $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                    if($config->zoom=="true")
-                    {
+                    if ($config->zoom == "true") {
                         $images_url = 'https://' . $this->option('url') . '/zoom/primail';
-                    }
-                    else {
+                    } else {
                         $images_url = 'https://' . $this->option('url') . '/primail';
                     }
                     $image_base_url = $config->image_base_url;
@@ -1690,6 +1696,86 @@ class WooAPI extends \PriorityAPI\API
             exit(json_encode(['status' => 0, 'msg' => 'Error Sync Items Priority Variation']));
 
         }
+    }
+
+    public function syncCustomerProducts()
+
+    {
+
+
+        $url_addition = '?$filter=CUSTPART eq \'Y\' &$select=CUSTNAME,MCUSTNAME ';
+
+        $url_addition .= '&$expand=CUSTPART_SUBFORM($filter=NOTVALID ne \'Y\' ;)';
+
+
+        $response = $this->makeRequest('GET', 'CUSTOMERS' . $url_addition,
+
+            [], $this->option('log_sites_priority', true));
+
+// check response status
+        if ($response['status']) {
+
+            // create the table
+
+            $table = $GLOBALS['wpdb']->prefix . 'p18a_customersparts';
+
+            $blog_id = get_current_blog_id();
+
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+
+            $data = json_decode($response['body_raw'], true);
+            if (isset($data['value'])) {
+
+                foreach ($data['value'] as $list) {
+
+                    $sub_form = 'CUSTPART_SUBFORM';
+
+                    if (!empty($list['MCUSTNAME'])) {
+
+                        $sub_form = 'ROYY_CUSTPART_SUBFORM';
+
+                    }
+
+                    if (isset($list[$sub_form])) {
+
+                        {
+
+                            foreach ($list[$sub_form] as $item) {
+
+                                echo $GLOBALS['wpdb']->insert($table, [
+                                    'blog_id' => $blog_id,
+                                    'custname' => $list['CUSTNAME'],
+                                    'partname' => $item['PARTNAME'],
+                                    'custpartname' => $item['CUSTPARTNAME']
+
+                                ]);
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                $this->updateOption('pricelist_priority_update', time());
+
+            }
+
+        } else {
+
+            $this->sendEmailError(
+
+                $this->option('email_error_sync_pricelist_priority'),
+
+                'Error Sync Price Lists Priority',
+
+                $response['body']
+
+            );
+
+        }
+
     }
 
     /**
