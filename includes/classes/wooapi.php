@@ -1130,7 +1130,7 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $response = $this->makeRequest('GET',
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config . '&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM'
@@ -1239,7 +1239,7 @@ class WooAPI extends \PriorityAPI\API
                     // Insert product
                     $id = wp_insert_post($data);
                     if ($id) {
-                        update_post_meta($id, '_sku', $item[$search_field]);
+                        update_post_meta($id, '_sku', $search_by_value);
                         update_post_meta($id, '_stock', 0);
                         update_post_meta($id, '_stock_status', 'outofstock');
                         $out_of_stock_staus = 'outofstock';
@@ -1399,7 +1399,7 @@ class WooAPI extends \PriorityAPI\API
                 if (false == $is_load_image) {
                     continue;
                 }
-                $sku = $item[$search_field];
+                $sku = $search_by_value;
                 $is_has_image = get_the_post_thumbnail_url($id);
                 if ($priority_version >= 21.0) {
                     $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $item['PARTNAME'] . '\'', [], $this->option('log_items_priority', true));
