@@ -201,9 +201,10 @@ $format2 = 'd/m/Y H:i:s';
 					<a href="#" class="button p18aw-sync" data-sync="sync_pricelist_priority"><?php _e('Sync', 'p18a'); ?></a>
 				</td>
 
-				<td>
-					<input type="text" style="width:300px" name="static_odata_header_sync_pricelist_priority" form="p18aw-sync"><?=$this->option('static_odata_header_sync_pricelist_priority')?></input>
-				</td>
+                <td>
+                    <input type="text" style="width:300px" name="sync_pricelist_priority_warhsname" form="p18aw-sync" value="<?php echo($this->option('sync_pricelist_priority_warhsname'))?>">
+
+                </td>
 			</tr>
 
 			<tr>
