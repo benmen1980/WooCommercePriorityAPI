@@ -46,6 +46,7 @@ class WooAPI extends \PriorityAPI\API
             'sync_items_web' => 'syncItemsWeb',
             'sync_inventory_priority' => 'syncInventoryPriority',
             'sync_pricelist_priority' => 'syncPriceLists',
+            'sync_productfamily_priority'=>'syncSpecialPriceProductFamily',
             'sync_receipts_priority' => 'syncReceipts',
             'sync_order_status_priority' => 'syncPriorityOrderStatus',
             'sync_sites_priority' => 'syncSites',
@@ -98,6 +99,7 @@ class WooAPI extends \PriorityAPI\API
 
 
         include P18AW_ADMIN_DIR . 'download_file.php';
+        add_action('draft_to_publish', array($this, 'my_product_update'), 99, 1);
 
 
     }
@@ -164,6 +166,7 @@ class WooAPI extends \PriorityAPI\API
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
+            add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
 
 
             // filter price range
@@ -340,6 +343,7 @@ class WooAPI extends \PriorityAPI\API
                 include P18AW_CLASSES_DIR . 'productpricelist.php';
                 include P18AW_CLASSES_DIR . 'sites.php';
                 include P18AW_CLASSES_DIR . 'customersProducts.php';
+                include P18AW_CLASSES_DIR . 'productfamily.php';
 
                 add_menu_page(P18AW_PLUGIN_NAME, P18AW_PLUGIN_NAME, 'manage_options', P18AW_PLUGIN_ADMIN_URL, function () {
 
@@ -377,7 +381,11 @@ class WooAPI extends \PriorityAPI\API
                             include P18AW_ADMIN_DIR . 'sites.php';
 
                             break;
+                        case 'productfamily';
 
+                            include P18AW_ADMIN_DIR . 'productfamily.php';
+
+                            break;
                         case 'post_order';
 
                             include P18AW_ADMIN_DIR . 'syncs/sync_order.php';
@@ -580,7 +588,9 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_pricelist_priority', $this->post('log_pricelist_priority'));
                 $this->updateOption('auto_sync_pricelist_priority', $this->post('auto_sync_pricelist_priority'));
                 $this->updateOption('email_error_sync_pricelist_priority', $this->post('email_error_sync_pricelist_priority'));
-                $this->updateOption('log_receipts_priority', $this->post('log_receipts_priority'));
+                $this->updateOption('log_productfamily_priority', $this->post('log_productfamily_priority'));
+                $this->updateOption('auto_sync_productfamily_priority', $this->post('auto_sync_productfamily_priority'));
+                $this->updateOption('email_error_sync_productfamily_priority', $this->post('email_error_sync_productfamily_priority'));$this->updateOption('log_receipts_priority', $this->post('log_receipts_priority'));
                 $this->updateOption('auto_sync_receipts_priority', $this->post('auto_sync_receipts_priority'));
                 $this->updateOption('email_error_sync_receipts_priority', $this->post('email_error_sync_receipts_priority'));
                 $this->updateOption('email_error_sync_customers_web', $this->post('email_error_sync_customers_web'));
@@ -598,6 +608,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('email_error_sync_einvoices_web', $this->post('email_error_sync_einvoices_web'));
                 // extra data
                 $this->updateOption('sync_inventory_warhsname', $this->post('sync_inventory_warhsname'));
+                $this->updateOption('sync_pricelist_priority_warhsname', $this->post('sync_pricelist_priority_warhsname'));
                 // sync orders control
                 $this->updateOption('post_receipt_checkout', $this->post('post_receipt_checkout'));
                 $this->updateOption('cron_receipt', $this->post('cron_receipt'));
@@ -871,7 +882,13 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
-
+                case 'sync_productfamily_priority':
+                    try {
+                        $this->syncSpecialPriceProductFamily();
+                    } catch (Exception $e) {
+                        exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
+                    break;
                 case 'sync_sites_priority':
 
 
@@ -995,6 +1012,50 @@ class WooAPI extends \PriorityAPI\API
         add_action('woocommerce_order_status_changed', [$this, 'syncReceiptAfterOrder']);
         add_action('woocommerce_order_status_changed', [$this, 'syncDataAfterOrder']);
         add_action('woocommerce_order_status_changed', [$this, 'post_order_status_to_priority'], 10);
+    }
+
+// Generating dynamically the product "sale price"
+
+    function custom_dynamic_sale_price($sale_price, $product)
+    {
+        $codeFamily = get_post_meta($product->get_id(), 'קוד משפחה', true);
+        $user = wp_get_current_user();
+        $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true))
+            ? get_user_meta($user->ID, 'priority_customer_number', true) :
+            get_user_meta($user->ID, 'priority_mcustomer_number', true);
+        $family = $this->getFamilyProduct($custname, $codeFamily);
+        if ($family > 0) {
+            $rate = ($family * $product->get_regular_price()) / 100;
+            if (empty($sale_price) || $sale_price == 0)
+                return $product->get_regular_price() - $rate;
+        } else
+            return $sale_price;
+    }
+
+// Displayed formatted regular price + sale price
+    function custom_dynamic_sale_price_html($price_html, $product)
+    {
+        if ($product->is_type('variable')) return $price_html;
+        $price = $product->get_regular_price();
+        $sale_price = $this->custom_dynamic_sale_price($product->get_sale_price(), $product);
+        if (!empty($sale_price) && $price > $sale_price) {
+            $price_html = wc_format_sale_price(
+                    wc_get_price_to_display($product, array('price' => $price)),
+                    wc_get_price_to_display($product, array('price' => $sale_price))) . $product->get_price_suffix();
+
+        } else {
+            $price_html = wc_price(
+                wc_get_price_to_display($product, array('price' => $price)));
+        }
+        return $price_html;
+    }
+
+    public function my_product_update($post)
+    {
+        if ($post->post_type == "product") {
+            $productId = $post->ID;
+            add_post_meta($productId, 'קוד משפחה', '');
+        }
     }
 
     public function post_order_status_to_priority($order_id)
@@ -1196,6 +1257,11 @@ class WooAPI extends \PriorityAPI\API
                     $my_product->set_regular_price($pri_price);
                     if (!empty($config->menu_order)) {
                         $my_product->set_menu_order($item[$config->menu_order]);
+                    }
+                    if (!empty($my_product->get_meta('קוד משפחה', true))) {
+                        $my_product->update_meta_data('קוד משפחה', $item['FAMILYNAME']);
+                    } else {
+                        $my_product->add_meta_data('קוד משפחה', $item['FAMILYNAME']);
                     }
                     //$my_product->set_sale_price( $sales_price);
                     $my_product->save();
@@ -1905,7 +1971,7 @@ class WooAPI extends \PriorityAPI\API
     public function get_items_total_by_status($product_id)
     {
 
-        //$statuses = ['on-hold','pending']; 
+        //$statuses = ['on-hold','pending'];
         $statuses = explode(',', $this->option('sync_inventory_warhsname'))[4];
         // Get 'on-hold' customer ORDERS
         $orders_by_status = wc_get_orders(array(
@@ -2681,7 +2747,8 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncPriceLists()
     {
-        $response = $this->makeRequest('GET', 'PRICELIST?$filter=STATDES eq \'פעיל\'&$select=PLNAME,PLDES,CODE&
+        $filter  = empty(explode(',', $this->option('sync_pricelist_priority_warhsname'))[0])?'':'$filter=STATDES eq \'פעיל\'';
+        $response = $this->makeRequest('GET', 'PRICELIST?'.$filter.'&$select=PLNAME,PLDES,CODE&
         $expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
 
         // check response status
@@ -3679,6 +3746,22 @@ class WooAPI extends \PriorityAPI\API
         return $price;
     }
 
+    public function getFamilyProduct($custname, $code)
+    {
+        $data = $GLOBALS['wpdb']->get_row('
+                SELECT price
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family
+                WHERE partname = "' . esc_sql($code) . '"
+                AND custname = "' . esc_sql($custname) . '"
+                AND blog_id = ' . get_current_blog_id(),
+            ARRAY_A
+        );
+        if ($data != null) {
+            return (float)$data['price'];
+        }
+        return null;
+    }
+
     public function getSpecialPriceCustomer($custname, $sku)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4101,6 +4184,40 @@ class WooAPI extends \PriorityAPI\API
             $this->sendEmailError(
                 $this->option('email_error_sync_pricelist_priority'),
                 'Error Sync Price Lists Priority',
+                $response['body']
+            );
+
+        }
+    }
+
+    public function syncSpecialPriceProductFamily()
+    {
+        $response = $this->makeRequest('GET', 'CUSTFAMILYDISCONE?$select=FAMILYNAME,CUSTNAME,PERCENT', [], $this->option('log_productfamily_priority', true));
+        // check response status
+        if ($response['status']) {
+            // allow multisite
+            $blog_id = get_current_blog_id();
+            // price lists table
+            $table = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family';
+            // delete all existing data from price list table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            // decode raw response
+            $data = json_decode($response['body_raw'], true);
+            if (isset($data['value'])) {
+                foreach ($data['value'] as $list) {
+                    $GLOBALS['wpdb']->insert($table, [
+                        'partname' => $list['FAMILYNAME'],
+                        'custname' => $list['CUSTNAME'],
+                        'price' => (float)$list['PERCENT'],
+                        'blog_id' => $blog_id
+                    ]);
+                }
+
+            }
+        } else {
+            $this->sendEmailError(
+                $this->option('email_error_sync_productfamily_priority'),
+                'Error special price product family',
                 $response['body']
             );
 
