@@ -2349,8 +2349,8 @@ class WooAPI extends \PriorityAPI\API
             $cust_number = $this->syncProspect($order);
             add_post_meta($order_id, 'cust_name', $cust_number);
             $response['args']['body'] = get_post_meta($order_id, 'cust_name', true);
-            $response['message'] = "simply_modify_customer_number";
-            $response['body'] = "";
+            $response['message'] = "Add Customers";
+            $response['body'] = "add Prospect Customers To Priority With cust_name";
             return $response;
         }
         // walk in customer
