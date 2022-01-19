@@ -46,7 +46,7 @@ class WooAPI extends \PriorityAPI\API
             'sync_items_web' => 'syncItemsWeb',
             'sync_inventory_priority' => 'syncInventoryPriority',
             'sync_pricelist_priority' => 'syncPriceLists',
-            'sync_productfamily_priority'=>'syncSpecialPriceProductFamily',
+            'sync_productfamily_priority' => 'syncSpecialPriceProductFamily',
             'sync_receipts_priority' => 'syncReceipts',
             'sync_order_status_priority' => 'syncPriorityOrderStatus',
             'sync_sites_priority' => 'syncSites',
@@ -435,6 +435,9 @@ class WooAPI extends \PriorityAPI\API
                         case 'syncItemsPriority';
                             $this->syncItemsPriority();
                             break;
+                        case 'sync_items';
+                        $this->syncItemsWeb();
+                        break;
                         case 'order_status';
                             $order_id = 785;
                             $order = wc_get_order($order_id);
@@ -590,7 +593,8 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('email_error_sync_pricelist_priority', $this->post('email_error_sync_pricelist_priority'));
                 $this->updateOption('log_productfamily_priority', $this->post('log_productfamily_priority'));
                 $this->updateOption('auto_sync_productfamily_priority', $this->post('auto_sync_productfamily_priority'));
-                $this->updateOption('email_error_sync_productfamily_priority', $this->post('email_error_sync_productfamily_priority'));$this->updateOption('log_receipts_priority', $this->post('log_receipts_priority'));
+                $this->updateOption('email_error_sync_productfamily_priority', $this->post('email_error_sync_productfamily_priority'));
+                $this->updateOption('log_receipts_priority', $this->post('log_receipts_priority'));
                 $this->updateOption('auto_sync_receipts_priority', $this->post('auto_sync_receipts_priority'));
                 $this->updateOption('email_error_sync_receipts_priority', $this->post('email_error_sync_receipts_priority'));
                 $this->updateOption('email_error_sync_customers_web', $this->post('email_error_sync_customers_web'));
@@ -2747,8 +2751,8 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncPriceLists()
     {
-        $filter  = empty(explode(',', $this->option('sync_pricelist_priority_warhsname'))[0])?'':'$filter=STATDES eq \'פעיל\'';
-        $response = $this->makeRequest('GET', 'PRICELIST?'.$filter.'&$select=PLNAME,PLDES,CODE&
+        $filter = empty(explode(',', $this->option('sync_pricelist_priority_warhsname'))[0]) ? '' : '$filter=STATDES eq \'פעיל\'';
+        $response = $this->makeRequest('GET', 'PRICELIST?' . $filter . '&$select=PLNAME,PLDES,CODE&
         $expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
 
         // check response status
