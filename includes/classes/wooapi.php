@@ -2615,8 +2615,7 @@ class WooAPI extends \PriorityAPI\API
                 'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
                 'QPRICE' => floatval($order->get_total())
             ];
-        }
-        else {
+        } else {
             $data = [
                 'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
                 'PAYACCOUNT' => substr($payaccount, strlen($payaccount) - 4, 4),
