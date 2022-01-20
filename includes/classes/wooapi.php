@@ -155,6 +155,11 @@ class WooAPI extends \PriorityAPI\API
             add_action('woocommerce_save_account_details', [$this, 'syncCustomer'], 999);
             add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
         }
+        if($this->option('product_family')==true)
+        {
+            add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
+
+        }
         if ($this->option('sell_by_pl') == true) {
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
@@ -166,7 +171,6 @@ class WooAPI extends \PriorityAPI\API
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
-            add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
 
 
             // filter price range
@@ -553,6 +557,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('variation_field', $this->post('variation_field'));
                 $this->updateOption('variation_field_title', $this->post('variation_field_title'));
                 $this->updateOption('sell_by_pl', $this->post('sell_by_pl'));
+                $this->updateOption('product_family', $this->post('product_family'));
                 $this->updateOption('walkin_hide_price', $this->post('walkin_hide_price'));
                 $this->updateOption('sites', $this->post('sites'));
                 $this->updateOption('update_image', $this->post('update_image'));
