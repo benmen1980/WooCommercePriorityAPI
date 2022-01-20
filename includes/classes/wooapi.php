@@ -2388,16 +2388,25 @@ class WooAPI extends \PriorityAPI\API
 
         }
 
-       $data=[
-           'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
-            'PAYACCOUNT'  => substr($payaccount,strlen($payaccount) -4,4),
-            'VALIDMONTH'  => $validmonth,
-            'QPRICE'      => floatval($order->get_total()),
-            'CCUID'       => $ccuid,
-            'CONFNUM'     => $confnum,
-            'PAYCODE'     => (string)$numpay
+        //paypel
+        if ($paymentcode == 'paypal') {
+            $data = [
+                'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
+                'QPRICE' => floatval($order->get_total())
+            ];
+        }
+        else {
+            $data = [
+                'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
+                'PAYACCOUNT' => substr($payaccount, strlen($payaccount) - 4, 4),
+                'VALIDMONTH' => $validmonth,
+                'QPRICE' => floatval($order->get_total()),
+                'CCUID' => $ccuid,
+                'CONFNUM' => $confnum,
+                'PAYCODE' => (string)$numpay
 
-        ];
+            ];
+        }
         // add fields for not order objects
         if(!$is_order&&$firstpay != 0.0){
             $data['FIRSTPAY'] = (float)$firstpay ;
