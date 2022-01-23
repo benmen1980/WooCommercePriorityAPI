@@ -2017,7 +2017,8 @@ class WooAPI extends \PriorityAPI\API
         if ($this->option('variation_field')) {
             //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
-        $data['select'] = 'PARTNAME';
+        $option_filed = explode (',',$this->option('sync_inventory_warhsname'))[2] ;
+        $data['select'] = (!empty($option_filed) ? $option_filed.',PARTNAME' : 'PARTNAME');
         $data = apply_filters('simply_syncInventoryPriority_data', $data);
         $response = $this->makeRequest('GET', 'LOGPART?$select=' . $data['select'] . '&$filter= ' . urlencode($url_addition) . 'and INVFLAG eq \'Y\' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
         // check response status
@@ -2025,7 +2026,6 @@ class WooAPI extends \PriorityAPI\API
             $data = json_decode($response['body_raw'], true);
             foreach ($data['value'] as $item) {
                 // if product exsits, update
-                $option_filed = explode(',', $this->option('sync_inventory_warhsname'))[2];
                 $field = (!empty($option_filed) ? $option_filed : 'PARTNAME');
                 $args = array(
                     'post_type' => array('product', 'product_variation'),
