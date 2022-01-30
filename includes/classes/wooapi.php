@@ -3283,7 +3283,9 @@ class WooAPI extends \PriorityAPI\API
     ];*/
 
         // filter data
+        $data['orderId']=$id;
         $data = apply_filters('simply_request_data', $data);
+        unset($data['orderId']);
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -3420,7 +3422,9 @@ class WooAPI extends \PriorityAPI\API
         if ($order->get_total() > 0.0) {
             $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
+        $data['orderId']=$order_id;
         $data = apply_filters('simply_request_data', $data);
+        unset($data['orderId']);
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
         if ($response['code'] <= 201) {
