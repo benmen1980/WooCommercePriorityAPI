@@ -315,7 +315,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     /**
      * Backend - PriorityAPI Admin
      *
@@ -2406,16 +2405,16 @@ class WooAPI extends \PriorityAPI\API
                 $validmonth = get_post_meta($order->get_id(), 'payplus_exp_date', true) ?? '';
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_id', true);
+                break;
 
-                /* there is another plugin for payplus in Munier 27.6.2021 roy
+            case 'payplus2';
+                /* there is another plugin for payplus in Munier and Swagg 27.6.2021 roy */
                  $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
                   $ccuid = get_post_meta($order->get_id(),'payplus_token_uid',true);
                   $payaccount = get_post_meta($order->get_id(),'payplus_four_digits',true);
                   $validmonth = get_post_meta($order->get_id(),'payplus_expiry_month',true) .'/'.get_post_meta($order->get_id(),'payplus_expiry_year',true);
                   $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
                   $confnum = get_post_meta($order->get_id(),'payplus_voucher_num',true);
-                 */
-
                 break;
             // debug
             case 'debug';
@@ -2578,7 +2577,7 @@ class WooAPI extends \PriorityAPI\API
     public function syncPriceLists()
     {
         $response = $this->makeRequest('GET', '
-        PRICELIST?$select=PLNAME,PLDES,CODE&$expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
+        PRICELIST?$filter=STATDES eq \'פעיל\'   &$select=PLNAME,PLDES,CODE&$expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
 
         // check response status
         if ($response['status']) {
