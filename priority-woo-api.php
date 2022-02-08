@@ -39,15 +39,15 @@ define('P18AW_PLUGIN_ADMIN_URL' , sanitize_title(P18AW_PLUGIN_NAME));
 register_activation_hook(P18AW_SELF, function(){
 
     global $wp_rewrite;
-    $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists'; 
-         
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
+
     $sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
         product_sku VARCHAR(32),
-        price_list_code VARCHAR(32),
-        price_list_name VARCHAR(256),
-        price_list_currency VARCHAR(6), 
+        price_list_code VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price_list_name VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price_list_currency VARCHAR(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, 
         price_list_price DECIMAL(6,2), 
         PRIMARY KEY  (id)
     )";
