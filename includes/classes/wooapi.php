@@ -1603,19 +1603,24 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncItemsPriorityVariation()
     {
-        // default values
-        $daysback = 1;
-        $url_addition_config = '';
-        // config
+        $raw_option = $this->option('sync_items_priority_config');
+        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
-        $config = json_decode($res);
-        $daysback = (int)$config->days_back;
-        $url_addition_config = $config->additional_url;
+        $config_v = json_decode(stripslashes($res));
+        $daysback = 1;//!empty((int)$config_v->days_back) ? $config_v->days_back : (!empty((int)$config->days_back) ? $config->days_back : 1);
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
-        $response = $this->makeRequest('GET', 'LOGPART?$filter=' . $this->option('variation_field') . ' ne \'\'    and SHOWINWEB eq \'Y\' and ' . urlencode($url_addition) . ' ' . $url_addition_config . '&$expand=PARTUNSPECS_SUBFORM', [], $this->option('log_items_priority_variation', true));
+        $variation_field = $this->option('variation_field');
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME';
+        $data = apply_filters('simply_syncItemsPriority_data', $data);
+        $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
+        $filter = $variation_field . ' ne \'\' and '. urlencode($url_addition) . ' ' . $url_addition_config;
+        $response = $this->makeRequest('GET',
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&$expand=PARTUNSPECS_SUBFORM',
+            [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
