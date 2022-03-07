@@ -25,6 +25,11 @@
             </a>
         </li>
         <li>
+            <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=productfamily'); ?>" class="<?php if($this->get('tab') == 'productfamily') echo 'active'; ?>">
+                <?php _e('Discounts Family', 'p18a'); ?>
+            </a>
+        </li>
+        <li>
             <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=sites'); ?>" class="<?php if($this->get('tab') == 'sites') echo 'active'; ?>">
 			    <?php _e('Sites', 'p18a'); ?>
             </a>
