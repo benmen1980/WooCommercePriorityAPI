@@ -1,21 +1,21 @@
 <?php
 /**
-* @package     Priority Woocommerce API
-* @author      Roy Ben Menachem <roy@simplyCT.co.il>
-* @copyright   2018 SimplyCT
-*
-* @wordpress-plugin
-* Plugin Name: Priority Woocommerce API 
-* Plugin URI: http://simplyCT.co.il
-* Description: Priority Woocommerce API extension
-* Version: 1.10
-* Author: SimplyCT
-* Author URI: http://www.simplyCT.co.il
-* Licence: GPLv2
-* Text Domain: p18w
-* Domain Path: /languages  
-* 
-*/
+ * @package     Priority Woocommerce API
+ * @author      Roy Ben Menachem <roy@simplyCT.co.il>
+ * @copyright   2018 SimplyCT
+ *
+ * @wordpress-plugin
+ * Plugin Name: Priority Woocommerce API
+ * Plugin URI: http://simplyCT.co.il
+ * Description: Priority Woocommerce API extension
+ * Version: 1.10
+ * Author: SimplyCT
+ * Author URI: http://www.simplyCT.co.il
+ * Licence: GPLv2
+ * Text Domain: p18w
+ * Domain Path: /languages
+ *
+ */
 
 namespace PriorityWoocommerceAPI;
 
@@ -23,7 +23,7 @@ namespace PriorityWoocommerceAPI;
 define('P18AW_VERSION'       , '1.09');
 define('P18AW_SELF'          , __FILE__);
 define('P18AW_URI'           , plugin_dir_url(__FILE__));
-define('P18AW_DIR'           , plugin_dir_path(__FILE__)); 
+define('P18AW_DIR'           , plugin_dir_path(__FILE__));
 define('P18AW_ASSET_DIR'     , trailingslashit(P18AW_DIR)    . 'assets/');
 define('P18AW_ASSET_URL'     , trailingslashit(P18AW_URI)    . 'assets/');
 define('P18AW_INCLUDES_DIR'  , trailingslashit(P18AW_DIR)    . 'includes/');
@@ -61,24 +61,35 @@ register_activation_hook(P18AW_SELF, function(){
 
     /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
     $wp_rewrite->flush_rules( false );
-	
-	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-	dbDelta($sql);
-    /* sites */
-	$table = $GLOBALS['wpdb']->prefix . 'p18a_sites';
-
-	$sql = "CREATE TABLE $table (
-        id  INT AUTO_INCREMENT,
-        blog_id INT,
-        sitecode VARCHAR(32),
-        sitedesc VARCHAR(80),
-        customer_number VARCHAR(30),
-        address1 VARCHAR(80),
-        PRIMARY KEY  (id)
-    )";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    
+    dbDelta($sql);
+    /* sites */
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_sites';
+
+    $sql = "CREATE TABLE $table (
+        id  INT AUTO_INCREMENT,
+        blog_id INT,
+        sitecode VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        sitedesc VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        customer_number VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        address1 VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        PRIMARY KEY  (id)
+    )";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    /* special price product family */
+    $table = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family';
+    $sql = "CREATE TABLE $table (
+        id  INT AUTO_INCREMENT,
+        blog_id INT,
+        custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        familyname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        discounts DECIMAL(6,3),
+        PRIMARY KEY  (id)
+    )";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
     dbDelta($sql);
 
     /* special price item customer */
@@ -86,8 +97,8 @@ register_activation_hook(P18AW_SELF, function(){
     $sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
-        custname VARCHAR(32),
-        partname VARCHAR(32),
+        custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        partname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price DECIMAL(6,3),
         PRIMARY KEY  (id)
     )";
@@ -101,7 +112,7 @@ register_activation_hook(P18AW_SELF, function(){
 register_deactivation_hook(P18AW_SELF, function(){
 
     # $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
-    
+
 });
 // hook up
 add_action('plugins_loaded', function(){
@@ -114,15 +125,15 @@ add_action('plugins_loaded', function(){
 
     // check for PriorityAPI
     include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-     if (is_plugin_active('PriorityAPI/priority18-api.php')) {
+    if (is_plugin_active('PriorityAPI/priority18-api.php')) {
 
         // and check for Woocommerce
         if (is_plugin_active('woocommerce/woocommerce.php')) {
-            
-	    load_plugin_textdomain( 'p18w', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
+
+            load_plugin_textdomain( 'p18w', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
 
             require P18AW_CLASSES_DIR . 'wooapi.php';
-            
+
             WooAPI::instance()->run();
             // load simplypay
             $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
@@ -131,9 +142,9 @@ add_action('plugins_loaded', function(){
                 require P18AW_FRONT_DIR . 'simplypay/simplypay.php';
                 \simplypay::instance()->run();
             }
-	        // load obligo
+            // load obligo
             $obligo = WooAPI::instance()->option('obligo') == true ;
-	        if($obligo) {
+            if($obligo) {
                 require P18AW_FRONT_DIR . 'my-account/obligo.php';
                 \obligo::instance()->run();
                 //load prority orders excel
@@ -156,7 +167,7 @@ add_action('plugins_loaded', function(){
                 require P18AW_CLASSES_DIR . 'priority_delivery_customer/priority_delivery_customer.php';
                 \priority_delivery_customer::instance()->run();
 
-                
+
                 //load prority documents(return from customer)
                 require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
                 \priority_return_customer::instance()->run();
