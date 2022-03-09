@@ -1265,8 +1265,9 @@ class WooAPI extends \PriorityAPI\API
                 // And finally (optionally if needed)
                 wc_delete_product_transients($id); // Clear/refresh the variation cache
                 // update product price
+                $item['id']=$id;
                 $item = apply_filters('simply_syncItemsPriority_item', $item);
-                $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                unset( $item['id']);                $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                 if ($id) {
                     $my_product = new \WC_Product($id);
                     $my_product->set_regular_price($pri_price);
