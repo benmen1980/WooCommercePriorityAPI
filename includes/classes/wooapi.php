@@ -4026,10 +4026,35 @@ class WooAPI extends \PriorityAPI\API
         $priority_mcustomer_number = get_the_author_meta('priority_mcustomer_number', $user->ID);
         $custpricelists = get_the_author_meta('custpricelists', $user->ID);
         $customer_percents = get_the_author_meta('customer_percents', $user->ID);
+        $users = get_users( array( 'fields' => array( 'ID' ) ) );
+        $selected_users = get_user_meta( $user->ID, 'select_users', true);
         ?>
         <h3><?php esc_html_e('Priority API User Information', 'p18a'); ?></h3>
 
         <table class="form-table">
+            <tr>
+                <th><label for="select_users"><?php esc_html_e( 'Select User', 'p18a' ); ?></label></th>
+                <td>
+                    <select name="select_users[]" id="select_users" multiple="multiple">
+                        <?php
+                        foreach($users as $user1){
+                            $userid = $user1->ID;
+                            //$user_info = get_userdata($userid);
+                            //$selected = array();
+                            $priority_cust_number = get_the_author_meta( 'priority_customer_number', $userid );
+                            $first_name =  get_the_author_meta( 'user_firstname', $userid  );
+                            $last_name =  get_the_author_meta( 'user_lastname', $userid  );
+                            $selected='';
+                            if (is_array($selected_users)) {
+                                $selected = in_array($userid, $selected_users) ? ' selected="selected" ' : '';
+                            }
+
+                            ?>
+                            <option value="<?php echo $userid; ?>"  <?php echo $selected; ?> ><?php echo  $priority_cust_number.' '. $first_name.' '.$last_name?></option>
+                        <?php }?>
+                    </select>
+                </td>
+            </tr>
             <tr>
                 <th>
                     <label for="Priority Customer Number"><?php esc_html_e('Priority Customer Number', 'p18a'); ?></label>
@@ -4094,8 +4119,14 @@ class WooAPI extends \PriorityAPI\API
 
     function crf_update_profile_fields($user_id)
     {
-        if (!current_user_can('edit_user', $user_id)) {
+        if ( ! current_user_can( 'edit_user', $user_id ) ) {
             return false;
+        }
+        if ( ! empty( $_POST['select_users'] ) ) {
+            update_user_meta( $user_id, 'select_users',  $_POST['select_users']  );
+        }
+        else{
+            delete_user_meta( $user_id,'select_users' );
         }
 
         if (!empty($_POST['priority_customer_number'])) {
