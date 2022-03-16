@@ -616,6 +616,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_c_products_priority', $this->post('log_c_products_priority'));
                 $this->updateOption('email_error_sync_einvoices_web', $this->post('email_error_sync_einvoices_web'));
                 // extra data
+                $this->updateOption('static_odata_header_sync_pricelist_priority', $this->post('static_odata_header_sync_pricelist_priority'));
                 $this->updateOption('sync_inventory_warhsname', $this->post('sync_inventory_warhsname'));
                 $this->updateOption('sync_pricelist_priority_warhsname', $this->post('sync_pricelist_priority_warhsname'));
                 // sync orders control
@@ -2964,10 +2965,9 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncPriceLists()
     {
-        $filter = empty(explode(',', $this->option('sync_pricelist_priority_warhsname'))[0]) ? '' : '$filter=STATDES eq \'פעיל\'';
-        $response = $this->makeRequest('GET', 'PRICELIST?' . $filter . '&$select=PLNAME,PLDES,CODE&
-        $expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
-
+        $priceList=!empty( $this->option('static_odata_header_sync_pricelist_priority')[1])?'&$filter=PLNAME eq \'2\'':'';
+        $filter = empty(explode(',', $this->option('static_odata_header_sync_pricelist_priority'))[0]) ? '' : '$filter=STATDES eq \'פעיל\'';
+        $response = $this->makeRequest('GET', 'PRICELIST?' . $filter . '&$select=PLNAME,PLDES,CODE'.$priceList.'&$expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
         // check response status
         if ($response['status']) {
 
