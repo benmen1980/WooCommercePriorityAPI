@@ -4241,9 +4241,11 @@ class WooAPI extends \PriorityAPI\API
                 if (!isset($user_obj->ID)) {
                     if (!email_exists($email))
                         $data['user_email'] = $email;
+                    $user_id = wp_insert_user($data);
+                    wp_set_password($password, $user_id);
                 }
-                $user_id = wp_insert_user($data);
-                wp_set_password($password, $user_id);
+                else
+                {$user_id=$user_obj->ID;}
                 //wp_hash_password( $password);
                 wp_update_user(array('ID' => $user_id, 'email' => $email));
                 wp_update_user(array('ID' => $user_id, 'user_email' => $email));
