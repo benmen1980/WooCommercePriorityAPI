@@ -2140,7 +2140,7 @@ class WooAPI extends \PriorityAPI\API
                 'PARTDES' => $product->post_title,
                 'BASEPLPRICE' => (float)$meta['_regular_price'][0],
                 'INVFLAG' => ($meta['_manage_stock'][0] == 'yes') ? 'Y' : 'N',
-                'EXTFILENAME' => wp_get_attachment_url($product_item->get_image_id()),
+                'EXTFILENAME' => !empty(wp_get_attachment_url($product_item->get_image_id()))?wp_get_attachment_url($product_item->get_image_id()):'',
                 'SPEC1' => $terms[0]->name
             ];
             // here I need to apply filter to manipulate the json
