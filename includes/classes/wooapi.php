@@ -2964,7 +2964,8 @@ class WooAPI extends \PriorityAPI\API
      */
     public function syncPriceLists()
     {
-        $priceList=!empty( $this->option('sync_pricelist_priority_warhsname')[1])?'&$filter=PLNAME eq \'2\'':'';
+        $priceListNumber=$this->option('sync_pricelist_priority_warhsname')[1];
+        $priceList=!empty( $priceListNumber)?'&$filter=PLNAME eq '.$priceListNumber.'':'';
         $filter = empty(explode(',', $this->option('sync_pricelist_priority_warhsname'))[0]) ? '' : '$filter=STATDES eq \'פעיל\'';
         $response = $this->makeRequest('GET', 'PRICELIST?' . $filter . '&$select=PLNAME,PLDES,CODE'.$priceList.'&$expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
         // check response status
