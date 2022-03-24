@@ -2909,7 +2909,7 @@ class WooAPI extends \PriorityAPI\API
         // check order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
         if (!isset($config->order_statuses)) {
-            $is_status = true;
+            $is_status = "processing";
         } else {
             $statuses = explode(',', $config->order_statuses);
             $is_status = in_array($order->get_status(), $statuses);
