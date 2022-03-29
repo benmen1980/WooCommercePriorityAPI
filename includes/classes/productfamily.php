@@ -23,7 +23,7 @@ class ProductFamily extends \WP_List_Table
         $sortable = $this->get_sortable_columns();
 
         $data = $GLOBALS['wpdb']->get_results('
-            SELECT  custname,partname,price
+            SELECT  custname,familyname,discounts
             FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family
             WHERE blog_id = ' . get_current_blog_id() . '
             ',
@@ -50,8 +50,8 @@ class ProductFamily extends \WP_List_Table
     {
         $columns = [
             'custname' => __('Customer Number', 'p18a'),
-            'partname' => __('Part Number', 'p18a'),
-            'price' => __('Price', 'p18a')
+            'familyname' => __('Family Name', 'p18a'),
+            'discounts' => __('Discounts %', 'p18a')
         ];
 
         return $columns;

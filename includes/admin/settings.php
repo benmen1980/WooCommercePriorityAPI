@@ -30,6 +30,15 @@
             </tr>
             <tr>
                 <td class="p18a-label">
+                    <label for="p18a-product_family"><?php _e('Use Product Family  ? ', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-product_family" type="checkbox" name="product_family" form="p18aw-settings" <?php if($this->option('product_family') == true){?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
+            <tr>
+                <td class="p18a-label">
                     <label for="p18a-walkin_hide_price"><?php _e('Hide price for non registered user ?', 'p18a'); ?></label>
                 </td>
                 <td></td>
