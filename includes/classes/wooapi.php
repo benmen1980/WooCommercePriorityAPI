@@ -2778,16 +2778,19 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_id', true);
 
-                /* there is another plugin for payplus in Munier 27.6.2021 roy
+                break;
+            // payplus2
+            case 'payplus2';
+                /* there is another plugin for payplus in Munier 27.6.2021 roy */
                  $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
                   $ccuid = get_post_meta($order->get_id(),'payplus_token_uid',true);
                   $payaccount = get_post_meta($order->get_id(),'payplus_four_digits',true);
                   $validmonth = get_post_meta($order->get_id(),'payplus_expiry_month',true) .'/'.get_post_meta($order->get_id(),'payplus_expiry_year',true);
                   $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
                   $confnum = get_post_meta($order->get_id(),'payplus_voucher_num',true);
-                 */
-
+                  $payplus_identification_number = get_post_meta($order->get_id(),'payplus_identification_number',true);
                 break;
+
             case 'z-credit';
                 $data = $order->get_meta('zc_response');
                 $data = base64_decode($data);

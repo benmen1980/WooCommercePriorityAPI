@@ -275,4 +275,6 @@ function create_product_variation( $product_id, $variation_data ){
     $variation->set_weight(''); // weight (reseting)
 
     $variation->save(); // Save the data
+
+    return $variation_id;
 }
