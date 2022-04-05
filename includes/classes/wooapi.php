@@ -1512,8 +1512,7 @@ class WooAPI extends \PriorityAPI\API
             $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
         }
         $response = $this->makeRequest('GET',
-            'LOGPART?$select=PARTNAME,BASEPLPRICE,VATPRICE,BARCODE&$filter=' . $date_filter . ' ' . $url_addition_config .
-            '&' . $expand . '', [],
+            'LOGPART?$select=PARTNAME,BASEPLPRICE,VATPRICE,BARCODE&$filter=' . $date_filter . ' ' . $url_addition_config .'&' . $expand . '', [],
             $this->option('log_items_priority', true));
         if ($response['status']) {
 
