@@ -1131,6 +1131,10 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
+        if ($config->sync_price == "true") {
+            $this->syncPricePriority();
+            return;
+        }
         $synclongtext = $config->synclongtext;
         $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
         $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
@@ -1488,7 +1492,93 @@ class WooAPI extends \PriorityAPI\API
 
         return $response;
     }
+    public function syncPricePriority()
+    {
+        $raw_option = $this->option('sync_items_priority_config');
+        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
+        $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
+        $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
+        $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
+        $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
+        $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
+        $stamp = mktime(0 - $daysback * 24, 0, 0);
+        $bod = date(DATE_ATOM, $stamp);
+        $date_filter = 'UDATE ge ' . urlencode($bod);
+        if ($product_price_list != null) {
+            $expand = '$expand=INTERNALDIALOGTEXT_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+        } else {
+            $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+        }
+        $response = $this->makeRequest('GET',
+            'LOGPART?$select=PARTNAME,BASEPLPRICE,VATPRICE,BARCODE&$filter=' . $date_filter . ' ' . $url_addition_config .
+            '&' . $expand . '', [],
+            $this->option('log_items_priority', true));
+        if ($response['status']) {
 
+            $response_data = json_decode($response['body_raw'], true);
+            foreach ($response_data['value'] as $item) {
+                // if product exsits, update price
+                $search_by_value = $item[$search_field];
+                $args = array(
+
+                    'post_type' => array('product'),
+
+                    'post_status' => array('publish'),
+
+                    'meta_query' => array(
+
+                        array(
+
+                            'key' => $search_field_web,
+
+                            'value' => $search_by_value
+
+                        )
+
+                    )
+
+                );
+                $product_id = 0;
+                $my_query = new \WP_Query($args);
+                if ($my_query->have_posts()) {
+                    while ($my_query->have_posts()) {
+                        $my_query->the_post();
+                        $product_id = get_the_ID();
+                    }
+                }
+                // if product variation skip
+                if ($product_id != 0) {
+                    if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
+                        $pri_price = $this->option('price_method') == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+
+                    } else {
+                        $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                    }
+                    $my_product = new \WC_Product($product_id);
+
+                    $my_product->set_regular_price($pri_price);
+
+                    $my_product->save();
+                }
+            }
+            // add timestamp
+
+            $this->updateOption('items_priority_update', time());
+        } else {
+
+            $this->sendEmailError(
+
+                $this->option('email_error_sync_items_priority'),
+
+                'Error Sync Items Priority',
+
+                $response['body']
+
+            );
+        }
+        return $response;
+    }
     public function simply_posts_where($where, $query)
     {
         global $wpdb;
