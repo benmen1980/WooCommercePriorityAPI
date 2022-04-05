@@ -1139,6 +1139,7 @@ class WooAPI extends \PriorityAPI\API
         $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
         $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
+        $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
         $statdes = (!empty($config->statdes) ? $config->statdes : false);
         $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
@@ -1193,7 +1194,7 @@ class WooAPI extends \PriorityAPI\API
                     'post_status' => array('publish', 'draft'),
                     'meta_query' => array(
                         array(
-                            'key' => '_sku',
+                            'key' => $search_field_web,
                             'value' => $search_by_value
                         )
                     )
