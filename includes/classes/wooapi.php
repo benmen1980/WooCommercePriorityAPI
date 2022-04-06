@@ -1512,8 +1512,7 @@ class WooAPI extends \PriorityAPI\API
             $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
         }
         $response = $this->makeRequest('GET',
-            'LOGPART?$select=PARTNAME,BASEPLPRICE,VATPRICE,BARCODE&$filter=' . $date_filter . ' ' . $url_addition_config .'&' . $expand . '', [],
-            $this->option('log_items_priority', true));
+            'LOGPART?$select=PARTNAME,BASEPLPRICE,VATPRICE,BARCODE&$filter=' . $date_filter . ' ' . $url_addition_config .'&' . $expand . '', [],$this->option('log_items_priority', true));
         if ($response['status']) {
 
             $response_data = json_decode($response['body_raw'], true);
@@ -4096,7 +4095,10 @@ class WooAPI extends \PriorityAPI\API
                 AND blog_id = ' . get_current_blog_id(),
             ARRAY_A
         );
-        return $data['price'];
+        if ($data != null && $data['price_list_price'] != 0) {
+            return $data['price_list_price'];
+        }
+        return null;
     }
 
     // filter price range for products with variations
