@@ -4092,7 +4092,10 @@ class WooAPI extends \PriorityAPI\API
                 AND blog_id = ' . get_current_blog_id(),
             ARRAY_A
         );
-        return $data['price'];
+        if ($data != null && $data['price_list_price'] != 0) {
+            return $data['price_list_price'];
+        }
+        return null;
     }
 
     // filter price range for products with variations
