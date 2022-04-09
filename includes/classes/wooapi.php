@@ -402,7 +402,9 @@ class WooAPI extends \PriorityAPI\API
                             $id = $_GET['ord'];
                             $order = new \WC_Order($id);
                             $data = get_post_meta($_GET['ord']);
+                            $order_data = $order->get_data();
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+                            highlight_string("<?php\n\$data =\n" . var_export($order_data, true) . ";\n?>");
                             /*
                             $id = $_GET['ord'];
                             $inst = get_post_meta($id, 'מקור', true);
