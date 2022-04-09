@@ -396,19 +396,15 @@ class WooAPI extends \PriorityAPI\API
                             /*
                              $order_id =  $_GET['ord'];
                             $response =  $this->syncOrder($order_id,'true');
-
                              echo var_dump($response);
                             */
-
                             break;
-
                         case 'order_meta';
                             $id = $_GET['ord'];
                             $order = new \WC_Order($id);
                             $data = get_post_meta($_GET['ord']);
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
-
-
+                            /*
                             $id = $_GET['ord'];
                             $inst = get_post_meta($id, 'מקור', true);
                             foreach ($order->get_items() as $item_id => $item) {
@@ -417,7 +413,7 @@ class WooAPI extends \PriorityAPI\API
                                     continue;
                                 }
                             }
-
+                            */
                             break;
                         case 'customersProducts';
                             include P18AW_ADMIN_DIR . 'customersProducts.php';
