@@ -3408,6 +3408,7 @@ class WooAPI extends \PriorityAPI\API
             $order->save();
         } else {
             $message = $response['message'] . '' . json_encode($response);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
             $order->update_meta_data('priority_order_status', $message);
             $order->save();
         }
@@ -3604,7 +3605,8 @@ class WooAPI extends \PriorityAPI\API
         }
 
         if (!$response['status'] || $response['code'] >= 400) {
-            $order->update_meta_data('priority_invoice_status', $response['message']);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $order->update_meta_data('priority_invoice_status', $message);
             $order->save();
             $this->sendEmailError(
                 $this->option('email_error_sync_ainvoices_priority'),
@@ -3737,10 +3739,8 @@ class WooAPI extends \PriorityAPI\API
         }
         if ($response['code'] >= 400) {
             $body_array = json_decode($response["body"], true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_invoice_status', $response["body"]);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $order->update_meta_data('priority_invoice_status', $message);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
         }
@@ -3807,10 +3807,8 @@ class WooAPI extends \PriorityAPI\API
         }
         if ($response['code'] >= 400) {
             $body_array = json_decode($response["body"], true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_recipe_status', $response["body"]);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $order->update_meta_data('priority_recipe_status', $message);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
         }
