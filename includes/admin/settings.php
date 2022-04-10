@@ -76,7 +76,7 @@
             </tr>
             <tr>
                 <td class="p18a-label">
-                    <label for="p18a-packs"><?php _e('use Packs?', 'p18a'); ?></label>
+                    <label for="p18a-packs"><?php _e('Use Packs?', 'p18a'); ?></label>
                 </td>
                 <td></td>
                 <td>
