@@ -2409,7 +2409,8 @@ class WooAPI extends \PriorityAPI\API
         // get the items simply by time stamp of today
         $stamp = mktime(0, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
-        $url_addition = 'LOGPART?$select=PARTNAME&$filter=ITAI_INKATALOG eq \'Y\'&$expand=PARTPACK_SUBFORM';
+        $list_packs = [];
+        $url_addition = 'PARTPACKONE?$select=PACKCODE,PARTNAME,PACKNAME,PACKQUANT';
         $response = $this->makeRequest('GET', $url_addition, [], true);
         // check response status
         if ($response['status']) {
@@ -2437,8 +2438,17 @@ class WooAPI extends \PriorityAPI\API
 
                 //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
                 if (!$product_id == 0) {
-                    update_post_meta($product_id, 'pri_packs', $item['PARTPACK_SUBFORM']);
+                    if ($list_packs[$product_id] != null) {
+                        $i = count($list_packs[$product_id]);
+                        $list_packs[$product_id][$i] = $item;
+                    } else {
+                        $list_packs[$product_id][0] = $item;
+                    }
                 }
+            }
+            foreach ($list_packs as $id => $p) {
+
+                update_post_meta($id, 'pri_packs', $p);
             }
         }
     }
