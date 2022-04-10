@@ -20,23 +20,23 @@
 namespace PriorityWoocommerceAPI;
 
 // Priority Woocommerce API
-define('P18AW_VERSION'       , '1.09');
-define('P18AW_SELF'          , __FILE__);
-define('P18AW_URI'           , plugin_dir_url(__FILE__));
-define('P18AW_DIR'           , plugin_dir_path(__FILE__));
-define('P18AW_ASSET_DIR'     , trailingslashit(P18AW_DIR)    . 'assets/');
-define('P18AW_ASSET_URL'     , trailingslashit(P18AW_URI)    . 'assets/');
-define('P18AW_INCLUDES_DIR'  , trailingslashit(P18AW_DIR)    . 'includes/');
-define('P18AW_CLASSES_DIR'   , trailingslashit(P18AW_DIR)    . 'includes/classes/');
-define('P18AW_ADMIN_DIR'     , trailingslashit(P18AW_DIR)    . 'includes/admin/');
-define('P18AW_FRONT_DIR'     , trailingslashit(P18AW_DIR)    . 'includes/front/');
+define('P18AW_VERSION', '1.09');
+define('P18AW_SELF', __FILE__);
+define('P18AW_URI', plugin_dir_url(__FILE__));
+define('P18AW_DIR', plugin_dir_path(__FILE__));
+define('P18AW_ASSET_DIR', trailingslashit(P18AW_DIR) . 'assets/');
+define('P18AW_ASSET_URL', trailingslashit(P18AW_URI) . 'assets/');
+define('P18AW_INCLUDES_DIR', trailingslashit(P18AW_DIR) . 'includes/');
+define('P18AW_CLASSES_DIR', trailingslashit(P18AW_DIR) . 'includes/classes/');
+define('P18AW_ADMIN_DIR', trailingslashit(P18AW_DIR) . 'includes/admin/');
+define('P18AW_FRONT_DIR', trailingslashit(P18AW_DIR) . 'includes/front/');
 
 // define plugin name and plugin admin url
-define('P18AW_PLUGIN_NAME'      , 'Priority WooCommerce API');
-define('P18AW_PLUGIN_ADMIN_URL' , sanitize_title(P18AW_PLUGIN_NAME));
+define('P18AW_PLUGIN_NAME', 'Priority WooCommerce API');
+define('P18AW_PLUGIN_ADMIN_URL', sanitize_title(P18AW_PLUGIN_NAME));
 
 
-register_activation_hook(P18AW_SELF, function(){
+register_activation_hook(P18AW_SELF, function () {
 
     global $wp_rewrite;
     $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
@@ -54,13 +54,13 @@ register_activation_hook(P18AW_SELF, function(){
 
     /* This is used add the endpoint and menu item in woocommerce account menu. */
     add_rewrite_endpoint('obligo', EP_PERMALINK | EP_ROOT | EP_PAGES);
-    add_rewrite_endpoint( 'priority-orders', EP_ROOT | EP_PAGES );
-    add_rewrite_endpoint( 'priority-invoices', EP_ROOT | EP_PAGES );
-    add_rewrite_endpoint( 'priority-receipt', EP_ROOT | EP_PAGES );
-    add_rewrite_endpoint( 'priority-documents', EP_ROOT | EP_PAGES );
+    add_rewrite_endpoint('priority-orders', EP_ROOT | EP_PAGES);
+    add_rewrite_endpoint('priority-invoices', EP_ROOT | EP_PAGES);
+    add_rewrite_endpoint('priority-receipt', EP_ROOT | EP_PAGES);
+    add_rewrite_endpoint('priority-documents', EP_ROOT | EP_PAGES);
 
     /* When we add a new endpoint we need to flush the rewrite rules otherwise it would return 404 */
-    $wp_rewrite->flush_rules( false );
+    $wp_rewrite->flush_rules(false);
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
@@ -109,28 +109,28 @@ register_activation_hook(P18AW_SELF, function(){
 });
 
 // housekeeping
-register_deactivation_hook(P18AW_SELF, function(){
+register_deactivation_hook(P18AW_SELF, function () {
 
     # $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
 
 });
 // hook up
-add_action('plugins_loaded', function(){
-    if(is_multisite()){
+add_action('plugins_loaded', function () {
+    if (is_multisite()) {
         $blog_id = \get_current_blog_id();
         $plugins = \get_blog_option($blog_id, 'active_plugins');
-    }else{
+    } else {
         $plugins = get_option('active_plugins');
     }
 
     // check for PriorityAPI
-    include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+    include_once(ABSPATH . 'wp-admin/includes/plugin.php');
     if (is_plugin_active('PriorityAPI/priority18-api.php')) {
 
         // and check for Woocommerce
         if (is_plugin_active('woocommerce/woocommerce.php')) {
 
-            load_plugin_textdomain( 'p18w', FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
+            load_plugin_textdomain('p18w', FALSE, basename(dirname(__FILE__)) . '/languages/');
 
             require P18AW_CLASSES_DIR . 'wooapi.php';
 
@@ -138,13 +138,13 @@ add_action('plugins_loaded', function(){
             // load simplypay
             $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
             $simplypay = (!empty($config->simplypay) ? ($config->simplypay == 'true') : false);
-            if($simplypay){
+            if ($simplypay) {
                 require P18AW_FRONT_DIR . 'simplypay/simplypay.php';
                 \simplypay::instance()->run();
             }
             // load obligo
-            $obligo = WooAPI::instance()->option('obligo') == true ;
-            if($obligo) {
+            $obligo = WooAPI::instance()->option('obligo') == true;
+            if ($obligo) {
                 require P18AW_FRONT_DIR . 'my-account/obligo.php';
                 \obligo::instance()->run();
                 //load prority orders excel
@@ -175,24 +175,24 @@ add_action('plugins_loaded', function(){
                 //load prority central invoices
                 require P18AW_CLASSES_DIR . 'priority_cinvoices/priority_cinvoices.php';
                 \priority_cinvoices::instance()->run();
-
+            }
+            if (WooAPI::instance()->option('packs')) {
                 require P18AW_ADMIN_DIR . 'packs.php';
-                if (WooAPI::instance()->option('sites')) {
-                    include_once dirname(__FILE__) . '/includes/front/sites/sites.php';
-                }
+            }
+            if (WooAPI::instance()->option('sites')) {
+                include_once dirname(__FILE__) . '/includes/front/sites/sites.php';
             }
 
 
-
         } else {
-            add_action('admin_notices', function(){
+            add_action('admin_notices', function () {
                 printf('<div class="notice notice-error"><p>%s</p></div>', __('In order to use Priority WooCommerce API extension, WooCommerce must be activated', 'p18a'));
             });
         }
 
     } else {
 
-        add_action('admin_notices', function(){
+        add_action('admin_notices', function () {
             printf('<div class="notice notice-error"><p>%s</p></div>', __('In order to use Priority WooCommerce API extension, Priority 18 API must be activated', 'p18a'));
         });
 
@@ -202,4 +202,4 @@ add_action('plugins_loaded', function(){
 
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
 
-include_once (P18AW_FRONT_DIR.'selectusers/selectusers.php');
+include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
