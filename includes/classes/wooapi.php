@@ -395,19 +395,17 @@ class WooAPI extends \PriorityAPI\API
                             /*
                              $order_id =  $_GET['ord'];
                             $response =  $this->syncOrder($order_id,'true');
-
                              echo var_dump($response);
                             */
-
                             break;
-
                         case 'order_meta';
                             $id = $_GET['ord'];
                             $order = new \WC_Order($id);
                             $data = get_post_meta($_GET['ord']);
+                            $order_data = $order->get_data();
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
-
-
+                            highlight_string("<?php\n\$data =\n" . var_export($order_data, true) . ";\n?>");
+                            /*
                             $id = $_GET['ord'];
                             $inst = get_post_meta($id, 'מקור', true);
                             foreach ($order->get_items() as $item_id => $item) {
@@ -416,7 +414,7 @@ class WooAPI extends \PriorityAPI\API
                                     continue;
                                 }
                             }
-
+                            */
                             break;
                         case 'customersProducts';
                             include P18AW_ADMIN_DIR . 'customersProducts.php';
@@ -2878,16 +2876,19 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_id', true);
 
-                /* there is another plugin for payplus in Munier 27.6.2021 roy
+                break;
+            // payplus2
+            case 'payplus2';
+                /* there is another plugin for payplus in Munier 27.6.2021 roy */
                  $firstpay = floatval(get_post_meta($order->get_id(),'payplus_payments_firstAmount',true))/100;
                   $ccuid = get_post_meta($order->get_id(),'payplus_token_uid',true);
                   $payaccount = get_post_meta($order->get_id(),'payplus_four_digits',true);
                   $validmonth = get_post_meta($order->get_id(),'payplus_expiry_month',true) .'/'.get_post_meta($order->get_id(),'payplus_expiry_year',true);
                   $numpay = get_post_meta($order->get_id(),'payplus_number_of_payments',true);
                   $confnum = get_post_meta($order->get_id(),'payplus_voucher_num',true);
-                 */
-
+                  $payplus_identification_number = get_post_meta($order->get_id(),'payplus_identification_number',true);
                 break;
+
             case 'z-credit';
                 $data = $order->get_meta('zc_response');
                 $data = base64_decode($data);
@@ -3409,6 +3410,7 @@ class WooAPI extends \PriorityAPI\API
             $order->save();
         } else {
             $message = $response['message'] . '' . json_encode($response);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
             $order->update_meta_data('priority_order_status', $message);
             $order->save();
         }
@@ -3605,7 +3607,8 @@ class WooAPI extends \PriorityAPI\API
         }
 
         if (!$response['status'] || $response['code'] >= 400) {
-            $order->update_meta_data('priority_invoice_status', $response['message']);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $order->update_meta_data('priority_invoice_status', $message);
             $order->save();
             $this->sendEmailError(
                 $this->option('email_error_sync_ainvoices_priority'),
@@ -3738,10 +3741,8 @@ class WooAPI extends \PriorityAPI\API
         }
         if ($response['code'] >= 400) {
             $body_array = json_decode($response["body"], true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_invoice_status', $response["body"]);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $order->update_meta_data('priority_invoice_status', $message);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
         }
@@ -3808,10 +3809,8 @@ class WooAPI extends \PriorityAPI\API
         }
         if ($response['code'] >= 400) {
             $body_array = json_decode($response["body"], true);
-
-            //$ord_status = $body_array["ORDSTATUSDES"];
-            // $ord_number = $body_array["ORDNAME"];
-            $order->update_meta_data('priority_recipe_status', $response["body"]);
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $order->update_meta_data('priority_recipe_status', $message);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
         }
@@ -4287,7 +4286,7 @@ class WooAPI extends \PriorityAPI\API
                 $price_filed => floatval($shipping_price)
             ];
             if ($is_order) $data += ['DUEDATE' => date('Y-m-d')];
-            return $data;
+            return ($shipping_price > 0 ? $data : null);
         } else {
             return null;
         }
