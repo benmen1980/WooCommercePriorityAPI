@@ -2498,7 +2498,7 @@ class WooAPI extends \PriorityAPI\API
             } // set priority customer id
             else {
                 $this->sendEmailError(
-                    $this->option('email_error_sync_customers_web'),
+                    [$this->option('email_error_sync_customers_web')],
                     'Error Sync Customers',
                     $response['body']
                 );
