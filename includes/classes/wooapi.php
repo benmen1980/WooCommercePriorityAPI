@@ -146,8 +146,8 @@ class WooAPI extends \PriorityAPI\API
         add_action('woocommerce_order_status_changed', [$this, 'syncDataAfterOrder']);
         // custom check out fields
         //add_action( 'woocommerce_after_checkout_billing_form', array( $this ,'custom_checkout_fields'));
-        add_action('woocommerce_checkout_process', array($this, 'my_custom_checkout_field_process'));
-        add_action('woocommerce_checkout_update_order_meta', array($this, 'my_custom_checkout_field_update_order_meta'));
+       // add_action('woocommerce_checkout_process', array($this, 'my_custom_checkout_field_process'));
+       //add_action('woocommerce_checkout_update_order_meta', array($this, 'my_custom_checkout_field_update_order_meta'));
         // sync user to priority after registration
         if ($this->option('post_customers') == true) {
             add_action('user_register', [$this, 'syncCustomer'], 999);
@@ -713,7 +713,7 @@ class WooAPI extends \PriorityAPI\API
 
                 }
                 //add the new column "Status"
-                if ($this->option('post_receipt_checkout')) {
+                if ($this->option('post_receipt_checkout')|| $this->option('obligo')==true) {
                     // add the Priority recipe number
                     $columns['priority_recipe_number'] = '<span>' . __('Priority Recipe', 'p18w') . '</span>'; // title
                     $columns['priority_recipe_status'] = '<span>' . __('Priority Recipe Status', 'p18w') . '</span>'; // title
@@ -751,7 +751,7 @@ class WooAPI extends \PriorityAPI\API
                     if (empty($invoice_number)) $invoice_number = '';
                 }
                 // recipe
-                if ($this->option('post_receipt_checkout')) {
+                if ($this->option('post_receipt_checkout')|| $this->option('obligo')==true) {
                     $recipe_status = get_post_meta($post_id, 'priority_recipe_status', true);
                     $recipe_number = get_post_meta($post_id, 'priority_recipe_number', true);
                     if (empty($recipe_status)) $recipe_status = '';
@@ -3029,7 +3029,16 @@ class WooAPI extends \PriorityAPI\API
             // get order
             update_post_meta($order_id, '_post_done', true);
             // sync payments
-            $is_payment = !empty(get_post_meta($order_id, 'priority_custname', true));
+            //$is_payment = !empty(get_post_meta($order_id, 'priority_custname', true));
+            $retrive_data = [];
+            if(isset(WC()->session)){
+                $retrive_data = WC()->session->get( 'session_vars' );
+            }
+            if(!empty($retrive_data ) && ($retrive_data['ordertype'] =="obligo_payment")) {
+                $is_payment = true;
+            }else{
+                $is_payment = false;
+            }
             if ($is_payment) {
                 $optional = array(
                     "custname" => get_post_meta($order_id, 'priority_custname', true)
