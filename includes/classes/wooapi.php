@@ -1302,6 +1302,10 @@ class WooAPI extends \PriorityAPI\API
                     if (!empty($item['INVFLAG'])) {
                         update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
                     }
+                    $taxon = 'product_cat';
+                    if (!empty($config->parent_category)) {
+                        $parent_category = wp_set_object_terms($id, $item[$config->parent_category], $taxon, true);
+                    }
                     if (!empty($is_categories)) {
                         // update categories
                         $categories = [];
@@ -1313,7 +1317,16 @@ class WooAPI extends \PriorityAPI\API
                         }
                         if (!empty($categories)) {
                             $terms = $categories;
-                            wp_set_object_terms($id, $terms, 'product_cat');
+                            if (!empty($config->parent_category) && $parent_category[0] > 0) {
+                                $term_exists = term_exists($terms[0], $taxon, $parent_category);
+                                if (empty($term_exists))
+                                    $terms = wp_insert_term($terms[0], $taxon, array('parent' => $parent_category[0]));
+                                array_push($terms, $item[$config->parent_category]);
+
+                            }
+
+                            wp_set_object_terms($id, $terms, $taxon);
+
                         }
                     }
                 }
