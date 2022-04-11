@@ -560,6 +560,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('update_image', $this->post('update_image'));
                 $this->updateOption('mailing_list_field', $this->post('mailing_list_field'));
                 $this->updateOption('obligo', $this->post('obligo'));
+                $this->updateOption('packs', $this->post('packs'));
                 $this->updateOption('setting-config', $this->post('setting-config'));
                 // save shipping conversion table
                 if ($this->post('shipping')) {
