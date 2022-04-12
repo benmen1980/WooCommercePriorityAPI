@@ -30,6 +30,15 @@
             </tr>
             <tr>
                 <td class="p18a-label">
+                    <label for="p18a-product_family"><?php _e('Use Product Family  ? ', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-product_family" type="checkbox" name="product_family" form="p18aw-settings" <?php if($this->option('product_family') == true){?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
+            <tr>
+                <td class="p18a-label">
                     <label for="p18a-walkin_hide_price"><?php _e('Hide price for non registered user ?', 'p18a'); ?></label>
                 </td>
                 <td></td>
@@ -61,7 +70,18 @@
                 </td>
                 <td></td>
                 <td>
-                    <input id="p18aw-sites" type="checkbox" name="obligo" form="p18aw-settings" <?php if($this->option('obligo') == true){?> checked="checked" <?php } ?> />
+                    <input id="p18aw-obligo" type="checkbox" name="obligo"
+                           form="p18aw-settings" <?php if ($this->option('obligo') == true) { ?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-packs"><?php _e('Use Packs?', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-packs" type="checkbox" name="packs"
+                           form="p18aw-settings" <?php if ($this->option('packs') == true) { ?> checked="checked" <?php } ?> />
                 </td>
             </tr>
             </tbody>
@@ -153,7 +173,7 @@
 
                 $worldwide = new \WC_Shipping_Zone($zone['id']);
                 $methods   = $worldwide->get_shipping_methods();
-    
+
                 foreach ($methods as $method) {
                     if ($method->enabled === 'yes') {
                         $active_methods[$method->instance_id] = [
@@ -175,10 +195,10 @@
                     <label for="p18a-shipping_<?php echo $data['id']; ?>"><?php echo $data['zone']; ?> [<?php echo $data['title']; ?>]</label>
                 </td>
                 <td>
-                    <input id="p18a-shipping_<?php echo $data['id']; ?>" type="text" name="shipping[<?php echo $data['id'] . '_' . $instance; ?>]" value="<?php echo $this->option('shipping_' . $data['id'] . '_' . $instance); ?>" form="p18aw-settings">                   
+                    <input id="p18a-shipping_<?php echo $data['id']; ?>" type="text" name="shipping[<?php echo $data['id'] . '_' . $instance; ?>]" value="<?php echo $this->option('shipping_' . $data['id'] . '_' . $instance); ?>" form="p18aw-settings">
                 </td>
             </tr>
-                        
+
             <?php endforeach; ?>
 
 
@@ -210,10 +230,10 @@
                     <label for="p18a-payment_<?php echo $id; ?>"><?php echo $title; ?></label>
                 </td>
                 <td>
-                    <input id="p18a-payment_<?php echo $id; ?>" type="text" name="payment[<?php echo $id; ?>]" value="<?php echo $this->option('payment_' . $id); ?>" form="p18aw-settings">                   
+                    <input id="p18a-payment_<?php echo $id; ?>" type="text" name="payment[<?php echo $id; ?>]" value="<?php echo $this->option('payment_' . $id); ?>" form="p18aw-settings">
                 </td>
             </tr>
-                        
+
             <?php endforeach; ?>
 
         </table>

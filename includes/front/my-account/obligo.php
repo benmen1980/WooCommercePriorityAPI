@@ -314,7 +314,9 @@ class Obligo extends \PriorityAPI\API{
 			$date = $value->BALDATE;
             $createDate = new DateTime($date);
             $strip = $createDate->format('d/m/y');
-
+            if(!isset($checked)){
+                $checked = '';
+            }
 			echo '<td><input type="checkbox" '.$checked.' '.$disabled. ' name="'.$value->SUM1 .'#'.$value->IVNUM.'#'.$strip.'#'.$value->DETAILS.'" class="obligo_checkbox" data-sum=' . $value->SUM1 . ' data-IVNUM=' . $value->IVNUM . ' value="obligo_chk_sum' . $i . '"></td>';
 			//echo "<input type='hidden'name='obligo_chk_sum" . $i . "' value='" . $value->SUM1 . "'>";
 			//echo "<input type='hidden'name='obligo_chk_ivnum" . $i . "' value='" . $value->IVNUM . "'>";

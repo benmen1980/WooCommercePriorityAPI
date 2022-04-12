@@ -157,15 +157,19 @@ class simplypay extends \PriorityAPI\API{
                             p.order_item_id,
                             p.order_item_name,
                             p.order_item_type,
-                            pm.meta_value                            
+                            pm.meta_value    
+                                                   
                             from
                             '.$wpdb->prefix.'woocommerce_order_items as p,
-                            '.$wpdb->prefix.'woocommerce_order_itemmeta as pm
+                            '.$wpdb->prefix.'woocommerce_order_itemmeta as pm,
+                             '.$wpdb->prefix.'posts
                             where order_item_type = \'line_item\' 
                             and p.order_item_id = pm.order_item_id
                             and pm.meta_key = \'product-ivnum\' 
                             and p.order_item_id = pm.order_item_id 
                             and pm.meta_value = \''.$_GET['i'].'\'
+                            and p.order_id = '.$wpdb->prefix.'posts.ID
+                            and '.$wpdb->prefix.'posts.post_status <> \'wc-cancelled\'
                             group by
                             p.order_item_id'
             );
@@ -180,8 +184,16 @@ class simplypay extends \PriorityAPI\API{
             $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
             // get the customer info according to the IVNUM
             $customer_info = [
-                'docno' => $_GET['i'],
-                'price' => $_GET['pr']
+                'docno'           => $_GET['i'],
+                'price'           => $_GET['pr'],
+                'first_name'      => '',
+                'last_name'       => '',
+                'street'  => '',
+                'postcode'        => '',
+                'city'            => '',
+                'phone'           => '',
+                'email'           => '',
+                'data'            => ''
             ];
             // need to filter here
             $customer_info = apply_filters( 'simply_request_customer_data', $customer_info );
