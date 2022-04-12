@@ -2569,6 +2569,12 @@ class WooAPI extends \PriorityAPI\API
                 $card_type_desc = $order->get_meta('_cardtype');
                 $payment_type = $order->get_meta('cc_paymenttype_tranzila');
                 break;
+            case 'gobit2';
+                $payaccount = $order->get_meta('cc_last_4');
+                $validmonth=date_format(date_create(get_post_meta($order->get_id(),'_paid_date')[0]),'d/m');
+                $numpay = $order->get_meta('tranzila_F_number_of_payments');
+                $ccuid = $order->get_meta('tranzila_authnr');
+                break;
             // payplus
             case 'payplus';
                 $firstpay = floatval(get_post_meta($order->get_id(), 'payplus_payments_firstAmount', true)) / 100;
@@ -2610,7 +2616,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
         //paypel
-        if ($paymentcode == 'paypal') {
+        if ($order->get_payment_method() == 'paypal') {
             $data = [
                 'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
                 'QPRICE' => floatval($order->get_total())
