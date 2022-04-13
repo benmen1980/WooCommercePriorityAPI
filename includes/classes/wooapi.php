@@ -2494,22 +2494,25 @@ class WooAPI extends \PriorityAPI\API
         // check user
         if ($user = get_userdata($id)) {
             $meta = get_user_meta($id);
-            $priority_customer_number = 'WEB-' . (string)$user->data->ID;
-            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
-            if ('prospect_email' == $this->option('prospect_field')) {
-                $priority_customer_number = $user->data->user_email;
-            }
-            if ('prospect_cellphone' == $this->option('prospect_field')) {
-                $priority_customer_number = $meta['billing_phone'][0];
-            }
             // if already assigned value it is stronger
-            $priority_cust_from_wc = get_post_meta($id, 'priority_customer_number', true);
+            $priority_cust_from_wc = get_user_meta($id, 'priority_customer_number', true);
             if (!empty($priority_cust_from_wc)) {
                 $priority_customer_number = $priority_cust_from_wc;
-            }
-            // if the CUSTNAME is empty, do not POST to Priority
-            if(null == $priority_customer_number){
-                return;
+            }else{
+                $priority_customer_number = 'WEB-' . (string)$user->data->ID;
+                /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
+                if ('prospect_email' == $this->option('prospect_field')) {
+                    $priority_customer_number = $user->data->user_email;
+                    if(null == $priority_customer_number){
+                        return;
+                    }
+                }
+                if ('prospect_cellphone' == $this->option('prospect_field')) {
+                    $priority_customer_number = $meta['billing_phone'][0];
+                    if(null == $priority_customer_number){
+                        return;
+                    }
+                }
             }
 
             $request = [
@@ -2526,11 +2529,16 @@ class WooAPI extends \PriorityAPI\API
                 'NSFLAG' => 'Y',
             ];
             $method = !empty($priority_cust_from_wc) ? 'PATCH' : 'POST';
+            $url_eddition = 'CUSTOMERS';
+            if($method == 'PATCH'){
+                $url_eddition = 'CUSTOMERS(\''.$priority_customer_number.'\')';
+                unset($request['CUSTNAME']);
+            }
             $request["id"] = $id;
             $request = apply_filters('simply_syncCustomer', $request);
             unset($request["id"]);
             $json_request = json_encode($request);
-            $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => $json_request], true);
+            $response = $this->makeRequest($method, $url_eddition, ['body' => $json_request], true);
             if ($method == 'POST' && $response['code'] == '201') {
                 $data = json_decode($response['body']);
                 $priority_customer_number = $data->CUSTNAME;
@@ -2643,6 +2651,15 @@ class WooAPI extends \PriorityAPI\API
     {
         /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
         $order_id = $order->get_id();
+        $user_id = $order->get_user_id();
+        if($user_id==0){
+            $response = $this->syncProspect($order);
+        }else{
+            $response = $this->syncCustomer($order->get_user_id());
+        }
+        return $response;
+
+        get_user_meta($order->get_user_id(),'priority_customer_number',true);
         if (!empty(get_post_meta($order_id, 'cust_name', true))) {
             $response['args']['body'] = get_post_meta($order_id, 'cust_name', true);
             $response['message'] = "Exists cust_name";
@@ -3003,6 +3020,10 @@ class WooAPI extends \PriorityAPI\API
             $priority_customer_number = $order->get_billing_email();
         } else {
             $priority_customer_number = $order->get_billing_phone();
+        }
+        // if the CUSTNAME is empty, do not POST to Priority
+        if(null == $priority_customer_number){
+            return;
         }
         $json_request = [
             'CUSTNAME' => $priority_customer_number,
