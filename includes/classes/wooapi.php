@@ -3050,14 +3050,15 @@ class WooAPI extends \PriorityAPI\API
             $priority_customer_number = $data->CUSTNAME;
         } else {
             $this->sendEmailError(
-                $this->option('email_error_sync_customers_web'),
+                [$this->option('email_error_sync_customers_web')],
                 'Error Sync Customers',
                 $response['body']
             );
         }
         // add timestamp
         $this->updateOption('time_stamp_cron_prospect', time());
-        return $priority_customer_number;
+        $response['$priority_customer_number']= $priority_customer_number;
+        return $response;
     }
 
     public
@@ -3281,7 +3282,18 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
+    function get_cust_name($order){
+        if ($order->get_user_id()!=0) {
+            $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
+        }else{
+            if ('prospect_email' == $this->option('prospect_field')) {
+                $cust_number = $order->get_billing_email();
+            } else {
+                $cust_number = $order->get_billing_phone();
+            }
+        }
+        return $cust_number;
+    }
     /* sync order invoice ORDERS */
     public function syncOrder($id)
     {
@@ -3303,8 +3315,7 @@ class WooAPI extends \PriorityAPI\API
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
         //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
-        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
-
+        $cust_number = $this->get_cust_name($order);
         $data = [
             'CUSTNAME' => $cust_number,
             'CDES' => !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
