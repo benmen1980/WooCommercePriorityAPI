@@ -1150,15 +1150,16 @@ class WooAPI extends \PriorityAPI\API
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME,EXTFILENAME';
-        $data = apply_filters('simply_syncItemsPriority_data', $data);
         if ($product_price_list != null) {
-            $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+            $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
         } else {
-            $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+            $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
         }
+        $data = apply_filters('simply_syncItemsPriority_data', $data);
+
         $response = $this->makeRequest('GET',
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config .
-            '&' . $expand . '', [],
+            '&' . $data['expand'] . '', [],
             $this->option('log_items_priority', true));
         // check response status
 
