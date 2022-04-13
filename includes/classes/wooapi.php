@@ -3294,7 +3294,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $cust_number;
     }
-    /* sync order invoice ORDERS */
     public function syncOrder($id)
     {
         if (isset(WC()->session)) {
@@ -3518,9 +3517,7 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
-    public
-    function syncAinvoice($id)
+    public function syncAinvoice($id)
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3538,7 +3535,7 @@ class WooAPI extends \PriorityAPI\API
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
         //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
-        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
+        $cust_number = $this->get_cust_name($order);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3722,9 +3719,7 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
-    public
-    function syncOverTheCounterInvoice($order_id)
+    public function syncOverTheCounterInvoice($order_id)
     {
         $order = new \WC_Order($order_id);
         $user = $order->get_user();
@@ -3732,7 +3727,7 @@ class WooAPI extends \PriorityAPI\API
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
         $user_meta = get_user_meta($user_id);
         //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
-        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
+        $cust_number = $this->get_cust_name($order);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3863,9 +3858,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $response;
     }
-
-    public
-    function syncReceipt($order_id)
+    public function syncReceipt($order_id)
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3873,20 +3866,16 @@ class WooAPI extends \PriorityAPI\API
                 return;
             }
         }
-
         $order = new \WC_Order($order_id);
-
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
         //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
-        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
-
+        $cust_number = $this->get_cust_name($order);
         $data = [
             'CUSTNAME' => $cust_number,
             'CDES' => !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'IVDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('receipt_order_field') => $order->get_order_number(),
-
         ];
         // CDES
 //        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
@@ -3937,9 +3926,7 @@ class WooAPI extends \PriorityAPI\API
         return $response;
 
     }
-
-    public
-    function syncPayment($order_id, $optional)
+    public function syncPayment($order_id, $optional)
     {
         $order = new \WC_Order($order_id);
         $priority_customer_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
@@ -4031,14 +4018,7 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
     }
-
-    /**
-     * Sync receipts for completed orders
-     *
-     * @return void
-     */
-    public
-    function syncReceiptsCompleted()
+    public function syncReceiptsCompleted()
     {
         // get all completed orders
         $orders = wc_get_orders(['status' => 'completed']);
@@ -4047,10 +4027,7 @@ class WooAPI extends \PriorityAPI\API
             $this->syncReceipt($order->get_id());
         }
     }
-
-// filter products by user price list
-    public
-    function filterProductsByPriceList($ids)
+    public function filterProductsByPriceList($ids)
     {
         if ($user_id = get_current_user_id()) {
             $meta = get_user_meta($user_id, '_priority_price_list');
@@ -4083,13 +4060,7 @@ class WooAPI extends \PriorityAPI\API
         // not logged in user
         return [];
     }
-
-    /**
-     * Get all price lists
-     *
-     */
-    public
-    function getPriceLists()
+    public function getPriceLists()
     {
         if (empty(static::$priceList)) {
             static::$priceList = $GLOBALS['wpdb']->get_results('
@@ -4101,14 +4072,7 @@ class WooAPI extends \PriorityAPI\API
 
         return static::$priceList;
     }
-
-    /**
-     * Get price list data by price list code
-     *
-     * @param  $code
-     */
-    public
-    function getPriceListData($code)
+    public function getPriceListData($code)
     {
         $data = $GLOBALS['wpdb']->get_row('
             SELECT *
@@ -4121,14 +4085,7 @@ class WooAPI extends \PriorityAPI\API
         return $data;
 
     }
-
-    /**
-     * Get product data regarding to price list assigned for user
-     *
-     * @param $id product id
-     */
-    public
-    function getProductDataBySku($sku)
+    public function getProductDataBySku($sku)
     {
         if ($user_id = get_current_user_id()) {
             $meta = get_user_meta($user_id, '_priority_price_list');
@@ -4146,10 +4103,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return false;
     }
-
-// filter product price
-    public
-    function filterPrice($price, $product)
+    public function filterPrice($price, $product)
     {
         $user = wp_get_current_user();
         // get the MCUSTNAME if any else get the cust
@@ -4179,9 +4133,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $price;
     }
-
-    public
-    function getFamilyProduct($custname, $code)
+    public function getFamilyProduct($custname, $code)
     {
         $data = $GLOBALS['wpdb']->get_row('
                 SELECT discounts
@@ -4196,9 +4148,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return null;
     }
-
-    public
-    function getSpecialPriceCustomer($custname, $sku)
+    public function getSpecialPriceCustomer($custname, $sku)
     {
         $data = $GLOBALS['wpdb']->get_row('
                 SELECT price
@@ -4213,7 +4163,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return null;
     }
-
 // filter price range for products with variations
     public
     function filterPriceRange($price, $product)
