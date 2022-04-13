@@ -2411,7 +2411,12 @@ class WooAPI extends \PriorityAPI\API
                         $stock_status = 'outofstock';
                     }
                     $variation = wc_get_product($product_id);
-                    // $variation->set_stock_status($stock_status);
+                    //$variation->set_stock_status($stock_status);
+                    $product = wc_get_product($product_id);
+
+                    $var = new WC_Product_Variation($product_id);
+                    $var->set_manage_stock(true);
+
                     $variation->save();
                 }
             }
@@ -2498,17 +2503,14 @@ class WooAPI extends \PriorityAPI\API
             if ('prospect_cellphone' == $this->option('prospect_field')) {
                 $priority_customer_number = $meta['billing_phone'][0];
             }
-            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
-            if ('prospect_email' == $this->option('prospect_field')) {
-                $priority_customer_number = $user->data->user_email;
-            }
-            if ('prospect_cellphone' == $this->option('prospect_field')) {
-                $priority_customer_number = $meta['billing_phone'][0];
-            }
             // if already assigned value it is stronger
             $priority_cust_from_wc = get_post_meta($id, 'priority_customer_number', true);
             if (!empty($priority_cust_from_wc)) {
                 $priority_customer_number = $priority_cust_from_wc;
+            }
+            // if the CUSTNAME is empty, do not POST to Priority
+            if(null == $priority_customer_number){
+                return;
             }
 
             $request = [
@@ -3259,9 +3261,8 @@ class WooAPI extends \PriorityAPI\API
 
     }
 
-    /* sync over the counter invoice EINVOICES */
-    public
-    function syncOrder($id)
+    /* sync order invoice ORDERS */
+    public function syncOrder($id)
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3280,7 +3281,8 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($raw_option));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3503,7 +3505,8 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($this->option('setting-config')));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3696,7 +3699,8 @@ class WooAPI extends \PriorityAPI\API
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
         $user_meta = get_user_meta($user_id);
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3842,7 +3846,9 @@ class WooAPI extends \PriorityAPI\API
 
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
+
         $data = [
             'CUSTNAME' => $cust_number,
             'CDES' => !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
