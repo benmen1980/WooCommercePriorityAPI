@@ -3260,9 +3260,8 @@ class WooAPI extends \PriorityAPI\API
 
     }
 
-    /* sync over the counter invoice EINVOICES */
-    public
-    function syncOrder($id)
+    /* sync order invoice ORDERS */
+    public function syncOrder($id)
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3281,7 +3280,8 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($raw_option));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3504,7 +3504,8 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($this->option('setting-config')));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3697,7 +3698,8 @@ class WooAPI extends \PriorityAPI\API
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
         $user_meta = get_user_meta($user_id);
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
 
         $data = [
             'CUSTNAME' => $cust_number,
@@ -3843,7 +3845,9 @@ class WooAPI extends \PriorityAPI\API
 
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-        $cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
+
         $data = [
             'CUSTNAME' => $cust_number,
             'CDES' => !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
