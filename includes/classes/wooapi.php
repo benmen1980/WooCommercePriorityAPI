@@ -3283,14 +3283,24 @@ class WooAPI extends \PriorityAPI\API
 
     }
     function get_cust_name($order){
+        $walk_in_number = $this->option('walkin_number');
         if ($order->get_user_id()!=0) {
-            $cust_number = get_user_meta($order->get_user_id(),'priority_customer_number',true);
-        }else{
-            if ('prospect_email' == $this->option('prospect_field')) {
-                $cust_number = $order->get_billing_email();
-            } else {
-                $cust_number = $order->get_billing_phone();
+            if ($this->option('post_customers') == true) {
+                $cust_number = get_user_meta($order->get_user_id(), 'priority_customer_number', true);
+            }else{
+                $cust_number = $walk_in_number;
             }
+        }else{
+            if($this->option('post_prospect')){
+                if ('prospect_email' == $this->option('prospect_field')) {
+                    $cust_number = $order->get_billing_email();
+                } else {
+                    $cust_number = $order->get_billing_phone();
+                }
+            }else{
+                $cust_number = $walk_in_number;
+            }
+
         }
         return $cust_number;
     }
