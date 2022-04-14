@@ -4371,12 +4371,12 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode($json);
         $daysback = !empty((int)$config->days_back) ? (int)$config->days_back : 1;
         $statusdate = !empty($config->statusdate) ? 'STATUSDATE' : 'CREATEDDATE';
-        $username_filed = $config->username_field;
+        $username_filed = $config->username_field ?? 'CUSTNAME';
         $password_field = $config->password_field;
         $url_addition_config = !empty($config->additional_url) ? $config->additional_url : '';
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
-        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' amd ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
 
         $response = $this->makeRequest('GET', $url_addition, [], true);
         // print_r( $response['status'] );
@@ -4385,9 +4385,7 @@ class WooAPI extends \PriorityAPI\API
             $data = json_decode($response['body_raw'], true)['value'];
             //  echo 'data:';print_r( $data );
             foreach ($data as $user) {
-
                 $username = $user[$username_filed];
-
                 $email = $user['EMAIL'];
                 if (!is_email($email)) {
                     continue;
@@ -4395,7 +4393,7 @@ class WooAPI extends \PriorityAPI\API
                 if (!validate_username($username)) {
                     continue;
                 }
-                $password = $user[$password_field];
+                $password = $user[$password_field] ?? '123456';
                 $user_obj = get_user_by('login', $username);
                 $data = [
                     'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
@@ -4404,7 +4402,7 @@ class WooAPI extends \PriorityAPI\API
                     'email' => $email,
                     'first_name' => $user['CUSTDES'],
                     //'last_name'  => 'Doe',
-                    'user_nicename' => $user['CUSTDES'],
+                    'user_nickname' => $user['CUSTDES'],
                     'display_name' => $user['CUSTDES'],
                     'role' => 'customer'
                 ];
@@ -4419,6 +4417,7 @@ class WooAPI extends \PriorityAPI\API
                 //wp_hash_password( $password);
                 wp_update_user(array('ID' => $user_id, 'email' => $email));
                 wp_update_user(array('ID' => $user_id, 'user_email' => $email));
+                wp_update_user(array('ID' => $user_id, 'user_nickname' => $user['CUSTDES']));
                 if (is_wp_error($user_id)) {
                     error_log('This is customer with error ' . $user['CUSTNAME']);
                     continue;
@@ -4431,7 +4430,6 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'priority_mcustomer_number', $user['MCUSTNAME']);
                 update_user_meta($user_id, 'customer_percents', $user['CUSTDISCOUNT_SUBFORM']);
                 update_user_meta($user_id, 'priority_customer_rank', $user['ZYOU_RANKDES']);
-
                 update_user_meta($user_id, 'billing_address_1', $user['ADDRESS']);
                 update_user_meta($user_id, 'billing_address_2', $user['ADDRESS2']);
                 update_user_meta($user_id, 'billing_city', $user['STATE']);
