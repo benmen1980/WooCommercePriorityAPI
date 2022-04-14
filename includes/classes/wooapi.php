@@ -4122,7 +4122,7 @@ class WooAPI extends \PriorityAPI\API
         }
         // get the family code by customer discount as fraction
         $family_code = get_post_meta($product->get_id(), 'family_code', true);
-        $family_discount = (100.0 -  $this->getFamilyProduct($custname, $family_code))/100;
+        $family_discount = (100.0 -  (float)$this->getFamilyProduct($custname, $family_code))/100.0;
         // get price list
         $plists = get_user_meta($user->ID, 'custpricelists', true);
         if (empty($plists)) {
@@ -4143,7 +4143,7 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
         }
-        return $price * $family_discount;
+        return (float)$price * $family_discount;
     }
     public function getFamilyProduct($custname, $family_code)
     {
@@ -4376,7 +4376,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = !empty($config->additional_url) ? $config->additional_url : '';
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
-        $url_addition = 'CUSTOMERS?$filter=' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' amd ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
 
         $response = $this->makeRequest('GET', $url_addition, [], true);
         // print_r( $response['status'] );
