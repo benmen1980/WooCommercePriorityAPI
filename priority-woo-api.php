@@ -182,6 +182,7 @@ add_action('plugins_loaded', function () {
             if (WooAPI::instance()->option('sites')) {
                 include_once dirname(__FILE__) . '/includes/front/sites/sites.php';
             }
+            require P18AW_ADMIN_DIR . 'family-code.php';
 
 
         } else {

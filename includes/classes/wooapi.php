@@ -1024,7 +1024,7 @@ class WooAPI extends \PriorityAPI\API
 
     function custom_dynamic_sale_price($sale_price, $product)
     {
-        $codeFamily = get_post_meta($product->get_id(), 'קוד משפחה', true);
+        $codeFamily = get_post_meta($product->get_id(), 'family_code', true);
         $user = wp_get_current_user();
         $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true))
             ? get_user_meta($user->ID, 'priority_customer_number', true) :
@@ -2854,7 +2854,7 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = $s[1];
                 $var = $strArr[10];
                 $s = explode('=', $var);
-                $firstpay = s[1];
+                $firstpay = $s[1];
                 $var = $strArr[13];
                 $s = explode('=', $var);
                 $card_type = $s[1];
