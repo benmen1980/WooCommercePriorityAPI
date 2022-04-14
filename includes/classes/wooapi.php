@@ -155,10 +155,12 @@ class WooAPI extends \PriorityAPI\API
             add_action('woocommerce_save_account_details', [$this, 'syncCustomer'], 999);
             add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
         }
-        if ($this->option('product_family') == true) {
+       /*  this code by Ruth
+       if ($this->option('product_family') == true) {
             add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
 
         }
+       */
         if ($this->option('sell_by_pl') == true) {
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
@@ -166,17 +168,12 @@ class WooAPI extends \PriorityAPI\API
             //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
             // filter product price regarding to price list
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
-
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
-
-
             // filter price range
             add_filter('woocommerce_variable_sale_price_html', [$this, 'filterPriceRange'], 10, 2);
             add_filter('woocommerce_variable_price_html', [$this, 'filterPriceRange'], 10, 2);
-
-
             // check if variation is available to the client
             add_filter('woocommerce_variation_is_visible', function ($status, $id, $parent, $variation) {
 
@@ -1066,7 +1063,7 @@ class WooAPI extends \PriorityAPI\API
     {
         if ($post->post_type == "product") {
             $productId = $post->ID;
-            add_post_meta($productId, 'קוד משפחה', '');
+            add_post_meta($productId, 'family_code', '');
         }
     }
 
@@ -1290,10 +1287,10 @@ class WooAPI extends \PriorityAPI\API
                     if (!empty($config->menu_order)) {
                         $my_product->set_menu_order($item[$config->menu_order]);
                     }
-                    if (!empty($my_product->get_meta('קוד משפחה', true))) {
-                        $my_product->update_meta_data('קוד משפחה', $item['FAMILYNAME']);
+                    if (!empty($my_product->get_meta('family_code', true))) {
+                        $my_product->update_meta_data('family_code', $item['FAMILYNAME']);
                     } else {
-                        $my_product->add_meta_data('קוד משפחה', $item['FAMILYNAME']);
+                        $my_product->add_meta_data('family_code', $item['FAMILYNAME']);
                     }
                     //$my_product->set_sale_price( $sales_price);
                     $my_product->save();
@@ -4098,8 +4095,8 @@ class WooAPI extends \PriorityAPI\API
     public function getProductDataBySku($sku)
     {
         if ($user_id = get_current_user_id()) {
-            $meta = get_user_meta($user_id, '_priority_price_list');
-            if ($meta[0] === 'no-selected') return 'no-selected';
+            $meta = get_user_meta($user_id, '_priority_price_list',true);
+            if ($meta === 'no-selected') return 'no-selected';
             $list = empty($meta) ? $this->basePriceCode : $meta[0]; // use base price list if there is no list assigned
             $data = $GLOBALS['wpdb']->get_row('
                 SELECT price_list_price, price_list_currency
@@ -4123,6 +4120,9 @@ class WooAPI extends \PriorityAPI\API
         if ($special_price != 0) {
             return $special_price;
         }
+        // get the family code by customer discount as fraction
+        $family_code = get_post_meta($product->get_id(), 'family_code', true);
+        $family_discount = (100.0 -  $this->getFamilyProduct($custname, $family_code))/100;
         // get price list
         $plists = get_user_meta($user->ID, 'custpricelists', true);
         if (empty($plists)) {
@@ -4137,18 +4137,20 @@ class WooAPI extends \PriorityAPI\API
                     AND blog_id = ' . get_current_blog_id(),
                 ARRAY_A
             );
-            if ($data['price_list_price'] != 0) {
-                return $data['price_list_price'];
+            if( isset($data['price_list_price'])){
+                if ($data['price_list_price'] != 0) {
+                    return $data['price_list_price'];
+                }
             }
         }
-        return $price;
+        return $price * $family_discount;
     }
-    public function getFamilyProduct($custname, $code)
+    public function getFamilyProduct($custname, $family_code)
     {
         $data = $GLOBALS['wpdb']->get_row('
                 SELECT discounts
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family
-                WHERE familyname = "' . esc_sql($code) . '"
+                WHERE familyname = "' . esc_sql($family_code) . '"
                 AND custname = "' . esc_sql($custname) . '"
                 AND blog_id = ' . get_current_blog_id(),
             ARRAY_A
@@ -4156,7 +4158,7 @@ class WooAPI extends \PriorityAPI\API
         if ($data != null) {
             return (float)$data['discounts'];
         }
-        return null;
+        return 0;
     }
     public function getSpecialPriceCustomer($custname, $sku)
     {
@@ -4178,27 +4180,18 @@ class WooAPI extends \PriorityAPI\API
     function filterPriceRange($price, $product)
     {
         $variations = $product->get_available_variations();
-
         $prices = [];
-
         foreach ($variations as $variation) {
-
             $data = $this->getProductDataBySku($variation['sku']);
-
             if ($data !== 'no-selected') {
                 $prices[] = $data['price_list_price'];
             }
-
         }
-
         if (!empty($prices)) {
             return wc_price(min($prices)) . ' - ' . wc_price(max($prices));
         }
-
         return $price;
-
     }
-
     function crf_show_extra_profile_fields($user)
     {
         $priority_customer_number = get_the_author_meta('priority_customer_number', $user->ID);
@@ -4295,7 +4288,6 @@ class WooAPI extends \PriorityAPI\API
         </table>
         <?php
     }
-
     function crf_update_profile_fields($user_id)
     {
         if (!current_user_can('edit_user', $user_id)) {
