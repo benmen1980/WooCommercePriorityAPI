@@ -2521,7 +2521,7 @@ class WooAPI extends \PriorityAPI\API
                 'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
                 'STATEA' => isset($meta['billing_city']) ? $meta['billing_city'][0] : '',
                 'ZIP' => isset($meta['billing_postcode']) ? $meta['billing_postcode'][0] : '',
-                'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
+             //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
                 'PHONE' => isset($meta['billing_phone']) ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS' => 'Y',
                 'NSFLAG' => 'Y',
