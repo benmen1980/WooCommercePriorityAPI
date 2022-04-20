@@ -150,10 +150,12 @@ class WooAPI extends \PriorityAPI\API
         //add_action('woocommerce_checkout_update_order_meta', array($this, 'my_custom_checkout_field_update_order_meta'));
         // sync user to priority after registration
         if ($this->option('post_customers') == true) {
-            add_action('user_register', [$this, 'syncCustomer'], 999);
-            add_action('user_new_form', [$this, 'syncCustomer'], 999);
-            add_action('woocommerce_save_account_details', [$this, 'syncCustomer'], 999);
-            add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
+            if ($this->option('post_customers_on_sign_in') == true) {
+                add_action('user_register', [$this, 'syncCustomer'], 999);
+                add_action('user_new_form', [$this, 'syncCustomer'], 999);
+                add_action('woocommerce_save_account_details', [$this, 'syncCustomer'], 999);
+                add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
+            }
         }
        /*  this code by Ruth
        if ($this->option('product_family') == true) {
@@ -2494,6 +2496,19 @@ class WooAPI extends \PriorityAPI\API
             $meta = get_user_meta($id);
             // if already assigned value it is stronger
             $priority_cust_from_wc = get_user_meta($id, 'priority_customer_number', true);
+            // search customer number in Priority
+            if(empty($priority_cust_from_wc)){
+                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id]);
+                if(!empty($custname)){
+                    update_user_meta($id, 'priority_customer_number', $custname);
+                    $body = ['CUSTNAME'=>$custname];
+                    $response['body'] = json_encode($body);
+                    return $response;
+                }
+            }
+            if(!empty($custname)){
+                $priority_cust_from_wc = $custname;
+            }
             if (!empty($priority_cust_from_wc)) {
                 $priority_customer_number = $priority_cust_from_wc;
             }else{
@@ -2643,14 +2658,18 @@ class WooAPI extends \PriorityAPI\API
         // end
         $this->updateOption('auto_sync_order_status_priority_update', time());
     }
-
-    public
-    function getPriorityCustomer(&$order)
+    public function getPriorityCustomer(&$order)
     {
-        /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
         $order_id = $order->get_id();
         $user_id = $order->get_user_id();
         if($user_id==0){
+            /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
+            $custname = apply_filters('simply_search_customer_in_priority', ['order'=>$order]);
+            if(!empty($custname)){
+                $body = ['CUSTNAME'=>$custname];
+                $response['body'] = json_encode($body);
+                return $response;
+            }
             $response = $this->syncProspect($order);
         }else{
             $response = $this->syncCustomer($order->get_user_id());
