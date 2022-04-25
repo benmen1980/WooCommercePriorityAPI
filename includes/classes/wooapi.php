@@ -3065,6 +3065,7 @@ class WooAPI extends \PriorityAPI\API
         if ($response['status']) {
             $data = json_decode($response['body']);
             $priority_customer_number = $data->CUSTNAME;
+            update_post_meta($order->ID,'prospect_custname',$priority_customer_number);
         } else {
             $this->sendEmailError(
                 [$this->option('email_error_sync_customers_web')],
@@ -3318,6 +3319,9 @@ class WooAPI extends \PriorityAPI\API
                 }
             }else{
                 $cust_number = $walk_in_number;
+            }
+            if(!empty(get_post_meta($order->ID,'prospect_custname',true))){
+                $cust_number  = get_post_meta($order->ID,'prospect_custname',true);
             }
 
         }
