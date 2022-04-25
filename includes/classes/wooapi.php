@@ -2498,7 +2498,7 @@ class WooAPI extends \PriorityAPI\API
             $priority_cust_from_wc = get_user_meta($id, 'priority_customer_number', true);
             // search customer number in Priority
             if(empty($priority_cust_from_wc)){
-                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id]);
+                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id])['CUSTNAME'];
                 if(!empty($custname)){
                     update_user_meta($id, 'priority_customer_number', $custname);
                     $body = ['CUSTNAME'=>$custname];
