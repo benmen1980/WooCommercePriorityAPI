@@ -2664,7 +2664,8 @@ class WooAPI extends \PriorityAPI\API
         $user_id = $order->get_user_id();
         if($user_id==0){
             /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
-            $custname = apply_filters('simply_search_customer_in_priority', ['order'=>$order]);
+            $custname = apply_filters('simply_search_customer_in_priority', ['order'=>$order,
+                                                                              'CUSTNAME'=>null])['CUSTNAME'];
             if(!empty($custname)){
                 $body = ['CUSTNAME'=>$custname];
                 $response['body'] = json_encode($body);
