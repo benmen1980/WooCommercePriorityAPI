@@ -1,6 +1,6 @@
 <?php
-add_action('woocommerce_product_options_general_product_data', 'woo_add_custom_general_fields');
-function woo_add_custom_general_fields()
+add_action('woocommerce_product_options_general_product_data', 'simply_add_custom_general_fields');
+function simply_add_custom_general_fields()
 {
     // Define your fields here.
     // You can create text, textarea, select, checkbox and custom fields
