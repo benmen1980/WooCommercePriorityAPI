@@ -2669,6 +2669,7 @@ class WooAPI extends \PriorityAPI\API
             if(!empty($custname)){
                 $body = ['CUSTNAME'=>$custname];
                 $response['body'] = json_encode($body);
+                update_post_meta($order_id,'prospect_custname',$custname);
                 return $response;
             }
             $response = $this->syncProspect($order);
