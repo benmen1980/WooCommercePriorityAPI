@@ -1728,184 +1728,7 @@ class WooAPI extends \PriorityAPI\API
     /**
      * sync items width variation from priority
      */
-//    public function syncItemsPriorityVariation()
-//    {
-//        $raw_option = $this->option('sync_items_priority_config');
-//        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
-//        $config = json_decode(stripslashes($raw_option));
-//        $res = $this->option('sync_variations_priority_config');
-//        $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
-//        $config_v = json_decode(stripslashes($res));
-//        $daysback = 1;//!empty((int)$config_v->days_back) ? $config_v->days_back : (!empty((int)$config->days_back) ? $config->days_back : 1);
-//        $stamp = mktime(0 - $daysback * 24, 0, 0);
-//        $bod = date(DATE_ATOM, $stamp);
-//        $url_addition = 'UDATE ge ' . $bod;
-//        $variation_field = $this->option('variation_field');
-//        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,EXTFILENAME';
-//        $data = apply_filters('simply_syncItemsPriority_data', $data);
-//        $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
-//        $filter = $variation_field . ' ne \'\' and '. urlencode($url_addition) . ' ' . $url_addition_config;
-//        $response = $this->makeRequest('GET',
-//            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&$expand=PARTUNSPECS_SUBFORM',
-//            [], $this->option('log_items_priority_variation', true));
-//        // check response status
-//        if ($response['status']) {
-//            $response_data = json_decode($response['body_raw'], true);
-//            $product_cross_sells = [];
-//            $parents = [];
-//            $childrens = [];
-//            foreach ($response_data['value'] as $item) {
-//                if ($item[$this->option('variation_field')] !== '-') {
-//                    $attributes = [];
-//                    if ($item['PARTUNSPECS_SUBFORM']) {
-//                        foreach ($item['PARTUNSPECS_SUBFORM'] as $attr) {
-//                            $attribute = $attr['SPECDES'];
-//                            $attributes[$attribute] = $attr['VALUE'];
-//                        }
-//                    }
-//                    if ($attributes) {
-//                        $parents[$item[$this->option('variation_field')]] = [
-//                            'sku' => $item[$this->option('variation_field')],
-//                            //'crosssell' => $item['ROYL_SPECDES1'],
-//                            'title' => $item[$this->option('variation_field_title')],
-//                            'stock' => 'Y',
-//                            'variation' => []
-//                        ];
-//                        $childrens[$item[$this->option('variation_field')]][$item['PARTNAME']] = [
-//                            'sku' => $item['PARTNAME'],
-//                            'regular_price' => $item['VATPRICE'],
-//                            'stock' => $item['INVFLAG'],
-//                            'parent_title' => $item['MPARTDES'],
-//                            'title' => $item['PARTDES'],
-//                            'stock' => ($item['INVFLAG'] == 'Y') ? 'instock' : 'outofstock',
-//                            /*'tags'          => [
-//                                $item['ROYL_SPECEDES1'],
-//                                $item['ROYL_SPECEDES2'],
-//                                $item['FAMILYDES']
-//                            ],
-//                            */
-//                            'categories' => [
-//                                $item['ROYY_MFAMILYDES']
-//                            ],
-//                            'attributes' => $attributes
-//                        ];
-//                    }
-//                }
-//            }
-//            foreach ($parents as $partname => $value) {
-//                if (count($childrens[$partname])) {
-//                    $parents[$partname]['categories'] = end($childrens[$partname])['categories'];
-//                    $parents[$partname]['tags'] = end($childrens[$partname])['tags'];
-//                    $parents[$partname]['variation'] = $childrens[$partname];
-//                    $parents[$partname]['title'] = $parents[$partname]['title'];
-//                    foreach ($childrens[$partname] as $children) {
-//                        foreach ($children['attributes'] as $attribute => $attribute_value) {
-//                            if ($attribute_value && !in_array($attribute_value, $parents[$partname]['attributes'][$attribute]))
-//                                $parents[$partname]['attributes'][$attribute][] = $attribute_value;
-//                        }
-//                    }
-//                    $product_cross_sells[$value['cross_sells']][] = $partname;
-//                } else {
-//                    unset($parents[$partname]);
-//                }
-//            }
-//            if ($parents) {
-//
-//                foreach ($parents as $sku_parent => $parent) {
-//
-//                    $id = create_product_variable(array(
-//                        'author' => '', // optional
-//                        'title' => $parent['title'],
-//                        'content' => '',
-//                        'excerpt' => '',
-//                        'regular_price' => '', // product regular price
-//                        'sale_price' => '', // product sale price (optional)
-//                        'stock' => $parent['stock'], // Set a minimal stock quantity
-//                        'image_id' => '', // optional
-//                        'gallery_ids' => array(), // optional
-//                        'sku' => $sku_parent, // optional
-//                        'tax_class' => '', // optional
-//                        'weight' => '', // optional
-//                        // For NEW attributes/values use NAMES (not slugs)
-//                        'attributes' => $parent['attributes'],
-//                        'categories' => $parent['categories'],
-//                        'tags' => $parent['tags'],
-//                        'status' => $this->option('item_status')
-//                    ));
-//
-//                    $parents[$sku_parent]['product_id'] = $id;
-//
-//                    foreach ($parent['variation'] as $sku_children => $children) {
-//                        $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
-//                        // The variation data
-//                        $variation_data = array(
-//                            'attributes' => $children['attributes'],
-//                            'sku' => $sku_children,
-//                            'regular_price' => $pri_price,
-//                            'product_code' => $children['product_code'],
-//                            'sale_price' => '',
-//                            'stock' => $children['stock'],
-//                        );
-//
-//                        // The function to be run
-//                        create_product_variation($id, $variation_data);
-//
-//                    }
-//
-//                    unset($parents[$sku_parent]['variation']);
-//
-//                }
-//
-//                foreach ($product_cross_sells as $k => $product_cross_sell) {
-//                    foreach ($product_cross_sell as $key => $sku) {
-//                        $product_cross_sells[$k][$key] = $parents[$sku]['product_id'];
-//                    }
-//                }
-//
-//                foreach ($parents as $sku_parent => $parent) {
-//                    $cross_sells = $product_cross_sells[$parent['cross_sells']];
-//
-//                    if (($key = array_search($parent['product_id'], $cross_sells)) !== false) {
-//                        unset($cross_sells[$key]);
-//                    }
-//                    /**
-//                     * t205
-//                     */
-//                    $cross_sells_merge_array = [];
-//
-//                    if ($cross_sells_old = get_post_meta($parent['product_id'], '_crosssell_ids', true)) {
-//                        foreach ($cross_sells_old as $value)
-//                            if (!is_array($value)) $cross_sells_merge_array[] = $value;
-//                    }
-//
-//                    $cross_sells = array_unique(array_filter(array_merge($cross_sells, $cross_sells_merge_array)));
-//
-//                    /**
-//                     * end t205
-//                     */
-//
-//                    update_post_meta($parent['product_id'], '_crosssell_ids', $cross_sells);
-//                }
-//
-//            }
-//            // add timestamp
-//            $this->updateOption('items_priority_variation_update', time());
-//        } else {
-//            /**
-//             * t149
-//             */
-//            $this->sendEmailError(
-//                $this->option('email_error_sync_items_priority_variation'),
-//                'Error Sync Items Priority Variation',
-//                $response['body']
-//            );
-//
-//            exit(json_encode(['status' => 0, 'msg' => 'Error Sync Items Priority Variation']));
-//
-//        }
-//    }
-    public
-    function syncItemsPriorityVariation()
+    public function syncItemsPriorityVariation()
     {
         $priority_version = (float)$this->option('priority-version');
         // config
@@ -1931,7 +1754,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
         $response = $this->makeRequest('GET',
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&$expand=PARTUNSPECS_SUBFORM',
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',
             [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
@@ -1961,8 +1784,11 @@ class WooAPI extends \PriorityAPI\API
                                 'stock' => 'Y',
                                 'variation' => [],
                                 'regular_price' => $price,
-
+                                'post_content' =>isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])?$item['PARTTEXT_SUBFORM']['TEXT']:$parents[$item[$variation_field]]['post_content']
                             ];
+//                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
+//
+//                            }
                             $childrens[$item[$variation_field]][$item['PARTNAME']] = [
                                 'sku' => $item['PARTNAME'],
                                 'regular_price' => $price,
@@ -1986,6 +1812,7 @@ class WooAPI extends \PriorityAPI\API
                         $parents[$partname]['tags'] = end($childrens[$partname])['tags'];
                         $parents[$partname]['variation'] = $childrens[$partname];
                         $parents[$partname]['title'] = $parents[$partname]['title'];
+                        $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
                         foreach ($childrens[$partname] as $children) {
                             foreach ($children['attributes'] as $attribute => $attribute_value) {
                                 if ($attributes) {
@@ -2008,10 +1835,11 @@ class WooAPI extends \PriorityAPI\API
                         if (true == $is_load_image) {
                             $attach_id = $this->load_image($image_base_url, $priority_version, $sku_parent);
                         }
+
                         $id = create_product_variable(array(
                             'author' => '', // optional
                             'title' => $parent['title'],
-                            'content' => '',
+                            'content' => !empty($parent['post_content'])?$parent['post_content']:'',
                             'excerpt' => '',
                             'regular_price' => '', // product regular price
                             'sale_price' => '', // product sale price (optional)
@@ -2041,6 +1869,7 @@ class WooAPI extends \PriorityAPI\API
                                 'regular_price' => !empty($children['regular_price']) ? ($children['regular_price']) : $parent[$sku_children]['regular_price'],
                                 'product_code' => $children['product_code'],
                                 'sale_price' => '',
+                                'content' => $children['content'],
                                 'stock' => $children['stock'],
                                 'image' => ($attach_id != null && $attach_id != 0) ? $attach_id : '',
                             );

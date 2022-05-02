@@ -52,7 +52,11 @@ function create_product_variable($data)
         )
     );
     $product->save();
-
+    //Description
+    if(!empty($data['content']))
+    {
+        $product->set_description($data['content']);
+    }
     // MAIN IMAGE
     if (!empty($data['image_id']))
         $product->set_image_id($data['image_id']);
