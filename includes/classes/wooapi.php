@@ -2864,14 +2864,23 @@ class WooAPI extends \PriorityAPI\API
     public
     function syncProspect($order)
     {
+        if(null == $this->option('post_prospect')){
+            $priority_customer_number = $this->option('walkin_number');
+            update_post_meta($order->ID,'prospect_custname',$priority_customer_number);
+            $response['priority_customer_number']= $priority_customer_number;
+            $response['message']= 'this is a walk in number';
+            return $response;
+        }
         if ('prospect_email' == $this->option('prospect_field')) {
             $priority_customer_number = $order->get_billing_email();
-        } else {
+        } elseif('prospect_cellphone' == $this->option('prospect_field')) {
             $priority_customer_number = $order->get_billing_phone();
         }
+
         // if the CUSTNAME is empty, do not POST to Priority
         if(null == $priority_customer_number){
-            return;
+           // I want to post to priority and get the number from the template
+            //  return ;
         }
         $json_request = [
             'CUSTNAME' => $priority_customer_number,
@@ -2905,7 +2914,7 @@ class WooAPI extends \PriorityAPI\API
         }
         // add timestamp
         $this->updateOption('time_stamp_cron_prospect', time());
-        $response['$priority_customer_number']= $priority_customer_number;
+        $response['priority_customer_number'] = $priority_customer_number;
         return $response;
     }
 
