@@ -169,7 +169,16 @@ class WooAPI extends \PriorityAPI\API
             // filter products regarding to price list
             //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
             // filter product price regarding to price list
+            // see documentation here
+            // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
+
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
+            // filter sales price
+          /*  add_filter('woocommerce_product_get_price', function($price){
+                return 70;
+            }, 10, 2);*/
+
+
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
@@ -1564,10 +1573,10 @@ class WooAPI extends \PriorityAPI\API
                 // if product variation skip
                 if ($product_id != 0) {
                     if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
-                        $pri_price = $this->option('price_method') == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+                        $pri_price = wc_prices_include_tax() ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
                     } else {
-                        $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                        $pri_price = wc_prices_include_tax() ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                     }
                     $my_product = new \WC_Product($product_id);
 
@@ -3056,7 +3065,7 @@ class WooAPI extends \PriorityAPI\API
                             'price_list_code' => $list['PLNAME'],
                             'price_list_name' => $list['PLDES'],
                             'price_list_currency' => $list['CODE'],
-                            'price_list_price' => $product['PRICE'],
+                            'price_list_price' => wc_prices_include_tax() ? $product['VATPRICE']   :  $product['PRICE'],
                             'blog_id' => $blog_id
                         ]);
 
