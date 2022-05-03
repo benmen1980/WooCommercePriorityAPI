@@ -174,9 +174,16 @@ class WooAPI extends \PriorityAPI\API
 
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
             // filter sales price
-            add_filter('woocommerce_product_get_sale_price', function($price){
+            /*
+            add_filter('woocommerce_product_get_price', function($price,$product){
+                return $price;
+            }, 10, 2);
+            */
+            if(is_user_logged_in()){
+            add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
                 return 0;
             }, 10, 2);
+            }
 
 
 
