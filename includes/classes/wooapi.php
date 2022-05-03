@@ -174,9 +174,10 @@ class WooAPI extends \PriorityAPI\API
 
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
             // filter sales price
-          /*  add_filter('woocommerce_product_get_price', function($price){
-                return 70;
-            }, 10, 2);*/
+            add_filter('woocommerce_product_get_sale_price', function($price){
+                return 0;
+            }, 10, 2);
+
 
 
             // filter product variation price regarding to price list
@@ -4020,7 +4021,7 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
         }
-        return (float)$price * $family_discount;
+        return  (float)$price * $family_discount;
     }
     public function getFamilyProduct($custname, $family_code)
     {
