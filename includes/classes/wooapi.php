@@ -2816,7 +2816,10 @@ class WooAPI extends \PriorityAPI\API
                 $firstpay = floatval(get_post_meta($order->get_id(), 'payplus_payments_firstAmount', true)) / 100;
                 $ccuid = get_post_meta($order->get_id(), 'payplus_token_uid', true);
                 $payaccount = get_post_meta($order->get_id(), 'payplus_four_digits', true);
-                $validmonth = get_post_meta($order->get_id(), 'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(), 'payplus_expiry_year', true);
+                $validmonth = !empty(get_post_meta($order->get_id(), 'payplus_expiry_month', true)) ?
+                            get_post_meta($order->get_id(),
+                        'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(),
+                        'payplus_expiry_year', true) : '';
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_num', true);
                 $payplus_identification_number = get_post_meta($order->get_id(), 'payplus_identification_number', true);
