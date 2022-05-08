@@ -4238,7 +4238,12 @@ class WooAPI extends \PriorityAPI\API
                 $price_filed => floatval($shipping_price)
             ];
             if ($is_order) $data += ['DUEDATE' => date('Y-m-d')];
-            return ($shipping_price > 0 ? $data : null);
+            if($config->addShipPriceWherePriceZero == 'true'){
+                return $data;
+            }else{
+                return ($shipping_price > 0 ? $data : null);
+            }
+
         } else {
             return null;
         }
