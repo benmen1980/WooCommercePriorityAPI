@@ -3356,6 +3356,15 @@ class WooAPI extends \PriorityAPI\API
                 if ($discount_type != 'in_line') {
                     $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['VATPRICE'] = $line_before_discount + $line_tax;
                 }
+                // if you want to show the sales price as percent of regular price
+                if($config->in_line_sales_discount=='true'){
+                    $regular_price  = (float)$product->get_regular_price() ;
+                    $sales_price = (float)$item->get_total()/$item->get_quantity();
+                    $discount = (1-($sales_price/$regular_price)) * 100.0;
+                    unset($data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['VATPRICE']);
+                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['VPRICE'] = $regular_price;
+                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['PERCENT'] = $discount;
+                }
             }
 
         }
