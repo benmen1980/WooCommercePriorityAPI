@@ -157,12 +157,12 @@ class WooAPI extends \PriorityAPI\API
                 add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
             }
         }
-       /*  this code by Ruth
-       if ($this->option('product_family') == true) {
-            add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
+        /*  this code by Ruth
+        if ($this->option('product_family') == true) {
+             add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
 
-        }
-       */
+         }
+        */
         if ($this->option('sell_by_pl') == true) {
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
@@ -2253,14 +2253,18 @@ class WooAPI extends \PriorityAPI\API
                         // update_post_meta($product_id, '_stock_status', 'outofstock');
                         $stock_status = 'outofstock';
                     }
-                    $variation = wc_get_product($product_id);
+                    //$variation = wc_get_product($product_id);
                     //$variation->set_stock_status($stock_status);
                     $product = wc_get_product($product_id);
-
-                    $var = new \WC_Product_Variation($product_id);
-                    $var->set_manage_stock(true);
-
-                    $variation->save();
+                    if($product->post_type == 'product_variation'){
+                        $var = new \WC_Product_Variation($product_id);
+                        $var->set_manage_stock(true);
+                        $var->save();
+                    }
+                    if($product->post_type == 'product'){
+                        $product->set_manage_stock(true);
+                    }
+                    $product->save();
                 }
             }
             // add timestamp
@@ -2380,7 +2384,7 @@ class WooAPI extends \PriorityAPI\API
                 'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
                 'STATEA' => isset($meta['billing_city']) ? $meta['billing_city'][0] : '',
                 'ZIP' => isset($meta['billing_postcode']) ? $meta['billing_postcode'][0] : '',
-             //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
+                //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
                 'PHONE' => isset($meta['billing_phone']) ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS' => 'Y',
                 'NSFLAG' => 'Y',
@@ -2509,7 +2513,7 @@ class WooAPI extends \PriorityAPI\API
         if($user_id==0){
             /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
             $custname = apply_filters('simply_search_customer_in_priority', ['order'=>$order,
-                                                                              'CUSTNAME'=>null])['CUSTNAME'];
+                'CUSTNAME'=>null])['CUSTNAME'];
             if(!empty($custname)){
                 $body = ['CUSTNAME'=>$custname];
                 $response['body'] = json_encode($body);
@@ -2817,7 +2821,7 @@ class WooAPI extends \PriorityAPI\API
                 $ccuid = get_post_meta($order->get_id(), 'payplus_token_uid', true);
                 $payaccount = get_post_meta($order->get_id(), 'payplus_four_digits', true);
                 $validmonth = !empty(get_post_meta($order->get_id(), 'payplus_expiry_month', true)) ?
-                            get_post_meta($order->get_id(),
+                    get_post_meta($order->get_id(),
                         'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(),
                         'payplus_expiry_year', true) : '';
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
@@ -2897,7 +2901,7 @@ class WooAPI extends \PriorityAPI\API
 
         // if the CUSTNAME is empty, do not POST to Priority
         if(null == $priority_customer_number){
-           // I want to post to priority and get the number from the template
+            // I want to post to priority and get the number from the template
             //  return ;
         }
         $json_request = [
