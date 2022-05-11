@@ -2257,7 +2257,7 @@ class WooAPI extends \PriorityAPI\API
                     //$variation->set_stock_status($stock_status);
                     $product = wc_get_product($product_id);
 
-                    $var = new WC_Product_Variation($product_id);
+                    $var = new \WC_Product_Variation($product_id);
                     $var->set_manage_stock(true);
 
                     $variation->save();
