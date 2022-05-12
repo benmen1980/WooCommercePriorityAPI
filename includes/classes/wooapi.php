@@ -2339,6 +2339,12 @@ class WooAPI extends \PriorityAPI\API
     public
     function syncCustomer($id)
     {
+        if(null == $this->option('post_customers')){
+            $priority_customer_number = $this->option('walkin_number');
+            $response['priority_customer_number']= $priority_customer_number;
+            $response['message']= 'this is a walk in number';
+            return $response;
+        }
         // check user
         if ($user = get_userdata($id)) {
             $meta = get_user_meta($id);
@@ -2413,7 +2419,7 @@ class WooAPI extends \PriorityAPI\API
                 );
             }
             // add timestamp
-            $this->updateOption('post_customers', time());
+            //$this->updateOption('post_customers', time());
         }
         return $response;
     }
