@@ -434,7 +434,7 @@ class WooAPI extends \PriorityAPI\API
                             include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
                             break;
                         case 'sync-customer';
-                            $data = $this->syncCustomer($_GET['customer_id']);
+                           // $data = $this->syncCustomer($_GET['customer_id']);
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'sync-prospect';
@@ -670,7 +670,7 @@ class WooAPI extends \PriorityAPI\API
             if ($this->get('priority-post-customers') && $this->get('users')) {
 
                 foreach ($this->get('users') as $id) {
-                    $this->syncCustomer($id);
+                //    $this->syncCustomer($id);
                 }
 
                 // redirect, otherwise will run twice
@@ -936,7 +936,7 @@ class WooAPI extends \PriorityAPI\API
                         $customers = get_users(['role' => 'customer']);
 
                         foreach ($customers as $customer) {
-                            $this->syncCustomer($customer->ID);
+                          //  $this->syncCustomer($customer->ID);
                         }
 
                     } catch (Exception $e) {
@@ -2337,8 +2337,9 @@ class WooAPI extends \PriorityAPI\API
      * @param [int] $id
      */
     public
-    function syncCustomer($id)
+    function syncCustomer($order)
     {
+        $id = $order->get_user_id();
         if(null == $this->option('post_customers')){
             $priority_customer_number = $this->option('walkin_number');
             $response['priority_customer_number']= $priority_customer_number;
@@ -2352,7 +2353,7 @@ class WooAPI extends \PriorityAPI\API
             $priority_cust_from_wc = get_user_meta($id, 'priority_customer_number', true);
             // search customer number in Priority
             if(empty($priority_cust_from_wc)){
-                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id])['CUSTNAME'];
+                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id,'order'=>$order])['CUSTNAME'];
                 if(!empty($custname)){
                     update_user_meta($id, 'priority_customer_number', $custname);
                     $body = ['CUSTNAME'=>$custname];
@@ -2528,7 +2529,7 @@ class WooAPI extends \PriorityAPI\API
             }
             $response = $this->syncProspect($order);
         }else{
-            $response = $this->syncCustomer($order->get_user_id());
+            $response = $this->syncCustomer($order);
         }
         return $response;
 
@@ -2560,7 +2561,7 @@ class WooAPI extends \PriorityAPI\API
                 $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
                 /* אם אין לו מספר אז תיצור אותו */
                 if (empty($cust_number)) {
-                    $response = $this->syncCustomer($order->get_customer_id());
+                    $response = $this->syncCustomer($order);
                     if ($response['code'] == '201') {
                         $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
                         add_post_meta($order_id, 'cust_name', $cust_number);
