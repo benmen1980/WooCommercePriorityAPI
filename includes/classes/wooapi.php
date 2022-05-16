@@ -1137,6 +1137,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
+        $stock_status = (!empty($config->stock_status) ? $config->stock_status : 'outofstock');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
         $statdes = (!empty($config->statdes) ? $config->statdes : false);
         $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
@@ -1265,9 +1266,10 @@ class WooAPI extends \PriorityAPI\API
                     if ($id) {
                         update_post_meta($id, '_sku', $search_by_value);
                         update_post_meta($id, '_stock', 0);
-                        update_post_meta($id, '_stock_status', 'outofstock');
-                        $out_of_stock_staus = 'outofstock';
-                        wp_set_post_terms($id, 'outofstock', 'product_visibility', true);
+                        update_post_meta($id, '_stock_status', $stock_status);
+                        if($stock_status =='outofstock') {
+                            wp_set_post_terms($id, 'outofstock', 'product_visibility', true);
+                        }
                     }
                 }
 
