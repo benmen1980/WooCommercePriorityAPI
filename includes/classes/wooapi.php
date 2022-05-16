@@ -157,19 +157,31 @@ class WooAPI extends \PriorityAPI\API
                 add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
             }
         }
-       /*  this code by Ruth
-       if ($this->option('product_family') == true) {
-            add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
+        /*  this code by Ruth
+        if ($this->option('product_family') == true) {
+             add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
 
-        }
-       */
+         }
+        */
         if ($this->option('sell_by_pl') == true) {
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
             //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
             // filter product price regarding to price list
+            // see documentation here
+            // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
+
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
+            // filter sales price
+            if(is_user_logged_in()){
+                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
+                    return 0;
+                }, 10, 2);
+            }
+
+
+
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
@@ -422,7 +434,7 @@ class WooAPI extends \PriorityAPI\API
                             include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
                             break;
                         case 'sync-customer';
-                            $data = $this->syncCustomer($_GET['customer_id']);
+                           // $data = $this->syncCustomer($_GET['customer_id']);
                             highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'sync-prospect';
@@ -658,7 +670,7 @@ class WooAPI extends \PriorityAPI\API
             if ($this->get('priority-post-customers') && $this->get('users')) {
 
                 foreach ($this->get('users') as $id) {
-                    $this->syncCustomer($id);
+                //    $this->syncCustomer($id);
                 }
 
                 // redirect, otherwise will run twice
@@ -924,7 +936,7 @@ class WooAPI extends \PriorityAPI\API
                         $customers = get_users(['role' => 'customer']);
 
                         foreach ($customers as $customer) {
-                            $this->syncCustomer($customer->ID);
+                          //  $this->syncCustomer($customer->ID);
                         }
 
                     } catch (Exception $e) {
@@ -1288,6 +1300,9 @@ class WooAPI extends \PriorityAPI\API
                 if ($id) {
                     $my_product = new \WC_Product($id);
                     $my_product->set_regular_price($pri_price);
+                    if(null==$my_product->get_sale_price()){
+                        $my_product->set_sale_price(0);
+                    }
                     if (!empty($config->menu_order)) {
                         $my_product->set_menu_order($item[$config->menu_order]);
                     }
@@ -1566,10 +1581,10 @@ class WooAPI extends \PriorityAPI\API
                 // if product variation skip
                 if ($product_id != 0) {
                     if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
-                        $pri_price = $this->option('price_method') == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+                        $pri_price = wc_prices_include_tax() ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
                     } else {
-                        $pri_price = $this->option('price_method') == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                        $pri_price = wc_prices_include_tax() ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                     }
                     $my_product = new \WC_Product($product_id);
 
@@ -2240,14 +2255,18 @@ class WooAPI extends \PriorityAPI\API
                         // update_post_meta($product_id, '_stock_status', 'outofstock');
                         $stock_status = 'outofstock';
                     }
-                    $variation = wc_get_product($product_id);
+                    //$variation = wc_get_product($product_id);
                     //$variation->set_stock_status($stock_status);
                     $product = wc_get_product($product_id);
-
-                    $var = new WC_Product_Variation($product_id);
-                    $var->set_manage_stock(true);
-
-                    $variation->save();
+                    if($product->post_type == 'product_variation'){
+                        $var = new \WC_Product_Variation($product_id);
+                        $var->set_manage_stock(true);
+                        $var->save();
+                    }
+                    if($product->post_type == 'product'){
+                        $product->set_manage_stock(true);
+                    }
+                    $product->save();
                 }
             }
             // add timestamp
@@ -2320,8 +2339,15 @@ class WooAPI extends \PriorityAPI\API
      * @param [int] $id
      */
     public
-    function syncCustomer($id)
+    function syncCustomer($order)
     {
+        $id = $order->get_user_id();
+        if(null == $this->option('post_customers')){
+            $priority_customer_number = $this->option('walkin_number');
+            $response['priority_customer_number']= $priority_customer_number;
+            $response['message']= 'this is a walk in number';
+            return $response;
+        }
         // check user
         if ($user = get_userdata($id)) {
             $meta = get_user_meta($id);
@@ -2329,7 +2355,7 @@ class WooAPI extends \PriorityAPI\API
             $priority_cust_from_wc = get_user_meta($id, 'priority_customer_number', true);
             // search customer number in Priority
             if(empty($priority_cust_from_wc)){
-                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id])['CUSTNAME'];
+                $custname = apply_filters('simply_search_customer_in_priority', ['user_id'=>$id,'order'=>$order])['CUSTNAME'];
                 if(!empty($custname)){
                     update_user_meta($id, 'priority_customer_number', $custname);
                     $body = ['CUSTNAME'=>$custname];
@@ -2367,7 +2393,7 @@ class WooAPI extends \PriorityAPI\API
                 'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
                 'STATEA' => isset($meta['billing_city']) ? $meta['billing_city'][0] : '',
                 'ZIP' => isset($meta['billing_postcode']) ? $meta['billing_postcode'][0] : '',
-             //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
+                //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
                 'PHONE' => isset($meta['billing_phone']) ? $meta['billing_phone'][0] : '',
                 'EDOCUMENTS' => 'Y',
                 'NSFLAG' => 'Y',
@@ -2396,7 +2422,7 @@ class WooAPI extends \PriorityAPI\API
                 );
             }
             // add timestamp
-            $this->updateOption('post_customers', time());
+            //$this->updateOption('post_customers', time());
         }
         return $response;
     }
@@ -2496,15 +2522,16 @@ class WooAPI extends \PriorityAPI\API
         if($user_id==0){
             /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
             $custname = apply_filters('simply_search_customer_in_priority', ['order'=>$order,
-                                                                              'CUSTNAME'=>null])['CUSTNAME'];
+                'CUSTNAME'=>null])['CUSTNAME'];
             if(!empty($custname)){
                 $body = ['CUSTNAME'=>$custname];
                 $response['body'] = json_encode($body);
+                update_post_meta($order_id,'prospect_custname',$custname);
                 return $response;
             }
             $response = $this->syncProspect($order);
         }else{
-            $response = $this->syncCustomer($order->get_user_id());
+            $response = $this->syncCustomer($order);
         }
         return $response;
 
@@ -2536,7 +2563,7 @@ class WooAPI extends \PriorityAPI\API
                 $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
                 /* אם אין לו מספר אז תיצור אותו */
                 if (empty($cust_number)) {
-                    $response = $this->syncCustomer($order->get_customer_id());
+                    $response = $this->syncCustomer($order);
                     if ($response['code'] == '201') {
                         $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
                         add_post_meta($order_id, 'cust_name', $cust_number);
@@ -2802,7 +2829,10 @@ class WooAPI extends \PriorityAPI\API
                 $firstpay = floatval(get_post_meta($order->get_id(), 'payplus_payments_firstAmount', true)) / 100;
                 $ccuid = get_post_meta($order->get_id(), 'payplus_token_uid', true);
                 $payaccount = get_post_meta($order->get_id(), 'payplus_four_digits', true);
-                $validmonth = get_post_meta($order->get_id(), 'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(), 'payplus_expiry_year', true);
+                $validmonth = !empty(get_post_meta($order->get_id(), 'payplus_expiry_month', true)) ?
+                    get_post_meta($order->get_id(),
+                        'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(),
+                        'payplus_expiry_year', true) : '';
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_num', true);
                 $payplus_identification_number = get_post_meta($order->get_id(), 'payplus_identification_number', true);
@@ -2865,14 +2895,23 @@ class WooAPI extends \PriorityAPI\API
     public
     function syncProspect($order)
     {
+        if(null == $this->option('post_prospect')){
+            $priority_customer_number = $this->option('walkin_number');
+            update_post_meta($order->ID,'prospect_custname',$priority_customer_number);
+            $response['priority_customer_number']= $priority_customer_number;
+            $response['message']= 'this is a walk in number';
+            return $response;
+        }
         if ('prospect_email' == $this->option('prospect_field')) {
             $priority_customer_number = $order->get_billing_email();
-        } else {
+        } elseif('prospect_cellphone' == $this->option('prospect_field')) {
             $priority_customer_number = $order->get_billing_phone();
         }
+
         // if the CUSTNAME is empty, do not POST to Priority
         if(null == $priority_customer_number){
-            return;
+            // I want to post to priority and get the number from the template
+            //  return ;
         }
         $json_request = [
             'CUSTNAME' => $priority_customer_number,
@@ -2906,7 +2945,7 @@ class WooAPI extends \PriorityAPI\API
         }
         // add timestamp
         $this->updateOption('time_stamp_cron_prospect', time());
-        $response['$priority_customer_number']= $priority_customer_number;
+        $response['priority_customer_number'] = $priority_customer_number;
         return $response;
     }
 
@@ -3048,7 +3087,7 @@ class WooAPI extends \PriorityAPI\API
                             'price_list_code' => $list['PLNAME'],
                             'price_list_name' => $list['PLDES'],
                             'price_list_currency' => $list['CODE'],
-                            'price_list_price' => $product['PRICE'],
+                            'price_list_price' => wc_prices_include_tax() ? $product['VATPRICE']   :  $product['PRICE'],
                             'blog_id' => $blog_id
                         ]);
 
@@ -3325,6 +3364,15 @@ class WooAPI extends \PriorityAPI\API
                 ];
                 if ($discount_type != 'in_line') {
                     $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['VATPRICE'] = $line_before_discount + $line_tax;
+                }
+                // if you want to show the sales price as percent of regular price
+                if($config->in_line_sales_discount=='true'){
+                    $regular_price  = (float)$product->get_regular_price() ;
+                    $sales_price = (float)$item->get_total()/$item->get_quantity();
+                    $discount = (1-($sales_price/$regular_price)) * 100.0;
+                    unset($data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['VATPRICE']);
+                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['VPRICE'] = $regular_price;
+                    $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['PERCENT'] = $discount;
                 }
             }
 
@@ -3758,7 +3806,7 @@ class WooAPI extends \PriorityAPI\API
             $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
         // make request
-        $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data)], $this->option('log_receipts_priority', true));
+        $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data,JSON_UNESCAPED_SLASHES )], $this->option('log_receipts_priority', true));
         if ($response['code'] <= 201) {
             $body_array = json_decode($response["body"], true);
 
@@ -4000,7 +4048,7 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
         }
-        return (float)$price * $family_discount;
+        return  (float)$price * $family_discount;
     }
     public function getFamilyProduct($custname, $family_code)
     {
@@ -4212,7 +4260,12 @@ class WooAPI extends \PriorityAPI\API
                 $price_filed => floatval($shipping_price)
             ];
             if ($is_order) $data += ['DUEDATE' => date('Y-m-d')];
-            return ($shipping_price > 0 ? $data : null);
+            if($config->addShipPriceWherePriceZero == 'true'){
+                return $data;
+            }else{
+                return ($shipping_price > 0 ? $data : null);
+            }
+
         } else {
             return null;
         }
