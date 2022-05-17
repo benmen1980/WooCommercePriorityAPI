@@ -635,6 +635,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('ainvoice_order_field', $this->post('ainvoice_order_field'));
                 $this->updateOption('post_customers', $this->post('post_customers'));
                 $this->updateOption('post_order_checkout', $this->post('post_order_checkout'));
+                $this->updateOption('post_pos_checkout', $this->post('post_pos_checkout'));
                 $this->updateOption('cron_orders', $this->post('cron_orders'));
                 $this->updateOption('order_order_field', $this->post('order_order_field'));
                 $this->updateOption('post_einvoice_checkout', $this->post('post_einvoice_checkout'));
@@ -716,6 +717,15 @@ class WooAPI extends \PriorityAPI\API
                     $columns['priority_order_status'] = '<span>' . __('Priority Order Status', 'p18w') . '</span>'; // title
 
                 }
+
+                //add the new column "Status"
+                if ($this->option('post_pos_checkout')) {
+                    // add the Priority order number
+                    $columns['priority_pos_number'] = '<span>' . __('Priority POS', 'p18w') . '</span>'; // title
+                    $columns['priority_pos_status'] = '<span>' . __('Priority POS Status', 'p18w') . '</span>'; // title
+
+                }
+
                 //add the new column "Status"
                 if ($this->option('post_einvoice_checkout') || $this->option('post_ainvoice_checkout')) {
                     // add the Priority invoice number
@@ -769,6 +779,14 @@ class WooAPI extends \PriorityAPI\API
                     if (strlen($recipe_status) > 15) $recipe_status = '<div class="tooltip">Error<span class="tooltiptext">' . $recipe_status . '</span></div>';
                     if (empty($recipe_number)) $recipe_number = '';
                 }
+                //POS
+                if ($this->option('post_pos_checkout')) {
+                    $pos_status = get_post_meta($post_id, 'priority_pos_status', true);
+                    $pos_number = get_post_meta($post_id, 'priority_pos_number', true);
+                    if (empty($pos_status)) $pos_status = '';
+                    if (strlen($pos_status) > 0 && $pos_status != 'Success') $pos_status = '<div class="tooltip">Error<span class="tooltiptext">' . $pos_status . '</span></div>';
+                    if (empty($pos_number)) $pos_number = '';
+                }
                 switch ($column) {
                     // order
                     case 'priority_order_status' :
@@ -791,11 +809,18 @@ class WooAPI extends \PriorityAPI\API
                     case 'priority_recipe_number' :
                         echo '<span>' . $recipe_number . '</span>'; // display the data
                         break;
-                    // post order to API, using GET and
-                    case 'order_post' :
-                        $url = 'admin.php?page=priority-woocommerce-api&tab=post_order&ord=' . $post_id;
-                        echo '<span><a href=' . $url . '>' . __('Re Post', 'p18w') . '</a></span>'; // display the data
-                        break;
+                    // pos
+                    case 'priority_pos_status' :
+                    echo $pos_status;
+                    break;
+                case 'priority_pos_number' :
+                    echo '<span>' . $pos_number . '</span>'; // display the data
+                    break;
+                // post order to API, using GET and
+                case 'order_post' :
+                    $url = 'admin.php?page=priority-woocommerce-api&tab=post_order&ord=' . $post_id;
+                    echo '<span><a href=' . $url . '>' . __('Re Post', 'p18w') . '</a></span>'; // display the data
+                    break;
                 }
             }, 999, 2);
 
@@ -808,6 +833,8 @@ class WooAPI extends \PriorityAPI\API
                 $meta_keys[] = 'priority_invoice_number';
                 $meta_keys[] = 'priority_recipe_status';
                 $meta_keys[] = 'priority_recipe_number';
+                $meta_keys[] = 'priority_pos_status';
+                $meta_keys[] = 'priority_pos_number';
                 return $meta_keys;
             }, 10, 1);
 
@@ -3019,6 +3046,10 @@ class WooAPI extends \PriorityAPI\API
             if ($this->option('post_order_checkout')) {
                 $this->syncOrder($order_id);
             }
+            // sync order
+            if ($this->option('post_pos_checkout')) {
+                $this->syncPos($order_id);
+            }
             // sync OTC
             if ($this->option('post_einvoice_checkout') && empty(get_post_meta($order_id, 'priority_invoice_status', false)[0])) {
                 // avoid repetition
@@ -3195,8 +3226,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $cust_number;
     }
-    public function syncOrder($id)
-    {
+    public function syncOrder($id){
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
             if ($session['ordertype'] == 'obligo_payment') {
@@ -3229,10 +3259,10 @@ class WooAPI extends \PriorityAPI\API
         if (!empty($order->get_meta('site', true))) {
             $data['DCODE'] = $order->get_meta('site');
         }
-//        // CDES
-//        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
-//            $data['CDES'] = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-//        }
+        //        // CDES
+        //        if(empty($order->get_customer_id()) || true != $this->option( 'post_customers' )){
+        //            $data['CDES'] = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        //        }
 
         // cart discount header
         $cart_discount = floatval($order->get_total_discount());
@@ -3244,7 +3274,7 @@ class WooAPI extends \PriorityAPI\API
             $data['PERCENT'] = $order_discount;
         }
 
-// order comments
+        // order comments
         $priority_version = (float)$this->option('priority-version');
         if ($priority_version > 19.1) {
             // for Priority version 20.0
@@ -3427,6 +3457,286 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
+
+        /**
+     * MAke request
+     *
+     * @param [type] $method
+     * @param [type] $url_addition
+     * @param array $options
+     */
+    public function makeRequestPos($method, $url_addition = null, $options = [], $log = false)
+    {
+   
+        $args = [
+            'headers' => [
+                'Content-Type'  => 'application/json'
+            ],
+            'timeout'   => 45,
+            'method'    => strtoupper($method),
+            'sslverify' => $this->option('sslverify', false)
+        ];
+
+        if ( ! empty($options)) {
+            $args = array_merge($args, $options);
+        }
+        $raw_option = $this->option('setting-config');
+        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
+        $ip = $config->IP;
+        $url = sprintf('http://%s/PrioriPOSTestAPI/api/Transactions/%s',
+            $ip,
+            is_null($url_addition) ? '' : stripslashes($url_addition)
+        );
+        $response = wp_remote_request($url, $args);
+
+        //print_r($response);die;
+
+        $response_code    = wp_remote_retrieve_response_code($response);
+        $response_message = wp_remote_retrieve_response_message($response);
+        $response_body    = wp_remote_retrieve_body($response);
+
+        $body_array = json_decode($response["body"], true);
+        $error_code = $body_array["ErrorCode"];
+
+        if ($error_code >= 1) {
+            $response_body = strip_tags($response_body );
+        }
+
+        // decode hebrew
+        $response_body_decoded = $this->decodeHebrew($response_body);
+        // log request
+        if ($log) {
+            $GLOBALS['wpdb']->insert($GLOBALS['wpdb']->prefix . 'p18a_logs', [
+                'blog_id'        => get_current_blog_id(),
+                'timestamp'      => current_time('mysql'),
+                'url'            => $url,
+                'request_method' => strtoupper($method),
+                'json_request'   => (isset($args['body'])) ? $this->decodeHebrew($args['body']) : '',
+                'json_response'  => ($response_body_decoded ? $response_body_decoded : $response_message.' '.$response_code),
+                'json_status'    => ($error_code == 0) ? 1 : 0
+            ]);
+        }
+
+
+        return [ 
+            'url'      => $url,
+            'args'     => $args,
+            'method'   => strtoupper($method),
+            'body'     => $response_body_decoded,
+            'body_raw' => $response_body,
+            'code'     => $response_code,
+            'status'   => ($error_code == 0) ? 1 : 0,
+            'message'  => ($response_message ? $response_message : $response->get_error_message())
+        ];
+
+        
+    }
+
+
+
+    public function syncPos($id){
+        if (isset(WC()->session)) {
+            $session = WC()->session->get('session_vars');
+            if ($session['ordertype'] == 'obligo_payment') {
+                return;
+            }
+        }
+        $order = new \WC_Order($id);
+        $order_total = $order->get_total(); 
+        $user = $order->get_user();
+        $user_id = $order->get_user_id();
+        // $user_id = $order->user_id;
+        $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+
+        $raw_option = $this->option('setting-config');
+      
+        
+        $raw_option = str_replace(array('.', "\n", "\t", "\r"), '', $raw_option);
+        
+        $config = json_decode(stripslashes($raw_option));
+        $branch_number = $config->BranchNumber;
+        $pos_number = $config->POSNumber;
+        $unique_identifier = $config->UniqueIdentifier;
+
+        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+        $cust_number = $this->get_cust_name($order);
+
+        
+        $data['Transaction'] = [
+            "TemporaryTransactionNumber" => $order->get_order_number(),  
+            "FinalTransactionNumber" => $order->get_order_number(),  
+            "TransactionDateTime" => date('Y-m-d', strtotime($order->get_date_created())), 
+            "IsOrder" => true,
+            "IsCancelTransaction" => false,
+            "POSCustomerNumber" => "", 
+            "PriorityCustomerName" => "",
+            "TotalItemQuantity" => count( $order->get_items() ), 
+            "TotalBeforeGeneralDiscountIncludingVAT" => $order_total, 
+            "IsManualDiscount" => false,
+            "GeneralDiscountSum" => 0, 
+            "GeneralDiscountPercent" => 0, 
+            "TotalAfterGeneralDiscountIncludingVAT" => 0, 
+            "ExternalOrderNumber" => $order->get_order_number(), 
+            "SupplyBranch" => "", 
+        ];
+
+        //$data['Transaction']['TransactionExternalMetaData'] = [];
+        $data['Transaction']['TransactionItems'] = [];
+
+        // get ordered items
+        $line_number = 1;
+        foreach ($order->get_items() as $item) {
+            $product = $item->get_product();
+            if ($product) {
+                $data['Transaction']['OrderItems'][] = [
+                    "ItemCode" => $product->get_sku(), 
+                    "ItemQuantity" => $item->get_quantity(), 
+                    "PricePerItem" => $product->get_price(), 
+                    "CalculatePrice" => true,
+                    "IsManualPrice" => false,
+                    "IsManualDiscount" => false,
+                    "TotalPrice" => $item->get_total(), 
+                    "VATPercent" => 17, 
+                    "ExternalOrderLineNumber" => $line_number,
+                    "HasVAT" => true,
+                    "PointsPerType" => []
+                ];
+            }
+            $line_number ++;
+
+        }
+
+        $payment_method = get_post_meta( $order->id, '_payment_method', true );
+        $gateway = $config->gateway ?? 'debug';
+        if($gateway == 'pelecard'){
+            $order_cc_meta = $order->get_meta('_transaction_data');
+            $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
+        
+            $payaccount = $order_cc_meta['CreditCardNumber'];
+            $ccuid =  $order_cc_meta['Token'];
+            $validmonth =  $order_cc_meta['CreditCardExpDate'];
+            $confnum = $order_cc_meta['ConfirmationKey'];
+            $numpay = $order_cc_meta['TotalPayments'];
+            $firstpay = $order_cc_meta['FirstPaymentTotal']/100;
+
+            $data['Transaction']['CreditCardPayments'][] = [
+                "CardNumber" => $payaccount, 
+                "PaymentSum" => floatval($order->get_total()),
+                "AuthorizationNumber" => $confnum, 
+                "CardIssuerCode" => 1,
+                "CardClearingCode" => 1,
+                "VoucherNumber" => "", 
+                "NumberOfPayments" => $numpay, 
+                "FirstPaymentSum" => $firstpay, 
+                "Token" => $ccuid, 
+                "ExpirationDate" => $validmonth, 
+                "CreditType" =>  0, 
+            ];
+        }
+        else{
+            //debug
+            $data['Transaction']['CreditCardPayments'][] = [
+                "CardNumber" => "12345", 
+                "PaymentSum" => 1,
+                "AuthorizationNumber" => "12345", 
+                "CardIssuerCode" => 1,
+                "CardClearingCode" => 1,
+                "VoucherNumber" => "12345", 
+                "NumberOfPayments" => 1, 
+                "FirstPaymentSum" => 1, 
+                "Token" => 12345, 
+                "ExpirationDate" => "0126", 
+                "CreditType" =>  0, 
+            ];
+
+        }
+    
+
+
+        $data['Transaction']['ShippingDetails'] = [
+            "City" => $order->get_shipping_city(),
+			"ForeignLanguageCity" => "",
+			"Address" => $order->get_shipping_address_1(),
+			"ForeignLanguageAddress" => "",
+			"HouseNumber" => $order->get_shipping_address_2(),
+			"ApartmentNumber" => 0,
+			"ZipCode" => $order->get_shipping_postcode(),
+			"ContactPersonName" => "",
+			"ForeignLanguageContactPersonName" => "",
+			"Mail" => "",
+			"Fax" => "",
+			"SupplyDate" => "2022-04-19T06:56:24.279Z",
+			"FromSupplyHour" => "2022-04-19T06:56:24.279Z",
+			"ToSupplyHour" => "2022-04-19T06:56:24.279Z",
+			"Remark" => "",
+			"ForeignLanguageRemark" => "",
+			"FirstPhoneNumber" =>  $order->get_billing_phone(),
+			"SecondPhoneNumber" => "",
+			"ShipMethod" => $order->get_shipping_method(),
+			"Address2" => (!empty($order->get_shipping_address_2())) ? $order->get_shipping_address_2() : '',
+			"Address3" => "",
+			"Email" => $order->get_billing_email(),
+			"CountryCode" => "",
+			"StateCode" => ""
+        ];
+        $data['Transaction']['Remark'] = [
+            "CustomerName" => "",
+			"CustomerIDNumber" => "",
+			"CustomerPhone" => "",
+			"CustomerAddress" => "",
+			"CustomerCity" => "",
+			"CustomerZipCode" => "",
+			"FirstCustomerRemark" => "",
+			"SecondCustomerRemark" => "",
+			"ParentPOSCustomerNumber" => "",
+			"InvoiceCustomerName" => ""
+        ];
+        $data["CreatePriorityCustomer"] = false;
+        $data["RegisterByGeneralPosCustomer"] = true;
+        $data["CalculateTax"] = 0;
+
+        $data['UniquePOSIdentifier'] = [
+            "BranchNumber" => $branch_number,
+            "POSNumber" => $pos_number,
+            "UniqueIdentifier" => $unique_identifier,
+            "ChannelCode" => "",
+            "VendorCode" => "",
+            "ExternalAccountID" => ""
+        ];
+
+        // echo "<pre>";
+        // print_r(json_encode($data));
+        // echo "</pre>";
+        // die;
+
+        if (!empty($config->formname)) {
+            $form_name = $config->formname;
+        } else {
+            $form_name = 'RegisterFinalOrder';
+        }
+
+        // make request
+        $response = $this->makeRequestPos('POST', $form_name, ['body' => json_encode($data)], true);
+
+        $body_array = json_decode($response["body"], true);
+        $error_code = $body_array["ErrorCode"];
+        if ($error_code == 0) {
+            $ord_status = $body_array['EdeaError']['DisplayErrorMessage']; //success
+            $ord_number = $body_array["TransactionNumber"];
+            $order->update_meta_data('priority_pos_status', $ord_status);
+
+            $order->update_meta_data('priority_pos_number', $ord_number);
+            $order->save();
+        } else {
+            $message = $body_array['EdeaError']['DisplayErrorMessage'];
+            $order->update_meta_data('priority_pos_status', $message);
+            $order->save();
+        }
+        // add timestamp
+        return $response;
+    }
+
     public function syncAinvoice($id)
     {
         if (isset(WC()->session)) {
@@ -3740,6 +4050,7 @@ class WooAPI extends \PriorityAPI\API
         unset($data['orderId']);
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
+
         if ($response['code'] <= 201) {
             $body_array = json_decode($response["body"], true);
 

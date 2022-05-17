@@ -521,6 +521,15 @@ $format2 = 'd/m/Y H:i:s';
                     </select>
                 </td>
             </tr>
+            <!-- sync POS -->
+            <tr>
+                <td class="p18a-label">
+                    <?php _e('POS', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="post_pos_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_pos_checkout')) echo 'checked'; ?> />
+                </td>
+            </tr>
             <!-- submit -->
             <tr>
                 <td class="p18a-label" colspan="6">
