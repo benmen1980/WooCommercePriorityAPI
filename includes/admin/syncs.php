@@ -507,7 +507,7 @@ $format2 = 'd/m/Y H:i:s';
                 </td>
                 <td>
                 </td>
-                <td
+                <td>
                 </td>
                 <td>
                     <select name="prospect_field" form="p18aw-sync">
