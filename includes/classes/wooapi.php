@@ -3724,7 +3724,7 @@ class WooAPI extends \PriorityAPI\API
         $body_array = json_decode($response["body"], true);
         $error_code = $body_array["ErrorCode"];
         if ($error_code == 0) {
-            $ord_status = $body_array['EdeaError']['DisplayErrorMessage']; //success
+            $ord_status = $body_array['EdeaError']['ErrorMessage']; //success
             $ord_number = $body_array["TransactionNumber"];
             $order->update_meta_data('priority_pos_status', $ord_status);
 
