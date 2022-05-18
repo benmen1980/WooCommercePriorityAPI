@@ -44,6 +44,12 @@ if (isset($_GET['ord'])) {
         $response = $this->syncReceipt($order_id);
         $message .= simply_create_message_repost($response);
     }
+    // sync POS
+    if ($this->option('post_pos_checkout')) {
+        $message .= '<h1>Priority API, sync POS to Priority</h1>';
+        $response = $this->syncPos($order_id);
+        $message .= simply_create_message_repost($response);
+    }
     // message
     echo $message;
     echo '<br><br><br><h2>' . __('Refresh this page to re post again', 'woocommerce') . '</h2>';
