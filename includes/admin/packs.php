@@ -90,7 +90,7 @@ add_action('wp_enqueue_scripts', 'my_theme_scripts');
 function my_theme_scripts()
 {
     if (is_product() || is_shop() || is_cart() || is_product_category()) {
-        wp_enqueue_script('packs_js', P18AW_ASSET_URL . 'packs.js', array('jquery'), false);
+        wp_enqueue_script('packs_js', P18AW_ASSET_URL . 'packs.js', array('jquery'), true);
     }
 }
 
