@@ -3660,7 +3660,7 @@ class WooAPI extends \PriorityAPI\API
 			"ForeignLanguageCity" => "",
 			"Address" => $order->get_shipping_address_1(),
 			"ForeignLanguageAddress" => "",
-			"HouseNumber" => $order->get_shipping_address_2(),
+			"HouseNumber" => ($order->get_shipping_address_2()) ? $order->get_shipping_address_2() : 0,
 			"ApartmentNumber" => 0,
 			"ZipCode" => $order->get_shipping_postcode(),
 			"ContactPersonName" => "",

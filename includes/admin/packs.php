@@ -55,10 +55,13 @@ function create_pack_drop_down($product)
             <?php
             foreach ($packs[0] as $pack) {
                 echo $pack['PACKNAME'] . ' ' . $pack['PACKQUANT'] . '<br>';
-                echo ' <option value="' . $pack['PACKQUANT'].'">' . $pack['PACKNAME'] . ' | ' . $pack['PACKQUANT'] . '</option>';
+                echo ' <option value="' . $pack['PACKQUANT'] . '">' . $pack['PACKNAME'] . ' | ' . $pack['PACKQUANT'] . '</option>';
             }
             ?>
         </select>
+        <br>
+        <label><?php _e('Num a pack:', 'storefront'); ?> </label>
+        <span id="num-packs">0</span>
         <?php
     }
 }
@@ -87,7 +90,7 @@ add_action('wp_enqueue_scripts', 'my_theme_scripts');
 function my_theme_scripts()
 {
     if (is_product() || is_shop() || is_cart() || is_product_category()) {
-        wp_enqueue_script('packs_js', P18AW_ASSET_URL . 'packs.js', array('jquery'));
+        wp_enqueue_script('packs_js', P18AW_ASSET_URL . 'packs.js', array('jquery'), true);
     }
 }
 
@@ -108,7 +111,7 @@ function jk_woocommerce_quantity_input_args($args, $product)
                     $step = $cart_item['pack_step'];
                 } else {
                     $step = $packs[0][0]['PACKQUANT'];
-                    $quantity=0;
+                    $quantity = 0;
                     break;
 
                 }
