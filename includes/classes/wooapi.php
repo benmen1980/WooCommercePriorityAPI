@@ -432,8 +432,8 @@ class WooAPI extends \PriorityAPI\API
                             include P18AW_ADMIN_DIR . 'syncs/sync_product_attachemtns.php';
                             break;
                         case 'sync-customer';
-                           // $data = $this->syncCustomer($_GET['customer_id']);
-                            highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
+                            $data = $this->syncCustomer($_GET['customer_id']);
+                           highlight_string("<?php\n\$data =\n" . var_export($data, true) . ";\n?>");
                             break;
                         case 'sync-prospect';
                             $data = $this->syncProspect($_GET['ord']);
@@ -2727,7 +2727,6 @@ class WooAPI extends \PriorityAPI\API
     public
     function get_credit_card_data($order, $is_order)
     {
-
         $config = json_decode(stripslashes($this->option('setting-config')));
         $gateway = $config->gateway ?? 'debug';
         $paymentcode = $this->option('payment_' . $order->get_payment_method(), $order->get_payment_method());
@@ -3427,7 +3426,9 @@ class WooAPI extends \PriorityAPI\API
             $data['ORDERITEMS_SUBFORM'][] = $this->get_shipping_price($order, true);
         }
         // payment info
-        $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order, true);
+        if($order->get_payment_method()) {
+            $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order, true);
+        }
         // filter
         $data["orderId"] = $id;
         $data = apply_filters('simply_request_data', $data);
@@ -3607,7 +3608,7 @@ class WooAPI extends \PriorityAPI\API
 
         }
 
-        $payment_method = get_post_meta( $order->id, '_payment_method', true );
+        $payment_method = get_post_meta( $order->get_id(), '_payment_method', true );
         $gateway = $config->gateway ?? 'debug';
         if($gateway == 'pelecard'){
             $order_cc_meta = $order->get_meta('_transaction_data');
@@ -4398,7 +4399,9 @@ class WooAPI extends \PriorityAPI\API
         foreach ($variations as $variation) {
             $data = $this->getProductDataBySku($variation['sku']);
             if ($data !== 'no-selected') {
-                $prices[] = $data['price_list_price'];
+                if(!empty($data['price_list_price'])){
+                    $prices[] = $data['price_list_price'];
+                }
             }
         }
         if (!empty($prices)) {
