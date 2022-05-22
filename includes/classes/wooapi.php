@@ -179,16 +179,14 @@ class WooAPI extends \PriorityAPI\API
                     return 0;
                 }, 10, 2);
             }
-
-
-
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
             // filter price range
             add_filter('woocommerce_variable_sale_price_html', [$this, 'filterPriceRange'], 10, 2);
-            add_filter('woocommerce_variable_price_html', [$this, 'filterPriceRange'], 10, 2);
+           add_filter('woocommerce_variable_price_html', [$this, 'filterPriceRange'], 10, 2);
             // check if variation is available to the client
+/*
             add_filter('woocommerce_variation_is_visible', function ($status, $id, $parent, $variation) {
 
                 $data = $this->getProductDataBySku($variation->get_sku());
@@ -196,7 +194,7 @@ class WooAPI extends \PriorityAPI\API
                 return empty($data) ? false : true;
 
             }, 10, 4);
-
+*/
             add_filter('woocommerce_variation_prices', function ($transient_cached_prices) {
 
                 $transient_cached_prices_new = [];
@@ -2836,7 +2834,7 @@ class WooAPI extends \PriorityAPI\API
                 break;
             case 'gobit2';
                 $payaccount = $order->get_meta('cc_last_4');
-                $validmonth = date_format(date_create(get_post_meta($order->get_id(), '_paid_date')[0]), 'd/m');
+               // $validmonth = date_format(date_create(get_post_meta($order->get_id(), '_paid_date')[0]), 'd/m');
                 $numpay = $order->get_meta('tranzila_F_number_of_payments');
                 $ccuid = $order->get_meta('tranzila_authnr');
                 break;
