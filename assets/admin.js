@@ -1,5 +1,6 @@
 jQuery(document).ready(function($) {
 
+    $('#select_users').select2();
     $(document).on('click', '.p18aw-sync', function(e){
         e.preventDefault();
 
@@ -61,9 +62,9 @@ jQuery(document).ready(function($) {
 
             $('.p18aw-sync').attr('disabled', false);
             $(that).html(P18AW.sync);
-            
+
         });
 
     });
-    
+
 });
