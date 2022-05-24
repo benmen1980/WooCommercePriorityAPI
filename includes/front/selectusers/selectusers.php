@@ -3,13 +3,13 @@
 add_shortcode('select_users','simply_populate_users');
 
 
-//this is for populate users in front 
+//this is for populate users in front
 function simply_populate_users()
 {
-    $current_user_id = get_current_user_id(); 
+    $current_user_id = get_current_user_id();
     $current_first_name = get_user_meta( $current_user_id, 'first_name', true );
     $current_last_name = get_user_meta( $current_user_id, 'last_name', true );
-    
+
     if (isset($_SESSION['related_users']) && !empty($_SESSION['related_users'])) {
         if(!empty( get_user_meta( $current_user_id, 'select_users', true))){
             if($selected_users != get_user_meta( $current_user_id, 'select_users', true)){
@@ -19,7 +19,7 @@ function simply_populate_users()
         if(!in_array($current_user_id,$_SESSION['related_users'] )){
             array_push($_SESSION['related_users'],$current_user_id);
         }
-         
+
         $selected_users = $_SESSION['related_users'];
     }
     else{
@@ -52,7 +52,7 @@ function simply_populate_users()
     return $select_options;
 }
 
-add_action( 'wp_footer', 'simply_ajax_change_user' );
+//add_action( 'wp_footer', 'simply_ajax_change_user' );
 /* handle session on frontend */
 function simply_ajax_change_user() { ?>
     <script type="text/javascript" >
@@ -76,8 +76,8 @@ function simply_ajax_change_user() { ?>
     <?php
 }
 
-add_action("wp_ajax_change_user" , "change_user");
-add_action("wp_ajax_nopriv_change_user" , "change_user");
+//add_action("wp_ajax_change_user" , "change_user");
+//add_action("wp_ajax_nopriv_change_user" , "change_user");
 function change_user(){
     $user_id = $_POST['userid'];
     $user = get_user_by('id', $user_id);

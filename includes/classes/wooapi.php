@@ -466,6 +466,12 @@ class WooAPI extends \PriorityAPI\API
 
             // admin actions
             add_action('admin_init', function () {
+                wp_enqueue_style('style-css', P18AW_ASSET_URL . 'style.css');
+                wp_enqueue_style('select2-css', P18AW_ASSET_URL . 'select2.css');
+
+                wp_enqueue_script('select2-script', P18AW_ASSET_URL . 'select2.min.js', array('jquery'));
+
+                wp_enqueue_script('select2-he', P18AW_ASSET_URL . 'select2-he.js', array('jquery'));
                 // enqueue admin scripts
                 wp_enqueue_script('p18aw-admin-js', P18AW_ASSET_URL . 'admin.js', ['jquery']);
                 wp_localize_script('p18aw-admin-js', 'P18AW', [
@@ -3469,7 +3475,7 @@ class WooAPI extends \PriorityAPI\API
      */
     public function makeRequestPos($method, $url_addition = null, $options = [], $log = false)
     {
-   
+
         $args = [
             'headers' => [
                 'Content-Type'  => 'application/json'
@@ -3521,7 +3527,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
 
-        return [ 
+        return [
             'url'      => $url,
             'args'     => $args,
             'method'   => strtoupper($method),
@@ -3532,7 +3538,7 @@ class WooAPI extends \PriorityAPI\API
             'message'  => ($response_message ? $response_message : $response->get_error_message())
         ];
 
-        
+
     }
 
 
@@ -3545,17 +3551,17 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         $order = new \WC_Order($id);
-        $order_total = $order->get_total(); 
+        $order_total = $order->get_total();
         $user = $order->get_user();
         $user_id = $order->get_user_id();
         // $user_id = $order->user_id;
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
 
         $raw_option = $this->option('setting-config');
-      
-        
+
+
         $raw_option = str_replace(array('.', "\n", "\t", "\r"), '', $raw_option);
-        
+
         $config = json_decode(stripslashes($raw_option));
         $branch_number = $config->BranchNumber;
         $pos_number = $config->POSNumber;
@@ -3564,23 +3570,23 @@ class WooAPI extends \PriorityAPI\API
         //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
         $cust_number = $this->get_cust_name($order);
 
-        
+
         $data['Transaction'] = [
-            "TemporaryTransactionNumber" => $order->get_order_number(),  
-            "FinalTransactionNumber" => $order->get_order_number(),  
-            "TransactionDateTime" => date('Y-m-d', strtotime($order->get_date_created())), 
+            "TemporaryTransactionNumber" => $order->get_order_number(),
+            "FinalTransactionNumber" => $order->get_order_number(),
+            "TransactionDateTime" => date('Y-m-d', strtotime($order->get_date_created())),
             "IsOrder" => true,
             "IsCancelTransaction" => false,
-            "POSCustomerNumber" => "", 
+            "POSCustomerNumber" => "",
             "PriorityCustomerName" => "",
-            "TotalItemQuantity" => count( $order->get_items() ), 
-            "TotalBeforeGeneralDiscountIncludingVAT" => $order_total, 
+            "TotalItemQuantity" => count( $order->get_items() ),
+            "TotalBeforeGeneralDiscountIncludingVAT" => $order_total,
             "IsManualDiscount" => false,
-            "GeneralDiscountSum" => 0, 
-            "GeneralDiscountPercent" => 0, 
-            "TotalAfterGeneralDiscountIncludingVAT" => 0, 
-            "ExternalOrderNumber" => $order->get_order_number(), 
-            "SupplyBranch" => "", 
+            "GeneralDiscountSum" => 0,
+            "GeneralDiscountPercent" => 0,
+            "TotalAfterGeneralDiscountIncludingVAT" => 0,
+            "ExternalOrderNumber" => $order->get_order_number(),
+            "SupplyBranch" => "",
         ];
 
         //$data['Transaction']['TransactionExternalMetaData'] = [];
@@ -3592,14 +3598,14 @@ class WooAPI extends \PriorityAPI\API
             $product = $item->get_product();
             if ($product) {
                 $data['Transaction']['OrderItems'][] = [
-                    "ItemCode" => $product->get_sku(), 
-                    "ItemQuantity" => $item->get_quantity(), 
-                    "PricePerItem" => $product->get_price(), 
+                    "ItemCode" => $product->get_sku(),
+                    "ItemQuantity" => $item->get_quantity(),
+                    "PricePerItem" => $product->get_price(),
                     "CalculatePrice" => true,
                     "IsManualPrice" => false,
                     "IsManualDiscount" => false,
-                    "TotalPrice" => $item->get_total(), 
-                    "VATPercent" => 17, 
+                    "TotalPrice" => $item->get_total(),
+                    "VATPercent" => 17,
                     "ExternalOrderLineNumber" => $line_number,
                     "HasVAT" => true,
                     "PointsPerType" => []
@@ -3614,7 +3620,7 @@ class WooAPI extends \PriorityAPI\API
         if($gateway == 'pelecard'){
             $order_cc_meta = $order->get_meta('_transaction_data');
             $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
-        
+
             $payaccount = $order_cc_meta['CreditCardNumber'];
             $ccuid =  $order_cc_meta['Token'];
             $validmonth =  $order_cc_meta['CreditCardExpDate'];
@@ -3623,37 +3629,37 @@ class WooAPI extends \PriorityAPI\API
             $firstpay = $order_cc_meta['FirstPaymentTotal']/100;
 
             $data['Transaction']['CreditCardPayments'][] = [
-                "CardNumber" => $payaccount, 
+                "CardNumber" => $payaccount,
                 "PaymentSum" => floatval($order->get_total()),
-                "AuthorizationNumber" => $confnum, 
+                "AuthorizationNumber" => $confnum,
                 "CardIssuerCode" => 1,
                 "CardClearingCode" => 1,
-                "VoucherNumber" => "", 
-                "NumberOfPayments" => $numpay, 
-                "FirstPaymentSum" => $firstpay, 
-                "Token" => $ccuid, 
-                "ExpirationDate" => $validmonth, 
-                "CreditType" =>  0, 
+                "VoucherNumber" => "",
+                "NumberOfPayments" => $numpay,
+                "FirstPaymentSum" => $firstpay,
+                "Token" => $ccuid,
+                "ExpirationDate" => $validmonth,
+                "CreditType" =>  0,
             ];
         }
         else{
             //debug
             $data['Transaction']['CreditCardPayments'][] = [
-                "CardNumber" => "12345", 
+                "CardNumber" => "12345",
                 "PaymentSum" => 1,
-                "AuthorizationNumber" => "12345", 
+                "AuthorizationNumber" => "12345",
                 "CardIssuerCode" => 1,
                 "CardClearingCode" => 1,
-                "VoucherNumber" => "12345", 
-                "NumberOfPayments" => 1, 
-                "FirstPaymentSum" => 1, 
-                "Token" => 12345, 
-                "ExpirationDate" => "0126", 
-                "CreditType" =>  0, 
+                "VoucherNumber" => "12345",
+                "NumberOfPayments" => 1,
+                "FirstPaymentSum" => 1,
+                "Token" => 12345,
+                "ExpirationDate" => "0126",
+                "CreditType" =>  0,
             ];
 
         }
-    
+
 
 
         $data['Transaction']['ShippingDetails'] = [
