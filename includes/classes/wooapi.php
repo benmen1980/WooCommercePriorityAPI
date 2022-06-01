@@ -3554,8 +3554,11 @@ class WooAPI extends \PriorityAPI\API
         $order_total = $order->get_total();
         $user = $order->get_user();
         $user_id = $order->get_user_id();
-        // $user_id = $order->user_id;
-        $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+        if(!empty($user_id)){
+            $order_user = get_userdata($user_id); //$user_id is passed as a parameter
+            $cust_number = get_user_meta($user_id, 'priority_customer_number', true);
+        }
+        
 
         $raw_option = $this->option('setting-config');
 
@@ -3566,10 +3569,7 @@ class WooAPI extends \PriorityAPI\API
         $branch_number = $config->BranchNumber;
         $pos_number = $config->POSNumber;
         $unique_identifier = $config->UniqueIdentifier;
-
-        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
-        $cust_number = $this->get_cust_name($order);
-
+        
 
         $data['Transaction'] = [
             "TemporaryTransactionNumber" => $order->get_order_number(),
@@ -3577,7 +3577,7 @@ class WooAPI extends \PriorityAPI\API
             "TransactionDateTime" => date('Y-m-d', strtotime($order->get_date_created())),
             "IsOrder" => true,
             "IsCancelTransaction" => false,
-            "POSCustomerNumber" => "",
+            "POSCustomerNumber" => !empty($cust_number) ? $cust_number : '',
             "PriorityCustomerName" => "",
             "TotalItemQuantity" => count( $order->get_items() ),
             "TotalBeforeGeneralDiscountIncludingVAT" => $order_total,
@@ -3701,7 +3701,7 @@ class WooAPI extends \PriorityAPI\API
 			"InvoiceCustomerName" => ""
         ];
         $data["CreatePriorityCustomer"] = false;
-        $data["RegisterByGeneralPosCustomer"] = true;
+        $data["RegisterByGeneralPosCustomer"] = !empty($cust_number) ? false : true;
         $data["CalculateTax"] = 0;
 
         $data['UniquePOSIdentifier'] = [
