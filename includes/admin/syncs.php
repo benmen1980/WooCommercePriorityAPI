@@ -474,6 +474,15 @@ $format2 = 'd/m/Y H:i:s';
                            value="<?=empty($this->option('otc_order_field')) ? 'DETAILS' : $this->option('otc_order_field')?>"></input>
                 </td>
             </tr>
+            <!-- sync POS -->
+            <tr>
+                <td class="p18a-label">
+                    <?php _e('POS', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="post_pos_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_pos_checkout')) echo 'checked'; ?> />
+                </td>
+            </tr>
             <!-- sync registered customers -->
             <tr>
                 <td class="p18a-label">
@@ -519,15 +528,6 @@ $format2 = 'd/m/Y H:i:s';
                         <option value="prospect_cellphone" <?php if($this->option('prospect_field') == 'prospect_cellphone') echo 'selected'; ?>><?php _e('By order\'s Cellphone', 'p18a'); ?></option>
                         <!--option value="prospect_cellphone">By order's Cellphone</option-->
                     </select>
-                </td>
-            </tr>
-            <!-- sync POS -->
-            <tr>
-                <td class="p18a-label">
-                    <?php _e('POS', 'p18a'); ?>
-                </td>
-                <td>
-                    <input type="checkbox" name="post_pos_checkout" form="p18aw-sync" value="1" <?php if($this->option('post_pos_checkout')) echo 'checked'; ?> />
                 </td>
             </tr>
             <!-- submit -->
