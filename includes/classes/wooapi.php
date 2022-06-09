@@ -575,6 +575,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('update_image', $this->post('update_image'));
                 $this->updateOption('mailing_list_field', $this->post('mailing_list_field'));
                 $this->updateOption('obligo', $this->post('obligo'));
+                $this->updateOption('packs', $this->post('packs'));
                 $this->updateOption('setting-config', $this->post('setting-config'));
                 // save shipping conversion table
                 if ($this->post('shipping')) {
@@ -3558,7 +3559,7 @@ class WooAPI extends \PriorityAPI\API
             $order_user = get_userdata($user_id); //$user_id is passed as a parameter
             $cust_number = get_user_meta($user_id, 'priority_customer_number', true);
         }
-        
+
 
         $raw_option = $this->option('setting-config');
 
@@ -3569,7 +3570,7 @@ class WooAPI extends \PriorityAPI\API
         $branch_number = $config->BranchNumber;
         $pos_number = $config->POSNumber;
         $unique_identifier = $config->UniqueIdentifier;
-        
+
 
         $data['Transaction'] = [
             //"TemporaryTransactionNumber" => $order->get_order_number(),
