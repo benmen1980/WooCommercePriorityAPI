@@ -3572,12 +3572,12 @@ class WooAPI extends \PriorityAPI\API
         
 
         $data['Transaction'] = [
-            "TemporaryTransactionNumber" => $order->get_order_number(),
+            //"TemporaryTransactionNumber" => $order->get_order_number(),
             "FinalTransactionNumber" => $order->get_order_number(),
             "TransactionDateTime" => date('Y-m-d', strtotime($order->get_date_created())),
             "IsOrder" => true,
             "IsCancelTransaction" => false,
-            "POSCustomerNumber" => !empty($cust_number) ? $cust_number : '',
+            "POSCustomerNumber" => !empty($user_id) ? $cust_number : '',
             "PriorityCustomerName" => "",
             "TotalItemQuantity" => count( $order->get_items() ),
             "TotalBeforeGeneralDiscountIncludingVAT" => $order_total,
@@ -3701,7 +3701,7 @@ class WooAPI extends \PriorityAPI\API
 			"InvoiceCustomerName" => ""
         ];
         $data["CreatePriorityCustomer"] = false;
-        $data["RegisterByGeneralPosCustomer"] = !empty($cust_number) ? false : true;
+        $data["RegisterByGeneralPosCustomer"] = !empty($user_id) ? false : true;
         $data["CalculateTax"] = 0;
 
         $data['UniquePOSIdentifier'] = [
