@@ -3661,17 +3661,44 @@ class WooAPI extends \PriorityAPI\API
 
         }
 
+        if(!empty($order->get_shipping_address_1())){
+            $address = $order->get_shipping_address_1();
+        }
+        else{
+            $address = $order->get_billing_address_1();
+        }
 
+        
+        if(!empty($order->get_shipping_city())){
+            $city = $order->get_shipping_city();
+        }
+        else{
+            $city = $order->get_billing_city();
+        }
+
+        if(!empty($order->get_shipping_address_1())){
+            $contact_person = $order->get_shipping_first_name().' '.$order->get_shipping_last_name();
+        }
+        else{
+            $contact_person = $order->get_billing_first_name().' '.$order->get_billing_last_name();
+        }  
+        
+        if(!empty(get_post_meta( $order->get_id(), '_shipping_phone', true ) )){
+            $phone = get_post_meta( $order->get_id(), '_shipping_phone', true );
+        }
+        else{
+            $phone = $order->get_billing_phone();
+        }
 
         $data['Transaction']['ShippingDetails'] = [
-            "City" => $order->get_shipping_city(),
+            "City" => $city,
 			"ForeignLanguageCity" => "",
-			"Address" => $order->get_shipping_address_1(),
+			"Address" => $address,
 			"ForeignLanguageAddress" => "",
-			"HouseNumber" => ($order->get_shipping_address_2()) ? $order->get_shipping_address_2() : 0,
+			"HouseNumber" => 0,
 			"ApartmentNumber" => 0,
-			"ZipCode" => $order->get_shipping_postcode(),
-			"ContactPersonName" => "",
+			"ZipCode" => "",
+			"ContactPersonName" => $contact_person,
 			"ForeignLanguageContactPersonName" => "",
 			"Mail" => "",
 			"Fax" => "",
@@ -3680,7 +3707,7 @@ class WooAPI extends \PriorityAPI\API
 			"ToSupplyHour" => "2022-04-19T06:56:24.279Z",
 			"Remark" => "",
 			"ForeignLanguageRemark" => "",
-			"FirstPhoneNumber" =>  $order->get_billing_phone(),
+			"FirstPhoneNumber" =>  $phone,
 			"SecondPhoneNumber" => "",
 			"ShipMethod" => $order->get_shipping_method(),
 			"Address2" => (!empty($order->get_shipping_address_2())) ? $order->get_shipping_address_2() : '',
