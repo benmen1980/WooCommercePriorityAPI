@@ -139,3 +139,43 @@ function jk_woocommerce_quantity_input_args($args, $product)
 
     return $args;
 }
+add_action( 'woocommerce_before_add_to_cart_button', 'misha_before_add_to_cart_btn' );
+function misha_before_add_to_cart_btn(){
+    global $product;
+    if($product && is_user_logged_in() ) {
+        $packs = get_post_meta($product->get_id(), 'pri_packs', true);
+        ?>
+        <div class="step-custom-fields">
+            <input type="hidden" class="custom_pack_step" name="pack_step" value="<?php echo $packs[0]['PACKQUANT']; ?>">
+            <input type="hidden" class="custom_pack_code" name="pack_code" value="<?php echo $packs[0]['PACKCODE']; ?>">
+        </div>
+        <script>
+            jQuery(document).ready(function(){
+                jQuery(document).on('click change', '.pri-packs', function() {
+                    jQuery('.cart .custom_pack_step').val(jQuery(this).val());
+                    jQuery('.cart .custom_pack_code').val(jQuery(this).find('option:selected').attr('pack-code'));
+                })
+            })
+        </script>
+    <?php }
+}
+add_filter( 'woocommerce_add_cart_item_data', 'add_cart_item_data', 25, 2 );
+function add_cart_item_data( $cart_item_meta, $product_id ) {
+
+    if ( isset( $_POST ['pack_step'] ) && isset( $_POST ['pack_code'] ) ) {
+        $cart_item_meta [ 'pack_step' ]    = isset( $_POST ['pack_step'] ) ?  sanitize_text_field ( $_POST ['pack_step'] ) : "" ;
+        $cart_item_meta [ 'pack_code' ] = isset( $_POST ['pack_code'] ) ? sanitize_text_field ( $_POST ['pack_code'] ): "" ;
+    }
+    return $cart_item_meta;
+}
+function packs_checkout_create_order_line_item( $item, $cart_item_key, $values, $order ) {
+    foreach( $item as $cart_item_key=>$cart_item ) {
+        if( isset( $cart_item['pack_step'] ) ) {
+            $item->update_meta_data( 'pack_step', $cart_item['pack_step'], true );
+        }
+        if( isset( $cart_item['pack_code'] ) ) {
+            $item->update_meta_data( 'pack_code', $cart_item['pack_code'], true );
+        }
+    }
+}
+add_action( 'woocommerce_checkout_create_order_line_item', 'packs_checkout_create_order_line_item', 10, 4 );

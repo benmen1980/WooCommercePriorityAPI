@@ -48,11 +48,11 @@
             </tr>
             <tr>
                 <td class="p18a-label">
-                    <label for="p18a-price_method"><?php _e('Sync Price include VAT ?', 'p18a'); ?></label>
+                    <label for="p18a-price_method"><?php _e('Sync Customer Mcustname ?', 'p18a'); ?></label>
                 </td>
                 <td></td>
                 <td>
-                    <input id="p18aw-price_method" size="35" type="checkbox" name="price_method" form="p18aw-settings" <?php if($this->option('price_method') == true){?> checked="checked" <?php } ?> />
+                    <input id="p18aw-price_method" size="35" type="checkbox" name="price_method" form="p18aw-settings" <?php if($this->option('customer_Mcustname') == true){?> checked="checked" <?php } ?> />
                 </td>
             </tr>
             <tr>
