@@ -3628,7 +3628,7 @@ class WooAPI extends \PriorityAPI\API
             $confnum = $order_cc_meta['ConfirmationKey'];
             $numpay = $order_cc_meta['TotalPayments'];
             $firstpay = $order_cc_meta['FirstPaymentTotal']/100;
-            $vouchernumber =  $order_cc_meta['VoucherId'];
+            $vouchernumber =  str_replace("-","",$order_cc_meta['VoucherId']);
             $idnum = $order_cc_meta['CardHolderID'];
 
             $data['Transaction']['CreditCardPayments'][] = [
