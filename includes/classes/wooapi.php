@@ -3628,6 +3628,8 @@ class WooAPI extends \PriorityAPI\API
             $confnum = $order_cc_meta['ConfirmationKey'];
             $numpay = $order_cc_meta['TotalPayments'];
             $firstpay = $order_cc_meta['FirstPaymentTotal']/100;
+            $vouchernumber =  $order_cc_meta['VoucherId'];
+            $idnum = $order_cc_meta['CardHolderID'];
 
             $data['Transaction']['CreditCardPayments'][] = [
                 "CardNumber" => $payaccount,
@@ -3635,12 +3637,13 @@ class WooAPI extends \PriorityAPI\API
                 "AuthorizationNumber" => $confnum,
                 "CardIssuerCode" => 1,
                 "CardClearingCode" => 1,
-                "VoucherNumber" => "",
+                "VoucherNumber" => $vouchernumber,
                 "NumberOfPayments" => $numpay,
                 "FirstPaymentSum" => $firstpay,
                 "Token" => $ccuid,
                 "ExpirationDate" => $validmonth,
                 "CreditType" =>  0,
+                "IDNumber" => $idnum
             ];
         }
         else{
