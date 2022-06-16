@@ -1346,7 +1346,7 @@ class WooAPI extends \PriorityAPI\API
                     }
                     //$my_product->set_sale_price( $sales_price);
                     $my_product->save();
-                    if (!empty($item['INVFLAG'])&&$stock_status == 'outofstock') {
+                    if (!empty($item['INVFLAG']) && $stock_status == 'outofstock') {
                         update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
                     }
                     //update_post_meta($id, '_regular_price', $pri_price);
@@ -2910,11 +2910,13 @@ class WooAPI extends \PriorityAPI\API
 
             ];
         }
-        // add fields for not order objects
-        if (!$is_order && $firstpay != 0.0) {
-            $data['FIRSTPAY'] = (float)$firstpay;
+        if (!$is_order) {
             $data['CARDNUM'] = $cardnum;
-            //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
+            // add fields for not order objects
+            if ($firstpay != 0.0) {
+                $data['FIRSTPAY'] = (float)$firstpay;
+                //  $data['OTHERPAYMENTS'] = (float)$order_periodical_payment;
+            }
         }
         if (!$is_order) {
             $data['PAYDATE'] = date('Y-m-d');
@@ -3348,7 +3350,7 @@ class WooAPI extends \PriorityAPI\API
 
         // get ordered items
         foreach ($order->get_items() as $item_id => $item) {
-            if ($this->option('packs')==true) {
+            if ($this->option('packs') == true) {
                 $pack_step = wc_get_order_item_meta($item_id, 'pack_step', true);
                 $pack_code = wc_get_order_item_meta($item_id, 'pack_code', true);
             }
@@ -3406,9 +3408,9 @@ class WooAPI extends \PriorityAPI\API
                     'REMARK1' => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     'DUEDATE' => date('Y-m-d'),
                 ];
-                if ($this->option('packs')==true&&!empty($pack_step)&&!empty($pack_code)) {
-                    $data['ORDERITEMS_SUBFORM'][count($data['ORDERITEMS_SUBFORM']) - 1]['NUMPACK'] = $pack_step > 0 ? (int) $item->get_quantity() / $pack_step : 0;
-                    $data['ORDERITEMS_SUBFORM'][count($data['ORDERITEMS_SUBFORM']) - 1][ 'PACKCODE' ]  = $pack_code;
+                if ($this->option('packs') == true && !empty($pack_step) && !empty($pack_code)) {
+                    $data['ORDERITEMS_SUBFORM'][count($data['ORDERITEMS_SUBFORM']) - 1]['NUMPACK'] = $pack_step > 0 ? (int)$item->get_quantity() / $pack_step : 0;
+                    $data['ORDERITEMS_SUBFORM'][count($data['ORDERITEMS_SUBFORM']) - 1]['PACKCODE'] = $pack_code;
 
                 }
                 if ($discount_type != 'in_line') {
@@ -4729,12 +4731,12 @@ class WooAPI extends \PriorityAPI\API
             }
             //$index++;
         }
-        if ($this->option('customer_Mcustname') == true)
-        {
+        if ($this->option('customer_Mcustname') == true) {
             $this->syncCastnameToMcustname();
         }
 
     }
+
     function syncCastnameToMcustname()
     {
 
@@ -4751,7 +4753,7 @@ class WooAPI extends \PriorityAPI\API
                     'meta_value' => $id
                 ));
                 if (!empty($user_m)) {
-                    $user_m_id=$user_m[0]->ID;
+                    $user_m_id = $user_m[0]->ID;
                     foreach ($value as $v) {
                         $user_c = get_users(array(
                             'meta_key' => 'priority_customer_number',
@@ -4759,18 +4761,19 @@ class WooAPI extends \PriorityAPI\API
                         ));
 
                         if (!empty($user_c)) {
-                            $id=[];
-                            $id=get_user_meta($user_m_id,'select_users');
+                            $id = [];
+                            $id = get_user_meta($user_m_id, 'select_users');
                             $user_c_id = $user_c[0]->ID;
-                            array_push($id,$user_c_id);
+                            array_push($id, $user_c_id);
                             // echo 'user_c_id=' . $user_c_id .' user_m_id= '.$user_m_id.'<br>';
-                            update_user_meta($user_m_id,'select_users',$id);
+                            update_user_meta($user_m_id, 'select_users', $id);
                         }
                     }
                 }
             }
         }
     }
+
     function sync_priority_customers_to_wp_orig()
     {
         // default values
