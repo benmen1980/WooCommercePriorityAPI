@@ -625,6 +625,8 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_auto_post_orders_priority', $this->post('log_auto_post_orders_priority'));
                 $this->updateOption('auto_sync_sites_priority', $this->post('auto_sync_sites_priority'));
                 $this->updateOption('log_sites_priority', $this->post('log_sites_priority'));
+                $this->updateOption('auto_sync_packs_priority', $this->post('auto_sync_packs_priority'));
+                $this->updateOption('log_packs_priority', $this->post('log_packs_priority'));
                 $this->updateOption('auto_sync_c_products_priority', $this->post('auto_sync_c_products_priority'));
                 $this->updateOption('log_c_products_priority', $this->post('log_c_products_priority'));
                 $this->updateOption('email_error_sync_einvoices_web', $this->post('email_error_sync_einvoices_web'));
@@ -938,6 +940,7 @@ class WooAPI extends \PriorityAPI\API
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
                     break;
+
                 case 'sync_sites_priority':
 
 
@@ -948,7 +951,16 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
+                case 'sync_packs_priority':
 
+
+                    try {
+                        $this->syncPacksPriority();
+                    } catch (Exception $e) {
+                        exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
+
+                    break;
                 case 'sync_receipts_priority':
 
                     try {
