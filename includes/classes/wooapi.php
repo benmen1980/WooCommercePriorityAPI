@@ -174,11 +174,11 @@ class WooAPI extends \PriorityAPI\API
 
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
             // filter sales price
-            if (is_user_logged_in()) {
-                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
-                    return 0;
-                }, 10, 2);
-            }
+//            if (is_user_logged_in()) {
+//                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
+//                    return 0;
+//                }, 10, 2);
+//            }
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
