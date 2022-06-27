@@ -3946,7 +3946,7 @@ class WooAPI extends \PriorityAPI\API
             //if($discount_type == 'additional_line'){
             $data['AINVOICEITEMS_SUBFORM'][] = [
                 // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
-                'PARTNAME' => '000',
+                $this->get_sku_prioirty_dest_field() => '000',
                 // 'VATPRICE' => -1* floatval( $cart_discount + $cart_discount_tax),
                 'TOTPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax()),
                 'TQUANT' => -1,
