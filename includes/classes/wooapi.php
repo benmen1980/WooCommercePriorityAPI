@@ -4096,6 +4096,7 @@ class WooAPI extends \PriorityAPI\API
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),
                     'TQUANT' => (int)$item->get_quantity(),
                     'TOTPRICE' => round((float)($item->get_total() + $tax_label), 2),
+                    'id' => $item->get_id(),
                 ];
             }
 
@@ -4109,6 +4110,9 @@ class WooAPI extends \PriorityAPI\API
             $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
         $data['orderId'] = $order_id;
+        for( $i = 0; $i < count($order->get_items()); $i++ ) {
+            unset($data['EINVOICEITEMS_SUBFORM'][$i]['id']);
+        }
         $data = apply_filters('simply_request_data', $data);
         unset($data['orderId']);
         // make request
