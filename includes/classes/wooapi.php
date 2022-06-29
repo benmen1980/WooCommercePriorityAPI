@@ -4187,6 +4187,7 @@ class WooAPI extends \PriorityAPI\API
             // payment info
             $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
+        $data = apply_filters('simply_request_data_receipt', $data);
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data, JSON_UNESCAPED_SLASHES)], $this->option('log_receipts_priority', true));
         if ($response['code'] <= 201) {
