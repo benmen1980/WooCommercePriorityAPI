@@ -3226,6 +3226,11 @@ class WooAPI extends \PriorityAPI\API
 
     function get_cust_name($order)
     {
+        $cust_number = apply_filters('simply_modify_customer_number', $order);
+        if (!empty($cust_number))
+        {
+            return $cust_number;
+        }
         $walk_in_number = $this->option('walkin_number');
         if ($order->get_user_id() != 0) {
             if ($this->option('post_customers') == true) {
