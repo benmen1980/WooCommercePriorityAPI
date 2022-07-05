@@ -1631,8 +1631,12 @@ class WooAPI extends \PriorityAPI\API
                     } else {
                         $pri_price = wc_prices_include_tax() ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                     }
-                    $my_product = new \WC_Product($product_id);
-
+                    $product = get_post($product_id);
+                    if ('product_variation' == $product->post_type) {
+                        $my_product = new \WC_Product_Variation($product_id);
+                    } else {
+                        $my_product = new \WC_Product($product_id);
+                    }
                     $my_product->set_regular_price($pri_price);
 
                     $my_product->save();
@@ -3227,8 +3231,7 @@ class WooAPI extends \PriorityAPI\API
     function get_cust_name($order)
     {
         $cust_number = apply_filters('simply_modify_customer_number', $order);
-        if (!empty($cust_number))
-        {
+        if (!empty($cust_number)) {
             return $cust_number;
         }
         $walk_in_number = $this->option('walkin_number');
@@ -4115,7 +4118,7 @@ class WooAPI extends \PriorityAPI\API
             $data['EPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
         $data['orderId'] = $order_id;
-        for( $i = 0; $i < count($order->get_items()); $i++ ) {
+        for ($i = 0; $i < count($order->get_items()); $i++) {
             unset($data['EINVOICEITEMS_SUBFORM'][$i]['id']);
         }
         $data = apply_filters('simply_request_data', $data);
