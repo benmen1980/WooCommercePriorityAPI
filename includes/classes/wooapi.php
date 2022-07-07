@@ -1569,51 +1569,40 @@ class WooAPI extends \PriorityAPI\API
         return $response;
     }
 
-    public
-    function syncPricePriority()
+    public function syncPricePriority()
     {
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
         $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
-        $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
+        $url_addition_config = (!empty($config->additional_url) ? '&$filter=' . $config->additional_url : '');
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
         if ($product_price_list != null) {
-            $expand = '$expand=INTERNALDIALOGTEXT_SUBFORM,PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+            $expand = '$expand=PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\' and ' . $date_filter . ' )';
         } else {
             $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
         }
-        $response = $this->makeRequest('GET',
-            'LOGPART?$select=PARTNAME,BASEPLPRICE,VATPRICE,BARCODE&$filter=' . $date_filter . ' ' . $url_addition_config . '&' . $expand . '', [], $this->option('log_items_priority', true));
+        $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME,BARCODE' . $url_addition_config . '&' . $expand . ''
+            , [], $this->option('log_items_priority', true));
         if ($response['status']) {
 
             $response_data = json_decode($response['body_raw'], true);
             foreach ($response_data['value'] as $item) {
                 // if product exsits, update price
                 $search_by_value = $item[$search_field];
-                $args = array(
-
-                    'post_type' => array('product'),
-
+                $args = array('post_type' => array('product', 'product_variation'),
                     'post_status' => array('publish'),
-
                     'meta_query' => array(
-
                         array(
-
                             'key' => $search_field_web,
-
                             'value' => $search_by_value
-
                         )
-
                     )
-
                 );
                 $product_id = 0;
                 $my_query = new \WP_Query($args);
@@ -1625,11 +1614,16 @@ class WooAPI extends \PriorityAPI\API
                 }
                 // if product variation skip
                 if ($product_id != 0) {
-                    if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
-                        $pri_price = wc_prices_include_tax() ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+                    if ($product_price_list != null) {
+                        if (!empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
+                            $pri_price = wc_prices_include_tax() ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
+                        } else {
+                            continue;
+                        }
                     } else {
                         $pri_price = wc_prices_include_tax() ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+
                     }
                     $product = get_post($product_id);
                     if ('product_variation' == $product->post_type) {
