@@ -1575,6 +1575,7 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
+        $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
         $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
         $url_addition_config = (!empty($config->additional_url) ? '&$filter=' . $config->additional_url : '');
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
@@ -1582,10 +1583,13 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
+        $data['select'] = 'PARTNAME,BASEPLPRICE,VATPRICE,BARCODE';
         if ($product_price_list != null) {
-            $expand = '$expand=PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\' and ' . $date_filter . ' )';
-        } else {
-            $expand = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+            $expand = '&$expand=PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\' and ' . $date_filter . ' )';
+        }
+        $data = apply_filters('simply_syncPricePriority', $data);
+        if (empty($product_price_list)) {
+            $data['select'] .= '&$filter=' . $date_filter . '';
         }
         $response = $this->makeRequest('GET', 'LOGPART?$select=PARTNAME,BARCODE' . $url_addition_config . '&' . $expand . ''
             , [], $this->option('log_items_priority', true));
@@ -1596,7 +1600,7 @@ class WooAPI extends \PriorityAPI\API
                 // if product exsits, update price
                 $search_by_value = $item[$search_field];
                 $args = array('post_type' => array('product', 'product_variation'),
-                    'post_status' => array('publish'),
+                    'post_status' => array('publish', 'draft'),
                     'meta_query' => array(
                         array(
                             'key' => $search_field_web,
@@ -1630,6 +1634,12 @@ class WooAPI extends \PriorityAPI\API
                         $my_product = new \WC_Product_Variation($product_id);
                     } else {
                         $my_product = new \WC_Product($product_id);
+                    }
+                    if ($product_price_sale != null && $item[$product_price_sale]) {
+                        $price_sale = $item[$product_price_sale];
+                        if ($price_sale != 0) {
+                            $my_product->set_sale_price($price_sale);
+                        }
                     }
                     $my_product->set_regular_price($pri_price);
 
