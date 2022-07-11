@@ -2233,8 +2233,22 @@ class WooAPI extends \PriorityAPI\API
         $option_filed = explode(',', $this->option('sync_inventory_warhsname'))[2];
         $data['select'] = (!empty($option_filed) ? $option_filed . ',PARTNAME' : 'PARTNAME');
         $data = apply_filters('simply_syncInventoryPriority_data', $data);
-        $response = $this->makeRequest('GET', 'LOGPART?$select=' . $data['select'] . '&$filter= ' . urlencode($url_addition) . 'and INVFLAG eq \'Y\' &$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM', [], $this->option('log_inventory_priority', false));
-        // check response status
+        $wh_name = explode(',', $this->option('sync_inventory_warhsname'))[0];
+        $status = explode(',', $this->option('sync_inventory_warhsname'))[4];
+        if (!empty($wh_name)) {
+            if (!empty($status)) {
+                $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'' . $wh_name . '\' and CUSTNAME eq \'' . $status . '\')';
+
+            } else {
+                $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'' . $wh_name . '\')';
+            }
+        } else if (!empty($status)) {
+            $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=CUSTNAME eq \'' . $status . '\')';
+        } else {
+            $expand = '$expand = LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
+        }
+        $response = $this->makeRequest('GET', 'LOGPART?$select = ' . $data['select'] . '&$filter = ' . urlencode($url_addition) . ' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
+        // check response status        // check response status
         if ($response['status']) {
             $data = json_decode($response['body_raw'], true);
             foreach ($data['value'] as $item) {
@@ -2274,11 +2288,9 @@ class WooAPI extends \PriorityAPI\API
                     $is_deduct_order = explode(',', $this->option('sync_inventory_warhsname'))[1] == 'ORDER';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach ($item['PARTBALANCE_SUBFORM'] as $wh_stock) {
-                        if ($wh_stock['WARHSNAME'] == $wh_name) {
-                            $stock = $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
-                            if ($is_deduct_order) {
-                                $stock = $wh_stock['TBALANCE'] - $orders > 0 ? $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
-                            }
+                        $stock = $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
+                        if ($is_deduct_order) {
+                            $stock = $wh_stock['TBALANCE'] - $orders > 0 ? $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
                         }
                     }
                     $statuses = explode(',', $this->option('sync_inventory_warhsname'))[4];
@@ -3225,7 +3237,8 @@ class WooAPI extends \PriorityAPI\API
     function get_cust_name($order)
     {
         $cust_number = apply_filters('simply_modify_customer_number', ['order' => $order,
-            'CUSTNAME' => null])['CUSTNAME'];        if (!empty($cust_number)) {
+            'CUSTNAME' => null])['CUSTNAME'];
+        if (!empty($cust_number)) {
             return $cust_number;
         }
         $walk_in_number = $this->option('walkin_number');
