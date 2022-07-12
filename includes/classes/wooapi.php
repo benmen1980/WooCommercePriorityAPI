@@ -1201,6 +1201,7 @@ class WooAPI extends \PriorityAPI\API
         $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
         // get the items simply by time stamp of today
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
+        $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
         // get the items simply by time stamp of today
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
@@ -1344,10 +1345,16 @@ class WooAPI extends \PriorityAPI\API
                 if ($id) {
                     $my_product = new \WC_Product($id);
                     $my_product->set_regular_price($pri_price);
-                    // sales price make troubles. Roy need to think what to do with it.
-                    if (null == $my_product->get_sale_price()) {
-                        //   $my_product->set_sale_price(0);
+                    if ($product_price_sale != null && !empty($item[$product_price_sale])) {
+                        $price_sale = $item[$product_price_sale];
+                        if ($price_sale != 0) {
+                            $my_product->set_sale_price($price_sale);
+                        }
                     }
+                    // sales price make troubles. Roy need to think what to do with it.
+//                    if (null == $my_product->get_sale_price()) {
+                        //   $my_product->set_sale_price(0);
+//                    }
                     if (!empty($config->menu_order)) {
                         $my_product->set_menu_order($item[$config->menu_order]);
                     }
