@@ -3196,7 +3196,7 @@ class WooAPI extends \PriorityAPI\API
     public
     function syncSites()
     {
-        $response = $this->makeRequest('GET', 'CUSTOMERS?$expand=CUSTDESTS_SUBFORM', [], $this->option('log_sites_priority', true));
+        $response = $this->makeRequest('GET', 'CUSTOMERS?$select=CUSTNAME&$expand=CUSTDESTS_SUBFORM($select=CODE,CODEDES,ADDRESS,INACTIVE;$filter=INACTIVE ne \'Y\')', [], $this->option('log_sites_priority', true));
 
         // check response status
         if ($response['status']) {
