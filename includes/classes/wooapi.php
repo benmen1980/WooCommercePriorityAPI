@@ -1199,6 +1199,8 @@ class WooAPI extends \PriorityAPI\API
         $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
         $brands = (!empty($config->brands) ? $config->brands : false);
         $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+
         // get the items simply by time stamp of today
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
         $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
@@ -1206,7 +1208,7 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME,EXTFILENAME';
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME,EXTFILENAME';
         if ($product_price_list != null) {
             $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
         } else {
@@ -1344,6 +1346,11 @@ class WooAPI extends \PriorityAPI\API
                 }
                 if ($id) {
                     $my_product = new \WC_Product($id);
+                    if (!empty($show_in_web) && $item[$show_in_web] == 'N') {
+                        $my_product->set_status('draft');
+                        $my_product->save();
+                        continue;
+                    }
                     $my_product->set_regular_price($pri_price);
                     if ($product_price_sale != null && !empty($item[$product_price_sale])) {
                         $price_sale = $item[$product_price_sale];
@@ -1353,7 +1360,7 @@ class WooAPI extends \PriorityAPI\API
                     }
                     // sales price make troubles. Roy need to think what to do with it.
 //                    if (null == $my_product->get_sale_price()) {
-                        //   $my_product->set_sale_price(0);
+                    //   $my_product->set_sale_price(0);
 //                    }
                     if (!empty($config->menu_order)) {
                         $my_product->set_menu_order($item[$config->menu_order]);
@@ -1815,6 +1822,7 @@ class WooAPI extends \PriorityAPI\API
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
         $image_base_url = $config->image_base_url;
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
@@ -1824,7 +1832,7 @@ class WooAPI extends \PriorityAPI\API
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
         $variation_field = $this->option('variation_field');
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SPEC1,SPEC2,SPEC3,
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,EXTFILENAME,
         INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
@@ -1866,6 +1874,9 @@ class WooAPI extends \PriorityAPI\API
 //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
 //
 //                            }
+                            if (!empty($show_in_web)) {
+                                $parents[$item[$variation_field]][$show_in_web] = $item[$show_in_web];
+                            }
                             $childrens[$item[$variation_field]][$item['PARTNAME']] = [
                                 'sku' => $item['PARTNAME'],
                                 'regular_price' => $price,
@@ -1933,6 +1944,12 @@ class WooAPI extends \PriorityAPI\API
                             'status' => $this->option('item_status')
                         ));
                         $parents[$sku_parent]['product_id'] = $id;
+                        $product = new WC_Product_Variable($id);
+                        if (!empty($show_in_web)&&$parent[$show_in_web] == 'N') {
+                            $product->set_status('draft');
+                            $product->save();
+                            continue;
+                        }
 
                         foreach ($parent['variation'] as $sku_children => $children) {
                             // The variation data
@@ -2481,7 +2498,7 @@ class WooAPI extends \PriorityAPI\API
             unset($request["id"]);
             $json_request = json_encode($request);
             $response = $this->makeRequest($method, $url_eddition, ['body' => $json_request], true);
-            if ($method == 'POST' && $response['code'] == '201') {
+            if ($method == 'POST' && $response['code'] == '201' || $method == 'PATCH' && $response['code'] == '200')  {
                 $data = json_decode($response['body']);
                 $priority_customer_number = $data->CUSTNAME;
                 update_user_meta($id, 'priority_customer_number', $priority_customer_number);
