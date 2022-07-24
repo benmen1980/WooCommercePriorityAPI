@@ -1945,7 +1945,7 @@ class WooAPI extends \PriorityAPI\API
                         ));
                         $parents[$sku_parent]['product_id'] = $id;
                         $product = new WC_Product_Variable($id);
-                        if (!empty($show_in_web)&&$parent[$show_in_web] == 'N') {
+                        if (!empty($show_in_web) && $parent[$show_in_web] == 'N') {
                             $product->set_status('draft');
                             $product->save();
                             continue;
@@ -2498,7 +2498,7 @@ class WooAPI extends \PriorityAPI\API
             unset($request["id"]);
             $json_request = json_encode($request);
             $response = $this->makeRequest($method, $url_eddition, ['body' => $json_request], true);
-            if ($method == 'POST' && $response['code'] == '201' || $method == 'PATCH' && $response['code'] == '200')  {
+            if ($method == 'POST' && $response['code'] == '201' || $method == 'PATCH' && $response['code'] == '200') {
                 $data = json_decode($response['body']);
                 $priority_customer_number = $data->CUSTNAME;
                 update_user_meta($id, 'priority_customer_number', $priority_customer_number);
@@ -3515,9 +3515,11 @@ class WooAPI extends \PriorityAPI\API
             $data['PAYMENTDEF_SUBFORM'] = $this->get_credit_card_data($order, true);
         }
         // filter
-        $data["orderId"] = $id;
+        $data['orderId'] = $id;
+        $data['doctype'] = "ORDERS";
         $data = apply_filters('simply_request_data', $data);
-        unset($data["orderId"]);
+        unset($data['orderId']);
+        unset($data['doctype']);
         $config = json_decode(stripslashes($this->option('setting-config')));
         if (!empty($config->formname)) {
             $form_name = $config->formname;
@@ -4017,8 +4019,10 @@ class WooAPI extends \PriorityAPI\API
 
         // filter data
         $data['orderId'] = $id;
+        $data['doctype'] = "AINVOICES";
         $data = apply_filters('simply_request_data', $data);
         unset($data['orderId']);
+        unset($data['doctype']);
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
@@ -4162,8 +4166,10 @@ class WooAPI extends \PriorityAPI\API
         for ($i = 0; $i < count($order->get_items()); $i++) {
             unset($data['EINVOICEITEMS_SUBFORM'][$i]['id']);
         }
+        $data['doctype'] = "EINVOICES";
         $data = apply_filters('simply_request_data', $data);
         unset($data['orderId']);
+        unset($data['doctype']);
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
 
