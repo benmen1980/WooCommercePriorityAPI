@@ -1208,7 +1208,10 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $date_filter = 'UDATE ge ' . urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME,EXTFILENAME';
+        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
+        if ($priority_version < 21.0) {
+            $data['select'].='EXTFILENAME';
+        }
         if ($product_price_list != null) {
             $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
         } else {
@@ -5099,7 +5102,18 @@ class WooAPI extends \PriorityAPI\API
         $upload_dir = wp_upload_dir();
         $upload_path = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $filename;
         if (file_exists($upload_path)) {
-            return [0, $filename];
+            $wp_filetype = wp_check_filetype($filename, null);
+            $attachment = array(
+                'guid' => $upload_dir['baseurl'] . '/simplyCT/' . $filename,
+                'post_mime_type' => $wp_filetype['type'],
+                'post_title' => sanitize_file_name($filename),
+                'post_content' => '',
+                'post_type' => 'listing_type',
+                'post_status' => 'inherit',
+            );
+            $attach_id = wp_insert_attachment($attachment, $upload_path);
+            $file = [$attach_id, $filename];
+            return $file;
         }
         if (!is_dir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
             if (!@mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
