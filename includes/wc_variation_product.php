@@ -222,7 +222,9 @@ function create_product_variation($product_id, $variation_data)
 
     // Get an instance of the WC_Product_Variation object
     $variation = new WC_Product_Variation($variation_id);
-
+    if ($variation_data['show_front']) {
+        update_post_meta($variation_id, 'show_front', $variation_data['show_front']);
+    }
     if (!empty($variation_data['sku']))
         $variation->set_sku($variation_data['sku']);
 
@@ -283,3 +285,22 @@ function create_product_variation($product_id, $variation_data)
 
     return $variation_id;
 }
+function filter_woocommerce_get_children($children, $product, $false)
+{
+    // NOT backend
+    if (is_admin()) return $children;
+
+    // Delete by value: Searches the array for a given value and returns the first corresponding key if successful
+
+    foreach ($children as $key => $value) {
+        $show = get_post_meta($value, 'show_front', true);
+        if ($show == 'N') {
+            unset($children[$key]);
+        }
+
+    }
+    return $children;
+
+}
+
+add_filter('woocommerce_get_children', 'filter_woocommerce_get_children', 10, 3);

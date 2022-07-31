@@ -1211,7 +1211,7 @@ class WooAPI extends \PriorityAPI\API
         $date_filter = 'UDATE ge ' . urlencode($bod);
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
         if ($priority_version < 21.0) {
-            $data['select'].='EXTFILENAME';
+            $data['select'] .= 'EXTFILENAME';
         }
         if ($product_price_list != null) {
             $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
@@ -1831,14 +1831,18 @@ class WooAPI extends \PriorityAPI\API
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
         $config_v = json_decode(stripslashes($res));
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+        $show_front = !empty($config_v->show_front) ? $config_v->show_front : null;
         $daysback = !empty((int)$config_v->days_back) ? $config_v->days_back : (!empty((int)$config->days_back) ? $config->days_back : 1);
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
         $variation_field = $this->option('variation_field');
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
-        SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,EXTFILENAME,
-        INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
+        SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
+        if ($priority_version < 21.0) {
+            $data['select'] .= 'EXTFILENAME';
+        }
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
@@ -1865,7 +1869,14 @@ class WooAPI extends \PriorityAPI\API
                         $attributes = apply_filters('simply_ItemsAtrrVariation', $item);
                         if ($attributes) {
                             $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
-
+                            if (isset($parents[$item[$variation_field]]['content'])) {
+                                $parents[$item[$variation_field]]['content'] = '';
+                            }
+                            if (isset($item['PARTTEXT_SUBFORM'])) {
+                                foreach ($item['PARTTEXT_SUBFORM'] as $text) {
+                                    $parents[$item[$variation_field]]['content'] .= $text;
+                                }
+                            }
                             $parents[$item[$variation_field]] = [
                                 'sku' => $item[$variation_field],
                                 //'crosssell' => $item['ROYL_SPECDES1'],
@@ -1873,11 +1884,17 @@ class WooAPI extends \PriorityAPI\API
                                 'stock' => 'Y',
                                 'variation' => [],
                                 'regular_price' => $price,
-                                'post_content' => isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
+                                'post_content' => $parents[$item[$variation_field]]['content']
+                                    //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
 //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
 //
 //                            }
+                            if ($priority_version >= 21.0 && true == $is_load_image) {
+                                $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $item['PARTNAME'] . '\'', [], $this->option('log_items_priority', true));
+                                $data = json_decode($response['body']);
+                                $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
+                            }
                             if (!empty($show_in_web)) {
                                 $parents[$item[$variation_field]][$show_in_web] = $item[$show_in_web];
                             }
@@ -1895,6 +1912,9 @@ class WooAPI extends \PriorityAPI\API
                                 'attributes' => $attributes
 
                             ];
+                            if ($show_front != null) {
+                                $childrens[$item[$variation_field]][$item['PARTNAME']]['show_front'] = $item[$show_front];
+                            }
                         }
                     }
                 }
@@ -1904,7 +1924,7 @@ class WooAPI extends \PriorityAPI\API
                         $parents[$partname]['tags'] = end($childrens[$partname])['tags'];
                         $parents[$partname]['variation'] = $childrens[$partname];
                         $parents[$partname]['title'] = $parents[$partname]['title'];
-                        $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
+                       // $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
                         foreach ($childrens[$partname] as $children) {
                             foreach ($children['attributes'] as $attribute => $attribute_value) {
                                 if ($attributes) {
@@ -1927,11 +1947,11 @@ class WooAPI extends \PriorityAPI\API
                         if (true == $is_load_image) {
                             $attach_id = $this->load_image($image_base_url, $priority_version, $sku_parent);
                         }
-
+                        $text = apply_filters('simply_modify_long_text', ['sku' => $sku_parent, 'text' => ''])['text'];
                         $id = create_product_variable(array(
                             'author' => '', // optional
                             'title' => $parent['title'],
-                            'content' => !empty($parent['post_content']) ? $parent['post_content'] : '',
+                            'content' => $text != '' ? $text : (!empty($parent['post_content']) ? $parent['post_content'] : ''),
                             'excerpt' => '',
                             'regular_price' => '', // product regular price
                             'sale_price' => '', // product sale price (optional)
@@ -1970,6 +1990,7 @@ class WooAPI extends \PriorityAPI\API
                                 'content' => $children['content'],
                                 'stock' => $children['stock'],
                                 'image' => ($attach_id != null && $attach_id != 0) ? $attach_id : '',
+                                'show_front' => $children['show_front']
                             );
                             // The function to be run
                             create_product_variation($id, $variation_data);
@@ -4817,6 +4838,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
+
     function sync_priority_personnel_customers_to_wp()
     {
         // config
@@ -4894,6 +4916,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
+
     function syncCastnameToMcustname()
     {
 
