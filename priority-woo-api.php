@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 1.35
+ * Version: 1.36
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -52,6 +52,7 @@ register_activation_hook(P18AW_SELF, function () {
         price_list_name VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price_list_currency VARCHAR(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, 
         price_list_price DECIMAL(6,2), 
+        price_list_quant INT,
         PRIMARY KEY  (id)
     )";
 
@@ -207,3 +208,4 @@ add_action('plugins_loaded', function () {
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
 
 include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
+include_once(P18AW_FRONT_DIR . 'priceList/price_list.php');

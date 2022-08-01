@@ -1885,7 +1885,7 @@ class WooAPI extends \PriorityAPI\API
                                 'variation' => [],
                                 'regular_price' => $price,
                                 'post_content' => $parents[$item[$variation_field]]['content']
-                                    //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
+                                //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
 //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
 //
@@ -1924,7 +1924,7 @@ class WooAPI extends \PriorityAPI\API
                         $parents[$partname]['tags'] = end($childrens[$partname])['tags'];
                         $parents[$partname]['variation'] = $childrens[$partname];
                         $parents[$partname]['title'] = $parents[$partname]['title'];
-                       // $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
+                        // $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
                         foreach ($childrens[$partname] as $children) {
                             foreach ($children['attributes'] as $attribute => $attribute_value) {
                                 if ($attributes) {
@@ -3208,6 +3208,7 @@ class WooAPI extends \PriorityAPI\API
                             'price_list_name' => $list['PLDES'],
                             'price_list_currency' => $list['CODE'],
                             'price_list_price' => wc_prices_include_tax() ? $product['VATPRICE'] : $product['PRICE'],
+                            'price_list_quant' => $product['QUANT'],
                             'blog_id' => $blog_id
                         ]);
 
@@ -4471,7 +4472,7 @@ class WooAPI extends \PriorityAPI\API
             if ($meta === 'no-selected') return 'no-selected';
             $list = empty($meta) ? $this->basePriceCode : $meta[0]; // use base price list if there is no list assigned
             $data = $GLOBALS['wpdb']->get_row('
-                SELECT price_list_price, price_list_currency
+                SELECT price_list_price, price_list_currency,price_list_quant
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
                 WHERE product_sku = "' . esc_sql($sku) . '"
                 AND price_list_code = "' . esc_sql($list) . '"
