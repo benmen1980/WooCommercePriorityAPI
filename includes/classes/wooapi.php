@@ -171,7 +171,8 @@ class WooAPI extends \PriorityAPI\API
             // filter product price regarding to price list
             // see documentation here
             // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
-
+            add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
+            add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
             // filter sales price
 //            if (is_user_logged_in()) {
@@ -4402,6 +4403,32 @@ class WooAPI extends \PriorityAPI\API
         foreach ($orders as $order) {
             $this->syncReceipt($order->get_id());
         }
+    }
+
+    function simply_add_custom_price($cart_object)
+    {
+        if (is_cart()) {
+
+            foreach ($cart_object->get_cart() as $hash => $value) {
+                if (!empty($value['custom_data']['realprice'])) {
+                    $custom_price = $value['custom_data']['realprice'];
+                    // This will be your custom price
+                    if (!empty($custom_price) && $custom_price > 0) {
+                        $value['data']->set_price($custom_price);
+                    }
+                    remove_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
+                } else {
+                    $value['data']->set_price($this->filterPrice($value['data']->get_price(), $value['data']));
+                }
+            }
+
+        }
+
+    }
+
+    function simply_after_add_to_cart_button()
+    {
+        echo '<script type="text/javascript" >document.getElementsByName("quantity")[0].value = 1</script>';
     }
 
     public function filterProductsByPriceList($ids)

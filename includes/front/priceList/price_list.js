@@ -12,12 +12,10 @@ jQuery(document).ready(function ($) {
                 price = td1[0].textContent
                 $(event.target).parent().parent().parent().find('.price').text('₪' + price)
                  $(event.target).parent().parent().parent().find('#realprice').val(price)
-                // quant = td[1].textContent
-            } else if (step == td[1].textContent) {
+            } else if (step >= td[1].textContent) {
                 price = td[0].textContent
                 $(event.target).parent().parent().parent().find('.price').text('₪' + price)
                 $(event.target).parent().parent().parent().find('#realprice').val(price)
-
             }
         }
     })

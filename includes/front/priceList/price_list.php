@@ -7,17 +7,6 @@ function my_theme_scripts()
     }
 }
 
-add_action('woocommerce_before_calculate_totals', 'simply_add_custom_price');
-function simply_add_custom_price($cart)
-{
-    foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
-        if (isset($cart_item['custom_data'])) {
-            $custom_price = $cart_item['custom_data']['realprice']; // This will be your custom price
-            $cart_item['data']->set_price($custom_price);
-        }
-    }
-}
-
 // Add data to cart item
 add_filter('woocommerce_add_cart_item_data', 'simply_add_cart_item_data', 25, 2);
 function simply_add_cart_item_data($cart_item_data, $product_id)
@@ -54,7 +43,7 @@ function simply_pricelist_qty_table()
             ,
             ARRAY_A
         );
-        if ($data) {
+        if ($data && count($data) > 1) {
             $product->set_regular_price($data[0]['price_list_price'])
             ?>
             <table style="width:100%">
