@@ -49,8 +49,8 @@ function simply_pricelist_qty_table()
             <table style="width:100%">
                 <thead>
                 <tr>
-                    <th>כמות</th>
                     <th>מחיר</th>
+                    <th>כמות</th>
                 </tr>
                 </thead>
                 <tbody id="price_list">
