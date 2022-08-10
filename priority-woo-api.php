@@ -33,6 +33,7 @@ define('P18AW_INCLUDES_DIR', trailingslashit(P18AW_DIR) . 'includes/');
 define('P18AW_CLASSES_DIR', trailingslashit(P18AW_DIR) . 'includes/classes/');
 define('P18AW_ADMIN_DIR', trailingslashit(P18AW_DIR) . 'includes/admin/');
 define('P18AW_FRONT_DIR', trailingslashit(P18AW_DIR) . 'includes/front/');
+define('P18AW_FRONT_URL', trailingslashit(P18AW_URI) . 'includes/front/');
 
 // define plugin name and plugin admin url
 define('P18AW_PLUGIN_NAME', 'Priority WooCommerce API');
