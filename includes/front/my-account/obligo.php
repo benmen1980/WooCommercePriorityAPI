@@ -263,7 +263,7 @@ class Obligo extends \PriorityAPI\API
     {
         $current_user = wp_get_current_user();
         $priority_customer_number = get_user_meta($current_user->ID, 'priority_customer_number', true);
-        $priority_customer_number = apply_filters('simply_priority_customer_number_obligo', $current_user);
+       // $priority_customer_number = apply_filters('simply_priority_customer_number_obligo', $current_user);
         $additionalurl = 'OBLIGO?$select=OBLIGO,CUST&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'' . $priority_customer_number . '\'';
         $args = [];
         $response = $this->makeRequest("GET", $additionalurl, $args, true);
