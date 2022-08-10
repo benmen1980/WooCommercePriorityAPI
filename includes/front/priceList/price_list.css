@@ -1,0 +1,4 @@
+.price_list_table, .price_list_td, .price_list_tr {
+    border: 0.1rem solid black !important;
+    text-align: center;
+}
