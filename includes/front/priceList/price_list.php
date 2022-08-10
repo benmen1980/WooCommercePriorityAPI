@@ -46,11 +46,11 @@ function simply_pricelist_qty_table()
         if ($data && count($data) > 1) {
             $product->set_regular_price($data[0]['price_list_price'])
             ?>
-            <table style="width:100%">
+            <table style="width:100%" class="price_list_table">
                 <thead>
-                <tr>
-                    <th>מחיר</th>
-                    <th>כמות</th>
+                <tr class="price_list_tr">
+                    <th class="price_list_td">מחיר</th>
+                    <th class="price_list_td">כמות</th>
                 </tr>
                 </thead>
                 <tbody id="price_list">
@@ -59,9 +59,9 @@ function simply_pricelist_qty_table()
                     $price = $item["price_list_price"];
                     $quant = $item["price_list_quant"];
                     ?>
-                    <tr>
-                        <td><?= $price ?></td>
-                        <td><?= $quant ?></td>
+                    <tr class="price_list_tr">
+                        <td class="price_list_td"> <?= $price ?></td>
+                        <td class="price_list_td"><?= $quant ?></td>
                     </tr>
                     <?php
                 }
