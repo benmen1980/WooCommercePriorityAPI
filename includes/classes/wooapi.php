@@ -4541,7 +4541,7 @@ class WooAPI extends \PriorityAPI\API
             );
             if (isset($data['price_list_price'])) {
                 if ($data['price_list_price'] != 0) {
-                    return $data['price_list_price'];
+                    return $data['price_list_price'] * $family_discount;
                 }
             }
         }
