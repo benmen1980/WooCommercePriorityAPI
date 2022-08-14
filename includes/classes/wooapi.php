@@ -4514,12 +4514,20 @@ class WooAPI extends \PriorityAPI\API
 
     public function filterPrice($price, $product)
     {
+
         $user = wp_get_current_user();
         // get the MCUSTNAME if any else get the cust
         $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
+        // check transient
+        $transient = $user->ID . $product->get_id();
+        $get_transient = get_transient($transient);
+        if ($get_transient) {
+            return (float)$get_transient;
+        }
         // get special price
         $special_price = $this->getSpecialPriceCustomer($custname, $product->get_sku());
         if ($special_price != 0) {
+            set_transient($transient, $special_price, 300);
             return $special_price;
         }
         // get the family code by customer discount as fraction
@@ -4528,6 +4536,7 @@ class WooAPI extends \PriorityAPI\API
         // get price list
         $plists = get_user_meta($user->ID, 'custpricelists', true);
         if (empty($plists)) {
+            set_transient($transient, $price, 300);
             return $price;
         }
         foreach ($plists as $plist) {
@@ -4541,10 +4550,13 @@ class WooAPI extends \PriorityAPI\API
             );
             if (isset($data['price_list_price'])) {
                 if ($data['price_list_price'] != 0) {
+                    set_transient($transient, $data['price_list_price'] * $family_discount, 300);
                     return $data['price_list_price'] * $family_discount;
                 }
             }
         }
+
+        set_transient($transient, (float)$price * $family_discount, 300);
         return (float)$price * $family_discount;
     }
 
