@@ -1534,7 +1534,7 @@ class WooAPI extends \PriorityAPI\API
                     $data = json_decode($response['body']);
                     $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
                 }
-                if (!empty($item['EXTFILENAME'])
+                if (!empty($item['EXTFILENAME'] && !strstr($item['EXTFILENAME'], 'http'))
                     && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
                     $priority_image_path = str_replace('\\', '/', $priority_image_path);
