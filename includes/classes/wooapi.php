@@ -4516,14 +4516,15 @@ class WooAPI extends \PriorityAPI\API
     {
 
         $user = wp_get_current_user();
-        // get the MCUSTNAME if any else get the cust
-        $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
-        // check transient
         $transient = $user->ID . $product->get_id();
         $get_transient = get_transient($transient);
         if ($get_transient) {
             return (float)$get_transient;
         }
+        // get the MCUSTNAME if any else get the cust
+        $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
+        // check transient
+
         // get special price
         $special_price = $this->getSpecialPriceCustomer($custname, $product->get_sku());
         if ($special_price != 0) {
