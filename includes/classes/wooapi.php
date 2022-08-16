@@ -1534,8 +1534,7 @@ class WooAPI extends \PriorityAPI\API
                     $data = json_decode($response['body']);
                     $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
                 }
-                if (!empty($item['EXTFILENAME'] && !strstr($item['EXTFILENAME'], 'http'))
-                    && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
+                if (!empty($item['EXTFILENAME']) && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
                     $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
                     $priority_image_path = str_replace('\\', '/', $priority_image_path);
                     if ($config->zoom == "true") {
@@ -1552,7 +1551,7 @@ class WooAPI extends \PriorityAPI\API
                     ;//['url'] . '/' . $file_info['basename'];
                     //$priority_version = (float)$this->option('priority-version');
                     //$is_uri = strpos($product_full_url, 'http') >= 0 ? false : true;
-                    if ($priority_version >= 21.0 && strpos($product_full_url, 'http') === false) {
+                    if ($priority_version >= 21.0 && !strstr($item['EXTFILENAME'], 'http')) {
                         $file = $this->save_uri_as_image($priority_image_path, $item['PARTNAME']);
                         $attach_id = $file[0];
                         $file_name = $file[1];
@@ -1560,11 +1559,12 @@ class WooAPI extends \PriorityAPI\API
                     } else {
                         $file_path = $item['EXTFILENAME'];
                         $file_info = pathinfo($file_path);
-                        $url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
+                        $file_name = $item['PARTNAME'] . '.' . $file_info['extension'];
+                        $url = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
                         $attach_id = attachment_url_to_postid($url);
                     }
                     if ($attach_id == 0) {
-                        $attach_id = download_attachment($sku, wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name);
+                        $attach_id = download_attachment($sku, $url);
                     } else if ($attach_id == null) {
                         continue;
                     }
