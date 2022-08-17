@@ -1384,32 +1384,51 @@ class WooAPI extends \PriorityAPI\API
                     //update_post_meta($id, '_regular_price', $pri_price);
                     //update_post_meta($id, '_price',$pri_price );
                     $taxon = 'product_cat';
+                    if (!empty($config->parent_category) || !empty($is_categories)) {
+                        $terms = get_the_terms($id, $taxon);
+                        foreach ($terms as $term) {
+                            wp_remove_object_terms($id, $term->term_id, $taxon);
+                        }
+                    }
                     if (!empty($config->parent_category)) {
                         $parent_category = wp_set_object_terms($id, $item[$config->parent_category], $taxon, true);
                     }
                     if (!empty($is_categories)) {
                         // update categories
                         $categories = [];
-
                         foreach (explode(',', $config->categories) as $cat) {
                             if (!empty($item[$cat])) {
                                 array_push($categories, $item[$cat]);
                             }
                         }
                         if (!empty($categories)) {
+                            $d = 0;
                             $terms = $categories;
                             if (!empty($config->parent_category) && $parent_category[0] > 0) {
                                 $term_exists = term_exists($terms[0], $taxon, $parent_category);
-                                if (empty($term_exists))
+                                $childs = get_term_children($parent_category[0], $taxon);
+                                if (!empty($childs)) {
+                                    foreach ($childs as $child) {
+                                        $cat_c = get_term_by('id', $child, $taxon, 'ARRAY_A');
+                                        if ($cat_c['name'] == $terms[0]) {
+                                            $terms_cat = wp_set_object_terms($id, $child, $taxon, true);
+                                            $d = 1;
+                                        }
+                                    }
+                                }
+                                if (empty($term_exists) || $d == 0)
                                     $terms = wp_insert_term($terms[0], $taxon, array('parent' => $parent_category[0]));
                                 array_push($terms, $item[$config->parent_category]);
 
                             }
+                            if ($d != 1)
+                                wp_set_object_terms($id, $terms, $taxon);
+                            else {
+                                wp_set_object_terms($id, $item[$config->parent_category], $taxon, true);
+                            }
 
-                            wp_set_object_terms($id, $terms, $taxon);
 
                         }
-
                     }
 
                 }
