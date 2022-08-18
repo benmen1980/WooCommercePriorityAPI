@@ -4,6 +4,8 @@ function my_theme_scripts_price_list()
 {
     if (is_product() || is_shop() || is_cart() || is_product_category()) {
         wp_enqueue_script('price_list', P18AW_FRONT_URL . 'priceList/price_list.js', array('jquery'), true);
+        wp_enqueue_style('priceList-css', P18AW_FRONT_URL . 'priceList/priceList.css');
+
     }
 }
 
