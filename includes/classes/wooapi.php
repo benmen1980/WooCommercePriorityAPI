@@ -1371,7 +1371,7 @@ class WooAPI extends \PriorityAPI\API
                     if (!empty($config->menu_order)) {
                         $my_product->set_menu_order($item[$config->menu_order]);
                     }
-                    if (!empty($my_product->get_meta('family_code', true))) {
+                    if (!empty($my_product->get_meta_data('family_code', true))) {
                         $my_product->update_meta_data('family_code', $item['FAMILYNAME']);
                     } else {
                         $my_product->add_meta_data('family_code', $item['FAMILYNAME']);
