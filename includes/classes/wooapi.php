@@ -4752,14 +4752,17 @@ class WooAPI extends \PriorityAPI\API
         } else {
             update_user_meta($user_id, 'priority_mcustomer_number', '');
         }
-        if (isset($_POST['custpricelists'])) {
+        if (!empty($_POST['custpricelists'])) {
             $custpricelists = $_POST['custpricelists'];
             $custpricelists_ar = explode(' ', $custpricelists);
-            $custpricelists_result = [];
-            foreach ($custpricelists_ar as $key => $cust) {
-                $custpricelists_result[] = array('PLNAME' => $cust);
+            if (!in_array($custpricelists, $custpricelists_ar)) {
+                $custpricelists_result = [];
+                foreach ($custpricelists_ar as $key => $cust) {
+                    if (!empty($cust))
+                        $custpricelists_result[] = array('PLNAME' => $cust);
+                }
+                update_user_meta($user_id, 'custpricelists', $custpricelists_result);
             }
-            update_user_meta($user_id, 'custpricelists', $custpricelists_result);
         } else {
             update_user_meta($user_id, 'custpricelists', '');
         }
