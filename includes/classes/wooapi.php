@@ -1252,7 +1252,7 @@ class WooAPI extends \PriorityAPI\API
                     $data['post_content'] = $content;
                 }
                 // if product exsits, update
-                $search_by_value = $item[$search_field];
+                $search_by_value = (string)$item[$search_field];
                 $args = array(
                     'post_type' => array('product', 'product_variation'),
                     'post_status' => array('publish', 'draft'),
@@ -1639,7 +1639,7 @@ class WooAPI extends \PriorityAPI\API
             $response_data = json_decode($response['body_raw'], true);
             foreach ($response_data['value'] as $item) {
                 // if product exsits, update price
-                $search_by_value = $item[$search_field];
+                $search_by_value = (string)$item[$search_field];
                 $args = array('post_type' => array('product', 'product_variation'),
                     'post_status' => array('publish', 'draft'),
                     'meta_query' => array(
@@ -1881,7 +1881,7 @@ class WooAPI extends \PriorityAPI\API
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
                     if ($item[$variation_field] !== '-') {
-                        $search_by_value = $item[$search_field];
+                        $search_by_value = (string)$item[$search_field];
                         $attributes = [];
                         if ($item['PARTUNSPECS_SUBFORM']) {
                             foreach ($item['PARTUNSPECS_SUBFORM'] as $attr) {
@@ -1914,15 +1914,15 @@ class WooAPI extends \PriorityAPI\API
 //
 //                            }
                             if ($priority_version >= 21.0 && true == $is_load_image) {
-                                $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $item['PARTNAME'] . '\'', [], $this->option('log_items_priority', true));
+                                $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $search_by_value . '\'', [], $this->option('log_items_priority', true));
                                 $data = json_decode($response['body']);
                                 $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
                             }
                             if (!empty($show_in_web)) {
                                 $parents[$item[$variation_field]][$show_in_web] = $item[$show_in_web];
                             }
-                            $childrens[$item[$variation_field]][$item['PARTNAME']] = [
-                                'sku' => $item['PARTNAME'],
+                            $childrens[$item[$variation_field]][$search_by_value] = [
+                                'sku' => $search_by_value,
                                 'regular_price' => $price,
                                 'stock' => $item['INVFLAG'],
                                 'parent_title' => $item['MPARTDES'],
@@ -1936,7 +1936,7 @@ class WooAPI extends \PriorityAPI\API
 
                             ];
                             if ($show_front != null) {
-                                $childrens[$item[$variation_field]][$item['PARTNAME']]['show_front'] = $item[$show_front];
+                                $childrens[$item[$variation_field]][$search_by_value]['show_front'] = $item[$show_front];
                             }
                         }
                     }
