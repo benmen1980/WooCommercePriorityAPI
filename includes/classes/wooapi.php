@@ -1352,7 +1352,7 @@ class WooAPI extends \PriorityAPI\API
                 }
                 if ($id) {
                     $my_product = new \WC_Product($id);
-                    if (!empty($show_in_web) && $item[$show_in_web] == 'N') {
+                    if (!empty($show_in_web) && $item[$show_in_web] != 'Y') {
                         $my_product->set_status('draft');
                         $my_product->save();
                         continue;
