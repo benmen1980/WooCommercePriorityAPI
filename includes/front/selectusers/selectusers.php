@@ -35,13 +35,13 @@ function simply_populate_users()
         return __('','p18a');
     }
     $select_options = '<select name="users" class="change_user">';
-
-    //$select_options .= '<option value="'.$current_user_id.'" selected>'. $current_first_name.' '.$current_last_name .'</option>';
-    // <option value="1266" selected="">elicheva katz</option>
-
+    if(!in_array($current_user_id,$selected_users)){
+        $select_options .= '<option value="' . $current_user_id . '" '. $selected .' >' . $current_first_name.' '.$current_last_name . '</option>';
+    }
     foreach ($selected_users as $userid) {
         $first_name = get_user_meta( $userid, 'first_name', true );
         $last_name = get_user_meta( $userid, 'last_name', true );
+
         if($userid ==  $current_user_id){
             $selected = ' selected';
         }
@@ -52,7 +52,7 @@ function simply_populate_users()
     return $select_options;
 }
 
-//add_action( 'wp_footer', 'simply_ajax_change_user' );
+add_action( 'wp_footer', 'simply_ajax_change_user' );
 /* handle session on frontend */
 function simply_ajax_change_user() { ?>
     <script type="text/javascript" >
@@ -76,8 +76,8 @@ function simply_ajax_change_user() { ?>
     <?php
 }
 
-//add_action("wp_ajax_change_user" , "change_user");
-//add_action("wp_ajax_nopriv_change_user" , "change_user");
+add_action("wp_ajax_change_user" , "change_user");
+add_action("wp_ajax_nopriv_change_user" , "change_user");
 function change_user(){
     $user_id = $_POST['userid'];
     $user = get_user_by('id', $user_id);
