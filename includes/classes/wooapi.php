@@ -1213,7 +1213,7 @@ class WooAPI extends \PriorityAPI\API
         $date_filter = 'UDATE ge ' . urlencode($bod);
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
         if ($priority_version < 21.0) {
-            $data['select'] .= 'EXTFILENAME';
+            $data['select'] .= ',EXTFILENAME';
         }
         if ($product_price_list != null) {
             $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
@@ -1759,12 +1759,9 @@ class WooAPI extends \PriorityAPI\API
         ob_start();
         $allowed_sufix = ['jpg', 'jpeg', 'png'];
         $response = $this->makeRequest('GET', 'LOGPART?$filter=EXTFILEFLAG eq \'Y\' &$select=PARTNAME&$expand=PARTEXTFILE_SUBFORM');
-
-
         $response_data = json_decode($response['body_raw'], true);
         foreach ($response_data['value'] as $item) {
             $sku = $item['PARTNAME'];
-
             //$product_id = wc_get_product_id_by_sku($sku);
 
             $args = array(
