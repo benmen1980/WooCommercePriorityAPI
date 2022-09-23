@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 1.36
+ * Version: 1.37
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -48,7 +48,7 @@ register_activation_hook(P18AW_SELF, function () {
     $sql = "CREATE TABLE $table (
         id  INT AUTO_INCREMENT,
         blog_id INT,
-        product_sku VARCHAR(32),
+        product_sku VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price_list_code VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price_list_name VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price_list_currency VARCHAR(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, 
@@ -116,7 +116,7 @@ register_activation_hook(P18AW_SELF, function () {
 // housekeeping
 register_deactivation_hook(P18AW_SELF, function () {
 
-    # $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
+     $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
 
 });
 // hook up
