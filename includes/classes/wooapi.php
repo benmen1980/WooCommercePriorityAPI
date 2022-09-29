@@ -1187,6 +1187,8 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
+        $image_base_url = $config->image_base_url;
+
         if ($config->sync_price == "true") {
             $this->syncPricePriority();
             return;
@@ -1546,54 +1548,16 @@ class WooAPI extends \PriorityAPI\API
                 if (false == $is_load_image) {
                     continue;
                 }
-                $sku = $search_by_value;
+                $sku = $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
-                if ($priority_version >= 21.0) {
-                    $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $item['PARTNAME'] . '\'', [], $this->option('log_items_priority', true));
-                    $data = json_decode($response['body']);
-                    $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
-                }
-                if (!empty($item['EXTFILENAME']) && ($this->option('update_image') == true || !get_the_post_thumbnail_url($id))) {
-                    $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
-                    $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                    $images_url = 'https://' . $this->option('url') . '/zoom/primail';
-                    $image_base_url = $config->image_base_url;
-                    if (!empty($image_base_url)) {
-                        $images_url = $image_base_url;
-                    }
-                    $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
-                    $file_path = $item['EXTFILENAME'];
-                    $file_info = pathinfo($file_path);
-                    $file_name = $item['PARTNAME'] . '.' . $file_info['extension'];
-                    $url = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
-                    //$url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
-                    //$priority_version = (float)$this->option('priority-version');
-                    $is_uri = strpos('1' . $item['EXTFILENAME'], 'http') > 0 ? false : true;
-                    if ($priority_version >= 21.0 && $is_uri) {
-                        $file = $this->save_uri_as_image($priority_image_path, $item['PARTNAME']);
-                        $attach_id = $file[0];
-                        $file_name = $file[1];
-                        if ($attach_id == 0) {
-                            $attach_id = attachment_url_to_postid(wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name);
-                        }
-                    } else {
-                        $file_path = $item['EXTFILENAME'];
-                        $file_info = pathinfo($file_path);
-                        $file_name = $item['PARTNAME'] . '.' . $file_info['extension'];
-                        $url = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
-                        $attach_id = attachment_url_to_postid($url);
-                    }
-                    if ($attach_id == 0) {
-                        $attach_id = download_attachment($sku, $item['EXTFILENAME']);
-                    } else if ($attach_id == null) {
-                        continue;
-                    }
-                    $file = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
+                if ($this->option('update_image') == true || !get_the_post_thumbnail_url($id)) {
+                    $file_ = $this->load_image($item['EXTFILENAME'], $image_base_url, $priority_version, $sku, $search_field);
+                    $attach_id = $file_[0];
+                    $file = $file_[1];
                     include $file;
                     $attach_data = wp_generate_attachment_metadata($attach_id, $file);
                     wp_update_attachment_metadata($attach_id, $attach_data);
                     set_post_thumbnail($id, $attach_id);
-
                 }
 
             }
@@ -1965,18 +1929,22 @@ class WooAPI extends \PriorityAPI\API
                 if ($parents) {
                     foreach ($parents as $sku_parent => $parent) {
                         if (true == $is_load_image) {
-                            $attach_id = $this->load_image($image_base_url, $priority_version, $sku_parent);
+                            $file_parent = $this->load_image('', $image_base_url, $priority_version, $sku_parent, $search_field);
+                            $attach_id_parent = $file_parent[0];
+                            $file_name_parent = $file_parent[1];
                         }
                         $text = apply_filters('simply_modify_long_text', ['sku' => $sku_parent, 'text' => ''])['text'];
+
                         $id = create_product_variable(array(
                             'author' => '', // optional
                             'title' => $parent['title'],
-                            'content' => $text != '' ? $text : (!empty($parent['post_content']) ? $parent['post_content'] : ''),
+                            'content' => $text != '' ? $text : $parent['post_content'],
                             'excerpt' => '',
                             'regular_price' => '', // product regular price
                             'sale_price' => '', // product sale price (optional)
                             'stock' => $parent['stock'], // Set a minimal stock quantity
-                            'image_id' => ($attach_id != null && $attach_id != 0) ? $attach_id : '', // optional
+                            'image_id' => (!empty($attach_id_parent) && $attach_id_parent != 0) ? $attach_id_parent : '', // optional
+                            'image_file' => (!empty($file_name_parent)) ? $file_name_parent : '', // optional
                             'gallery_ids' => array(), // optional
                             'sku' => $sku_parent, // optional
                             'tax_class' => '', // optional
@@ -1987,19 +1955,15 @@ class WooAPI extends \PriorityAPI\API
                             'tags' => $parent['tags'],
                             'status' => $this->option('item_status')
                         ));
-                        $parents[$sku_parent]['product_id'] = $id;
-                        $product = new WC_Product_Variable($id);
-                        if (!empty($show_in_web) && $parent[$show_in_web] == 'N') {
-                            $product->set_status('draft');
-                            $product->save();
-                            continue;
-                        }
 
+                        $parents[$sku_parent]['product_id'] = $id;
                         foreach ($parent['variation'] as $sku_children => $children) {
                             // The variation data
                             //sync image
                             if (true == $is_load_image) {
-                                $attach_id = $this->load_image($image_base_url, $priority_version, $sku_children);
+                                $file = $this->load_image('', $image_base_url, $priority_version, $sku_children, $search_field);
+                                $attach_id = $file[0];
+                                $file_name = $file[1];
                             }
                             $variation_data = array(
                                 'attributes' => $children['attributes'],
@@ -2009,7 +1973,8 @@ class WooAPI extends \PriorityAPI\API
                                 'sale_price' => '',
                                 'content' => $children['content'],
                                 'stock' => $children['stock'],
-                                'image' => ($attach_id != null && $attach_id != 0) ? $attach_id : '',
+                                'image_id' => (!empty($attach_id) && $attach_id != 0) ? $attach_id : '', // optional
+                                'image_file' => (!empty($file_name)) ? $file_name : '', // optional
                                 'show_front' => $children['show_front']
                             );
                             // The function to be run
@@ -5315,35 +5280,58 @@ class WooAPI extends \PriorityAPI\API
         return substr($sub, 0, strpos($sub, $to));
     }
 
-    function load_image($image_base_url, $priority_version, $sku)
+    function load_image($ext_file, $image_base_url, $priority_version, $sku, $search_field)
     {
-
-        $response = $this->makeRequest('GET', 'LOGPART(\'' . $sku . '\')?$select=EXTFILENAME', [], $this->option('log_items_priority', true));
-        $data = json_decode($response['body']);
-        $item['EXTFILENAME'] = $data->EXTFILENAME;
-        if (!empty($item['EXTFILENAME'])) {
-            $priority_image_path = $item['EXTFILENAME']; //  "..\..\system\mail\pics\00093.jpg"
-            $priority_image_path = str_replace('\\', '/', $priority_image_path);
-            $images_url = 'https://' . $this->option('url') . '/zoom/primail';
-            if (!empty($image_base_url)) {
-                $images_url = $image_base_url;
-            }
-            $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
-            $file_path = $item['EXTFILENAME'];
-            $file_info = pathinfo($file_path);
-            $url = wp_get_upload_dir()['url'] . '/' . $file_info['basename'];
-            if ($priority_version >= 21.0 && strpos($product_full_url, 'http') === false) {
-                $attach_id = $this->save_uri_as_image($priority_image_path, $sku);
-            } else {
-                $attach_id = attachment_url_to_postid($url);
-            }
-            if ($attach_id != 0) {
-            } else {
-                $attach_id = download_attachment($sku, $product_full_url);
-            }
-            return $attach_id;
+        if ($priority_version >= 21.0 || $ext_file == '') {
+            $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=' . $search_field . ' eq \'' . $sku . '\'', [], $this->option('log_items_priority', true));
+            $data = json_decode($response['body']);
+            $ext_file = $data->value[0]->EXTFILENAME;
         }
-        return null;
+
+        if (!empty($ext_file)) {
+            if (filter_var($ext_file, FILTER_VALIDATE_URL) != false) {
+                $file_path = $ext_file;
+                $file_info = pathinfo($file_path);
+                $file_name = $sku . '.' . $file_info['extension'];
+                $url = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
+                if (file_exists($url) == false) {
+                    $attach_id = download_attachment($sku, $ext_file);
+                } else {
+                    $attach_id = attachment_url_to_postid($url);
+                }
+            } else {
+                $priority_image_path = $ext_file; //  "..\..\system\mail\pics\00093.jpg"
+                $priority_image_path = str_replace('\\', '/', $priority_image_path);
+                $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                if (!empty($image_base_url)) {
+                    $images_url = $image_base_url;
+                }
+                $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
+                $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
+                $is_uri = strpos('1' . $product_full_url, 'http') > 0 ? false : true;
+                if ($priority_version >= 21.0 && $is_uri) {
+                    $file = $this->save_uri_as_image($priority_image_path, $sku);
+                    $attach_id = $file[0];
+                    $file_name = $file[1];
+                    if ($attach_id == 0) {
+                        $attach_id = attachment_url_to_postid(wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name);
+                    }
+                } else {
+                    $file_path = $ext_file;
+                    $file_info = pathinfo($file_path);
+                    $file_name = $sku . '.' . $file_info['extension'];
+                    $url = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
+                    $attach_id = attachment_url_to_postid($url);
+
+                }
+                if ($attach_id == 0) {
+                    $attach_id = download_attachment($sku, $product_full_url);
+                }
+            }
+            $file = wp_get_upload_dir()['baseurl'] . '/simplyCT/' . $file_name;
+            $arr = [$attach_id, $file];
+            return $arr;
+        }
     }
 
 }

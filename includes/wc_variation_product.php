@@ -53,13 +53,18 @@ function create_product_variable($data)
     );
     $product->save();
     //Description
-    if(!empty($data['content']))
-    {
+    if (!empty($data['content'])) {
         $product->set_description($data['content']);
     }
     // MAIN IMAGE
-    if (!empty($data['image_id']))
-        $product->set_image_id($data['image_id']);
+    if (!empty($data['image_id']) && !empty($data['image_file'])) {
+        $file = $data['image_file'];
+        $attach_id = $data['image_id'];
+        include $file;
+        $attach_data = wp_generate_attachment_metadata($attach_id, $file);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+        set_post_thumbnail($product_id, $attach_id);
+    }
 
     // IMAGES GALLERY
     if (!empty($data['gallery_ids']) && count($data['gallery_ids']) > 0)
@@ -277,14 +282,21 @@ function create_product_variation($product_id, $variation_data)
     }*/
 
     update_post_meta($variation_id, 'product_code', $variation_data['product_code']);
-    if (!empty($variation_data['image_id']))
-        $variation_data->set_image_id($variation_data['image_id']);
+    if (!empty($variation_data['image_id']) && !empty($variation_data['image_file'])) {
+        $file = $variation_data['image_file'];
+        $attach_id = $variation_data['image_id'];
+        include $file;
+        $attach_data = wp_generate_attachment_metadata($attach_id, $file);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+        set_post_thumbnail($variation_id, $attach_id);
+    }
     $variation->set_weight(''); // weight (reseting)
 
     $variation->save(); // Save the data
 
     return $variation_id;
 }
+
 function filter_woocommerce_get_children($children, $product, $false)
 {
     // NOT backend
