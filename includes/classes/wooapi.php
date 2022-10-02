@@ -577,6 +577,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('update_image', $this->post('update_image'));
                 $this->updateOption('mailing_list_field', $this->post('mailing_list_field'));
                 $this->updateOption('obligo', $this->post('obligo'));
+                $this->updateOption('selectusers2', $this->post('selectusers2'));
                 $this->updateOption('packs', $this->post('packs'));
                 $this->updateOption('sync_personnel', $this->post('sync_personnel'));
                 $this->updateOption('setting-config', $this->post('setting-config'));

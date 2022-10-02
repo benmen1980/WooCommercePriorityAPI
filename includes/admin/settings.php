@@ -100,6 +100,16 @@
                            form="p18aw-settings" <?php if ($this->option('sync_personnel') == true) { ?> checked="checked" <?php } ?> />
                 </td>
             </tr>
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-selectusers2"><?php _e('Use Select users2?', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-selectusers2" type="checkbox" name="selectusers2"
+                           form="p18aw-settings" <?php if ($this->option('selectusers2') == true) { ?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
             </tbody>
         </table>
         <table class="widefat fixed" cellspacing="0">

@@ -116,7 +116,7 @@ register_activation_hook(P18AW_SELF, function () {
 // housekeeping
 register_deactivation_hook(P18AW_SELF, function () {
 
-     $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
+    $GLOBALS['wpdb']->query('DROP TABLE IF EXISTS ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists;');
 
 });
 // hook up
@@ -207,5 +207,8 @@ add_action('plugins_loaded', function () {
 });
 
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
-
-include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
+if (WooAPI::instance()->option('selectusers2')) {
+    include_once(P18AW_FRONT_DIR . 'selectusers/selectusers2.php');
+} else {
+    include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
+}
