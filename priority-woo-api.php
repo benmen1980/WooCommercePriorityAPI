@@ -187,6 +187,11 @@ add_action('plugins_loaded', function () {
             if (WooAPI::instance()->option('sites')) {
                 include_once dirname(__FILE__) . '/includes/front/sites/sites.php';
             }
+            if (WooAPI::instance()->option('selectusers2')) {
+                include_once(P18AW_FRONT_DIR . 'selectusers/selectusers2.php');
+            } else {
+                include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
+            }
             require P18AW_ADMIN_DIR . 'family-code.php';
 
 
@@ -207,8 +212,4 @@ add_action('plugins_loaded', function () {
 });
 
 include_once dirname(__FILE__) . '/includes/wc_variation_product.php';
-if (WooAPI::instance()->option('selectusers2')) {
-    include_once(P18AW_FRONT_DIR . 'selectusers/selectusers2.php');
-} else {
-    include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
-}
+
