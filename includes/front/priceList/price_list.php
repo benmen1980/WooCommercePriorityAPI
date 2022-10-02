@@ -32,22 +32,23 @@ add_filter('woocommerce_after_add_to_cart_form', 'simply_pricelist_qty_table');
 function simply_pricelist_qty_table()
 {
     global $product;
+    $price = $product->get_regular_price();
     $id = get_current_user_id();
     $price_list = get_user_meta($id, 'custpricelists', true);
     if (!empty($price_list)) {
         $price_list = $price_list[0]["PLNAME"];
-
-        $data = $GLOBALS['wpdb']->get_results('
+        $sql = '
             SELECT  *
             FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-            WHERE product_sku = ' . $product->get_sku() . ' and price_list_code=' . $price_list . ' 
-            ORDER BY price_list_quant ASC'
-            ,
+            WHERE product_sku = \'' . $product->get_sku() . '\' and price_list_code=\'' . $price_list . '\' 
+            ORDER BY price_list_quant ASC';
+        $data = $GLOBALS['wpdb']->get_results($sql,
             ARRAY_A
         );
-        if ($data && count($data) > 1) {
-            $product->set_regular_price($data[0]['price_list_price'])
+        if ($data && (count($data) > 1 || (count($data) == 1 && $data[0]['price_list_quant'] > 1))) {
+            // $product->set_regular_price($data[0]['price_list_price'])
             ?>
+            <input type="hidden" name="price_regular" id="price_regular" value="<?= $price ?>">
             <table style="width:100%" class="price_list_table">
                 <thead>
                 <tr class="price_list_tr">

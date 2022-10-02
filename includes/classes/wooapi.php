@@ -4534,7 +4534,7 @@ class WooAPI extends \PriorityAPI\API
                 ARRAY_A
             );
             if (isset($data['price_list_price'])) {
-                if ($data['price_list_price'] != 0) {
+                if ($data['price_list_price'] != 0 && $data['price_list_quant'] == 1) {
                     set_transient($transient, $data['price_list_price'] * $family_discount, 300);
                     return $data['price_list_price'] * $family_discount;
                 }
