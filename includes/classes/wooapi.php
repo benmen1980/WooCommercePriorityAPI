@@ -1726,7 +1726,7 @@ class WooAPI extends \PriorityAPI\API
         $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
         ob_start();
         //$allowed_sufix = ['jpg', 'jpeg', 'png'];
-        $daysback =15;
+        $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $search_field_select = $search_field == 'PARTNAME' ? $search_field : $search_field . ',PARTNAME';
@@ -1735,7 +1735,6 @@ class WooAPI extends \PriorityAPI\API
             , [], $this->option('log_attachments_priority', true));
         $priority_version = (float)$this->option('priority-version');
         $response_data = json_decode($response['body_raw'], true);
-        $response_data['value'][0] = $response_data;
         foreach ($response_data['value'] as $item) {
             $search_by_value = $item[$search_field];
             $sku = $item[$search_field];
