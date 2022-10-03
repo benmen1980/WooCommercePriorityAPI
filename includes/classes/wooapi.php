@@ -1708,7 +1708,6 @@ class WooAPI extends \PriorityAPI\API
         }
     }
 
-    public
     function sync_product_attachemtns()
     {
         /*
@@ -1720,21 +1719,33 @@ class WooAPI extends \PriorityAPI\API
         * the function ignore other file extensions
         * you cant anyway attach files that are not images
         */
-
+        $raw_option = $this->option('sync_items_priority_config');
+        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
+        $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
+        $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
         ob_start();
-        $allowed_sufix = ['jpg', 'jpeg', 'png'];
-        $response = $this->makeRequest('GET', 'LOGPART?$filter=EXTFILEFLAG eq \'Y\' &$select=PARTNAME&$expand=PARTEXTFILE_SUBFORM');
+        //$allowed_sufix = ['jpg', 'jpeg', 'png'];
+        $daysback =15;
+        $stamp = mktime(0 - $daysback * 24, 0, 0);
+        $bod = date(DATE_ATOM, $stamp);
+        $search_field_select = $search_field == 'PARTNAME' ? $search_field : $search_field . ',PARTNAME';
+        $response = $this->makeRequest('GET',
+            'LOGPART?$filter=UDATE ge ' . urlencode($bod) . ' and EXTFILEFLAG eq \'Y\' &$select=' . $search_field_select . '&$expand=PARTEXTFILE_SUBFORM($select=EXTFILENAME,EXTFILEDES,SUFFIX;$filter=SUFFIX eq \'png\' or SUFFIX eq \'jpeg\' or SUFFIX eq \'jpg\')'
+            , [], $this->option('log_attachments_priority', true));
+        $priority_version = (float)$this->option('priority-version');
         $response_data = json_decode($response['body_raw'], true);
+        $response_data['value'][0] = $response_data;
         foreach ($response_data['value'] as $item) {
-            $sku = $item['PARTNAME'];
+            $search_by_value = $item[$search_field];
+            $sku = $item[$search_field];
             //$product_id = wc_get_product_id_by_sku($sku);
-
             $args = array(
                 'post_type' => 'product',
                 'meta_query' => array(
                     array(
-                        'key' => '_sku',
-                        'value' => $item['PARTNAME']
+                        'key' => $search_field_web,
+                        'value' => $search_by_value
                     )
                 )
             );
@@ -1750,40 +1761,53 @@ class WooAPI extends \PriorityAPI\API
             //**********
             $product = new \WC_Product($product_id);
             $product_media = $product->get_gallery_image_ids();
-
-            //$main_attach_id = [];
-            //$attachments = [$main_attach_id];
             $attachments = [];
-
             echo 'Starting process for product ' . $sku . '<br>';
-
             foreach ($item['PARTEXTFILE_SUBFORM'] as $attachment) {
                 $file_path = $attachment['EXTFILENAME'];
-                $file_info = pathinfo($file_path);
-                $file_name = $file_info['basename'];
-                $file_ext = $file_info['extension'];
-                if (array_search($file_ext, $allowed_sufix, false) !== false) {
-                    $is_existing_file = false;
-                    // check if the item exists in media
-                    //$id = $this->simply_check_file_exists($file_name);
-                    global $wpdb;
-                    $id = $wpdb->get_var("SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_name' AND meta_key = '_wp_attached_file'");
-                    if ($id) {
-                        echo $file_path . ' already exists in media, add to product... <br>';
-                        $is_existing_file = true;
-                        array_push($attachments, (int)$id);
+                $is_uri = strpos('1' . $file_path, 'http') ? false : true;
+                if (!empty($file_path)) {
+                    $file_ext = $attachment['SUFFIX'];
+                    $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                    $image_base_url = $config->image_base_url;
+                    if (!empty($image_base_url)) {
+                        $images_url = $image_base_url;
+                    }
+                    $priority_image_path = $file_path;
+                    $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
+                    $product_full_url = str_replace(' ', '%20', $product_full_url);
+                    $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
+                    $file_n = 'simplyCT/' . $sku . $attachment['EXTFILEDES'] . '.' . $file_ext;
+//                    $upload_path = $sku . $attachment['EXTFILEDES'] . '.' . $file_ext;
+                    $upload_path = wp_get_upload_dir()['basedir'] . '/' . $file_n;
+
+                    if (file_exists($upload_path) == true) {
+                        global $wpdb;
+                        $id = $wpdb->get_var("SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_n' AND meta_key = '_wp_attached_file'");
+                        if ($id) {
+                            echo $file_path . ' already exists in media, add to product... <br>';
+                            $is_existing_file = true;
+                            array_push($attachments, (int)$id);
+                            continue;
+                        }
+                    }
+                    if ($priority_version < 21.0 && $is_uri) {
+                        $attach_id = download_attachment($sku . $attachment['EXTFILEDES'], $product_full_url);
+
+                    } else {
+                        echo 'File ' . $file_path . ' not exsits, downloading from ' . $images_url, '<br>';
+                        $file = $this->save_uri_as_image($product_full_url, $sku . $attachment['EXTFILEDES']);
+                        $attach_id = $file[0];
+                        // $file_name = $file[1];
+                    }
+                    if ($attach_id == null) {
                         continue;
                     }
-                    // if is a new file, download from Priority and push to array
-                    if ($is_existing_file !== true) {
-                        $images_url = 'https://' . $this->option('url') . '/primail';
-                        echo 'File ' . $file_path . ' not exsits, downloading from ' . $images_url, '<br>';
-                        $priority_image_path = $file_path;
-                        $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                        $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
-                        $thumb_id = download_attachment($sku, $product_full_url);
-                        array_push($attachments, (int)$thumb_id);
-                    };
+                    if ($attach_id != 0) {
+                        array_push($attachments, (int)$attach_id);
+                    }
+
+
                 }
             };
             //  add here merge to files that exists in wp and not exists in the response from API
