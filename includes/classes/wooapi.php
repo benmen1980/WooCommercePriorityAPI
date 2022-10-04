@@ -4817,6 +4817,9 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
         $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $args = [];
+        $res = apply_filters('simply_customers_url', ['url_addition' => $url_addition,'args' => $args]);
+        $url_addition = $res['url_addition'];
         $response = $this->makeRequest('GET', $url_addition, [], true);
         // print_r( $response['status'] );
         if ($response['status']) {
@@ -4905,6 +4908,9 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
         $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT),CUSTPERSONNEL_SUBFORM($select=NAME,EMAIL)';
+        $args = ['bod'=>$bod,'statusdate'=>$statusdate,'url_addition_config'=>$url_addition_config];
+        $res = apply_filters('simply_personnel_url', ['url_addition' => $url_addition,'args' => $args]);
+        $url_addition = $res['url_addition'];
         $response = $this->makeRequest('GET', $url_addition, [], true);
         // print_r( $response['status'] );
         if ($response['status']) {
