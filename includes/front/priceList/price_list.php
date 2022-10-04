@@ -52,8 +52,8 @@ function simply_pricelist_qty_table()
             <table style="width:100%" class="price_list_table">
                 <thead>
                 <tr class="price_list_tr">
-                    <th class="price_list_td"><?php __('Quantity','woocommerce');?></th>
-                    <th class="price_list_td">מחיר<?php __('Price','woocommerce');?></th>
+                    <th class="price_list_td"><?php _e('Quantity','woocommerce');?></th>
+                    <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
                 </tr>
                 </thead>
                 <tbody id="price_list">
