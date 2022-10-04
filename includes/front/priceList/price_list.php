@@ -63,8 +63,8 @@ function simply_pricelist_qty_table()
                     $quant = $item["price_list_quant"];
                     ?>
                     <tr class="price_list_tr">
-                        <td class="price_list_td"> <?= $price ?></td>
                         <td class="price_list_td"><?= $quant ?></td>
+                        <td class="price_list_td"> <?= $price ?></td>
                     </tr>
                     <?php
                 }
