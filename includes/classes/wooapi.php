@@ -304,7 +304,7 @@ class WooAPI extends \PriorityAPI\API
 
                 $list = empty($meta) ? $this->basePriceCode : $meta[0]; // use base price list if there is no list assigned
 
-                if ($data = $this->getPriceListData($list)) {
+                if ($data == $this->getPriceListData($list)) {
 
                     add_filter('woocommerce_currency', function ($currency) use ($data) {
 

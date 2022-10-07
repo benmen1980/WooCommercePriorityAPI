@@ -49,14 +49,14 @@ function simply_pricelist_qty_table()
             // $product->set_regular_price($data[0]['price_list_price'])
             ?>
             <input type="hidden" name="price_regular" id="price_regular" value="<?= $price ?>">
-            <table style="width:100%" class="price_list_table">
+            <table style="width:100%" class="simply-tire-price-grid">
                 <thead>
                 <tr class="price_list_tr">
                     <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
                     <th class="price_list_td"><?php _e('Quantity','woocommerce');?></th>
                 </tr>
                 </thead>
-                <tbody id="price_list">
+                <tbody id="simply-tire-price-grid-rows">
                 <?php
                 foreach ($data as $item) {
                     $price = $item["price_list_price"];
