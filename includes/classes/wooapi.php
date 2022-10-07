@@ -1240,7 +1240,7 @@ class WooAPI extends \PriorityAPI\API
                 $post_content = '';
                 if (isset($item['PARTTEXT_SUBFORM'])) {
                     foreach ($item['PARTTEXT_SUBFORM'] as $text) {
-                        $content .= $text;
+                        $content .= ' '.html_entity_decode($text);
                     }
                 }
                 $data = [
