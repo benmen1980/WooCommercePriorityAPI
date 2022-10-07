@@ -1539,7 +1539,9 @@ class WooAPI extends \PriorityAPI\API
                 //sync Brands
                 if (($brands) != false) {
                     if (!empty($item[$brands]) && $id) {
-                        wp_set_object_terms($id, $item[$brands], 'pwb-brand');
+                        $br_tex='pwb-brand';
+                        $br_tex=apply_filters('simplyct_brand_tax',$br_tex);
+                        wp_set_object_terms($id, $item[$brands], $br_tex);
 
                     }
                 }
