@@ -1,4 +1,4 @@
-.price_list_table, .price_list_td, .price_list_tr {
+.price_list_tr, .price_list_tr td,.price_list_tr th {
     border: 0.1rem solid black !important;
     text-align: center;
     margin-top: 3%;

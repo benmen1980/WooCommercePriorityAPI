@@ -12,26 +12,25 @@ jQuery(document).ready(function ($) {
         let price =  priceSpanBdi.childNodes[1].textContent ;
         for (i = 0; i < tr.length ; i++) {
             let td1;
-            let td = tr[i].getElementsByTagName("td")
+            let td = tr[i].querySelector('.simply-tire-price')
             if(i == tr.length -1){
-                price = td[0].textContent
+                price = tr[i].querySelector('.simply-tire-price').textContent
                 priceSpanBdi.childNodes[1].textContent = price;
                 document.getElementById('realprice').value = price
                 break;
             }else{
-                 td1 = tr[i + 1].getElementsByTagName("td")
+                 td1 = tr[i + 1].querySelector('.simply-tire-quantity');
             }
-            if (parseInt(qty) < parseInt(td1[1].textContent)) {
-                price = td[0].textContent
+            if (parseInt(qty) < parseInt(tr[i].querySelector('.simply-tire-quantity').textContent)) {
+                price = tr[i].querySelector('.simply-tire-price').textContent
                 priceSpanBdi.childNodes[1].textContent = price;
                 document.getElementById('realprice').value = price
                 break;
             }
         }
         if (price == undefined) {
-            let td = tr[i].getElementsByTagName("td")
-            if (i > 0 || parseInt(td[1].textContent) <= parseInt(step)) {
-                price = td[0].textContent
+            if (i > 0 || parseInt(tr[i].querySelector('.simply-tire-quantity').textContent) <= parseInt(step)) {
+                price = tr[i].querySelector('.simply-tire-price').textContent
 
             } else {
                 price = document.getElementById('price_regular').value;

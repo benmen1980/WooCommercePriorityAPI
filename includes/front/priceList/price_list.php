@@ -52,8 +52,8 @@ function simply_pricelist_qty_table()
             <table style="width:100%" class="simply-tire-price-grid">
                 <thead>
                 <tr class="price_list_tr">
-                    <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
                     <th class="price_list_td"><?php _e('Quantity','woocommerce');?></th>
+                    <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
                 </tr>
                 </thead>
                 <tbody id="simply-tire-price-grid-rows">
@@ -63,8 +63,9 @@ function simply_pricelist_qty_table()
                     $quant = $item["price_list_quant"];
                     ?>
                     <tr class="price_list_tr">
-                        <td class="price_list_td"> <?= $price ?></td>
-                        <td class="price_list_td"><?= $quant ?></td>
+                        <td class="simply-tire-quantity"><?= $quant ?></td>
+                        <td class="simply-tire-price"> <?= $price ?></td>
+
                     </tr>
                     <?php
                 }
