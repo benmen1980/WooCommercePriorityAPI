@@ -3572,7 +3572,8 @@ class WooAPI extends \PriorityAPI\API
         if ($response['code'] <= 201) {
             $body_array = json_decode($response["body"], true);
             $ord_status = $body_array["ORDSTATUSDES"];
-            $ord_number = $body_array["ORDNAME"];
+            $ordname_field = $config->ordname_field ?? 'ORDNAME';
+            $ord_number = $body_array[$ordname_field];
             $order->update_meta_data('priority_order_status', $ord_status);
             $order->update_meta_data('priority_order_number', $ord_number);
             $order->save();
