@@ -1192,7 +1192,7 @@ class WooAPI extends \PriorityAPI\API
 
         if ($config->sync_price == "true") {
             $this->syncPricePriority();
-            return;
+           // return;
         }
         $synclongtext = $config->synclongtext;
         $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
