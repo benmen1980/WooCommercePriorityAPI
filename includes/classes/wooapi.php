@@ -1557,7 +1557,8 @@ class WooAPI extends \PriorityAPI\API
                     $file_ = $this->load_image($item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field);
                     $attach_id = $file_[0];
                     $file = $file_[1];
-                    include $file;
+                   // include $file;
+                    require_once( ABSPATH . '/wp-admin/includes/image.php' );
                     $attach_data = wp_generate_attachment_metadata($attach_id, $file);
                     wp_update_attachment_metadata($attach_id, $attach_data);
                     set_post_thumbnail($id, $attach_id);
