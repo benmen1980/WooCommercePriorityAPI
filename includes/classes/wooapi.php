@@ -1554,7 +1554,7 @@ class WooAPI extends \PriorityAPI\API
                 $sku = $item[$search_field];
                 $is_has_image = get_the_post_thumbnail_url($id);
                 if ($this->option('update_image') == true || !get_the_post_thumbnail_url($id)) {
-                    $file_ = $this->load_image($item['EXTFILENAME'], $image_base_url, $priority_version, $sku, $search_field);
+                    $file_ = $this->load_image($item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field);
                     $attach_id = $file_[0];
                     $file = $file_[1];
                     include $file;
