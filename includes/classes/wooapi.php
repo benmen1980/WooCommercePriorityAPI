@@ -1281,22 +1281,38 @@ class WooAPI extends \PriorityAPI\API
                         continue;
                     }
                 }
-                if ($product_id != 0 && false == $is_update_products) {
-                    continue;
-                }
+                // delete not active
                 if ($statdes == true) {
                     if ($item['STATDES'] == "לא פעיל") {
                         if ($product_id != 0) {
-                            $_product->delete();
+                            $_product->delete(true);
 
                         } else {
-                            continue;
+                            //continue;
                         }
+                        continue;
                     }
                 }
+                // check if the item flagged as show in web, if not skip the item
+                if(isset($show_in_web)){
+                    if($product_id == 0 && $item[$show_in_web]!='Y'){
+                        continue;
+                    }
+                    if($product_id != 0 && $item[$show_in_web]!='Y'){
+                        $_product->set_status('draft');
+                        $_product->save();
+                        continue;
+                    }
+                }
+                // check if update existing products
+                if ($product_id != 0 && false == $is_update_products) {
+                    continue;
+                }
+                // update product
                 if ($product_id != 0) {
                     $data['ID'] = $product_id;
-
+                    $_product->set_status($this->option('item_status'));
+                    $_product->save();
                     // Update post
                     $id = $product_id;
                     global $wpdb;
@@ -1557,7 +1573,7 @@ class WooAPI extends \PriorityAPI\API
                     $file_ = $this->load_image($item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field);
                     $attach_id = $file_[0];
                     $file = $file_[1];
-                   // include $file;
+                    include $file;
                     require_once( ABSPATH . '/wp-admin/includes/image.php' );
                     $attach_data = wp_generate_attachment_metadata($attach_id, $file);
                     wp_update_attachment_metadata($attach_id, $attach_data);
@@ -5317,7 +5333,7 @@ class WooAPI extends \PriorityAPI\API
     function load_image($ext_file, $image_base_url, $priority_version, $sku, $search_field)
     {
         if ($priority_version >= 21.0 || $ext_file == '') {
-            $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=' . $search_field . ' eq \'' . $sku . '\'', [], $this->option('log_items_priority', true));
+            $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=' . $search_field . ' eq \'' . urlencode($sku) . '\'', [], $this->option('log_items_priority', true));
             $data = json_decode($response['body']);
             $ext_file = $data->value[0]->EXTFILENAME;
         }
