@@ -1377,13 +1377,11 @@ class WooAPI extends \PriorityAPI\API
                         continue;
                     }
                     // price
-                    if ($config->sync_price != "true") {
-                        $my_product->set_regular_price($pri_price);
-                        if ($product_price_sale != null && !empty($item[$product_price_sale])) {
-                            $price_sale = $item[$product_price_sale];
-                            if ($price_sale != 0) {
-                                $my_product->set_sale_price($price_sale);
-                            }
+                    $my_product->set_regular_price($pri_price);
+                    if ($product_price_sale != null && !empty($item[$product_price_sale])) {
+                        $price_sale = $item[$product_price_sale];
+                        if ($price_sale != 0) {
+                            $my_product->set_sale_price($price_sale);
                         }
                     }
                     // sales price make troubles. Roy need to think what to do with it.
