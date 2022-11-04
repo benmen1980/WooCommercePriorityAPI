@@ -102,7 +102,7 @@
             </tr>
             <tr>
                 <td class="p18a-label">
-                    <label for="p18a-selectusers2"><?php _e('Use Select users2?', 'p18a'); ?></label>
+                    <label for="p18a-selectusers2"><?php _e('Select user in check out form?', 'p18a'); ?></label>
                 </td>
                 <td></td>
                 <td>
