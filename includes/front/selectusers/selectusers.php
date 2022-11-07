@@ -29,7 +29,7 @@ function simply_populate_users($atts)
         //return __('No Sites','p18a');
         return __('','p18a');
     }
-    $select_options = '<select name="users" class="change_user">';
+    $select_options = '<select name="users" class="simply-agents-list">';
     $select_options .= ' <option disabled selected value>'.__('-- select an option --','p18w').'</option>';
     /*
     if(!in_array($current_user_id,$selected_users) && $removeInitailUser){
@@ -54,7 +54,7 @@ add_action( 'wp_footer', 'simply_ajax_change_user' );
 /* handle session on frontend */
 function simply_ajax_change_user() { ?>
     <script type="text/javascript" >
-        jQuery(".change_user").change(function($) {
+        jQuery(".simply-agents-list").change(function($) {
             ajaxurl = '<?php echo admin_url( 'admin-ajax.php' ) ?>'; // get ajaxurl
             var data = {
                 'action': 'change_user', // your action name
