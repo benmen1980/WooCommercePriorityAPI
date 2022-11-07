@@ -4,44 +4,38 @@ add_shortcode('select_users','simply_populate_users');
 
 
 //this is for populate users in front
-function simply_populate_users($removeInitailUser = false)
+function simply_populate_users($atts)
 {
+    $add_agent_to_drop_down = $atts['add_agent_to_drop_down'] == "true" ;
     $current_user_id = get_current_user_id();
     $current_first_name = get_user_meta( $current_user_id, 'first_name', true );
     $current_last_name = get_user_meta( $current_user_id, 'last_name', true );
+    if(empty($_SESSION['related_users']) && empty(get_user_meta( $current_user_id, 'select_users', true))){
+        return null;
+    }
+    if(!empty(get_user_meta( $current_user_id, 'select_users', true))) {
+        $selected_users = get_user_meta( $current_user_id, 'select_users', true);
+        $_SESSION['agent_id'] = $current_user_id;
+        if(true == $add_agent_to_drop_down){
+            $selected_users[] = $current_user_id;
+        };
 
-    if (isset($_SESSION['related_users']) && !empty($_SESSION['related_users'])) {
-        if(!empty( get_user_meta( $current_user_id, 'select_users', true))){
-            if($selected_users != get_user_meta( $current_user_id, 'select_users', true)){
-                $_SESSION['related_users'] = get_user_meta( $current_user_id, 'select_users', true);
-            }
-        }
-        if(!in_array($current_user_id,$_SESSION['related_users'] )){
-            array_push($_SESSION['related_users'],$current_user_id);
-        }
-
-        $selected_users = $_SESSION['related_users'];
     }
     else{
-        $selected_users = get_user_meta( $current_user_id, 'select_users', true);
-        $_SESSION['related_users'] = $selected_users;
-        if(!in_array($current_user_id,$_SESSION['related_users'] )){
-            array_push($_SESSION['related_users'],$current_user_id);
-        }
+        $selected_users = $_SESSION['related_users'];
     }
-    // remove the initial user from drop down
-    if($removeInitailUser){
-
-    }
-    //print_r($_SESSION['related_users']);
+    $_SESSION['related_users'] = $selected_users;
     if(empty($selected_users)){
         //return __('No Sites','p18a');
         return __('','p18a');
     }
     $select_options = '<select name="users" class="change_user">';
-    if(!in_array($current_user_id,$selected_users)){
+    $select_options .= ' <option disabled selected value>'.__('-- select an option --','p18w').'</option>';
+    /*
+    if(!in_array($current_user_id,$selected_users) && $removeInitailUser){
         $select_options .= '<option value="' . $current_user_id . '" '. $selected .' >' . $current_first_name.' '.$current_last_name . '</option>';
     }
+    */
     foreach ($selected_users as $userid) {
         $first_name = get_user_meta( $userid, 'first_name', true );
         $last_name = get_user_meta( $userid, 'last_name', true );
