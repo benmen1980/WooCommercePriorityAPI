@@ -4,7 +4,7 @@ add_shortcode('select_users','simply_populate_users');
 
 
 //this is for populate users in front
-function simply_populate_users()
+function simply_populate_users($removeInitailUser = false)
 {
     $current_user_id = get_current_user_id();
     $current_first_name = get_user_meta( $current_user_id, 'first_name', true );
@@ -28,6 +28,10 @@ function simply_populate_users()
         if(!in_array($current_user_id,$_SESSION['related_users'] )){
             array_push($_SESSION['related_users'],$current_user_id);
         }
+    }
+    // remove the initial user from drop down
+    if($removeInitailUser){
+
     }
     //print_r($_SESSION['related_users']);
     if(empty($selected_users)){

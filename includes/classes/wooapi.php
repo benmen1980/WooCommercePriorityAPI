@@ -298,11 +298,14 @@ class WooAPI extends \PriorityAPI\API
              */
 
             // set shop currency regarding to price list currency
+            /*
             if ($user_id = get_current_user_id()) {
 
-                $meta = get_user_meta($user_id, '_priority_price_list');
+                //$meta = get_user_meta($user_id, '_priority_price_list');
+                $meta = get_user_meta($user_id, 'custpricelists',true);
 
-                $list = empty($meta) ? $this->basePriceCode : $meta[0]; // use base price list if there is no list assigned
+
+                $list = empty($meta) ? $this->basePriceCode : $meta[0]['PLNAME']; // use base price list if there is no list assigned
 
                 if ($data == $this->getPriceListData($list)) {
 
@@ -319,15 +322,19 @@ class WooAPI extends \PriorityAPI\API
                         if ($data['price_list_currency'] == 'שח') {
                             return 'ILS';
                         }
-
                         return $data['price_list_currency'];
-
                     }, 9999);
 
                 }
 
-            }
+                add_filter('woocommerce_currency', function ($currency) {
+                    // here manipulate the currency
+                    return $currency;
+                });
 
+
+            }
+            */
 
         }
 
