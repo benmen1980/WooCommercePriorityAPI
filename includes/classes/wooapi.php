@@ -4577,7 +4577,7 @@ class WooAPI extends \PriorityAPI\API
         }
         foreach ($plists as $plist) {
             $data = $GLOBALS['wpdb']->get_row('
-                    SELECT price_list_price
+                    SELECT price_list_price,price_list_quant
                     FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
                     WHERE product_sku = "' . esc_sql($product->get_sku()) . '"
                     AND price_list_code = "' . esc_sql($plist['PLNAME']) . '"
