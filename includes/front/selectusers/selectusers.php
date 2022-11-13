@@ -6,6 +6,11 @@ add_shortcode('select_users','simply_populate_users');
 //this is for populate users in front
 function simply_populate_users($atts)
 {
+    if(!is_user_logged_in()){
+        unset($_SESSION['related_users']);
+        unset($_SESSION['agent_id']);
+        return null;
+    }
     $add_agent_to_drop_down = $atts['add_agent_to_drop_down'] == "true" ;
     $current_user_id = get_current_user_id();
     $current_first_name = get_user_meta( $current_user_id, 'first_name', true );
