@@ -125,7 +125,7 @@ class WooAPI extends \PriorityAPI\API
 
     function bbloomer_print_login_to_see()
     {
-        echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'theme_name') . '</a>';
+        echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'p18w') . '</a>';
     }
 
     /**
@@ -175,6 +175,7 @@ class WooAPI extends \PriorityAPI\API
             add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
             add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
+            add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
             // filter sales price
 //            if (is_user_logged_in()) {
 //                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
@@ -4769,14 +4770,14 @@ class WooAPI extends \PriorityAPI\API
         if (!empty($_POST['custpricelists'])) {
             $custpricelists = $_POST['custpricelists'];
             $custpricelists_ar = explode(' ', $custpricelists);
-            if (!in_array($custpricelists, $custpricelists_ar)) {
+           // if (!in_array($custpricelists, $custpricelists_ar)) {
                 $custpricelists_result = [];
                 foreach ($custpricelists_ar as $key => $cust) {
                     if (!empty($cust))
                         $custpricelists_result[] = array('PLNAME' => $cust);
                 }
                 update_user_meta($user_id, 'custpricelists', $custpricelists_result);
-            }
+          //  }
         } else {
             update_user_meta($user_id, 'custpricelists', '');
         }
