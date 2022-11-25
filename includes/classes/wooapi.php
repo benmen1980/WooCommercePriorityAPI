@@ -2419,6 +2419,11 @@ class WooAPI extends \PriorityAPI\API
                     }
                     $product->save();
                 }
+                // add filter here
+                if (function_exists('simply_code_after_sync_inventory'))
+                {
+                    simply_code_after_sync_inventory($product_id,$item);
+                }
             }
             // add timestamp
             $this->updateOption('inventory_priority_update', time());
