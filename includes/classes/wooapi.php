@@ -3558,7 +3558,8 @@ class WooAPI extends \PriorityAPI\API
                     $data['ORDERITEMS_SUBFORM'][sizeof($data['ORDERITEMS_SUBFORM']) - 1]['PERCENT'] = $discount;
                 }
             }
-            $data = apply_filters('simply_modify_orderitem',['data' => $data,'item' => $item]);
+            $res_data = apply_filters('simply_modify_orderitem',['data' => $data,'item' => $item]);
+            $data = $res_data['data'];
         }
         // additional line cart discount
         $config = json_decode(stripslashes($this->option('setting-config')));
