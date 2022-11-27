@@ -175,7 +175,11 @@ class WooAPI extends \PriorityAPI\API
             add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
             add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
             add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
-            add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
+            $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+            $show_priority_price_as_sale_price = $config->show_priority_price_as_sale_price;
+            if($show_priority_price_as_sale_price == 'true'){
+                add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
+            }
             // filter sales price
 //            if (is_user_logged_in()) {
 //                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
@@ -4561,7 +4565,7 @@ class WooAPI extends \PriorityAPI\API
         $transient = $user->ID . $product->get_id();
         $get_transient = get_transient($transient);
         if ($get_transient) {
-            return (float)$get_transient;
+          //  return (float)$get_transient;
         }
         // get the MCUSTNAME if any else get the cust
         $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
