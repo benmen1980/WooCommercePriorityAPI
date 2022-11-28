@@ -4818,7 +4818,7 @@ class WooAPI extends \PriorityAPI\API
             $method_title = $data['method_title'];
             $method_id = $data['method_id'];
             $instance_id = $data['instance_id'];
-            $shipping_price = $data['total'];
+            $shipping_price = $data['total'] + $data['total_tax'];
             $data = [
                 // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
                 $this->get_sku_prioirty_dest_field() => $this->option('shipping_' . $method_id . '_' . $instance_id, $default_product),
