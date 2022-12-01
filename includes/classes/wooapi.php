@@ -2388,10 +2388,10 @@ class WooAPI extends \PriorityAPI\API
                     $is_deduct_order = explode(',', $this->option('sync_inventory_warhsname'))[1] == 'ORDER';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
                     foreach ($item['PARTBALANCE_SUBFORM'] as $wh_stock) {
-                        $stock = $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
-                        if ($is_deduct_order) {
-                            $stock = $wh_stock['TBALANCE'] - $orders > 0 ? $wh_stock['TBALANCE'] - $orders : 0; // stock - orders
-                        }
+                        $stock += $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
+                    }
+                    if ($is_deduct_order) {
+                        $stock = $stock - $orders > 0 ? $stock - $orders : 0; // stock - orders
                     }
                     $statuses = explode(',', $this->option('sync_inventory_warhsname'))[4];
                     if (!empty($statuses)) {
