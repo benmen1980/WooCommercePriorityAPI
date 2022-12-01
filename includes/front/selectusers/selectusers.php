@@ -1,8 +1,6 @@
 <?php
 
 add_shortcode('select_users','simply_populate_users');
-
-
 //this is for populate users in front
 function simply_populate_users($atts)
 {
@@ -54,7 +52,6 @@ function simply_populate_users($atts)
     $select_options .= '</select>';
     return $select_options;
 }
-
 add_action( 'wp_footer', 'simply_ajax_change_user' );
 /* handle session on frontend */
 function simply_ajax_change_user() { ?>
@@ -78,7 +75,6 @@ function simply_ajax_change_user() { ?>
     </script>
     <?php
 }
-
 add_action("wp_ajax_change_user" , "change_user");
 add_action("wp_ajax_nopriv_change_user" , "change_user");
 function change_user(){
@@ -96,5 +92,12 @@ function change_user(){
     }
     wp_die();
 }
+function simply_users_register_my_session()
+{
+    if (!session_id()) {
+        session_start();
+    }
+}
+add_action('init', 'simply_users_register_my_session');
 
 
