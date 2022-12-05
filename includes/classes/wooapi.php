@@ -342,7 +342,20 @@ class WooAPI extends \PriorityAPI\API
             */
 
         }
+        /*
+        $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+        if($config->hide_price_if_not_in_pricelist == 'true'){
+            add_filter( 'woocommerce_get_price_html',[$this,'cw_change_product_price_display']);
+         }
+        */
 
+
+    }
+    function cw_change_product_price_display( $price ) {
+        if($price == 0){
+            $price = ' At Each Item Product';
+        }
+        return $price;
     }
 
     /**
@@ -1372,7 +1385,7 @@ class WooAPI extends \PriorityAPI\API
                 // And finally (optionally if needed)
                 wc_delete_product_transients($id); // Clear/refresh the variation cache
                 // update product price
-                $item['id'] = $id;
+                $item['product_id'] = $id;
                 $item = apply_filters('simply_syncItemsPriority_item', $item);
                 unset($item['id']);
                 if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
@@ -1592,7 +1605,8 @@ class WooAPI extends \PriorityAPI\API
                     wp_update_attachment_metadata($attach_id, $attach_data);
                     set_post_thumbnail($id, $attach_id);
                 }
-
+                $item->product_id = $id;
+                do_action( 'simply_update_product_data', $item );
             }
             // add timestamp
             $this->updateOption('items_priority_update', time());
@@ -4560,7 +4574,6 @@ class WooAPI extends \PriorityAPI\API
 
     public function filterPrice($price, $product)
     {
-
         $user = wp_get_current_user();
         $transient = $user->ID . $product->get_id();
         $get_transient = get_transient($transient);
