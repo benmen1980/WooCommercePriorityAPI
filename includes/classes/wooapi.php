@@ -2608,8 +2608,8 @@ class WooAPI extends \PriorityAPI\API
         // orders
         $url_addition = 'ORDERS?$filter=' . $this->option('order_order_field') . ' ne \'\'  and ';
         $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'CURDATE ge ' . $prev_date;
+        $prev_date = date(DATE_ATOM, strtotime($date . ' -10 day'));
+        $url_addition .= 'CURDATE ge ' . urlencode($prev_date);
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
         $orders = json_decode($response['body'], true)['value'];
