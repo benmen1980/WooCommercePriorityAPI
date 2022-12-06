@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 1.48.2
+ * Version: 1.48.3
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
