@@ -528,7 +528,7 @@ class WooAPI extends \PriorityAPI\API
             add_filter('manage_users_columns', function ($column) {
 
                 $column['priority_customer'] = __('Priority Customer Number', 'p18a');
-                $column['priority_price_list'] = __('Price List', 'p18a');
+             // $column['priority_price_list'] = __('Price List', 'p18a');
 
                 return $column;
 
@@ -555,7 +555,7 @@ class WooAPI extends \PriorityAPI\API
 
                         break;
 
-
+/*
                     case 'priority_price_list':
 
                         $lists = $this->getPriceLists();
@@ -578,7 +578,7 @@ class WooAPI extends \PriorityAPI\API
                         return $html;
 
                         break;
-
+*/
                     default:
 
                         return $value;
