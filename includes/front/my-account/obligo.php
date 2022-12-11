@@ -305,11 +305,12 @@ class Obligo extends \PriorityAPI\API
                 $arr = array('sum' => $value->SUM1, 'ivnum' => $value->IVNUM);
 
                 //check if already pay for this ivnum
+                $disabled = '';
                 if (!empty($retrieve_ivnum)) {
                     if (in_array($value->IVNUM, $retrieve_ivnum)) {
                         $disabled = 'disabled="disabled"';
                     } else {
-                        $disabled = '';
+                       // $disabled = '';
                     }
                 }
                 if (!empty($pdts_in_cart)) {

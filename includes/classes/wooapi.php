@@ -2340,7 +2340,7 @@ class WooAPI extends \PriorityAPI\API
         $daysback = intval(!empty($daysback_options) ? $daysback_options : 10); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $bod = date(DATE_ATOM, $stamp);
-        $url_addition = '(WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod . ')';
+        $url_addition = '('. urlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
         if ($this->option('variation_field')) {
             //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
@@ -2361,7 +2361,7 @@ class WooAPI extends \PriorityAPI\API
         } else {
             $expand = '$expand = LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$select = ' . $data['select'] . '&$filter = ' . urlencode($url_addition) . ' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
+        $response = $this->makeRequest('GET', 'LOGPART?$select = ' . $data['select'] . '&$filter = ' . $url_addition . ' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
         // check response status        // check response status
         if ($response['status']) {
             $data = json_decode($response['body_raw'], true);
@@ -3619,7 +3619,7 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', $form_name, ['body' => json_encode($data)], true);
 
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200 ) {
             $body_array = json_decode($response["body"], true);
             $ord_status = $body_array["ORDSTATUSDES"];
             $ordname_field = $config->ordname_field ?? 'ORDNAME';
@@ -3628,8 +3628,12 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_order_number', $ord_number);
             $order->save();
         } else {
+            $mes_arr = json_decode($response['body']);
             $message = $response['message'] . '' . json_encode($response);
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_order_status', $message);
             $order->save();
         }
@@ -3711,8 +3715,6 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-
-
     public function syncPos($id)
     {
         if (isset(WC()->session)) {
@@ -3940,7 +3942,6 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
     public function syncAinvoice($id)
     {
         if (isset(WC()->session)) {
@@ -4053,12 +4054,9 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
             if ($product) {
-
                 /*start T151*/
                 $new_data = [];
-
                 $item_meta = wc_get_order_item_meta($item->get_id(), '_tmcartepo_data');
-
                 if ($item_meta && is_array($item_meta)) {
                     foreach ($item_meta as $tm_item) {
                         $new_data[] = [
@@ -4117,7 +4115,7 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200) {
             $body_array = json_decode($response["body"], true);
 
             $ord_status = $body_array["STATDES"];
@@ -4125,22 +4123,15 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_invoice_status', $ord_status);
             $order->update_meta_data('priority_invoice_number', $ord_number);
             $order->save();
-        }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
-            $order->update_meta_data('priority_invoice_status', $response['message'] . ' ' . $response["body"]);
-            $order->save();
-        }
-
-        if (!$response['status'] || $response['code'] >= 400) {
+        }else{
+            $message = $response['message'] . '' . json_encode($response);
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_invoice_status', $message);
             $order->save();
-            $this->sendEmailError(
-                $this->option('email_error_sync_ainvoices_priority'),
-                'Error Sync Sales Invoice',
-                $response['message'] . ' ' . $response['body']
-            );
         }
         // add timestamp
         return $response;
@@ -4264,7 +4255,7 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
 
-        if ($response['code'] <= 201) {
+        if($response['code'] <= 201 && $response['code'] >= 200){
             $body_array = json_decode($response["body"], true);
 
             $ord_status = $body_array["STATDES"];
@@ -4272,27 +4263,18 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_invoice_status', $ord_status);
             $order->update_meta_data('priority_invoice_number', $ord_number);
             $order->save();
-        }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
+        }else{
+            $message = $response['message'] . '' . json_encode($response);
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_invoice_status', $message);
-            // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
-        }
-        if (!$response['status']) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync OTC invoice',
-                $response['body']
-            );
         }
         return $response;
     }
-
     public function syncReceipt($order_id)
     {
         if (isset(WC()->session)) {
@@ -4331,7 +4313,7 @@ class WooAPI extends \PriorityAPI\API
         $data = apply_filters('simply_request_data_receipt', $data);
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data, JSON_UNESCAPED_SLASHES)], $this->option('log_receipts_priority', true));
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200) {
             $body_array = json_decode($response["body"], true);
 
             $ord_status = $body_array["STATDES"];
@@ -4339,30 +4321,21 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_recipe_status', $ord_status);
             $order->update_meta_data('priority_recipe_number', $ord_number);
             $order->save();
-        }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
+        }else{
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_recipe_status', $message);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
-        }
-        if (!$response['status']) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync OTC invoice',
-                $response['body']
-            );
         }
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
         return $response;
 
     }
-
     public function syncPayment($order_id, $optional)
     {
         $order = new \WC_Order($order_id);
@@ -4427,35 +4400,22 @@ class WooAPI extends \PriorityAPI\API
         unset($data['doctype']);
         // make request
         $response = $this->makeRequest('POST', $doctype, ['body' => json_encode($data)], true);
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200){
             $body_array = json_decode($response["body"], true);
             $ord_status = $body_array["STATDES"];
             $ord_number = $body_array["IVNUM"];
+            $order->update_meta_data('priority_recipe_status', $ord_status);
+            $order->update_meta_data('priority_recipe_number', $ord_number);
+        }else{
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
+            $order->update_meta_data('priority_recipe_status', $message);
         }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
-            $ord_status = $body_array;
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync payment',
-                $response['body']
-            );
-        }
-        if (!$response['status']) {
-            $ord_status = $response['body'];
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync payment',
-                $response['body']
-            );
-        }
-        $order->update_meta_data('priority_recipe_status', $ord_status);
-        $order->update_meta_data('priority_recipe_number', $ord_number);
         $order->save();
-        // add timestamp
-        $this->updateOption('receipts_priority_update', time());
     }
-
     public function syncReceiptsCompleted()
     {
         // get all completed orders
