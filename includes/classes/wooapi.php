@@ -2340,7 +2340,7 @@ class WooAPI extends \PriorityAPI\API
         $daysback = intval(!empty($daysback_options) ? $daysback_options : 10); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $bod = date(DATE_ATOM, $stamp);
-        $url_addition = '('. urlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
+        $url_addition = '('. rawurlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
         if ($this->option('variation_field')) {
             //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
@@ -2361,7 +2361,7 @@ class WooAPI extends \PriorityAPI\API
         } else {
             $expand = '$expand = LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$select = ' . $data['select'] . '&$filter = ' . $url_addition . ' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$url_addition.' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
         // check response status        // check response status
         if ($response['status']) {
             $data = json_decode($response['body_raw'], true);
