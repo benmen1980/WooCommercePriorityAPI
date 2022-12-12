@@ -2359,7 +2359,7 @@ class WooAPI extends \PriorityAPI\API
         } else if (!empty($status)) {
             $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=CUSTNAME eq \'' . $status . '\')';
         } else {
-            $expand = '$expand = LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
+            $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
         }
         $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$url_addition.' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
         // check response status        // check response status
