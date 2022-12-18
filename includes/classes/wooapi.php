@@ -2602,17 +2602,13 @@ class WooAPI extends \PriorityAPI\API
         }
         return $response;
     }
-
-    public
-    function syncPriorityOrderStatus()
+    public function syncPriorityOrderStatus()
     {
-
         // orders
         $url_addition = 'ORDERS?$filter=' . $this->option('order_order_field') . ' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date(DATE_ATOM, strtotime($date . ' -10 day'));
         $url_addition .= 'CURDATE ge ' . urlencode($prev_date);
-
         $response = $this->makeRequest('GET', $url_addition, null, true);
         $orders = json_decode($response['body'], true)['value'];
         $output = '';
@@ -2629,7 +2625,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition = 'AINVOICES?$filter=' . $this->option('ainvoice_order_field') . ' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'IVDATE ge ' . $prev_date;
+        $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
@@ -2650,7 +2646,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition = 'EINVOICES?$filter=' . $this->option('otc_order_field') . ' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'IVDATE ge ' . $prev_date;
+        $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
@@ -2671,7 +2667,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition = 'TINVOICES?$filter=' . $this->option('receipt_order_field') . ' ne \'\'  and ';
         $date = date('Y-m-d');
         $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'IVDATE ge ' . $prev_date;
+        $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
@@ -2691,7 +2687,6 @@ class WooAPI extends \PriorityAPI\API
         // end
         $this->updateOption('auto_sync_order_status_priority_update', time());
     }
-
     public function getPriorityCustomer(&$order)
     {
         $order_id = $order->get_id();
@@ -2779,9 +2774,7 @@ class WooAPI extends \PriorityAPI\API
         $response['body'] = "";
         return $response;
     }
-
-    public
-    function syncOrders()
+    public function syncOrders()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2803,9 +2796,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_receipt', time());
     }
-
-    public
-    function syncReceipts()
+    public function syncReceipts()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2827,9 +2818,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_order', time());
     }
-
-    public
-    function syncAinvoices()
+    public function syncAinvoices()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2851,9 +2840,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_ainvoice', time());
     }
-
-    public
-    function syncOtcs()
+    public function syncOtcs()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2875,9 +2862,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_otc', time());
     }
-
-    public
-    function get_credit_card_data($order, $is_order)
+    public function get_credit_card_data($order, $is_order)
     {
         $config = json_decode(stripslashes($this->option('setting-config')));
         $gateway = $config->gateway ?? 'debug';
@@ -3069,9 +3054,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $data;
     }
-
-    public
-    function syncProspect($order)
+    public function syncProspect($order)
     {
         if (null == $this->option('post_prospect')) {
             $priority_customer_number = $this->option('walkin_number');
@@ -3126,9 +3109,7 @@ class WooAPI extends \PriorityAPI\API
         $response['priority_customer_number'] = $priority_customer_number;
         return $response;
     }
-
-    public
-    function syncReceiptAfterOrder($order_id)
+    public function syncReceiptAfterOrder($order_id)
     {
 
         $order = new \WC_Order($order_id);
@@ -3147,9 +3128,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
-    public
-    function syncDataAfterOrder($order_id)
+    public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
         // check order status against config
@@ -3219,12 +3198,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
-    /**
-     * Sync price lists from priority to web
-     */
-    public
-    function syncPriceLists()
+    public function syncPriceLists()
     {
         $priceListNumber = $this->option('sync_pricelist_priority_warhsname')[1];
         $priceList = !empty($priceListNumber) ? '&$filter=PLNAME eq ' . $priceListNumber . '' : '';
@@ -3296,10 +3270,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
-    /* sync sites */
-    public
-    function syncSites()
+    public function syncSites()
     {
         $response = $this->makeRequest('GET', 'CUSTOMERS?$select=CUSTNAME&$expand=CUSTDESTS_SUBFORM($select=CODE,CODEDES,ADDRESS,INACTIVE;$filter=INACTIVE ne \'Y\')', [], $this->option('log_sites_priority', true));
 
@@ -3355,7 +3326,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     function get_cust_name($order)
     {
         $cust_number = apply_filters('simply_modify_customer_number', ['order' => $order,
@@ -3387,7 +3357,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $cust_number;
     }
-
     public function syncOrder($id)
     {
         if (isset(WC()->session)) {
@@ -3642,17 +3611,8 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
-    /**
-     * MAke request
-     *
-     * @param [type] $method
-     * @param [type] $url_addition
-     * @param array $options
-     */
     public function makeRequestPos($method, $url_addition = null, $options = [], $log = false)
     {
-
         $args = [
             'headers' => [
                 'Content-Type' => 'application/json'
@@ -4138,7 +4098,6 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
     public function syncOverTheCounterInvoice($order_id)
     {
         $order = new \WC_Order($order_id);
@@ -4427,7 +4386,6 @@ class WooAPI extends \PriorityAPI\API
             $this->syncReceipt($order->get_id());
         }
     }
-
     function simply_add_custom_price($cart_object)
     {
         if (is_cart()) {
@@ -4448,12 +4406,10 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     function simply_after_add_to_cart_button()
     {
         echo '<script type="text/javascript" >document.getElementsByName("quantity")[0].value = 1</script>';
     }
-
     public function filterProductsByPriceList($ids)
     {
         if ($user_id = get_current_user_id()) {
@@ -4487,7 +4443,6 @@ class WooAPI extends \PriorityAPI\API
         // not logged in user
         return [];
     }
-
     public function getPriceLists()
     {
         if (empty(static::$priceList)) {
@@ -4500,7 +4455,6 @@ class WooAPI extends \PriorityAPI\API
 
         return static::$priceList;
     }
-
     public function getPriceListData($code)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4514,7 +4468,6 @@ class WooAPI extends \PriorityAPI\API
         return $data;
 
     }
-
     public function getProductDataBySku($sku)
     {
         if ($user_id = get_current_user_id()) {
@@ -4533,7 +4486,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return false;
     }
-
     public function filterPrice($price, $product)
     {
         $user = wp_get_current_user();
@@ -4581,7 +4533,6 @@ class WooAPI extends \PriorityAPI\API
         set_transient($transient, (float)$price * $family_discount, 300);
         return (float)$price * $family_discount;
     }
-
     public function getFamilyProduct($custname, $family_code)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4597,7 +4548,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return 0;
     }
-
     public function getSpecialPriceCustomer($custname, $sku)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4613,10 +4563,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return null;
     }
-
-// filter price range for products with variations
-    public
-    function filterPriceRange($price, $product)
+    public function filterPriceRange($price, $product)
     {
         $variations = $product->get_available_variations();
         $prices = [];
@@ -4633,7 +4580,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $price;
     }
-
     function crf_show_extra_profile_fields($user)
     {
         $priority_customer_number = get_the_author_meta('priority_customer_number', $user->ID);
@@ -4730,7 +4676,6 @@ class WooAPI extends \PriorityAPI\API
         </table>
         <?php
     }
-
     function crf_update_profile_fields($user_id)
     {
         if (!current_user_can('edit_user', $user_id)) {
@@ -4778,7 +4723,6 @@ class WooAPI extends \PriorityAPI\API
             update_user_meta($user_id, 'customer_percents', '');
         }
     }
-
     function get_shipping_price($order, $is_order)
     {
         $price_filed = $is_order ? 'VATPRICE' : 'TOTPRICE';
@@ -4811,7 +4755,6 @@ class WooAPI extends \PriorityAPI\API
             return null;
         }
     }
-
     function sync_priority_customers_to_wp()
     {
 
@@ -4907,7 +4850,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     function sync_priority_personnel_customers_to_wp()
     {
         // config
@@ -4988,7 +4930,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     function syncCastnameToMcustname()
     {
 
@@ -5025,7 +4966,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     function sync_priority_customers_to_wp_orig()
     {
         // default values
@@ -5101,7 +5041,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     function generate_settings($description, $name, $format, $format2)
     {
         ?>
@@ -5150,9 +5089,7 @@ class WooAPI extends \PriorityAPI\API
         <?php
 
     }
-
-    public
-    function syncSpecialPriceItemCustomer()
+    public function syncSpecialPriceItemCustomer()
     {
         $response = $this->makeRequest('GET', 'CUSTPARTPRICEONE?&$select=PARTNAME,CUSTNAME,PRICE', [], $this->option('log_pricelist_priority', true));
         // check response status
@@ -5187,9 +5124,7 @@ class WooAPI extends \PriorityAPI\API
 
         }
     }
-
-    public
-    function syncSpecialPriceProductFamily()
+    public function syncSpecialPriceProductFamily()
     {
         $response = $this->makeRequest('GET', 'CUSTFAMILYDISCONE?$select=FAMILYNAME,CUSTNAME,PERCENT', [], $this->option('log_productfamily_priority', true));
         // check response status
@@ -5222,7 +5157,6 @@ class WooAPI extends \PriorityAPI\API
 
         }
     }
-
     function add_customer_discount()
     {
         global $woocommerce; //Set the price for user role.
@@ -5238,7 +5172,6 @@ class WooAPI extends \PriorityAPI\API
         $discount_price = $percentage * $subtotal / 100;
         $woocommerce->cart->add_fee(__('Discount ' . $percentage . '%', 'p18w'), -$discount_price, false, 'standard');
     }
-
     function get_coupons($data, $order)
     {
         foreach ($order->get_coupon_codes() as $coupon_code) {
@@ -5256,14 +5189,12 @@ class WooAPI extends \PriorityAPI\API
         }
         return $data;
     }
-
     function get_sku_prioirty_dest_field()
     {
         $fieldname = 'PARTNAME';
         $fieldname = apply_filters('simply_set_priority_sku_field', $fieldname);
         return $fieldname;
     }
-
     function save_uri_as_image($base64_img, $title)
     {
 
@@ -5316,14 +5247,11 @@ class WooAPI extends \PriorityAPI\API
         $file = [$attach_id, $filename];
         return $file;
     }
-
-    public
-    function getStringBetween($str, $from, $to)
+    public function getStringBetween($str, $from, $to)
     {
         $sub = substr($str, strpos($str, $from) + strlen($from), strlen($str));
         return substr($sub, 0, strpos($sub, $to));
     }
-
     function load_image($ext_file, $image_base_url, $priority_version, $sku, $search_field)
     {
         if ($priority_version >= 21.0 || $ext_file == '') {
