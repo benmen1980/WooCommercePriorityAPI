@@ -2724,8 +2724,8 @@ class WooAPI extends \PriorityAPI\API
         }
         // invoice
         $url_addition = 'AINVOICES?$filter=' . $this->option('ainvoice_order_field') . ' ne \'\'  and ';
-        $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
+        //$date = date('Y-m-d');
+        //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
         $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
@@ -2745,8 +2745,8 @@ class WooAPI extends \PriorityAPI\API
         }
         // OTC
         $url_addition = 'EINVOICES?$filter=' . $this->option('otc_order_field') . ' ne \'\'  and ';
-        $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
+        //$date = date('Y-m-d');
+        //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
         $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
@@ -2766,8 +2766,8 @@ class WooAPI extends \PriorityAPI\API
         }
         // recipe
         $url_addition = 'TINVOICES?$filter=' . $this->option('receipt_order_field') . ' ne \'\'  and ';
-        $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
+       // $date = date('Y-m-d');
+        //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
         $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
