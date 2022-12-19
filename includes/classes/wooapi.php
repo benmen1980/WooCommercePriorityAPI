@@ -1992,7 +1992,8 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
-        $variation_field = $this->option('variation_field');
+        $variation_field       = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
+        $variation_field_title = $this->option('variation_field_title') == 'true' ? $this->option('variation_field_title') : 'MPARTDES';
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
@@ -2021,7 +2022,8 @@ class WooAPI extends \PriorityAPI\API
                                 $attributes[$attribute] = $attr['VALUE'];
                             }
                         }
-                        $attributes = apply_filters('simply_ItemsAtrrVariation', $item);
+                        $item = apply_filters('simply_ItemsAtrrVariation', $item);
+                        $attributes = $item['attributes'];
                         if ($attributes) {
                             $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                             if (isset($parents[$item[$variation_field]]['content'])) {
@@ -2035,7 +2037,7 @@ class WooAPI extends \PriorityAPI\API
                             $parents[$item[$variation_field]] = [
                                 'sku' => $item[$variation_field],
                                 //'crosssell' => $item['ROYL_SPECDES1'],
-                                'title' => $item[$this->option('variation_field_title')],
+                                'title' => $item[$variation_field_title],
                                 'stock' => 'Y',
                                 'variation' => [],
                                 'regular_price' => $price,
