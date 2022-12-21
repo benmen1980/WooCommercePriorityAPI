@@ -1605,6 +1605,7 @@ class WooAPI extends \PriorityAPI\API
                     wp_update_attachment_metadata($attach_id, $attach_data);
                     set_post_thumbnail($id, $attach_id);
                 }
+
                 $item->product_id = $id;
                 do_action( 'simply_update_product_data', $item );
             }
