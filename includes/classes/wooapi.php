@@ -1587,6 +1587,10 @@ class WooAPI extends \PriorityAPI\API
 
                     }
                 }
+
+                $item['product_id'] = $id;
+                do_action( 'simply_update_product_data', $item );
+
                 // sync image
                 $is_load_image = json_decode($config->is_load_image);
 
@@ -1606,8 +1610,7 @@ class WooAPI extends \PriorityAPI\API
                     set_post_thumbnail($id, $attach_id);
                 }
 
-                $item->product_id = $id;
-                do_action( 'simply_update_product_data', $item );
+
             }
             // add timestamp
             $this->updateOption('items_priority_update', time());
