@@ -1230,7 +1230,7 @@ class WooAPI extends \PriorityAPI\API
         $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
         $brands = (!empty($config->brands) ? $config->brands : false);
         $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
 
         // get the items simply by time stamp of today
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
@@ -1985,12 +1985,12 @@ class WooAPI extends \PriorityAPI\API
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
         $image_base_url = $config->image_base_url;
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
         $config_v = json_decode(stripslashes($res));
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+        $show_in_web = (!empty($config_v->show_in_web) ? $config_v->show_in_web :  $show_in_web);
         $show_front = !empty($config_v->show_front) ? $config_v->show_front : null;
         $daysback = !empty((int)$config_v->days_back) ? $config_v->days_back : (!empty((int)$config->days_back) ? $config->days_back : 1);
         $stamp = mktime(0 - $daysback * 24, 0, 0);
