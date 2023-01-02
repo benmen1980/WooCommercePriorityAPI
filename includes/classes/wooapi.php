@@ -169,10 +169,15 @@ class WooAPI extends \PriorityAPI\API
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
             $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
-            $filter_pdts_by_pricelist = $config->filter_pdts_by_pricelist;
-            if($filter_pdts_by_pricelist == true){
+            $hide_pdts_if_not_in_pricelist = $config->hide_pdts_if_not_in_pricelist;
+            if($hide_pdts_if_not_in_pricelist == 'true'){
                 add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999999);
             }
+            $hide_price_if_not_in_pricelist = $config->hide_price_if_not_in_pricelist;
+            if($hide_price_if_not_in_pricelist == 'true'){
+                add_filter( 'woocommerce_get_price_html', [$this, 'custom_price_message'] , 100 , 2 );
+            }
+
             // see documentation here
             // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
             add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
@@ -4690,6 +4695,23 @@ class WooAPI extends \PriorityAPI\API
         }
         return $price;
     }
+
+
+    /**
+     * Display "msg" instead of $0 if the item is free.
+     *
+     * @param string $price The current price label.
+     * @param object $product The product object.
+     * @return string
+     */
+    function custom_price_message( $price, $product ) {
+        if ( empty( $product->get_price() ) ) {
+
+        $price = __( 'This product is not available in your pricelist', 'p18w' );
+        }
+        return $price;
+    }
+
     function crf_show_extra_profile_fields($user)
     {
         $priority_customer_number = get_the_author_meta('priority_customer_number', $user->ID);
