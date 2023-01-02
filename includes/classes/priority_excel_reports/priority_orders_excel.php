@@ -73,7 +73,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PARTDES,EPARTDES)';
         	
 		} else 
 		//by default enter date from begin of year to today
@@ -81,7 +81,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PARTDES,EPARTDES)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 
@@ -114,9 +114,9 @@ class Priority_orders_excel extends \PriorityAPI\API{
 				if(!empty($value->ORDERITEMS_SUBFORM)) {
 					echo "<tr class='content_value subform-content-".$i."' style='display:none;'><td colspan='8'>";
 					echo "<table>";
-					echo "<tr><td>".__('Part Name','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td></tr>";
+					echo "<tr><td>".__('Part Name','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('English Description','p18w')."</td></tr>";
 					foreach($value->ORDERITEMS_SUBFORM as $subform) {
-						echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->QUANT."</td><td>".$subform->PRICE."</td></tr>";
+						echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->QUANT."</td><td>".$subform->PRICE."</td><td>".$subform->PARTDES."</td><td>".$subform->EPARTDES."</td></tr>";
 					}
 					echo "</table>";
 					echo "</td></tr>";
@@ -138,11 +138,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PARTDES,EPARTDES)';
 		} else {
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PARTDES,EPARTDES)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
@@ -155,12 +155,12 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$f = fopen('php://output', 'w');
 		//add BOM to fix UTF-8 in Excel
         fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-		$array=array(__('Date','p18w'),__('Order Name','p18w'),__('BOOK Number','p18w'),__('Quantity','p18w'),__('Price','p18w'),__('Percentage','p18w'),__('Discounted Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Quantity','p18w'),__('Price','p18w'));
+		$array=array(__('Date','p18w'),__('Order Name','p18w'),__('BOOK Number','p18w'),__('Quantity','p18w'),__('Price','p18w'),__('Percentage','p18w'),__('Discounted Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Quantity','p18w'),__('Price','p18w'),__('Description','p18w'),__('English Description','p18w'));
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				foreach($value->ORDERITEMS_SUBFORM as $subform) {
-					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE);
+					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE,$subform->PARTDES,$subform->EPARTDES);
 					fputcsv($f, $array);
 				}
 			}else {
