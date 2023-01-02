@@ -176,6 +176,8 @@ class WooAPI extends \PriorityAPI\API
             $hide_price_if_not_in_pricelist = $config->hide_price_if_not_in_pricelist;
             if($hide_price_if_not_in_pricelist == 'true'){
                 add_filter( 'woocommerce_get_price_html', [$this, 'custom_price_message'] , 100 , 2 );
+                add_filter('remove_add_to_cart', [$this,'my_woocommerce_is_purchasable'], 10, 2);
+                add_filter( 'woocommerce_is_purchasable', [$this,'remove_add_to_cart_on_0'], 10, 2 );
             }
 
             // see documentation here
@@ -4706,12 +4708,23 @@ class WooAPI extends \PriorityAPI\API
      */
     function custom_price_message( $price, $product ) {
         if ( empty( $product->get_price() ) ) {
-
-        $price = __( 'This product is not available in your pricelist', 'p18w' );
+            remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 9999);
+            $price = __( 'This product is not available in your pricelist', 'p18w' );
         }
         return $price;
     }
+    function remove_add_to_cart($is_purchasable, $product) {
+        if( $product->get_price() == 0 )
+            $is_purchasable = false;
+            return $purchasable;   
+    }
 
+
+    function remove_add_to_cart_on_0 ( $purchasable, $product ){
+        if( $product->get_price() == 0 )
+            $purchasable = false;
+        return $purchasable;
+    }
     function crf_show_extra_profile_fields($user)
     {
         $priority_customer_number = get_the_author_meta('priority_customer_number', $user->ID);
