@@ -168,8 +168,11 @@ class WooAPI extends \PriorityAPI\API
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
-            //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
-            // filter product price regarding to price list
+            $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+            $filter_pdts_by_pricelist = $config->filter_pdts_by_pricelist;
+            if($filter_pdts_by_pricelist == true){
+                add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999999);
+            }
             // see documentation here
             // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
             add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
@@ -4520,9 +4523,9 @@ class WooAPI extends \PriorityAPI\API
     public function filterProductsByPriceList($ids)
     {
         if ($user_id = get_current_user_id()) {
-            $meta = get_user_meta($user_id, '_priority_price_list');
-            if ($meta[0] === 'no-selected') return $ids;
-            $list = empty($meta) ? $this->basePriceCode : $meta[0];
+            $meta = get_user_meta($user_id, 'custpricelists', true);
+            if ($meta[0]["PLNAME"] === 'no-selected') return $ids;
+            $list = empty($meta) ? $this->basePriceCode : $meta[0]["PLNAME"];
             $products = $GLOBALS['wpdb']->get_results('
                 SELECT product_sku
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
