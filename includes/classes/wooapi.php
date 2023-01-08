@@ -168,8 +168,18 @@ class WooAPI extends \PriorityAPI\API
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
-            //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
-            // filter product price regarding to price list
+            $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
+            $hide_pdts_if_not_in_pricelist = $config->hide_pdts_if_not_in_pricelist;
+            if($hide_pdts_if_not_in_pricelist == 'true'){
+                add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999999);
+            }
+            $hide_price_if_not_in_pricelist = $config->hide_price_if_not_in_pricelist;
+            if($hide_price_if_not_in_pricelist == 'true'){
+                add_filter( 'woocommerce_get_price_html', [$this, 'custom_price_message'] , 100 , 2 );
+                add_filter('remove_add_to_cart', [$this,'my_woocommerce_is_purchasable'], 10, 2);
+                add_filter( 'woocommerce_is_purchasable', [$this,'remove_add_to_cart_on_0'], 10, 2 );
+            }
+
             // see documentation here
             // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
             add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
@@ -4522,9 +4532,9 @@ class WooAPI extends \PriorityAPI\API
     public function filterProductsByPriceList($ids)
     {
         if ($user_id = get_current_user_id()) {
-            $meta = get_user_meta($user_id, '_priority_price_list');
-            if ($meta[0] === 'no-selected') return $ids;
-            $list = empty($meta) ? $this->basePriceCode : $meta[0];
+            $meta = get_user_meta($user_id, 'custpricelists', true);
+            if ($meta[0]["PLNAME"] === 'no-selected') return $ids;
+            $list = empty($meta) ? $this->basePriceCode : $meta[0]["PLNAME"];
             $products = $GLOBALS['wpdb']->get_results('
                 SELECT product_sku
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -4688,6 +4698,34 @@ class WooAPI extends \PriorityAPI\API
             return wc_price(min($prices)) . ' - ' . wc_price(max($prices));
         }
         return $price;
+    }
+
+
+    /**
+     * Display "msg" instead of $0 if the item is free.
+     *
+     * @param string $price The current price label.
+     * @param object $product The product object.
+     * @return string
+     */
+    function custom_price_message( $price, $product ) {
+        if ( empty( $product->get_price() ) ) {
+            remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 9999);
+            $price = __( 'This product is not available in your pricelist', 'p18w' );
+        }
+        return $price;
+    }
+    function remove_add_to_cart($is_purchasable, $product) {
+        if( $product->get_price() == 0 )
+            $is_purchasable = false;
+            return $purchasable;   
+    }
+
+
+    function remove_add_to_cart_on_0 ( $purchasable, $product ){
+        if( $product->get_price() == 0 )
+            $purchasable = false;
+        return $purchasable;
     }
     function crf_show_extra_profile_fields($user)
     {
