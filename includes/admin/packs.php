@@ -100,6 +100,9 @@ function jk_woocommerce_quantity_input_args($args, $product)
     $args['min_value'] = 0;
     $args['max_value'] = 1000000; // Max quantity (default = -1)
     $packs = get_post_meta($product->get_id(), 'pri_packs', false);
+    if(empty($packs)){
+        return $args;
+    }
     //if( is_cart() || is_product()) {
 
     //if ( sizeof( WC()->cart->get_cart() ) > 0  ) {
@@ -144,6 +147,7 @@ function misha_before_add_to_cart_btn(){
     global $product;
     if($product && is_user_logged_in() ) {
         $packs = get_post_meta($product->get_id(), 'pri_packs', true);
+        if(is_array($packs)){
         ?>
         <div class="step-custom-fields">
             <input type="hidden" class="custom_pack_step" name="pack_step" value="<?php echo $packs[0]['PACKQUANT']; ?>">
@@ -157,7 +161,7 @@ function misha_before_add_to_cart_btn(){
                 })
             })
         </script>
-    <?php }
+    <?php  } }
 }
 add_filter( 'woocommerce_add_cart_item_data', 'add_cart_item_data', 25, 2 );
 function add_cart_item_data( $cart_item_meta, $product_id ) {

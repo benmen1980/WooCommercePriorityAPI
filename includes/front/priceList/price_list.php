@@ -1,4 +1,5 @@
 <?php
+
 add_action('wp_enqueue_scripts', 'my_theme_scripts_price_list');
 function my_theme_scripts_price_list()
 {

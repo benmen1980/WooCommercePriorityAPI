@@ -157,45 +157,32 @@ class WooAPI extends \PriorityAPI\API
                 add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
             }
         }
-        /*  this code by Ruth
-        if ($this->option('product_family') == true) {
-             add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
-
-         }
-        */
         if ($this->option('sell_by_pl') == true) {
             include_once P18AW_FRONT_DIR . 'priceList/price_list.php';
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
             $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
-            $hide_pdts_if_not_in_pricelist = $config->hide_pdts_if_not_in_pricelist;
+            $hide_pdts_if_not_in_pricelist = $config->hide_pdts_if_not_in_pricelist ?? false;
             if($hide_pdts_if_not_in_pricelist == 'true'){
                 add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999999);
             }
-            $hide_price_if_not_in_pricelist = $config->hide_price_if_not_in_pricelist;
+            $hide_price_if_not_in_pricelist = $config->hide_price_if_not_in_pricelist ?? false;
             if($hide_price_if_not_in_pricelist == 'true'){
                 add_filter( 'woocommerce_get_price_html', [$this, 'custom_price_message'] , 100 , 2 );
                 add_filter('remove_add_to_cart', [$this,'my_woocommerce_is_purchasable'], 10, 2);
                 add_filter( 'woocommerce_is_purchasable', [$this,'remove_add_to_cart_on_0'], 10, 2 );
+	            // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
             }
+            // filter priority price to sales price
+	        $show_priority_price_as_sale_price = $config->show_priority_price_as_sale_price ?? false;
+	        if($show_priority_price_as_sale_price == 'true'){
+		        add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
+	        }
+	        add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
+	        add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
+	        add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
 
-            // see documentation here
-            // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
-            add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
-            add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
-            add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
-            $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
-            $show_priority_price_as_sale_price = $config->show_priority_price_as_sale_price;
-            if($show_priority_price_as_sale_price == 'true'){
-                add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
-            }
-            // filter sales price
-//            if (is_user_logged_in()) {
-//                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
-//                    return 0;
-//                }, 10, 2);
-//            }
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
@@ -203,44 +190,25 @@ class WooAPI extends \PriorityAPI\API
             add_filter('woocommerce_variable_sale_price_html', [$this, 'filterPriceRange'], 10, 2);
             add_filter('woocommerce_variable_price_html', [$this, 'filterPriceRange'], 10, 2);
             // check if variation is available to the client
-            /*
-                        add_filter('woocommerce_variation_is_visible', function ($status, $id, $parent, $variation) {
 
-                            $data = $this->getProductDataBySku($variation->get_sku());
-
-                            return empty($data) ? false : true;
-
-                        }, 10, 4);
-            */
             add_filter('woocommerce_variation_prices', function ($transient_cached_prices) {
-
-                $transient_cached_prices_new = [];
-
-                foreach ($transient_cached_prices as $type_price => $variations) {
-                    foreach ($variations as $var_id => $price) {
-                        $sku = get_post_meta($var_id, '_sku', true);
-                        $data = $this->getProductDataBySku($sku);
-                        if (!empty($data)) {
-                            $transient_cached_prices_new[$type_price][$var_id] = $price;
-                        }
+            $transient_cached_prices_new = [];
+            foreach ($transient_cached_prices as $type_price => $variations) {
+                foreach ($variations as $var_id => $price) {
+                    $sku = get_post_meta($var_id, '_sku', true);
+                    $data = $this->getProductDataBySku($sku);
+                    if (!empty($data)) {
+                        $transient_cached_prices_new[$type_price][$var_id] = $price;
                     }
                 }
-
-                return $transient_cached_prices_new ? $transient_cached_prices_new : $transient_cached_prices;
+            }
+            return $transient_cached_prices_new ? $transient_cached_prices_new : $transient_cached_prices;
             }, 10);
-
-            /**
-             * t190 t214
-             */
-            add_filter('woocommerce_product_categories_widget_args', function ($list_args) {
-
+           add_filter('woocommerce_product_categories_widget_args', function ($list_args) {
                 $user_id = get_current_user_id();
-
                 $include = [];
                 $exclude = [];
-
                 $meta = get_user_meta($user_id, '_priority_price_list', true);
-
                 if ($meta !== 'no-selected') {
                     $list = empty($meta) ? $this->basePriceCode : $meta;
                     $products = $GLOBALS['wpdb']->get_results('
@@ -250,9 +218,7 @@ class WooAPI extends \PriorityAPI\API
                     AND blog_id = ' . get_current_blog_id(),
                         ARRAY_A
                     );
-
                     $cat_ids = [];
-
                     foreach ($products as $product) {
                         if ($id = wc_get_product_id_by_sku($product['product_sku'])) {
                             $parent_id = get_post($id)->post_parent;
@@ -264,7 +230,6 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-
                     if ($cat_ids) {
                         $include = array_merge($include, $cat_ids);
                     } else {
@@ -272,13 +237,11 @@ class WooAPI extends \PriorityAPI\API
                         $exclude = array_merge($include, get_terms($args));
                     }
                 }
-
                 //check display categories
                 if (empty($include)) {
                     $args = array_merge(['fields' => 'ids'], $list_args);
                     $include = get_terms($args);
                 }
-
                 global $wpdb;
                 $term_ids = $wpdb->get_col("SELECT woocommerce_term_id as term_id FROM {$wpdb->prefix}woocommerce_termmeta WHERE meta_key = '_attribute_display_category' AND meta_value = '0'");
                 if (!$term_ids) {
@@ -286,12 +249,9 @@ class WooAPI extends \PriorityAPI\API
                 } else {
                     $term_ids = array_unique($term_ids);
                 }
-
                 $include = array_diff($include, $term_ids);
-
                 //check display categories for user
                 $cat_user = get_user_meta($user_id, '_display_product_cat', true);
-
                 if (is_array($cat_user)) {
                     if ($cat_user) {
                         $include = array_intersect($include, $cat_user);
@@ -301,65 +261,13 @@ class WooAPI extends \PriorityAPI\API
                         $exclude = array_merge($exclude, get_terms($args));
                     }
                 }
-
                 $list_args['hide_empty'] = 1;
                 $list_args['include'] = implode(',', array_unique($include));
                 $list_args['exclude'] = implode(',', array_unique($exclude));
-
                 return $list_args;
             });
-            /**
-             * end t190 t214
-             */
-
-            // set shop currency regarding to price list currency
-            /*
-            if ($user_id = get_current_user_id()) {
-
-                //$meta = get_user_meta($user_id, '_priority_price_list');
-                $meta = get_user_meta($user_id, 'custpricelists',true);
-
-
-                $list = empty($meta) ? $this->basePriceCode : $meta[0]['PLNAME']; // use base price list if there is no list assigned
-
-                if ($data == $this->getPriceListData($list)) {
-
-                    add_filter('woocommerce_currency', function ($currency) use ($data) {
-
-                        if ($data['price_list_currency'] == '$') {
-                            return 'USD';
-                        }
-
-                        if ($data['price_list_currency'] == 'ש"ח') {
-                            return 'ILS';
-                        }
-
-                        if ($data['price_list_currency'] == 'שח') {
-                            return 'ILS';
-                        }
-                        return $data['price_list_currency'];
-                    }, 9999);
-
-                }
-
-                add_filter('woocommerce_currency', function ($currency) {
-                    // here manipulate the currency
-                    return $currency;
-                });
-
-
-            }
-            */
 
         }
-        /*
-        $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
-        if($config->hide_price_if_not_in_pricelist == 'true'){
-            add_filter( 'woocommerce_get_price_html',[$this,'cw_change_product_price_display']);
-         }
-        */
-
-
     }
     function cw_change_product_price_display( $price ) {
         if($price == 0){
@@ -1241,7 +1149,7 @@ class WooAPI extends \PriorityAPI\API
         $brands = (!empty($config->brands) ? $config->brands : false);
         $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
         $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
-
+	    $variation_field = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
         // get the items simply by time stamp of today
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
         $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
@@ -1261,7 +1169,7 @@ class WooAPI extends \PriorityAPI\API
         $data = apply_filters('simply_syncItemsPriority_data', $data);
 
         $response = $this->makeRequest('GET',
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config .
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and '.$variation_field.' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
             '&' . $data['expand'] . '', [],
             $this->option('log_items_priority', true));
         // check response status
