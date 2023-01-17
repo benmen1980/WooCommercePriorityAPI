@@ -1900,6 +1900,8 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
+	    $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
+	    $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
@@ -1921,11 +1923,16 @@ class WooAPI extends \PriorityAPI\API
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
+	    if ($product_price_list != null) {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+	    } else {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    }
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
         $response = $this->makeRequest('GET',
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM',
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&'.$data['expand'],
             [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
@@ -1948,6 +1955,13 @@ class WooAPI extends \PriorityAPI\API
                         $attributes = $item['attributes'];
                         if ($attributes) {
                             $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                            // price refer to pricelist
+	                        if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
+		                        $price = wc_prices_include_tax() == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+
+	                        } else {
+		                        $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+	                        }
                             if (isset($parents[$item[$variation_field]]['content'])) {
                                 $parents[$item[$variation_field]]['content'] = '';
                             }
@@ -1966,6 +1980,12 @@ class WooAPI extends \PriorityAPI\API
                                 'post_content' => $parents[$item[$variation_field]]['content']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
+                            /*
+	                        if ($config->sync_price != "true") {
+		                        $parents[$item[$variation_field]]['regular_price']= $price;
+                            }
+                            */
+
 //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
 //
 //                            }
@@ -1991,6 +2011,11 @@ class WooAPI extends \PriorityAPI\API
                                 'attributes' => $attributes
 
                             ];
+                            /*
+	                        if ($config->sync_price != "true") {
+		                        $childrens[$item[$variation_field]][$search_by_value]['regular_price']= $price;
+	                        }
+                            */
                             if ($show_front != null) {
                                 $childrens[$item[$variation_field]][$search_by_value]['show_front'] = $item[$show_front];
                             }

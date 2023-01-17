@@ -60,8 +60,8 @@ function create_pack_drop_down($product)
             ?>
         </select>
         <br>
-        <label><?php _e('Num a pack:', 'storefront'); ?> </label>
-        <span id="num-packs">0</span>
+        <label><?php _e('Number of packs:', 'p18w'); ?> </label>
+        <input id="num-packs" />
         <?php
     }
 }

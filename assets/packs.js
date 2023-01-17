@@ -1,10 +1,15 @@
 jQuery(document).ready(function( $ ) {
+    $(document).on('change','#num-packs', function(event ) {
+        let a = $('input[name="quantity"]').attr('step');
+        let b = $(event.target).val();
+        $('input[name="quantity"]').val(a*b);
+    });
     $(document).on('change','.pri-packs', function(event ) {
         // shop- wait for Sunli to fix his bug T20
         // cart and product
         $(event.target).parent().find('.input-text.qty.text').first().attr('step',this.value);
         $(event.target).parent().find('.input-text.qty.text').first().val(0);
-        $(event.target).parent().parent().parent().find('#num-packs').first().text(0)
+
     });
     $(document).on('change', '.input-text.qty.text', function (event) {
         // shop- wait for Sunli to fix his bug T20
@@ -13,9 +18,11 @@ jQuery(document).ready(function( $ ) {
         let b = $(event.target).parent().find('.input-text.qty.text').first()[0].value;
         if (b > 1) {
             let c = b / a
-            $(event.target).parent().parent().parent().find('#num-packs').first().text(c)
+            console.log('c= '+ c);
+            console.log(  $(event.target).parent().parent().parent().find('#num-packs').first());
+            document.getElementById('num-packs').value = c;
         } else {
-            $(event.target).parent().parent().parent().find('#num-packs').first().text(b)
+            $(event.target).parent().parent().parent().find('#num-packs').first().value = b;
         }
     });
 
