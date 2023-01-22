@@ -4905,6 +4905,9 @@ class WooAPI extends \PriorityAPI\API
                 apply_filters('simply_sync_priority_customers_to_wp', $user);
                 unset($user['user_id']);
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
+	            if(empty($user['CUSTPLIST_SUBFORM'])){
+		            $user['CUSTPLIST_SUBFORM'][0] = ['PLNAME' => 'בסיס'];
+	            }
                 update_user_meta($user_id, 'custpricelists', $user['CUSTPLIST_SUBFORM']);
                 update_user_meta($user_id, 'priority_mcustomer_number', $user['MCUSTNAME']);
                 update_user_meta($user_id, 'customer_percents', $user['CUSTDISCOUNT_SUBFORM']);
