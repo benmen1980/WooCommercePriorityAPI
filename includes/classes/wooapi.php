@@ -1926,35 +1926,19 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
-<<<<<<< HEAD
-        $variation_field = $this->option('variation_field'); //we have to add this field in priority;
-=======
         $variation_field       = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
         $variation_field_title = $this->option('variation_field_title') == 'true' ? $this->option('variation_field_title') : 'MPARTDES';
->>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
-<<<<<<< HEAD
-        $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
-=======
-	    if ($product_price_list != null) {
-		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
-	    } else {
-		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
-	    }
->>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
+
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
         $response = $this->makeRequest('GET',
-<<<<<<< HEAD
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&' . $data['expand'] . '',
-=======
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&'.$data['expand'],
->>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
             [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
@@ -2002,21 +1986,11 @@ class WooAPI extends \PriorityAPI\API
                                 'post_content' => $parents[$item[$variation_field]]['content']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
-<<<<<<< HEAD
-                            //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
-                            //
-                            //                            }
-=======
-                            /*
-	                        if ($config->sync_price != "true") {
-		                        $parents[$item[$variation_field]]['regular_price']= $price;
-                            }
-                            */
 
 //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
 //
 //                            }
->>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
+
                             if ($priority_version >= 21.0 && true == $is_load_image) {
                                 $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $search_by_value . '\'', [], $this->option('log_items_priority', true));
                                 $data = json_decode($response['body']);
@@ -3757,13 +3731,8 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-<<<<<<< HEAD
-
 
     public function syncTransactionPos($id)
-=======
-    public function syncPos($id)
->>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3990,6 +3959,7 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
+
     public function syncAinvoice($id)
     {
         if (isset(WC()->session)) {
