@@ -47,7 +47,7 @@ if (isset($_GET['ord'])) {
     // sync POS
     if ($this->option('post_pos_checkout')) {
         $message .= '<h1>Priority API, sync POS to Priority</h1>';
-        $response = $this->syncPos($order_id);
+        $response = $this->syncTransactionPos($order_id);
         $message .= simply_create_message_repost($response);
     }
     if($this->option('cardPos')){

@@ -512,7 +512,7 @@ class CardPOS extends \PriorityAPI\API
         }
     }
 
-
+    //we dont need it because we are synchronizing item from priority api and not from cart
     function syncItemsPriorityPos(){
         $item_option = $this->option('sync_items_priority_pos_config');
         $item_option = str_replace(array("\n", "\t", "\r"), '', $item_option);
@@ -747,7 +747,6 @@ class CardPOS extends \PriorityAPI\API
             wp_mail( $multiple_recipients, $subj, $message );
         }
     }
-
 
     function syncPricePriorityPos(){
         $price_option = $this->option('sync_price_pos_config');
