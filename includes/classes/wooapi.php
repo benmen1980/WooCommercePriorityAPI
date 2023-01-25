@@ -157,35 +157,32 @@ class WooAPI extends \PriorityAPI\API
                 add_action('woocommerce_customer_save_address', [$this, 'syncCustomer'], 999);
             }
         }
-        /*  this code by Ruth
-        if ($this->option('product_family') == true) {
-             add_filter('woocommerce_get_price_html', [$this, 'custom_dynamic_sale_price_html'], 20, 2);
-
-         }
-        */
         if ($this->option('sell_by_pl') == true) {
             include_once P18AW_FRONT_DIR . 'priceList/price_list.php';
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
-            //  add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999);
-            // filter product price regarding to price list
-            // see documentation here
-            // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
-            add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
-            add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
-            add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
             $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
-            $show_priority_price_as_sale_price = $config->show_priority_price_as_sale_price;
-            if($show_priority_price_as_sale_price == 'true'){
-                add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
+            $hide_pdts_if_not_in_pricelist = $config->hide_pdts_if_not_in_pricelist ?? false;
+            if($hide_pdts_if_not_in_pricelist == 'true'){
+                add_filter('loop_shop_post_in', [$this, 'filterProductsByPriceList'], 9999999);
             }
-            // filter sales price
-//            if (is_user_logged_in()) {
-//                add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
-//                    return 0;
-//                }, 10, 2);
-//            }
+            $hide_price_if_not_in_pricelist = $config->hide_price_if_not_in_pricelist ?? false;
+            if($hide_price_if_not_in_pricelist == 'true'){
+                add_filter( 'woocommerce_get_price_html', [$this, 'custom_price_message'] , 100 , 2 );
+                add_filter('remove_add_to_cart', [$this,'my_woocommerce_is_purchasable'], 10, 2);
+                add_filter( 'woocommerce_is_purchasable', [$this,'remove_add_to_cart_on_0'], 10, 2 );
+	            // https://awhitepixel.com/blog/change-prices-woocommerce-by-code/
+            }
+            // filter priority price to sales price
+	        $show_priority_price_as_sale_price = $config->show_priority_price_as_sale_price ?? false;
+	        if($show_priority_price_as_sale_price == 'true'){
+		        add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
+	        }
+	        add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
+	        add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
+	        add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
+
             // filter product variation price regarding to price list
             add_filter('woocommerce_product_variation_get_price', [$this, 'filterPrice'], 10, 2);
             //add_filter('woocommerce_product_variation_get_regular_price', [$this, 'filterPrice'], 10, 2);
@@ -193,44 +190,25 @@ class WooAPI extends \PriorityAPI\API
             add_filter('woocommerce_variable_sale_price_html', [$this, 'filterPriceRange'], 10, 2);
             add_filter('woocommerce_variable_price_html', [$this, 'filterPriceRange'], 10, 2);
             // check if variation is available to the client
-            /*
-                        add_filter('woocommerce_variation_is_visible', function ($status, $id, $parent, $variation) {
 
-                            $data = $this->getProductDataBySku($variation->get_sku());
-
-                            return empty($data) ? false : true;
-
-                        }, 10, 4);
-            */
             add_filter('woocommerce_variation_prices', function ($transient_cached_prices) {
-
-                $transient_cached_prices_new = [];
-
-                foreach ($transient_cached_prices as $type_price => $variations) {
-                    foreach ($variations as $var_id => $price) {
-                        $sku = get_post_meta($var_id, '_sku', true);
-                        $data = $this->getProductDataBySku($sku);
-                        if (!empty($data)) {
-                            $transient_cached_prices_new[$type_price][$var_id] = $price;
-                        }
+            $transient_cached_prices_new = [];
+            foreach ($transient_cached_prices as $type_price => $variations) {
+                foreach ($variations as $var_id => $price) {
+                    $sku = get_post_meta($var_id, '_sku', true);
+                    $data = $this->getProductDataBySku($sku);
+                    if (!empty($data)) {
+                        $transient_cached_prices_new[$type_price][$var_id] = $price;
                     }
                 }
-
-                return $transient_cached_prices_new ? $transient_cached_prices_new : $transient_cached_prices;
+            }
+            return $transient_cached_prices_new ? $transient_cached_prices_new : $transient_cached_prices;
             }, 10);
-
-            /**
-             * t190 t214
-             */
-            add_filter('woocommerce_product_categories_widget_args', function ($list_args) {
-
+           add_filter('woocommerce_product_categories_widget_args', function ($list_args) {
                 $user_id = get_current_user_id();
-
                 $include = [];
                 $exclude = [];
-
                 $meta = get_user_meta($user_id, '_priority_price_list', true);
-
                 if ($meta !== 'no-selected') {
                     $list = empty($meta) ? $this->basePriceCode : $meta;
                     $products = $GLOBALS['wpdb']->get_results('
@@ -240,9 +218,7 @@ class WooAPI extends \PriorityAPI\API
                     AND blog_id = ' . get_current_blog_id(),
                         ARRAY_A
                     );
-
                     $cat_ids = [];
-
                     foreach ($products as $product) {
                         if ($id = wc_get_product_id_by_sku($product['product_sku'])) {
                             $parent_id = get_post($id)->post_parent;
@@ -254,7 +230,6 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                     }
-
                     if ($cat_ids) {
                         $include = array_merge($include, $cat_ids);
                     } else {
@@ -262,13 +237,11 @@ class WooAPI extends \PriorityAPI\API
                         $exclude = array_merge($include, get_terms($args));
                     }
                 }
-
                 //check display categories
                 if (empty($include)) {
                     $args = array_merge(['fields' => 'ids'], $list_args);
                     $include = get_terms($args);
                 }
-
                 global $wpdb;
                 $term_ids = $wpdb->get_col("SELECT woocommerce_term_id as term_id FROM {$wpdb->prefix}woocommerce_termmeta WHERE meta_key = '_attribute_display_category' AND meta_value = '0'");
                 if (!$term_ids) {
@@ -276,12 +249,9 @@ class WooAPI extends \PriorityAPI\API
                 } else {
                     $term_ids = array_unique($term_ids);
                 }
-
                 $include = array_diff($include, $term_ids);
-
                 //check display categories for user
                 $cat_user = get_user_meta($user_id, '_display_product_cat', true);
-
                 if (is_array($cat_user)) {
                     if ($cat_user) {
                         $include = array_intersect($include, $cat_user);
@@ -291,58 +261,19 @@ class WooAPI extends \PriorityAPI\API
                         $exclude = array_merge($exclude, get_terms($args));
                     }
                 }
-
                 $list_args['hide_empty'] = 1;
                 $list_args['include'] = implode(',', array_unique($include));
                 $list_args['exclude'] = implode(',', array_unique($exclude));
-
                 return $list_args;
             });
-            /**
-             * end t190 t214
-             */
-
-            // set shop currency regarding to price list currency
-            /*
-            if ($user_id = get_current_user_id()) {
-
-                //$meta = get_user_meta($user_id, '_priority_price_list');
-                $meta = get_user_meta($user_id, 'custpricelists',true);
-
-
-                $list = empty($meta) ? $this->basePriceCode : $meta[0]['PLNAME']; // use base price list if there is no list assigned
-
-                if ($data == $this->getPriceListData($list)) {
-
-                    add_filter('woocommerce_currency', function ($currency) use ($data) {
-
-                        if ($data['price_list_currency'] == '$') {
-                            return 'USD';
-                        }
-
-                        if ($data['price_list_currency'] == 'ש"ח') {
-                            return 'ILS';
-                        }
-
-                        if ($data['price_list_currency'] == 'שח') {
-                            return 'ILS';
-                        }
-                        return $data['price_list_currency'];
-                    }, 9999);
-
-                }
-
-                add_filter('woocommerce_currency', function ($currency) {
-                    // here manipulate the currency
-                    return $currency;
-                });
-
-
-            }
-            */
 
         }
-
+    }
+    function cw_change_product_price_display( $price ) {
+        if($price == 0){
+            $price = ' At Each Item Product';
+        }
+        return $price;
     }
     /**
      * Backend - PriorityAPI Admin
@@ -526,7 +457,7 @@ class WooAPI extends \PriorityAPI\API
             add_filter('manage_users_columns', function ($column) {
 
                 $column['priority_customer'] = __('Priority Customer Number', 'p18a');
-                $column['priority_price_list'] = __('Price List', 'p18a');
+             // $column['priority_price_list'] = __('Price List', 'p18a');
 
                 return $column;
 
@@ -553,7 +484,7 @@ class WooAPI extends \PriorityAPI\API
 
                         break;
 
-
+/*
                     case 'priority_price_list':
 
                         $lists = $this->getPriceLists();
@@ -576,7 +507,7 @@ class WooAPI extends \PriorityAPI\API
                         return $html;
 
                         break;
-
+*/
                     default:
 
                         return $value;
@@ -1227,8 +1158,8 @@ class WooAPI extends \PriorityAPI\API
         $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
         $brands = (!empty($config->brands) ? $config->brands : false);
         $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
-
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
+	    $variation_field = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
         // get the items simply by time stamp of today
         $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
         $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
@@ -1248,7 +1179,7 @@ class WooAPI extends \PriorityAPI\API
         $data = apply_filters('simply_syncItemsPriority_data', $data);
 
         $response = $this->makeRequest('GET',
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' ' . $url_addition_config .
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and '.$variation_field.' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
             '&' . $data['expand'] . '', [],
             $this->option('log_items_priority', true));
         // check response status
@@ -1382,7 +1313,7 @@ class WooAPI extends \PriorityAPI\API
                 // And finally (optionally if needed)
                 wc_delete_product_transients($id); // Clear/refresh the variation cache
                 // update product price
-                $item['id'] = $id;
+                $item['product_id'] = $id;
                 $item = apply_filters('simply_syncItemsPriority_item', $item);
                 unset($item['id']);
                 if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
@@ -1584,6 +1515,10 @@ class WooAPI extends \PriorityAPI\API
 
                     }
                 }
+
+                $item['product_id'] = $id;
+                do_action( 'simply_update_product_data', $item );
+
                 // sync image
                 $is_load_image = json_decode($config->is_load_image);
 
@@ -1602,6 +1537,7 @@ class WooAPI extends \PriorityAPI\API
                     wp_update_attachment_metadata($attach_id, $attach_data);
                     set_post_thumbnail($id, $attach_id);
                 }
+
 
             }
             // add timestamp
@@ -1772,10 +1708,16 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $search_field_select = $search_field == 'PARTNAME' ? $search_field : $search_field . ',PARTNAME';
-        $response = $this->makeRequest('GET',
-            'LOGPART?$filter=UDATE ge ' . urlencode($bod) . ' and EXTFILEFLAG eq \'Y\' &$select=' . $search_field_select . '&$expand=PARTEXTFILE_SUBFORM($select=EXTFILENAME,EXTFILEDES,SUFFIX;$filter=SUFFIX eq \'png\' or SUFFIX eq \'jpeg\' or SUFFIX eq \'jpg\')'
-            , [], $this->option('log_attachments_priority', true));
         $priority_version = (float)$this->option('priority-version');
+        if ($priority_version < 21.0) {
+            $response = $this->makeRequest('GET',
+                'LOGPART?$filter=UDATE ge ' . urlencode($bod) . ' and EXTFILEFLAG eq \'Y\' &$select=' . $search_field_select . '&$expand=PARTEXTFILE_SUBFORM($select=EXTFILENAME,EXTFILEDES,SUFFIX;$filter=SUFFIX eq \'png\' or SUFFIX eq \'jpeg\' or SUFFIX eq \'jpg\')'
+                , [], $this->option('log_attachments_priority', true));
+        }
+        else{
+            $response = $this->makeRequest('GET',
+                'LOGPART?$filter=UDATE ge ' . urlencode($bod) . ' and EXTFILEFLAG eq \'Y\' &$select=' . $search_field_select, [], $this->option('log_attachments_priority', true));
+        }
         $response_data = json_decode($response['body_raw'], true);
         foreach ($response_data['value'] as $item) {
             $search_by_value = $item[$search_field];
@@ -1804,53 +1746,148 @@ class WooAPI extends \PriorityAPI\API
             $product_media = $product->get_gallery_image_ids();
             $attachments = [];
             echo 'Starting process for product ' . $sku . '<br>';
-            foreach ($item['PARTEXTFILE_SUBFORM'] as $attachment) {
-                $file_path = $attachment['EXTFILENAME'];
-                $is_uri = strpos('1' . $file_path, 'http') ? false : true;
-                if (!empty($file_path)) {
-                    $file_ext = $attachment['SUFFIX'];
-                    $images_url = 'https://' . $this->option('url') . '/zoom/primail';
-                    $image_base_url = $config->image_base_url;
-                    if (!empty($image_base_url)) {
-                        $images_url = $image_base_url;
-                    }
-                    $priority_image_path = $file_path;
-                    $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
-                    $product_full_url = str_replace(' ', '%20', $product_full_url);
-                    $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
-                    $file_n = 'simplyCT/' . $sku . $attachment['EXTFILEDES'] . '.' . $file_ext;
-//                    $upload_path = $sku . $attachment['EXTFILEDES'] . '.' . $file_ext;
-                    $upload_path = wp_get_upload_dir()['basedir'] . '/' . $file_n;
+            if ($priority_version < 21.0) {
+                foreach ($item['PARTEXTFILE_SUBFORM'] as $attachment) {
+                    $file_path = $attachment['EXTFILENAME'];
+                    $is_uri = strpos('1' . $file_path, 'http') ? false : true;
+                    if (!empty($file_path)) {
+                        $file_ext = $attachment['SUFFIX'];
+                        $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                        $image_base_url = $config->image_base_url;
+                        if (!empty($image_base_url)) {
+                            $images_url = $image_base_url;
+                        }
+                        $priority_image_path = $file_path;
+                        $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
+                        $product_full_url = str_replace(' ', '%20', $product_full_url);
+                        $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
+                        $file_n = 'simplyCT/' . $sku . $attachment['EXTFILEDES'] . '.' . $file_ext;
+                    //  $upload_path = $sku . $attachment['EXTFILEDES'] . '.' . $file_ext;
+                        $upload_path = wp_get_upload_dir()['basedir'] . '/' . $file_n;
 
-                    if (file_exists($upload_path) == true) {
-                        global $wpdb;
-                        $id = $wpdb->get_var("SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_n' AND meta_key = '_wp_attached_file'");
-                        if ($id) {
-                            echo $file_path . ' already exists in media, add to product... <br>';
-                            $is_existing_file = true;
-                            array_push($attachments, (int)$id);
+                        if (file_exists($upload_path) == true) {
+                            global $wpdb;
+                            $id = $wpdb->get_var("SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_n' AND meta_key = '_wp_attached_file'");
+                            if ($id) {
+                                echo $file_path . ' already exists in media, add to product... <br>';
+                                $is_existing_file = true;
+                                array_push($attachments, (int)$id);
+                                continue;
+                            }
+                        }
+                        if ($priority_version < 21.0 && $is_uri) {
+                            $attach_id = download_attachment($sku . $attachment['EXTFILEDES'], $product_full_url);
+
+                        } else {
+                            echo 'File ' . $file_path . ' not exsits, downloading from ' . $images_url, '<br>';
+                            $file = $this->save_uri_as_image($product_full_url, $sku . $attachment['EXTFILEDES']);
+                            $attach_id = $file[0];
+                            // $file_name = $file[1];
+                        }
+                        if ($attach_id == null) {
                             continue;
                         }
-                    }
-                    if ($priority_version < 21.0 && $is_uri) {
-                        $attach_id = download_attachment($sku . $attachment['EXTFILEDES'], $product_full_url);
-
-                    } else {
-                        echo 'File ' . $file_path . ' not exsits, downloading from ' . $images_url, '<br>';
-                        $file = $this->save_uri_as_image($product_full_url, $sku . $attachment['EXTFILEDES']);
-                        $attach_id = $file[0];
-                        // $file_name = $file[1];
-                    }
-                    if ($attach_id == null) {
-                        continue;
-                    }
-                    if ($attach_id != 0) {
-                        array_push($attachments, (int)$attach_id);
-                    }
+                        if ($attach_id != 0) {
+                            array_push($attachments, (int)$attach_id);
+                        }
 
 
+                    }
+                };
+            }
+            else{
+                $response_gallery = $this->makeRequest('GET', 'LOGPART?$filter=PARTNAME eq \'' . $search_by_value . '\' &$select=' . $search_field_select . '&$expand=PARTEXTFILE_SUBFORM($select=EXTFILENAME,EXTFILEDES,SUFFIX;$filter=ITAI_ADDKATALOG eq \'Y\' and (SUFFIX eq \'png\' or SUFFIX eq \'jpeg\' or SUFFIX eq \'jpg\'))', [], $this->option('log_attachments_priority', true));
+                $data_gallery = json_decode($response_gallery['body']);
+                $data_gallery_item = $data_gallery->value[0];
+
+                foreach ($data_gallery_item->PARTEXTFILE_SUBFORM as $attachment) {
+                    $file_path = $attachment->EXTFILENAME;
+                    $is_uri = strpos('1' . $file_path, 'http') ? false : true;
+                    if (!empty($file_path)) {
+                        $file_ext = $attachment->SUFFIX;
+                        $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                        $image_base_url = $config->image_base_url;
+                        if (!empty($image_base_url)) {
+                            $images_url = $image_base_url;
+                        }
+                        $priority_image_path = $file_path;
+                        $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
+                        $product_full_url = str_replace(' ', '%20', $product_full_url);
+                        $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
+                        
+                        $ar = explode(',', $product_full_url);
+                        $image_data = $ar[0]; //data:image/jpeg;base64
+                        $file_type = explode(';', explode(':', $image_data)[1])[0]; //image/jpeg
+                        $extension = explode('/', $file_type)[1];  //jpeg
+                        
+                        $file_n = 'simplyCT/' . $sku . $attachment->EXTFILEDES . '.' . $file_ext; //simplyCT/0523805238-5.jpg
+                        $file_n2 = 'simplyCT/' . $sku . $attachment->EXTFILEDES . '.' . $extension; //simplyCT/0523805238-5.jpeg
+                        $file_name = $attachment->EXTFILEDES . '.' . $file_ext; //05238-5.jpg
+
+                        $upload_path = wp_get_upload_dir()['basedir'] . '/' . $file_n; 
+                        $upload_path_2 = wp_get_upload_dir()['basedir'] . '/' . $file_n2;
+                        if ( ! function_exists( 'wp_crop_image' ) ) {
+                            require_once(ABSPATH . 'wp-admin/includes/image.php');
+                        }
+                        // check if the item exists in media
+                        //in the past we uploaded image like this: 05238-5.jpg
+                        $id = $this->simply_check_file_exists($file_name);
+                        global $wpdb;
+                        $id = $wpdb->get_var( "SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_name' AND meta_key = '_wp_attached_file'" );
+                        if($id){
+                            echo $file_path . ' already exists in media, add to product... <br>';
+                            array_push( $attachments,  (int)$id );
+                            continue;
+                        }
+                        elseif (file_exists($upload_path) == true) {
+                            global $wpdb;
+                            $id = $wpdb->get_var("SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_n' AND meta_key = '_wp_attached_file'");
+                            if ($id) {
+
+                                // Generate the metadata for the attachment, and update the database record.
+                                $attach_data = wp_generate_attachment_metadata( $id, $upload_path);
+                                wp_update_attachment_metadata( $id, $attach_data );
+
+                                echo $file_path . ' already exists in media, add to product... <br>';
+                                $is_existing_file = true;
+                                array_push($attachments, (int)$id);
+                                continue;
+                            }
+                        }
+                        elseif(file_exists($upload_path_2) == true){
+                            global $wpdb;
+                            $id = $wpdb->get_var("SELECT post_id FROM $wpdb->postmeta WHERE meta_value like  '%$file_n2' AND meta_key = '_wp_attached_file'");
+                            if ($id) {
+
+                                // Generate the metadata for the attachment, and update the database record.
+                                $attach_data = wp_generate_attachment_metadata( $id, $upload_path_2);
+                                wp_update_attachment_metadata( $id, $attach_data );
+
+                                echo $file_path . ' already exists in media, add to product... <br>';
+                                $is_existing_file = true;
+                                array_push($attachments, (int)$id);
+                                continue;
+                            }
+
+                        }
+                        else {
+                            echo 'File ' . $file_path . ' not exsits, downloading from ' . $images_url, '<br>';
+                            $file = $this->save_uri_as_image($product_full_url, $sku . $attachment->EXTFILEDES);
+                            $attach_id = $file[0];
+                    
+                            // $file_name = $file[1];
+                        }
+                        if ($attach_id == null) {
+                            continue;
+                        }
+                        if ($attach_id != 0) {
+                            array_push($attachments, (int)$attach_id);
+                        }
+
+                    }
                 }
-            };
+            }
+
             //  add here merge to files that exists in wp and not exists in the response from API
             $image_id_array = array_merge($product_media, $attachments);
             // https://stackoverflow.com/questions/43521429/add-multiple-images-to-woocommerce-product
@@ -1873,32 +1910,51 @@ class WooAPI extends \PriorityAPI\API
         $raw_option = $this->option('sync_items_priority_config');
         $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
         $config = json_decode(stripslashes($raw_option));
+	    $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
+	    $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
         $image_base_url = $config->image_base_url;
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
         $config_v = json_decode(stripslashes($res));
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : null);
+        $show_in_web = (!empty($config_v->show_in_web) ? $config_v->show_in_web :  $show_in_web);
         $show_front = !empty($config_v->show_front) ? $config_v->show_front : null;
         $daysback = !empty((int)$config_v->days_back) ? $config_v->days_back : (!empty((int)$config->days_back) ? $config->days_back : 1);
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
+<<<<<<< HEAD
         $variation_field = $this->option('variation_field'); //we have to add this field in priority;
+=======
+        $variation_field       = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
+        $variation_field_title = $this->option('variation_field_title') == 'true' ? $this->option('variation_field_title') : 'MPARTDES';
+>>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
+<<<<<<< HEAD
         $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+=======
+	    if ($product_price_list != null) {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+	    } else {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    }
+>>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
         $response = $this->makeRequest('GET',
+<<<<<<< HEAD
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&' . $data['expand'] . '',
+=======
+            'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&'.$data['expand'],
+>>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
             [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
@@ -1917,9 +1973,17 @@ class WooAPI extends \PriorityAPI\API
                                 $attributes[$attribute] = $attr['VALUE'];
                             }
                         }
-                        $attributes = apply_filters('simply_ItemsAtrrVariation', $item);
+                        $item = apply_filters('simply_ItemsAtrrVariation', $item);
+                        $attributes = $item['attributes'];
                         if ($attributes) {
                             $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                            // price refer to pricelist
+	                        if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
+		                        $price = wc_prices_include_tax() == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+
+	                        } else {
+		                        $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+	                        }
                             if (isset($parents[$item[$variation_field]]['content'])) {
                                 $parents[$item[$variation_field]]['content'] = '';
                             }
@@ -1931,16 +1995,28 @@ class WooAPI extends \PriorityAPI\API
                             $parents[$item[$variation_field]] = [
                                 'sku' => $item[$variation_field],
                                 //'crosssell' => $item['ROYL_SPECDES1'],
-                                'title' => $item[$this->option('variation_field_title')],
+                                'title' => $item[$variation_field_title],
                                 'stock' => 'Y',
                                 'variation' => [],
                                 'regular_price' => $price,
                                 'post_content' => $parents[$item[$variation_field]]['content']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
+<<<<<<< HEAD
                             //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
                             //
                             //                            }
+=======
+                            /*
+	                        if ($config->sync_price != "true") {
+		                        $parents[$item[$variation_field]]['regular_price']= $price;
+                            }
+                            */
+
+//                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
+//
+//                            }
+>>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
                             if ($priority_version >= 21.0 && true == $is_load_image) {
                                 $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $search_by_value . '\'', [], $this->option('log_items_priority', true));
                                 $data = json_decode($response['body']);
@@ -1963,6 +2039,11 @@ class WooAPI extends \PriorityAPI\API
                                 'attributes' => $attributes
 
                             ];
+                            /*
+	                        if ($config->sync_price != "true") {
+		                        $childrens[$item[$variation_field]][$search_by_value]['regular_price']= $price;
+	                        }
+                            */
                             if ($show_front != null) {
                                 $childrens[$item[$variation_field]][$search_by_value]['show_front'] = $item[$show_front];
                             }
@@ -2337,13 +2418,13 @@ class WooAPI extends \PriorityAPI\API
         $daysback = intval(!empty($daysback_options) ? $daysback_options : 10); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $bod = date(DATE_ATOM, $stamp);
-        $url_addition = '(WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod . ')';
+        $url_addition = '('. rawurlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
         if ($this->option('variation_field')) {
             //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
         $option_filed = explode(',', $this->option('sync_inventory_warhsname'))[2];
         $data['select'] = (!empty($option_filed) ? $option_filed . ',PARTNAME' : 'PARTNAME');
-        $data = apply_filters('simply_syncInventoryPriority_data', $data);
+
         $wh_name = explode(',', $this->option('sync_inventory_warhsname'))[0];
         $status = explode(',', $this->option('sync_inventory_warhsname'))[4];
         if (!empty($wh_name)) {
@@ -2356,9 +2437,11 @@ class WooAPI extends \PriorityAPI\API
         } else if (!empty($status)) {
             $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=CUSTNAME eq \'' . $status . '\')';
         } else {
-            $expand = '$expand = LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
+            $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
         }
-        $response = $this->makeRequest('GET', 'LOGPART?$select = ' . $data['select'] . '&$filter = ' . urlencode($url_addition) . ' and INVFLAG eq \'Y\' &' . $expand, [], $this->option('log_inventory_priority', false));
+        $data['expand'] = $expand;
+	    $data = apply_filters('simply_syncInventoryPriority_data', $data);
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$url_addition.' and INVFLAG eq \'Y\' &' . $data['expand'], [], $this->option('log_inventory_priority', false));
         // check response status        // check response status
         if ($response['status']) {
             $data = json_decode($response['body_raw'], true);
@@ -2398,8 +2481,10 @@ class WooAPI extends \PriorityAPI\API
                     $foo2 = explode(',', $this->option('sync_inventory_warhsname'))[1];
                     $is_deduct_order = explode(',', $this->option('sync_inventory_warhsname'))[1] == 'ORDER';
                     $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
-                    foreach ($item['PARTBALANCE_SUBFORM'] as $wh_stock) {
-                        $stock += $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
+                    if(!empty($wh_name)) {
+                        foreach ($item['PARTBALANCE_SUBFORM'] as $wh_stock) {
+                            $stock += $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
+                        }
                     }
                     if ($is_deduct_order) {
                         $stock = $stock - $orders > 0 ? $stock - $orders : 0; // stock - orders
@@ -2597,17 +2682,13 @@ class WooAPI extends \PriorityAPI\API
         }
         return $response;
     }
-
-    public
-    function syncPriorityOrderStatus()
+    public function syncPriorityOrderStatus()
     {
-
         // orders
         $url_addition = 'ORDERS?$filter=' . $this->option('order_order_field') . ' ne \'\'  and ';
         $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'CURDATE ge ' . $prev_date;
-
+        $prev_date = date(DATE_ATOM, strtotime($date . ' -10 day'));
+        $url_addition .= 'CURDATE ge ' . urlencode($prev_date);
         $response = $this->makeRequest('GET', $url_addition, null, true);
         $orders = json_decode($response['body'], true)['value'];
         $output = '';
@@ -2622,9 +2703,9 @@ class WooAPI extends \PriorityAPI\API
         }
         // invoice
         $url_addition = 'AINVOICES?$filter=' . $this->option('ainvoice_order_field') . ' ne \'\'  and ';
-        $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'IVDATE ge ' . $prev_date;
+        //$date = date('Y-m-d');
+        //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
+        $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
@@ -2643,9 +2724,9 @@ class WooAPI extends \PriorityAPI\API
         }
         // OTC
         $url_addition = 'EINVOICES?$filter=' . $this->option('otc_order_field') . ' ne \'\'  and ';
-        $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'IVDATE ge ' . $prev_date;
+        //$date = date('Y-m-d');
+        //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
+        $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
@@ -2664,9 +2745,9 @@ class WooAPI extends \PriorityAPI\API
         }
         // recipe
         $url_addition = 'TINVOICES?$filter=' . $this->option('receipt_order_field') . ' ne \'\'  and ';
-        $date = date('Y-m-d');
-        $prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
-        $url_addition .= 'IVDATE ge ' . $prev_date;
+       // $date = date('Y-m-d');
+        //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
+        $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
         $response = $this->makeRequest('GET', $url_addition, null, true);
@@ -2686,7 +2767,6 @@ class WooAPI extends \PriorityAPI\API
         // end
         $this->updateOption('auto_sync_order_status_priority_update', time());
     }
-
     public function getPriorityCustomer(&$order)
     {
         $order_id = $order->get_id();
@@ -2774,9 +2854,7 @@ class WooAPI extends \PriorityAPI\API
         $response['body'] = "";
         return $response;
     }
-
-    public
-    function syncOrders()
+    public function syncOrders()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2798,9 +2876,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_receipt', time());
     }
-
-    public
-    function syncReceipts()
+    public function syncReceipts()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2822,9 +2898,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_order', time());
     }
-
-    public
-    function syncAinvoices()
+    public function syncAinvoices()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2846,9 +2920,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_ainvoice', time());
     }
-
-    public
-    function syncOtcs()
+    public function syncOtcs()
     {
         $query = new \WC_Order_Query(array(
             //'limit' => get_option('posts_per_page'),
@@ -2870,9 +2942,7 @@ class WooAPI extends \PriorityAPI\API
         };
         $this->updateOption('time_stamp_cron_otc', time());
     }
-
-    public
-    function get_credit_card_data($order, $is_order)
+    public function get_credit_card_data($order, $is_order)
     {
         $config = json_decode(stripslashes($this->option('setting-config')));
         $gateway = $config->gateway ?? 'debug';
@@ -3064,9 +3134,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $data;
     }
-
-    public
-    function syncProspect($order)
+    public function syncProspect($order)
     {
         if (null == $this->option('post_prospect')) {
             $priority_customer_number = $this->option('walkin_number');
@@ -3121,9 +3189,7 @@ class WooAPI extends \PriorityAPI\API
         $response['priority_customer_number'] = $priority_customer_number;
         return $response;
     }
-
-    public
-    function syncReceiptAfterOrder($order_id)
+    public function syncReceiptAfterOrder($order_id)
     {
 
         $order = new \WC_Order($order_id);
@@ -3142,9 +3208,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
-    public
-    function syncDataAfterOrder($order_id)
+    public function syncDataAfterOrder($order_id)
     {
         $order = new \WC_Order($order_id);
         // check order status against config
@@ -3214,12 +3278,7 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
-    /**
-     * Sync price lists from priority to web
-     */
-    public
-    function syncPriceLists()
+    public function syncPriceLists()
     {
         $priceListNumber = $this->option('sync_pricelist_priority_warhsname')[1];
         $priceList = !empty($priceListNumber) ? '&$filter=PLNAME eq ' . $priceListNumber . '' : '';
@@ -3291,10 +3350,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
-    /* sync sites */
-    public
-    function syncSites()
+    public function syncSites()
     {
         $response = $this->makeRequest('GET', 'CUSTOMERS?$select=CUSTNAME&$expand=CUSTDESTS_SUBFORM($select=CODE,CODEDES,ADDRESS,INACTIVE;$filter=INACTIVE ne \'Y\')', [], $this->option('log_sites_priority', true));
 
@@ -3350,7 +3406,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     function get_cust_name($order)
     {
         $cust_number = apply_filters('simply_modify_customer_number', ['order' => $order,
@@ -3382,7 +3437,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $cust_number;
     }
-
     public function syncOrder($id)
     {
         if (isset(WC()->session)) {
@@ -3616,7 +3670,7 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', $form_name, ['body' => json_encode($data)], true);
 
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200 ) {
             $body_array = json_decode($response["body"], true);
             $ord_status = $body_array["ORDSTATUSDES"];
             $ordname_field = $config->ordname_field ?? 'ORDNAME';
@@ -3625,25 +3679,20 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_order_number', $ord_number);
             $order->save();
         } else {
+            $mes_arr = json_decode($response['body']);
             $message = $response['message'] . '' . json_encode($response);
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_order_status', $message);
             $order->save();
         }
         // add timestamp
         return $response;
     }
-
-    /**
-     * MAke request
-     *
-     * @param [type] $method
-     * @param [type] $url_addition
-     * @param array $options
-     */
     public function makeRequestPos($method, $url_addition = null, $options = [], $log = false)
     {
-
         $args = [
             'headers' => [
                 'Content-Type' => 'application/json'
@@ -3708,9 +3757,13 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
+<<<<<<< HEAD
 
 
     public function syncTransactionPos($id)
+=======
+    public function syncPos($id)
+>>>>>>> c2d84c26754dd03d2ca4f1a0f78c3f8fb046f345
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3937,7 +3990,6 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
-
     public function syncAinvoice($id)
     {
         if (isset(WC()->session)) {
@@ -4050,12 +4102,9 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
             if ($product) {
-
                 /*start T151*/
                 $new_data = [];
-
                 $item_meta = wc_get_order_item_meta($item->get_id(), '_tmcartepo_data');
-
                 if ($item_meta && is_array($item_meta)) {
                     foreach ($item_meta as $tm_item) {
                         $new_data[] = [
@@ -4114,7 +4163,7 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', 'AINVOICES', ['body' => json_encode($data)], true);
 
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200) {
             $body_array = json_decode($response["body"], true);
 
             $ord_status = $body_array["STATDES"];
@@ -4122,27 +4171,19 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_invoice_status', $ord_status);
             $order->update_meta_data('priority_invoice_number', $ord_number);
             $order->save();
-        }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
-            $order->update_meta_data('priority_invoice_status', $response['message'] . ' ' . $response["body"]);
-            $order->save();
-        }
-
-        if (!$response['status'] || $response['code'] >= 400) {
+        }else{
+            $message = $response['message'] . '' . json_encode($response);
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_invoice_status', $message);
             $order->save();
-            $this->sendEmailError(
-                $this->option('email_error_sync_ainvoices_priority'),
-                'Error Sync Sales Invoice',
-                $response['message'] . ' ' . $response['body']
-            );
         }
         // add timestamp
         return $response;
     }
-
     public function syncOverTheCounterInvoice($order_id)
     {
         $order = new \WC_Order($order_id);
@@ -4261,7 +4302,7 @@ class WooAPI extends \PriorityAPI\API
         // make request
         $response = $this->makeRequest('POST', 'EINVOICES', ['body' => json_encode($data)], true);
 
-        if ($response['code'] <= 201) {
+        if($response['code'] <= 201 && $response['code'] >= 200){
             $body_array = json_decode($response["body"], true);
 
             $ord_status = $body_array["STATDES"];
@@ -4269,27 +4310,18 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_invoice_status', $ord_status);
             $order->update_meta_data('priority_invoice_number', $ord_number);
             $order->save();
-        }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
+        }else{
+            $message = $response['message'] . '' . json_encode($response);
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_invoice_status', $message);
-            // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
-        }
-        if (!$response['status']) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync OTC invoice',
-                $response['body']
-            );
         }
         return $response;
     }
-
     public function syncReceipt($order_id)
     {
         if (isset(WC()->session)) {
@@ -4328,7 +4360,7 @@ class WooAPI extends \PriorityAPI\API
         $data = apply_filters('simply_request_data_receipt', $data);
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data, JSON_UNESCAPED_SLASHES)], $this->option('log_receipts_priority', true));
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200) {
             $body_array = json_decode($response["body"], true);
 
             $ord_status = $body_array["STATDES"];
@@ -4336,30 +4368,21 @@ class WooAPI extends \PriorityAPI\API
             $order->update_meta_data('priority_recipe_status', $ord_status);
             $order->update_meta_data('priority_recipe_number', $ord_number);
             $order->save();
-        }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
+        }else{
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
             $order->update_meta_data('priority_recipe_status', $message);
             // $order->update_meta_data('priority_ordnumber',$ord_number);
             $order->save();
-        }
-        if (!$response['status']) {
-            /**
-             * t149
-             */
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync OTC invoice',
-                $response['body']
-            );
         }
         // add timestamp
         $this->updateOption('receipts_priority_update', time());
         return $response;
 
     }
-
     public function syncPayment($order_id, $optional)
     {
         $order = new \WC_Order($order_id);
@@ -4424,35 +4447,22 @@ class WooAPI extends \PriorityAPI\API
         unset($data['doctype']);
         // make request
         $response = $this->makeRequest('POST', $doctype, ['body' => json_encode($data)], true);
-        if ($response['code'] <= 201) {
+        if ($response['code'] <= 201 && $response['code'] >= 200){
             $body_array = json_decode($response["body"], true);
             $ord_status = $body_array["STATDES"];
             $ord_number = $body_array["IVNUM"];
+            $order->update_meta_data('priority_recipe_status', $ord_status);
+            $order->update_meta_data('priority_recipe_number', $ord_number);
+        }else{
+            $message = $response['message'] . '<br>' . $response['body'] . '<br>';
+            $mes_arr = json_decode($response['body']);
+            if(isset($mes_arr->FORM->InterfaceErrors->text)){
+                $message = $mes_arr->FORM->InterfaceErrors->text;
+            }
+            $order->update_meta_data('priority_recipe_status', $message);
         }
-        if ($response['code'] >= 400) {
-            $body_array = json_decode($response["body"], true);
-            $ord_status = $body_array;
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync payment',
-                $response['body']
-            );
-        }
-        if (!$response['status']) {
-            $ord_status = $response['body'];
-            $this->sendEmailError(
-                [$this->option('email_error_sync_einvoices_web')],
-                'Error Sync payment',
-                $response['body']
-            );
-        }
-        $order->update_meta_data('priority_recipe_status', $ord_status);
-        $order->update_meta_data('priority_recipe_number', $ord_number);
         $order->save();
-        // add timestamp
-        $this->updateOption('receipts_priority_update', time());
     }
-
     public function syncReceiptsCompleted()
     {
         // get all completed orders
@@ -4462,7 +4472,6 @@ class WooAPI extends \PriorityAPI\API
             $this->syncReceipt($order->get_id());
         }
     }
-
     function simply_add_custom_price($cart_object)
     {
         if (is_cart()) {
@@ -4483,18 +4492,16 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     function simply_after_add_to_cart_button()
     {
         echo '<script type="text/javascript" >document.getElementsByName("quantity")[0].value = 1</script>';
     }
-
     public function filterProductsByPriceList($ids)
     {
         if ($user_id = get_current_user_id()) {
-            $meta = get_user_meta($user_id, '_priority_price_list');
-            if ($meta[0] === 'no-selected') return $ids;
-            $list = empty($meta) ? $this->basePriceCode : $meta[0];
+            $meta = get_user_meta($user_id, 'custpricelists', true);
+            if ($meta[0]["PLNAME"] === 'no-selected') return $ids;
+            $list = empty($meta) ? $this->basePriceCode : $meta[0]["PLNAME"];
             $products = $GLOBALS['wpdb']->get_results('
                 SELECT product_sku
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -4522,7 +4529,6 @@ class WooAPI extends \PriorityAPI\API
         // not logged in user
         return [];
     }
-
     public function getPriceLists()
     {
         if (empty(static::$priceList)) {
@@ -4535,7 +4541,6 @@ class WooAPI extends \PriorityAPI\API
 
         return static::$priceList;
     }
-
     public function getPriceListData($code)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4549,7 +4554,6 @@ class WooAPI extends \PriorityAPI\API
         return $data;
 
     }
-
     public function getProductDataBySku($sku)
     {
         if ($user_id = get_current_user_id()) {
@@ -4568,10 +4572,8 @@ class WooAPI extends \PriorityAPI\API
         }
         return false;
     }
-
     public function filterPrice($price, $product)
     {
-
         $user = wp_get_current_user();
         $transient = $user->ID . $product->get_id();
         $get_transient = get_transient($transient);
@@ -4617,7 +4619,6 @@ class WooAPI extends \PriorityAPI\API
         set_transient($transient, (float)$price * $family_discount, 300);
         return (float)$price * $family_discount;
     }
-
     public function getFamilyProduct($custname, $family_code)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4633,7 +4634,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return 0;
     }
-
     public function getSpecialPriceCustomer($custname, $sku)
     {
         $data = $GLOBALS['wpdb']->get_row('
@@ -4649,10 +4649,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return null;
     }
-
-// filter price range for products with variations
-    public
-    function filterPriceRange($price, $product)
+    public function filterPriceRange($price, $product)
     {
         $variations = $product->get_available_variations();
         $prices = [];
@@ -4670,6 +4667,33 @@ class WooAPI extends \PriorityAPI\API
         return $price;
     }
 
+
+    /**
+     * Display "msg" instead of $0 if the item is free.
+     *
+     * @param string $price The current price label.
+     * @param object $product The product object.
+     * @return string
+     */
+    function custom_price_message( $price, $product ) {
+        if ( empty( $product->get_price() ) ) {
+            remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 9999);
+            $price = __( 'This product is not available in your pricelist', 'p18w' );
+        }
+        return $price;
+    }
+    function remove_add_to_cart($is_purchasable, $product) {
+        if( $product->get_price() == 0 )
+            $is_purchasable = false;
+            return $purchasable;   
+    }
+
+
+    function remove_add_to_cart_on_0 ( $purchasable, $product ){
+        if( $product->get_price() == 0 )
+            $purchasable = false;
+        return $purchasable;
+    }
     function crf_show_extra_profile_fields($user)
     {
         $priority_customer_number = get_the_author_meta('priority_customer_number', $user->ID);
@@ -4766,7 +4790,6 @@ class WooAPI extends \PriorityAPI\API
         </table>
         <?php
     }
-
     function crf_update_profile_fields($user_id)
     {
         if (!current_user_can('edit_user', $user_id)) {
@@ -4814,7 +4837,6 @@ class WooAPI extends \PriorityAPI\API
             update_user_meta($user_id, 'customer_percents', '');
         }
     }
-
     function get_shipping_price($order, $is_order)
     {
         $price_filed = $is_order ? 'VATPRICE' : 'TOTPRICE';
@@ -4847,7 +4869,6 @@ class WooAPI extends \PriorityAPI\API
             return null;
         }
     }
-
     function sync_priority_customers_to_wp()
     {
 
@@ -4866,7 +4887,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = !empty($config->additional_url) ? $config->additional_url : '';
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
-        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2,STATDES&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
         $args = [];
         $res = apply_filters('simply_customers_url', ['url_addition' => $url_addition,'args' => $args]);
         $url_addition = $res['url_addition'];
@@ -4918,6 +4939,9 @@ class WooAPI extends \PriorityAPI\API
                 apply_filters('simply_sync_priority_customers_to_wp', $user);
                 unset($user['user_id']);
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
+	            if(empty($user['CUSTPLIST_SUBFORM'])){
+		            $user['CUSTPLIST_SUBFORM'][0] = ['PLNAME' => 'בסיס'];
+	            }
                 update_user_meta($user_id, 'custpricelists', $user['CUSTPLIST_SUBFORM']);
                 update_user_meta($user_id, 'priority_mcustomer_number', $user['MCUSTNAME']);
                 update_user_meta($user_id, 'customer_percents', $user['CUSTDISCOUNT_SUBFORM']);
@@ -4943,7 +4967,6 @@ class WooAPI extends \PriorityAPI\API
         }
 
     }
-
     function sync_priority_personnel_customers_to_wp()
     {
         // config
@@ -5024,7 +5047,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     function syncCastnameToMcustname()
     {
 
@@ -5061,7 +5083,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     function sync_priority_customers_to_wp_orig()
     {
         // default values
@@ -5137,7 +5158,6 @@ class WooAPI extends \PriorityAPI\API
             }
         }
     }
-
     function generate_settings($description, $name, $format, $format2)
     {
         ?>
@@ -5186,9 +5206,7 @@ class WooAPI extends \PriorityAPI\API
         <?php
 
     }
-
-    public
-    function syncSpecialPriceItemCustomer()
+    public function syncSpecialPriceItemCustomer()
     {
         $response = $this->makeRequest('GET', 'CUSTPARTPRICEONE?&$select=PARTNAME,CUSTNAME,PRICE', [], $this->option('log_pricelist_priority', true));
         // check response status
@@ -5223,9 +5241,7 @@ class WooAPI extends \PriorityAPI\API
 
         }
     }
-
-    public
-    function syncSpecialPriceProductFamily()
+    public function syncSpecialPriceProductFamily()
     {
         $response = $this->makeRequest('GET', 'CUSTFAMILYDISCONE?$select=FAMILYNAME,CUSTNAME,PERCENT', [], $this->option('log_productfamily_priority', true));
         // check response status
@@ -5258,7 +5274,6 @@ class WooAPI extends \PriorityAPI\API
 
         }
     }
-
     function add_customer_discount()
     {
         global $woocommerce; //Set the price for user role.
@@ -5274,7 +5289,6 @@ class WooAPI extends \PriorityAPI\API
         $discount_price = $percentage * $subtotal / 100;
         $woocommerce->cart->add_fee(__('Discount ' . $percentage . '%', 'p18w'), -$discount_price, false, 'standard');
     }
-
     function get_coupons($data, $order)
     {
         foreach ($order->get_coupon_codes() as $coupon_code) {
@@ -5292,14 +5306,12 @@ class WooAPI extends \PriorityAPI\API
         }
         return $data;
     }
-
     function get_sku_prioirty_dest_field()
     {
         $fieldname = 'PARTNAME';
         $fieldname = apply_filters('simply_set_priority_sku_field', $fieldname);
         return $fieldname;
     }
-
     function save_uri_as_image($base64_img, $title)
     {
 
@@ -5349,17 +5361,17 @@ class WooAPI extends \PriorityAPI\API
         );
 
         $attach_id = wp_insert_attachment($attachment, $upload_path);
+        // Generate the metadata for the attachment, and update the database record.
+        $attach_data = wp_generate_attachment_metadata( $attach_id, $upload_path);
+        wp_update_attachment_metadata( $attach_id, $attach_data );
         $file = [$attach_id, $filename];
         return $file;
     }
-
-    public
-    function getStringBetween($str, $from, $to)
+    public function getStringBetween($str, $from, $to)
     {
         $sub = substr($str, strpos($str, $from) + strlen($from), strlen($str));
         return substr($sub, 0, strpos($sub, $to));
     }
-
     function load_image($ext_file, $image_base_url, $priority_version, $sku, $search_field)
     {
         if ($priority_version >= 21.0 || $ext_file == '') {

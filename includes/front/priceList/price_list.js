@@ -15,15 +15,15 @@ jQuery(document).ready(function ($) {
             let td = tr[i].querySelector('.simply-tire-price')
             if(i == tr.length -1){
                 price = tr[i].querySelector('.simply-tire-price').textContent
-                priceSpanBdi.childNodes[1].textContent = price;
+                priceSpanBdi.childNodes[0].textContent = price;
                 document.getElementById('realprice').value = price
                 break;
             }else{
                  td1 = tr[i + 1].querySelector('.simply-tire-quantity');
             }
-            if (parseInt(qty) < parseInt(tr[i].querySelector('.simply-tire-quantity').textContent)) {
+            if (parseInt(qty) < parseInt(tr[i+1].querySelector('.simply-tire-quantity').textContent)) {
                 price = tr[i].querySelector('.simply-tire-price').textContent
-                priceSpanBdi.childNodes[1].textContent = price;
+                priceSpanBdi.childNodes[0].textContent = price;
                 document.getElementById('realprice').value = price
                 break;
             }
@@ -42,12 +42,13 @@ jQuery(document).ready(function ($) {
     })
 });
 function setInitialPriceOnQtyOne(){
-    let initQty = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[1].textContent;
-    let price   = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[0].textContent
+    let initQty = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[0].textContent;
+    let price   = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[1].textContent
     if(1 == initQty){
         let priceSpan = document.querySelector('.woocommerce-Price-amount');
         let priceSpanBdi = priceSpan.querySelector('bdi');
-        priceSpanBdi.childNodes[1].textContent = price;
+        priceSpanBdi.childNodes[0].textContent = price;
+
     }
 }
 

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-03 05:46+0000\n"
+"POT-Creation-Date: 2021-05-03 05:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -228,4 +228,19 @@ msgid "Priority Cinvoices"
 msgstr ""
 
 msgid "CDES"
+msgstr ""
+
+msgid "DISPRICEEXCVAT"
+msgstr ""
+
+msgid "New message"
+msgstr ""
+
+msgid "Total Price Include VAT"
+msgstr ""
+
+msgid "DOCNO"
+msgstr ""
+
+msgid "NAME"
 msgstr ""
