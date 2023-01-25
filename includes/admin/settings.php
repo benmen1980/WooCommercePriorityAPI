@@ -110,6 +110,16 @@
                            form="p18aw-settings" <?php if ($this->option('selectusers2') == true) { ?> checked="checked" <?php } ?> />
                 </td>
             </tr>
+            <tr>
+                <td class="p18a-label">
+                    <label for="p18a-cardPos"><?php _e('Card POS Sync', 'p18a'); ?></label>
+                </td>
+                <td></td>
+                <td>
+                    <input id="p18aw-cardPos" type="checkbox" name="cardPos"
+                           form="p18aw-settings" <?php if ($this->option('cardPos') == true) { ?> checked="checked" <?php } ?> />
+                </td>
+            </tr>
             </tbody>
         </table>
         <table class="widefat fixed" cellspacing="0">

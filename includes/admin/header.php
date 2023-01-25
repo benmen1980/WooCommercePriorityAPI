@@ -44,10 +44,17 @@
             </a>
         </li>
         <?php endif; ?>
-	<li>
+	    <li>
             <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=customersProducts'); ?>" class="<?php if($this->get('tab') == 'customersProducts') echo 'active'; ?>">
 			    <?php _e('Customer\'s Products', 'p18a'); ?>
             </a>
         </li>
+        <?php if($this->option('cardPos')){ ?>
+            <li>
+                <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=syncPOS'); ?>" class="<?php if($this->get('tab') == 'syncPOS') echo 'active'; ?>">
+                    <?php _e('Syncs POS', 'p18a'); ?>
+                </a>
+            </li>
+        <?php } ?>
     </ul>
 </div>
