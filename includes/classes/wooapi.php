@@ -275,7 +275,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $price;
     }
-
     /**
      * Backend - PriorityAPI Admin
      *
@@ -292,6 +291,8 @@ class WooAPI extends \PriorityAPI\API
                 return $this->notify('Priority API data not set', 'error');
             }
 
+            
+
             // admin page
             add_action('admin_menu', function () {
 
@@ -301,11 +302,11 @@ class WooAPI extends \PriorityAPI\API
                 include P18AW_CLASSES_DIR . 'sites.php';
                 include P18AW_CLASSES_DIR . 'customersProducts.php';
                 include P18AW_CLASSES_DIR . 'productfamily.php';
+                
 
                 add_menu_page(P18AW_PLUGIN_NAME, P18AW_PLUGIN_NAME, 'manage_options', P18AW_PLUGIN_ADMIN_URL, function () {
 
                     switch ($this->get('tab')) {
-
                         case 'syncs':
                             include P18AW_ADMIN_DIR . 'syncs.php';
                             break;
@@ -397,9 +398,19 @@ class WooAPI extends \PriorityAPI\API
                             $order_id = 785;
                             $order = wc_get_order($order_id);
                             echo $order->get_status();
+                            break;
                         case 'test';
                             echo 'this is just a test' . PHP_EOL;
 
+                            break;
+                        case 'syncPOS':
+                            if($this->option('cardPos')){
+                                include P18AW_ADMIN_DIR . 'syncPOS.php';     
+                            }
+                            break;
+                        //test sync price pos
+                        case 'sync_price_pos';
+                            $this->syncPricePriorityPos();
                             break;
                         default:
                             include P18AW_ADMIN_DIR . 'settings.php';
@@ -520,6 +531,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('update_image', $this->post('update_image'));
                 $this->updateOption('mailing_list_field', $this->post('mailing_list_field'));
                 $this->updateOption('obligo', $this->post('obligo'));
+                $this->updateOption('cardPos', $this->post('cardPos'));
                 $this->updateOption('selectusers2', $this->post('selectusers2'));
                 $this->updateOption('packs', $this->post('packs'));
                 $this->updateOption('sync_personnel', $this->post('sync_personnel'));
@@ -694,8 +706,6 @@ class WooAPI extends \PriorityAPI\API
                     $columns['priority_recipe_status'] = '<span>' . __('Priority Recipe Status', 'p18w') . '</span>'; // title
 
                 }
-
-
                 //add the new column "post to Priority"
                 $columns['order_post'] = '<span>' . __('Post to Priority', 'p18w') . '</span>'; // title
 
@@ -706,7 +716,7 @@ class WooAPI extends \PriorityAPI\API
                 return $columns;
             }, 999);
 
-// ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
+        // ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
         add_action('manage_shop_order_posts_custom_column',
             function ($column, $post_id) {
 
@@ -778,7 +788,7 @@ class WooAPI extends \PriorityAPI\API
                 }
             }, 999, 2);
 
-// MAKE 'stauts' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
+        // MAKE 'stauts' METAKEY SEARCHABLE IN THE SHOP ORDERS LIST
         add_filter('woocommerce_shop_order_search_fields',
             function ($meta_keys) {
                 $meta_keys[] = 'priority_order_status';
@@ -1923,11 +1933,7 @@ class WooAPI extends \PriorityAPI\API
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
-	    if ($product_price_list != null) {
-		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
-	    } else {
-		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
-	    }
+
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
@@ -1980,15 +1986,11 @@ class WooAPI extends \PriorityAPI\API
                                 'post_content' => $parents[$item[$variation_field]]['content']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
-                            /*
-	                        if ($config->sync_price != "true") {
-		                        $parents[$item[$variation_field]]['regular_price']= $price;
-                            }
-                            */
 
 //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
 //
 //                            }
+
                             if ($priority_version >= 21.0 && true == $is_load_image) {
                                 $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $search_by_value . '\'', [], $this->option('log_items_priority', true));
                                 $data = json_decode($response['body']);
@@ -3232,7 +3234,7 @@ class WooAPI extends \PriorityAPI\API
             }
             // sync order
             if ($this->option('post_pos_checkout')) {
-                $this->syncPos($order_id);
+                $this->syncTransactionPos($order_id);
             }
             // sync OTC
             if ($this->option('post_einvoice_checkout') && empty(get_post_meta($order_id, 'priority_invoice_status', false)[0])) {
@@ -3732,7 +3734,8 @@ class WooAPI extends \PriorityAPI\API
 
 
     }
-    public function syncPos($id)
+
+    public function syncTransactionPos($id)
     {
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
@@ -3959,6 +3962,7 @@ class WooAPI extends \PriorityAPI\API
         // add timestamp
         return $response;
     }
+
     public function syncAinvoice($id)
     {
         if (isset(WC()->session)) {

@@ -193,6 +193,10 @@ add_action('plugins_loaded', function () {
                 include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
             }
             require P18AW_ADMIN_DIR . 'family-code.php';
+            if (WooAPI::instance()->option('cardPos')) {
+                require P18AW_CLASSES_DIR . 'card_pos/card_pos.php';
+                \CardPOS::instance()->run();   
+            }
 
 
         } else {

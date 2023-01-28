@@ -47,8 +47,30 @@ if (isset($_GET['ord'])) {
     // sync POS
     if ($this->option('post_pos_checkout')) {
         $message .= '<h1>Priority API, sync POS to Priority</h1>';
-        $response = $this->syncPos($order_id);
+        $response = $this->syncTransactionPos($order_id);
         $message .= simply_create_message_repost($response);
+    }
+    if($this->option('cardPos')){
+        $message = '';
+        require_once WP_PLUGIN_DIR. '/WooCommercePriorityAPI/includes/classes/card_pos/card_pos.php';
+        $update_result = get_post_meta($order_id, 'response_transaction_update', true);
+        $approve_result = get_post_meta($order_id, 'response_transaction_approve', true);
+        $cancel_request = get_post_meta($order_id, 'cancel_request', true);
+        $response = CardPOS::instance()->close_transaction($order_id);
+        echo '<pre style="direction: ltr;">';
+        echo '<h1>Sync CART POS transaction to EDEA</h1><h2>Request Approve: update result</h2>';
+        
+        print_r($update_result);
+
+        echo '</br>';
+        echo '<h2>Request close: approve result</h2>';
+
+        print_r($approve_result);
+        echo '</br>';
+        echo '<h2>Response close</h2>';
+
+        print_r($response);
+        echo '</pre>';
     }
     // message
     echo $message;
