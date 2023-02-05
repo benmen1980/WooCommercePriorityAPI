@@ -36,6 +36,7 @@ class CardPOS extends \PriorityAPI\API
             'sync_items_web_pos' => 'syncItemsWebPos',
             'sync_inventory_priority_pos' => 'syncInventoryPriorityPos',
             'sync_price_priority_pos' => 'syncPricePriorityPos',
+            'sync_sale_price_priority_pos' => 'syncSalePricePriorityPos',
             //'sync_color_details' => 'syncColorDetails'
         ];
 
@@ -87,6 +88,7 @@ class CardPOS extends \PriorityAPI\API
                 $this->updateOption('sync_items_priority_pos_config', stripslashes($this->post('sync_items_priority_pos_config')));
                 $this->updateOption('sync_inventory_pos_config', stripslashes($this->post('sync_inventory_pos_config')));
                 $this->updateOption('sync_price_pos_config', stripslashes($this->post('sync_price_pos_config')));
+                $this->updateOption('sync_sale_price_pos_config', stripslashes($this->post('sync_sale_price_pos_config')));
 
                 $this->updateOption('sync_items_priority_pos', $this->post('sync_items_priority_pos'));
                 $this->updateOption('auto_sync_items_priority_pos', $this->post('auto_sync_items_priority_pos'));
@@ -97,6 +99,9 @@ class CardPOS extends \PriorityAPI\API
                 $this->updateOption('sync_price_priority_pos', $this->post('sync_price_priority_pos'));
                 $this->updateOption('auto_sync_price_priority_pos', $this->post('auto_sync_price_priority_pos'));
 
+                $this->updateOption('sync_sale_price_priority_pos', $this->post('sync_sale_price_priority_pos'));
+                $this->updateOption('auto_sync_sale_price_priority_pos', $this->post('auto_sync_sale_price_priority_pos'));
+                
                 $this->updateOption('sync_color_details', $this->post('sync_color_details'));
                 $this->updateOption('auto_sync_color_details', $this->post('auto_sync_color_details'));
 
@@ -748,6 +753,7 @@ class CardPOS extends \PriorityAPI\API
         }
     }
 
+
     function syncPricePriorityPos(){
         $price_option = $this->option('sync_price_pos_config');
         $price_option = str_replace(array("\n", "\t", "\r"), '', $price_option);
@@ -816,6 +822,110 @@ class CardPOS extends \PriorityAPI\API
 
             // add timestamp
             $this->updateOption('price_priority_update_pos', time());
+        }
+        else{
+            $message = $result['EdeaError']['DisplayErrorMessage'];
+            $multiple_recipients = array(
+                get_bloginfo('admin_email')
+            );
+            $subj = 'Error get item from priority';
+            wp_mail( $multiple_recipients, $subj, $message );
+        }
+        
+    }
+    function syncSalePricePriorityPos(){
+        $price_option = $this->option('sync_sale_price_pos_config');
+        $price_option = str_replace(array("\n", "\t", "\r"), '', $price_option);
+        $price_config = json_decode(stripslashes($price_option));
+
+        $daysback = (!empty((int)$price_config->days_back) ? $price_config->days_back : 1);
+        $stamp = mktime(0 - ($daysback * 24), 0, 0);
+        $from_date = date(DATE_ATOM, $stamp);
+        $chunknumber = 1;
+        $data = [
+            "FromDateTime" => $from_date, 
+            "ChunkNumber" => $chunknumber,
+        ];
+    
+        $raw_option = $this->option('setting-config');
+        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+        $config = json_decode(stripslashes($raw_option));
+        $branch_num = $config->BranchNumber;
+        $unique_id = $config->UniqueIdentifier;
+        $pos_num = $config->POSNumber;
+    
+        $data['UniquePOSIdentifier'] = [
+            "BranchNumber" => $branch_num,
+            "POSNumber" => $pos_num,
+            "UniqueIdentifier" => $unique_id,
+            "ChannelCode" => "",
+            "VendorCode" => "",
+            "ExternalAccountID" => ""
+        ];
+
+        $form_name = 'ItemSpecialPrice';
+    
+        $form_action = 'GetUpdatedItemSpecialPriceChunk';
+    
+        $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
+        $error_code = $result["ErrorCode"];
+        if ($error_code == 0) {
+            $is_last_chunk = $result["IsLastChunk"];
+            $response_data = $result['ItemsSpecialPriceDetails'];
+            $api_salecode = [];
+            $web_salecode = [];
+
+            //get all products id with salecode to check if still in sale
+            $args = array(
+                'post_type' => 'product_variation',
+                'posts_per_page' => -1,
+                'fields' => 'ids',
+                'meta_query' => array(
+                    array(
+                        'key' => 'sale_code_field',
+                        'value' => '',
+                        'compare' => '!='
+                    )
+                )
+            );
+            $query = new WP_Query($args);
+            $product_ids = $query->posts;
+
+            foreach ($product_ids as $product_id) {
+                $web_salecode[$product_id] =  get_post_meta( $product_id, 'sale_code_field', true );
+            }
+
+
+            foreach($response_data as $item){
+                $best_price = $item["IsBestPriceForDigital"];
+                $sale_code = $item["SaleCode"]; 
+                $sku = $item['ItemCode']; //22011103XL
+                $variation_id = wc_get_product_id_by_sku($sku); //625
+                $discount_percent = $item['DiscountPercent']; //25
+                // check if need to remove the sale
+                if (array_key_exists($variation_id, $web_salecode)) {
+                    $wb_id = $web_salecode[$variation_id];
+                    if( $sale_code == $web_salecode[$variation_id] ){
+                        if($best_price == false){
+                            delete_post_meta($sku, 'sale_code_field');
+                        }
+                    }
+                }
+                if($best_price == true){
+                   
+                    $product = wc_get_product($variation_id);
+                    if ($product) {
+                        $original_price = $product->get_regular_price(); //355
+                        $discount_amount = $original_price * ($discount_percent/100); //88.75
+                        $sale_price = $original_price - $discount_amount; //266.25
+                        $product->set_sale_price($sale_price);
+                        update_post_meta( $variation_id, 'sale_code_field', $sale_code);
+                        $product->save();
+                    }
+                }
+            }
+            // add timestamp
+            $this->updateOption('sale_price_priority_update_pos', time());
         }
         else{
             $message = $result['EdeaError']['DisplayErrorMessage'];
@@ -988,7 +1098,8 @@ class CardPOS extends \PriorityAPI\API
                 $vtion_id = $cart_item['variation_id'];
                 $quantity = $cart_item['quantity'];
                 //$price = WC()->cart->get_product_price( $product );
-                $price = get_post_meta($cart_item['product_id'] , '_price', true);
+                //$price = get_post_meta($cart_item['product_id'] , '_price', true);
+                $price = $cart_item['data']->get_regular_price();
                 $sku = $pdt->get_sku();
                 
                 $items_in_bag [] = [
@@ -1411,9 +1522,11 @@ class CardPOS extends \PriorityAPI\API
         }
         else{
             $error_src = $result['EdeaError']['ErrorSource'];
-            // the order is locked so cancel
             $error_msg = $result['EdeaError']['ErrorMessage'];
             wc_add_notice( 'error updating bag: '.$error_msg, 'error' );
+            update_post_meta($order_id, 'response_transaction_update', $result);
+            $order->update_meta_data('priority_pos_cart_status', $error_msg);
+            $order->save();
             exit;
             // $multiple_recipients = array(
             //     get_bloginfo('admin_email')
@@ -1516,8 +1629,11 @@ class CardPOS extends \PriorityAPI\API
             WC()->cart->set_session();
         }
         else{
-            $error_msg = $result_cancel['EdeaError']['ErrorMessage'];
-            wc_add_notice( 'error in approve transaction: '.$error_msg, 'error' );
+            $message = $result['EdeaError']['ErrorMessage'];
+            wc_add_notice( 'error in approve transaction: '.$message, 'error' );
+            update_post_meta($order_id, 'response_transaction_approve', $result);
+            $order->update_meta_data('priority_pos_cart_status', $message);
+            $order->save();
             exit;
         }
 
@@ -1529,118 +1645,119 @@ class CardPOS extends \PriorityAPI\API
     public function close_transaction($order_id){
 
         $data = get_post_meta($order_id, 'response_transaction_approve', true);
-
-        include_once WC_ABSPATH . 'includes/wc-cart-functions.php';
-        include_once WC_ABSPATH . 'includes/class-wc-cart.php';
-        global $woocommerce;
-        $order = wc_get_order( $order_id ); 
-        // check order status against config
-        $config = json_decode(stripslashes($this->option('setting-config')));
-        $raw_option = WooAPI::instance()->option('setting-config');
-        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
-        $config = json_decode(stripslashes($raw_option));
-        $branch_num = $config->BranchNumber;
-        $unique_id = $config->UniqueIdentifier;
-        $pos_num = $config->POSNumber;
-        $gateway = $config->gateway ?? 'debug';
-        if (!isset($config->order_statuses)) {
-            //$is_status = "processing";
-            $statuses = ["processing"];
-            $is_status = in_array($order->get_status(), $statuses);
-        } else {
-            $statuses = explode(',', $config->order_statuses);
-            $is_status = in_array($order->get_status(), $statuses);
-        }
-        if (empty(get_post_meta($order_id, '_post_done', true))) {
-            if($is_status || $gateway == 'debug' ){
-                //update_post_meta($order_id, '_post_done', true);
-                $data['UniquePOSIdentifier'] = [
-                    "BranchNumber" => $branch_num,
-                    "POSNumber" => $pos_num,
-                    "UniqueIdentifier" => $unique_id,
-                    "ChannelCode" => "",
-                    "VendorCode" => "",
-                    "ExternalAccountID" => ""
-                ];
-
-                $data["ExternalOrderNumber"] = $order->get_order_number();
-                $left_to_pay =  $data['Transaction']['LeftToPay'];
-                $payment_method = get_post_meta($order->get_id(), '_payment_method', true);
-                $gateway = $config->gateway ?? 'debug';
-                if ($gateway == 'pelecard') {
-                    $order_cc_meta = $order->get_meta('_transaction_data');
-                    $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
-        
-                    $payaccount = $order_cc_meta['CreditCardNumber'];
-                    $ccuid = $order_cc_meta['Token'];
-                    $validmonth = $order_cc_meta['CreditCardExpDate'];
-                    $confnum = $order_cc_meta['ConfirmationKey'];
-                    $numpay = $order_cc_meta['TotalPayments'];
-                    $firstpay = $order_cc_meta['FirstPaymentTotal'] / 100;
-                    $vouchernumber = str_replace("-", "", $order_cc_meta['VoucherId']);
-                    $idnum = $order_cc_meta['CardHolderID'];
-        
-                    $data['CreditCardPayments'][] = [
-                        "CardNumber" => $payaccount,
-                        "PaymentSum" => floatval($order->get_total()),
-                        "AuthorizationNumber" => $confnum,
-                        "CardIssuerCode" => 1,
-                        "CardClearingCode" => 1,
-                        "VoucherNumber" => $vouchernumber,
-                        "NumberOfPayments" => $numpay,
-                        "FirstPaymentSum" => $firstpay,
-                        "Token" => $ccuid,
-                        "ExpirationDate" => $validmonth,
-                        "CreditType" => 0,
-                        "IDNumber" => $idnum
-                    ];
-                } else {
-                    //debug
-                    $data['CreditCardPayments'][] = [
-                        "CardNumber" => "12345",
-                        "PaymentSum" => $left_to_pay,
-                        "AuthorizationNumber" => "12345",
-                        "CardIssuerCode" => 1,
-                        "CardClearingCode" => 1,
-                        "VoucherNumber" => "12345",
-                        "NumberOfPayments" => 1,
-                        "FirstPaymentSum" => $left_to_pay,
-                        "Token" => 12345,
-                        "ExpirationDate" => "0126",
-                        "CreditType" => 0,
-                    ];
-        
-                }
-                update_post_meta($order_id, 'cancel_request', $data);
-
-                $form_name = 'Transactions';
-                $form_action = 'CloseTransaction';
-        
-                $data = json_encode($data);
-                $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
-                $error_code = $result["ErrorCode"];
-                if ($error_code == 0) {
-                    $ord_status = $result['EdeaError']['ErrorMessage']; //success
-                    $ord_number = $result["TransactionNumber"];
-                    $order->update_meta_data('priority_pos_cart_status', $ord_status);
-        
-                    $order->update_meta_data('priority_pos_cart_number', $ord_number);
-                    $order->save();
-                } else {
-                    $message = $result['EdeaError']['DisplayErrorMessage'];
-                    $order->update_meta_data('priority_pos_cart_status', $message);
-                    $order->save();
-                }
-                return $result;
-                
-                
-  
+        if($data){
+            include_once WC_ABSPATH . 'includes/wc-cart-functions.php';
+            include_once WC_ABSPATH . 'includes/class-wc-cart.php';
+            global $woocommerce;
+            $order = wc_get_order( $order_id ); 
+            // check order status against config
+            $config = json_decode(stripslashes($this->option('setting-config')));
+            $raw_option = WooAPI::instance()->option('setting-config');
+            $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+            $config = json_decode(stripslashes($raw_option));
+            $branch_num = $config->BranchNumber;
+            $unique_id = $config->UniqueIdentifier;
+            $pos_num = $config->POSNumber;
+            $gateway = $config->gateway ?? 'debug';
+            if (!isset($config->order_statuses)) {
+                //$is_status = "processing";
+                $statuses = ["processing"];
+                $is_status = in_array($order->get_status(), $statuses);
+            } else {
+                $statuses = explode(',', $config->order_statuses);
+                $is_status = in_array($order->get_status(), $statuses);
             }
-            //order failed or canceled or not paid so cancel transaction
-            else{
-                $this->cancel_transaction();
-            }
+            if (empty(get_post_meta($order_id, '_post_done', true))) {
+                if($is_status || $gateway == 'debug' ){
+                    update_post_meta($order_id, '_post_done', true);
+                    $data['UniquePOSIdentifier'] = [
+                        "BranchNumber" => $branch_num,
+                        "POSNumber" => $pos_num,
+                        "UniqueIdentifier" => $unique_id,
+                        "ChannelCode" => "",
+                        "VendorCode" => "",
+                        "ExternalAccountID" => ""
+                    ];
+    
+                    $data["ExternalOrderNumber"] = $order->get_order_number();
+                    $left_to_pay =  $data['Transaction']['LeftToPay'];
+                    $payment_method = get_post_meta($order->get_id(), '_payment_method', true);
+                    $gateway = $config->gateway ?? 'debug';
+                    if ($gateway == 'pelecard') {
+                        $order_cc_meta = $order->get_meta('_transaction_data');
+                        $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
             
+                        $payaccount = $order_cc_meta['CreditCardNumber'];
+                        $ccuid = $order_cc_meta['Token'];
+                        $validmonth = $order_cc_meta['CreditCardExpDate'];
+                        $confnum = $order_cc_meta['ConfirmationKey'];
+                        $numpay = $order_cc_meta['TotalPayments'];
+                        $firstpay = $order_cc_meta['FirstPaymentTotal'] / 100;
+                        $vouchernumber = str_replace("-", "", $order_cc_meta['VoucherId']);
+                        $idnum = $order_cc_meta['CardHolderID'];
+            
+                        $data['CreditCardPayments'][] = [
+                            "CardNumber" => $payaccount,
+                            "PaymentSum" => floatval($order->get_total()),
+                            "AuthorizationNumber" => $confnum,
+                            "CardIssuerCode" => 1,
+                            "CardClearingCode" => 1,
+                            "VoucherNumber" => $vouchernumber,
+                            "NumberOfPayments" => $numpay,
+                            "FirstPaymentSum" => $firstpay,
+                            "Token" => $ccuid,
+                            "ExpirationDate" => $validmonth,
+                            "CreditType" => 0,
+                            "IDNumber" => $idnum
+                        ];
+                    } else {
+                        //debug
+                        $data['CreditCardPayments'][] = [
+                            "CardNumber" => "12345",
+                            "PaymentSum" => $left_to_pay,
+                            "AuthorizationNumber" => "12345",
+                            "CardIssuerCode" => 1,
+                            "CardClearingCode" => 1,
+                            "VoucherNumber" => "12345",
+                            "NumberOfPayments" => 1,
+                            "FirstPaymentSum" => $left_to_pay,
+                            "Token" => 12345,
+                            "ExpirationDate" => "0126",
+                            "CreditType" => 0,
+                        ];
+            
+                    }
+                    update_post_meta($order_id, 'cancel_request', $data);
+    
+                    $form_name = 'Transactions';
+                    $form_action = 'CloseTransaction';
+            
+                    $data = json_encode($data);
+                    $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
+                    $error_code = $result["ErrorCode"];
+                    if ($error_code == 0) {
+                        $ord_status = $result['EdeaError']['ErrorMessage']; //success
+                        $ord_number = $result["TransactionNumber"];
+                        $order->update_meta_data('priority_pos_cart_status', $ord_status);
+            
+                        $order->update_meta_data('priority_pos_cart_number', $ord_number);
+                        $order->save();
+                    } else {
+                        $message = $result['EdeaError']['DisplayErrorMessage'];
+                        $order->update_meta_data('priority_pos_cart_status', $message);
+                        $order->save();
+                    }
+                    return $result;
+                    
+                    
+      
+                }
+                //order failed or canceled or not paid so cancel transaction
+                else{
+                    $this->cancel_transaction();
+                }
+                
+            }
         }
     }
 
