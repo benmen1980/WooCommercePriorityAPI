@@ -3,6 +3,7 @@ jQuery(document).ready(function( $ ) {
         let a = $('input[name="quantity"]').attr('step');
         let b = $(event.target).val();
         $('input[name="quantity"]').val(a*b);
+        $('.input-text.qty.text').trigger('change');
     });
     $(document).on('change','.pri-packs', function(event ) {
         // shop- wait for Sunli to fix his bug T20

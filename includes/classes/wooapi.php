@@ -3291,13 +3291,16 @@ class WooAPI extends \PriorityAPI\API
                     // products price lists
                     foreach ($list['PARTPRICE2_SUBFORM'] as $product) {
 
+                        if($product['PARTNAME'] =='1240-TX-240'){
+                        $foo = $product['PARTNAME'];
+                        }
 
-                        $GLOBALS['wpdb']->insert($table, [
+                       $res =  $GLOBALS['wpdb']->insert($table, [
                             'product_sku' => $product['PARTNAME'],
                             'price_list_code' => $list['PLNAME'],
                             'price_list_name' => $list['PLDES'],
                             'price_list_currency' => $list['CODE'],
-                            'price_list_price' => wc_prices_include_tax() ? $product['VATPRICE'] : $product['PRICE'],
+                            'price_list_price' => wc_prices_include_tax() ? $product['VATPRICE'] : (float)$product['PRICE'],
                             'price_list_quant' => $product['QUANT'],
                             'blog_id' => $blog_id
                         ]);
@@ -4670,6 +4673,7 @@ class WooAPI extends \PriorityAPI\API
         $priority_mcustomer_number = get_the_author_meta('priority_mcustomer_number', $user->ID);
         $custpricelists = get_the_author_meta('custpricelists', $user->ID);
         $customer_percents = get_the_author_meta('customer_percents', $user->ID);
+	    $customer_paydes = get_the_author_meta('customer_paydes', $user->ID);
         $users = get_users(array('fields' => array('ID')));
         $selected_users = get_user_meta($user->ID, 'select_users', true);
         ?>
@@ -4753,6 +4757,21 @@ class WooAPI extends \PriorityAPI\API
                                    echo $item["PERCENT"] . '% ';
                                }
                            }; ?>"
+                           class="regular-text"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="Priority PayDes"><?php esc_html_e('Priority Payment Description', 'p18a'); ?></label>
+                </th>
+                <td>
+                    <input type="text"
+                           id="customer_paydes"
+                           name="customer_paydes"
+                           value="<?php
+					               echo $customer_paydes;
+
+			                ?>"
                            class="regular-text"
                     />
                 </td>
@@ -4857,7 +4876,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition_config = !empty($config->additional_url) ? $config->additional_url : '';
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
-        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2,STATDES&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
+        $url_addition = 'CUSTOMERS?$filter=EMAIL ne \'\' and ' . $statusdate . ' ge ' . $bod . ' ' . $url_addition_config . '&$select=EMAIL,CUSTDES,CUSTNAME,MCUSTNAME,ADDRESS,ADDRESS2,STATE,ZIP,PHONE,SPEC1,SPEC2,STATDES,PAYDES&$expand=CUSTPLIST_SUBFORM($select=PLNAME),CUSTDISCOUNT_SUBFORM($select=PERCENT)';
         $args = [];
         $res = apply_filters('simply_customers_url', ['url_addition' => $url_addition,'args' => $args]);
         $url_addition = $res['url_addition'];
@@ -4921,6 +4940,7 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'billing_city', $user['STATE']);
                 update_user_meta($user_id, 'billing_phone', $user['PHONE']);
                 update_user_meta($user_id, 'billing_postcode', $user['ZIP']);
+	            update_user_meta($user_id, 'customer_paydes', $user['PAYDES']);
 
                 // $customer = new \WC_Customer($user_id);
                 // $customer->set_billing_address_1($user['ADDRESS']);
