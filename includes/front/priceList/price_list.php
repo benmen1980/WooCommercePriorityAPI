@@ -35,7 +35,13 @@ function simply_pricelist_qty_table()
     global $product;
     $price = $product->get_regular_price();
     $id = get_current_user_id();
-    $price_list = get_user_meta($id, 'custpricelists', true);
+    if(!empty(get_user_meta($id, 'custpricelists', true))){
+	    $price_list =   get_user_meta($id, 'custpricelists', true);
+        }else{
+	    $locale = get_locale();
+        $price_list[0] = ['PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base'];
+            };
+
     if (!empty($price_list)) {
         $price_list = $price_list[0]["PLNAME"];
         $sql = '
