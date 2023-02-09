@@ -1231,6 +1231,11 @@ class WooAPI extends \PriorityAPI\API
                 if ($product_id != 0) {
                     $_product = wc_get_product($product_id);
                     if (!$_product->is_type('simple')) {
+	                    /*
+	                    $pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+	                    $foo = $_product->set_regular_price($pri_price);
+	                    update_post_meta($product_id, '_regular_price',$pri_price);
+	                     */
                         continue;
                     }
                 }
@@ -5273,7 +5278,7 @@ class WooAPI extends \PriorityAPI\API
             return;
         };
         foreach ($percentages as $item) {
-            $percentage = +is_numeric($item['PERCENT']) ? $item['PERCENT'] : 0.0;
+            $percentage =+ is_numeric($item['PERCENT']) ? $item['PERCENT'] : 0.0;
         }
         $subtotal = $woocommerce->cart->get_subtotal() + $woocommerce->cart->get_subtotal_tax();
         $discount_price = $percentage * $subtotal / 100;

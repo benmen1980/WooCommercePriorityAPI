@@ -67,10 +67,13 @@ function simply_pricelist_qty_table()
                 <?php
                 foreach ($data as $item) {
                     $price = $item["price_list_price"];
-                    $quant = $item["price_list_quant"];
+                    $quantity = $item["price_list_quant"];
+	                $arr = apply_filters('simply_tire_pricing_filter_price_and_quantity', ['price'=>$price,'quantity' => $quantity]);
+                    $price = $arr['price'];
+                    $quantity = $arr['quantity'];
                     ?>
                     <tr class="price_list_tr">
-                        <td class="simply-tire-quantity"><?= $quant ?></td>
+                        <td class="simply-tire-quantity"><?= $quantity ?></td>
                         <td class="simply-tire-price"> <?= $price ?></td>
 
                     </tr>
