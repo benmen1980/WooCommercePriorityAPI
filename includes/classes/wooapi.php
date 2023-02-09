@@ -4770,15 +4770,7 @@ class WooAPI extends \PriorityAPI\API
                 <th><label for="Priority PayDes"><?php esc_html_e('Priority Payment Description', 'p18a'); ?></label>
                 </th>
                 <td>
-                    <input type="text"
-                           id="customer_paydes"
-                           name="customer_paydes"
-                           value="<?php
-					               echo $customer_paydes;
-
-			                ?>"
-                           class="regular-text"
-                    />
+                    <input type="text" id="customer_paydes"  name="customer_paydes" value="<?php echo $customer_paydes;?>"class="regular-text"/>
                 </td>
             </tr>
         </table>
@@ -4829,6 +4821,11 @@ class WooAPI extends \PriorityAPI\API
             update_user_meta($user_id, 'customer_percents', $customer_percents_result);
         } else {
             update_user_meta($user_id, 'customer_percents', '');
+        }
+        if (!empty($_POST['customer_paydes'])) {
+            update_user_meta($user_id, 'customer_paydes', $_POST['customer_paydes']);
+        } else {
+            update_user_meta($user_id, 'customer_paydes', '');
         }
     }
     function get_shipping_price($order, $is_order)
