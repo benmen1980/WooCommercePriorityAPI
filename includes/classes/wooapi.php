@@ -3626,7 +3626,7 @@ class WooAPI extends \PriorityAPI\API
 	    $total_fee = 0;
 	    foreach ( $fees as $fee ) {
             if($fee->get_total()<0 && $add_fee_as_discount == true){
-	            $total_fee += $fee->get_total()* -1;
+	            $total_fee += ($fee->get_total()+$fee->get_total_tax()) * -1;
             }
 	    }
 	    if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() + $total_fee > 0)) {
