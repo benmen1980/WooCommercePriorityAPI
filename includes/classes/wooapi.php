@@ -4305,6 +4305,11 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncReceipt($order_id)
     {
+        $is_to_sync = true;
+        $is_to_sync = apply_filters('simply_sync_receipt_true', $order_id);
+        if($is_to_sync == false){
+            return;
+        }
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
             if ($session['ordertype'] == 'obligo_payment') {
