@@ -2394,7 +2394,7 @@ class WooAPI extends \PriorityAPI\API
 
         // get the items simply by time stamp of today
         $daysback_options = explode(',', $this->option('sync_inventory_warhsname'))[3];
-        $daysback = intval(!empty($daysback_options) ? $daysback_options : 10); // change days back to get inventory of prev days
+        $daysback = intval(!empty($daysback_options) ? $daysback_options : 1); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = '('. rawurlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
@@ -2472,6 +2472,9 @@ class WooAPI extends \PriorityAPI\API
                     if (!empty($statuses)) {
                         $stock -= $this->get_items_total_by_status($product_id);
                         $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
+                    }
+                    if($item['PARTNAME']=='8511'){
+                        $foo = 'haaa';
                     }
                     $item['stock'] = $stock;
                     $item = apply_filters('simply_sync_inventory_priority', $item);
