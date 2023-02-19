@@ -179,7 +179,7 @@ class WooAPI extends \PriorityAPI\API
 	        if($show_priority_price_as_sale_price == 'true'){
 		        add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
 	        }
-	        add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
+	        add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price'],10,1);
 	        add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
 	        add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
 
@@ -4470,7 +4470,6 @@ class WooAPI extends \PriorityAPI\API
     function simply_add_custom_price($cart_object)
     {
         if (is_cart()) {
-
             foreach ($cart_object->get_cart() as $hash => $value) {
                 if (!empty($value['custom_data']['realprice'])) {
                     $custom_price = $value['custom_data']['realprice'];
@@ -4569,6 +4568,8 @@ class WooAPI extends \PriorityAPI\API
     }
     public function filterPrice($price, $product)
     {
+        if(is_cart() || is_checkout()) return $price ;
+
         $user = wp_get_current_user();
         $transient = $user->ID . $product->get_id();
         $get_transient = get_transient($transient);
