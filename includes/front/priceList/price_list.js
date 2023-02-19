@@ -14,7 +14,7 @@ jQuery(document).ready(function ($) {
             let td1;
             let td = tr[i].querySelector('.simply-tire-price')
             if(i == tr.length -1){
-                price = tr[i].querySelector('.simply-tire-price').textContent
+                price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
                 priceSpanBdi.childNodes[0].textContent = price;
                 document.getElementById('realprice').value = price
                 break;
@@ -22,15 +22,16 @@ jQuery(document).ready(function ($) {
                  td1 = tr[i + 1].querySelector('.simply-tire-quantity');
             }
             if (parseInt(qty) < parseInt(tr[i+1].querySelector('.simply-tire-quantity').textContent)) {
-                price = tr[i].querySelector('.simply-tire-price').textContent
+                price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[0].textContent
+                let  realprice = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
                 priceSpanBdi.childNodes[0].textContent = price;
-                document.getElementById('realprice').value = price
+                document.getElementById('realprice').value = realprice
                 break;
             }
         }
         if (price == undefined) {
             if (i > 0 || parseInt(tr[i].querySelector('.simply-tire-quantity').textContent) <= parseInt(step)) {
-                price = tr[i].querySelector('.simply-tire-price').textContent
+                price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
 
             } else {
                 price = document.getElementById('price_regular').value;
@@ -43,7 +44,7 @@ jQuery(document).ready(function ($) {
 });
 function setInitialPriceOnQtyOne(){
     let initQty = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[0].textContent;
-    let price   = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[1].textContent
+    let price   = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[1].querySelectorAll('span')[0].textContent
     if(1 == initQty){
         let priceSpan = document.querySelector('.woocommerce-Price-amount');
         let priceSpanBdi = priceSpan.querySelector('bdi');
