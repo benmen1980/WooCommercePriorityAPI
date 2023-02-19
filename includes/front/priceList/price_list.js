@@ -14,7 +14,7 @@ jQuery(document).ready(function ($) {
             let td1;
             let td = tr[i].querySelector('.simply-tire-price')
             if(i == tr.length -1){
-                price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
+                price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[0].textContent
                 priceSpanBdi.childNodes[0].textContent = price;
                 document.getElementById('realprice').value = price
                 break;
