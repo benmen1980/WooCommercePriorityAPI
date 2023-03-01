@@ -5391,7 +5391,7 @@ class WooAPI extends \PriorityAPI\API
             } else {
                 $priority_image_path = $ext_file; //  "..\..\system\mail\pics\00093.jpg"
                 $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                $images_url = 'https://' . $this->option('url') . '/primail';
                 if (!empty($image_base_url)) {
                     $images_url = $image_base_url;
                 }
