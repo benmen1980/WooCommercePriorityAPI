@@ -204,6 +204,7 @@ class WooAPI extends \PriorityAPI\API
             }
             return $transient_cached_prices_new ? $transient_cached_prices_new : $transient_cached_prices;
             }, 10);
+
            add_filter('woocommerce_product_categories_widget_args', function ($list_args) {
                 $user_id = get_current_user_id();
                 $include = [];
@@ -4657,10 +4658,14 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
         }
-        if (!empty($prices)) {
-            return wc_price(min($prices)) . ' - ' . wc_price(max($prices));
+        if (!empty($prices) && min($prices)==max($prices)) {
+            return wc_price(min($prices));
+        }elseif(!empty($prices)){
+	        return wc_price(min($prices)) . ' - ' . wc_price(max($prices));
+        }else{
+	        return $price;
         }
-        return $price;
+
     }
 
 
