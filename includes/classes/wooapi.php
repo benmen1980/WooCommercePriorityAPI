@@ -179,7 +179,7 @@ class WooAPI extends \PriorityAPI\API
 	        if($show_priority_price_as_sale_price == 'true'){
 		        add_filter('woocommerce_product_get_sale_price', [$this, 'filterPrice'], 10, 2);
 	        }
-	        add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price']);
+	        add_action('woocommerce_before_calculate_totals', [$this, 'simply_add_custom_price'],10,1);
 	        add_action('woocommerce_after_add_to_cart_button', [$this, 'simply_after_add_to_cart_button']);
 	        add_filter('woocommerce_product_get_price', [$this, 'filterPrice'], 10, 2);
 
@@ -204,6 +204,7 @@ class WooAPI extends \PriorityAPI\API
             }
             return $transient_cached_prices_new ? $transient_cached_prices_new : $transient_cached_prices;
             }, 10);
+
            add_filter('woocommerce_product_categories_widget_args', function ($list_args) {
                 $user_id = get_current_user_id();
                 $include = [];
@@ -2394,7 +2395,7 @@ class WooAPI extends \PriorityAPI\API
 
         // get the items simply by time stamp of today
         $daysback_options = explode(',', $this->option('sync_inventory_warhsname'))[3];
-        $daysback = intval(!empty($daysback_options) ? $daysback_options : 10); // change days back to get inventory of prev days
+        $daysback = intval(!empty($daysback_options) ? $daysback_options : 1); // change days back to get inventory of prev days
         $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = '('. rawurlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
@@ -2472,6 +2473,9 @@ class WooAPI extends \PriorityAPI\API
                     if (!empty($statuses)) {
                         $stock -= $this->get_items_total_by_status($product_id);
                         $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
+                    }
+                    if($item['PARTNAME']=='8511'){
+                        $foo = 'haaa';
                     }
                     $item['stock'] = $stock;
                     $item = apply_filters('simply_sync_inventory_priority', $item);
@@ -3614,14 +3618,23 @@ class WooAPI extends \PriorityAPI\API
         }
         // additional line cart discount
         $config = json_decode(stripslashes($this->option('setting-config')));
-        if (!empty($config))
-            $coupon_num = $config->coupon_num;
+        if (!empty($config)){
+	        $coupon_num = $config->coupon_num;
+            $add_fee_as_discount = $config->add_fee_as_discount == 'true';
+        }
         // additional line cart discount
-        if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() > 0)) {
+	    $fees = $order->get_fees();
+	    $total_fee = 0;
+	    foreach ( $fees as $fee ) {
+            if($fee->get_total()<0 && $add_fee_as_discount == true){
+	            $total_fee += ($fee->get_total()+$fee->get_total_tax()) * -1;
+            }
+	    }
+	    if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() + $total_fee > 0)) {
             $data['ORDERITEMS_SUBFORM'][] = [
                 $this->get_sku_prioirty_dest_field() => empty($coupon_num) ? '000' : $coupon_num, // change to other item
                 'TQUANT' => -1,
-                'VATPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax()),
+                'VATPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax() + $total_fee ),
                 'DUEDATE' => date('Y-m-d'),
 
 
@@ -4458,7 +4471,6 @@ class WooAPI extends \PriorityAPI\API
     function simply_add_custom_price($cart_object)
     {
         if (is_cart()) {
-
             foreach ($cart_object->get_cart() as $hash => $value) {
                 if (!empty($value['custom_data']['realprice'])) {
                     $custom_price = $value['custom_data']['realprice'];
@@ -4557,6 +4569,8 @@ class WooAPI extends \PriorityAPI\API
     }
     public function filterPrice($price, $product)
     {
+        if(is_cart() || is_checkout()) return $price ;
+
         $user = wp_get_current_user();
         $transient = $user->ID . $product->get_id();
         $get_transient = get_transient($transient);
@@ -4644,10 +4658,14 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
         }
-        if (!empty($prices)) {
-            return wc_price(min($prices)) . ' - ' . wc_price(max($prices));
+        if (!empty($prices) && min($prices)==max($prices)) {
+            return wc_price(min($prices));
+        }elseif(!empty($prices)){
+	        return wc_price(min($prices)) . ' - ' . wc_price(max($prices));
+        }else{
+	        return $price;
         }
-        return $price;
+
     }
 
 
