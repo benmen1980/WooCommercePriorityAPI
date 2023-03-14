@@ -1,14 +1,18 @@
 
 jQuery(document).ready(function ($) {
   //  setInitialPriceOnQtyOne();
+
     $(document).on('keyup change keydown keypress oninput', '.input-text.qty.text', function (event) {
+
         let tr = document.getElementById('simply-tire-price-grid-rows').rows;
         let qty = $(event.target).first().val();
+
         let i;
         let currencySymbol = document.querySelector('.woocommerce-Price-currencySymbol');
         let priceSpan = document.querySelector('.woocommerce-Price-amount');
         let priceSpanBdi = priceSpan.querySelector('bdi');
         let priceSpanBdiSpan = priceSpanBdi.querySelector('.woocommerce-Price-currencySymbol');
+
         //let price =  priceSpanBdi.childNodes[1].textContent ;
         for (i = 0; i < tr.length ; i++) {
             let td1;
@@ -48,6 +52,7 @@ jQuery(document).ready(function ($) {
         }
 
     })
+
 });
 function setInitialPriceOnQtyOne(){
     let initQty = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[0].textContent;
