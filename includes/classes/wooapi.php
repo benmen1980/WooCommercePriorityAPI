@@ -2000,7 +2000,8 @@ class WooAPI extends \PriorityAPI\API
                                 'categories' => [
                                     $item[$is_categories]
                                 ],
-                                'attributes' => $attributes
+                                'attributes' => $attributes,
+                                'show_in_web' => $item[$show_in_web]
 
                             ];
                             /*
@@ -2087,7 +2088,8 @@ class WooAPI extends \PriorityAPI\API
                                 'stock' => $children['stock'],
                                 'image_id' => (!empty($attach_id) && $attach_id != 0) ? $attach_id : '', // optional
                                 'image_file' => (!empty($file_name)) ? $file_name : '', // optional
-                                'show_front' => $children['show_front']
+                                'show_front' => $children['show_front'],
+                                'show_in_web' => $children['show_in_web']
                             );
                             // The function to be run
                             create_product_variation($id, $variation_data);
