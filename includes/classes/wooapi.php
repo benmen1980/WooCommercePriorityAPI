@@ -1922,7 +1922,7 @@ class WooAPI extends \PriorityAPI\API
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
-
+        $data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
@@ -1946,6 +1946,7 @@ class WooAPI extends \PriorityAPI\API
                                 $attributes[$attribute] = $attr['VALUE'];
                             }
                         }
+	                    $item['attributes'] = $attributes;
                         $item = apply_filters('simply_ItemsAtrrVariation', $item);
                         $attributes = $item['attributes'];
                         if ($attributes) {
