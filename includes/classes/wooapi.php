@@ -1074,7 +1074,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $price_html;
     }
-
     public function my_product_update($post)
     {
         if ($post->post_type == "product") {
@@ -1082,7 +1081,6 @@ class WooAPI extends \PriorityAPI\API
             add_post_meta($productId, 'family_code', '');
         }
     }
-
     public function post_order_status_to_priority($order_id)
     {
         // this code is currently working only for EINVOICES
@@ -1117,10 +1115,6 @@ class WooAPI extends \PriorityAPI\API
             $response_data = json_decode($response['body_raw'], true);
         }
     }
-
-    /**
-     * sync items from priority
-     */
     public function is_attribute_exists($slug)
     {
         $is_attr_exists = false;
@@ -1134,7 +1128,6 @@ class WooAPI extends \PriorityAPI\API
         }
         return $is_attr_exists;
     }
-
     public function syncItemsPriority()
     {
         $priority_version = (float)$this->option('priority-version');
@@ -1558,7 +1551,6 @@ class WooAPI extends \PriorityAPI\API
 
         return $response;
     }
-
     public function syncPricePriority()
     {
         $raw_option = $this->option('sync_items_priority_config');
@@ -1653,9 +1645,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $response;
     }
-
-    public
-    function simply_posts_where($where, $query)
+    public function simply_posts_where($where, $query)
     {
         global $wpdb;
         // Check if our custom argument has been set on current query.
@@ -1666,9 +1656,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $where;
     }
-
-    public
-    function simply_check_file_exists($file_name)
+    public function simply_check_file_exists($file_name)
     {
         add_filter('posts_where', array($this, 'simply_posts_where'), 10, 2);
         $args = array(
@@ -1691,7 +1679,6 @@ class WooAPI extends \PriorityAPI\API
             return false;
         }
     }
-
     function sync_product_attachemtns()
     {
         /*
@@ -1905,10 +1892,6 @@ class WooAPI extends \PriorityAPI\API
         return $output_string;
 
     }
-
-    /**
-     * sync items width variation from priority
-     */
     public function syncItemsPriorityVariation()
     {
         $priority_version = (float)$this->option('priority-version');

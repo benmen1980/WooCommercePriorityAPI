@@ -294,6 +294,9 @@ function create_product_variation($product_id, $variation_data)
 
     $variation->save(); // Save the data
 
+	$variation_data['variation_id'] = $variation_id;
+	do_action( 'simply_update_variation_data', $variation_data );
+
     return $variation_id;
 }
 
