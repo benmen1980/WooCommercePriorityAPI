@@ -1520,7 +1520,6 @@ class WooAPI extends \PriorityAPI\API
 
                 // sync image
                 $is_load_image = json_decode($config->is_load_image);
-
                 if (false == $is_load_image) {
                     continue;
                 }
@@ -1530,6 +1529,9 @@ class WooAPI extends \PriorityAPI\API
                     $file_ = $this->load_image($item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field);
                     $attach_id = $file_[0];
                     $file = $file_[1];
+                    if(empty($file)){
+                        continue;
+                    }
                     include $file;
                     require_once( ABSPATH . '/wp-admin/includes/image.php' );
                     $attach_data = wp_generate_attachment_metadata($attach_id, $file);
@@ -5395,7 +5397,7 @@ class WooAPI extends \PriorityAPI\API
             } else {
                 $priority_image_path = $ext_file; //  "..\..\system\mail\pics\00093.jpg"
                 $priority_image_path = str_replace('\\', '/', $priority_image_path);
-                $images_url = 'https://' . $this->option('url') . '/zoom/primail';
+                $images_url = 'https://' . $this->option('url') . '/primail';
                 if (!empty($image_base_url)) {
                     $images_url = $image_base_url;
                 }
