@@ -1130,6 +1130,7 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncItemsPriority()
     {
+
         $priority_version = (float)$this->option('priority-version');
         // config
         $raw_option = $this->option('sync_items_priority_config');
@@ -1225,7 +1226,9 @@ class WooAPI extends \PriorityAPI\API
                 if ($product_id != 0) {
                     $_product = wc_get_product($product_id);
                     if (!$_product->is_type('simple')) {
-	                    /*
+	                    $item['variation_id'] = $product_id;
+	                    do_action( 'simply_update_variation_data', $item);
+                        /*
 	                    $pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
 	                    $foo = $_product->set_regular_price($pri_price);
 	                    update_post_meta($product_id, '_regular_price',$pri_price);
