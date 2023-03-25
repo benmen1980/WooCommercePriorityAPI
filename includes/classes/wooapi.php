@@ -1079,6 +1079,7 @@ class WooAPI extends \PriorityAPI\API
         if ($post->post_type == "product") {
             $productId = $post->ID;
             add_post_meta($productId, 'family_code', '');
+	        add_post_meta($productId, 'mpartname', '');
         }
     }
     public function post_order_status_to_priority($order_id)
@@ -1128,55 +1129,62 @@ class WooAPI extends \PriorityAPI\API
         }
         return $is_attr_exists;
     }
-    public function syncItemsPriority()
-    {
+    public function syncItemsPriority() {
 
-        $priority_version = (float)$this->option('priority-version');
-        // config
-        $raw_option = $this->option('sync_items_priority_config');
-        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
-        $config = json_decode(stripslashes($raw_option));
-        $image_base_url = $config->image_base_url;
+	    $priority_version = (float) $this->option( 'priority-version' );
+	    // config
+	    $raw_option     = $this->option( 'sync_items_priority_config' );
+	    $raw_option     = str_replace( array( "\n", "\t", "\r" ), '', $raw_option );
+	    $config         = json_decode( stripslashes( $raw_option ) );
+	    $image_base_url = $config->image_base_url;
 
-        if ($config->sync_price == "true") {
-            $this->syncPricePriority();
-           // return;
-        }
-        $synclongtext = $config->synclongtext;
-        $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
-        $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
-        $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
-        $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
-        $stock_status = (!empty($config->stock_status) ? $config->stock_status : 'outofstock');
-        $is_categories = (!empty($config->categories) ? $config->categories : null);
-        $statdes = (!empty($config->statdes) ? $config->statdes : false);
-        $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
-        $brands = (!empty($config->brands) ? $config->brands : false);
-        $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
-	    $variation_field = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
-        // get the items simply by time stamp of today
-        $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
-        $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
-        // get the items simply by time stamp of today
-        $stamp = mktime(0 - $daysback * 24, 0, 0);
-        $bod = date(DATE_ATOM, $stamp);
-        $date_filter = 'UDATE ge ' . urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
-        if ($priority_version < 21.0) {
-            $data['select'] .= ',EXTFILENAME';
-        }
-        if ($product_price_list != null) {
-            $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
-        } else {
-            $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
-        }
-        $data = apply_filters('simply_syncItemsPriority_data', $data);
+	    if ( $config->sync_price == "true" ) {
+		    $this->syncPricePriority();
+		    // return;
+	    }
+	    $synclongtext        = $config->synclongtext;
+	    $daysback            = ( ! empty( (int) $config->days_back ) ? $config->days_back : 1 );
+	    $url_addition_config = ( ! empty( $config->additional_url ) ? $config->additional_url : '' );
+	    $search_field        = ( ! empty( $config->search_by ) ? $config->search_by : 'PARTNAME' );
+	    $search_field_web    = ( ! empty( $config->search_field_web ) ? $config->search_field_web : '_sku' );
+	    $stock_status        = ( ! empty( $config->stock_status ) ? $config->stock_status : 'outofstock' );
+	    $is_categories       = ( ! empty( $config->categories ) ? $config->categories : null );
+	    $statdes             = ( ! empty( $config->statdes ) ? $config->statdes : false );
+	    $is_attrs            = ( ! empty( $config->attrs ) ? $config->attrs : false );
+	    $brands              = ( ! empty( $config->brands ) ? $config->brands : false );
+	    $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
+	    $show_in_web         = ( ! empty( $config->show_in_web ) ? $config->show_in_web : 'SHOWINWEB' );
+	    $variation_field     = $this->option( 'variation_field' ) == 'true' ? $this->option( 'variation_field' ) : 'MPARTNAME';
+	    // get the items simply by time stamp of today
+	    $product_price_list = ( ! empty( $config->product_price_list ) ? $config->product_price_list : null );
+	    $product_price_sale = ( ! empty( $config->product_price_sale ) ? $config->product_price_sale : null );
+	    // get the items simply by time stamp of today
+	    $stamp          = mktime( 0 - $daysback * 24, 0, 0 );
+	    $bod            = date( DATE_ATOM, $stamp );
+	    $date_filter    = 'UDATE ge ' . urlencode( $bod );
+	    $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
+	    if ( $priority_version < 21.0 ) {
+		    $data['select'] .= ',EXTFILENAME';
+	    }
+	    if ( $product_price_list != null ) {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+	    } else {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    }
+	    $data = apply_filters( 'simply_syncItemsPriority_data', $data );
 
-        $response = $this->makeRequest('GET',
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and '.$variation_field.' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
+
+	    if ( $config->ignore_variations == 'true' ) {
+        $response = $this->makeRequest( 'GET',
+            'LOGPART?$select=' . $data['select'].=',MPARTNAME'. '&$filter=' . $date_filter .  $url_addition_config .
             '&' . $data['expand'] . '', [],
-            $this->option('log_items_priority', true));
+            $this->option( 'log_items_priority', true ) );
+	    } else {
+	    $response = $this->makeRequest( 'GET',
+		    'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and ' . $variation_field . ' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
+		    '&' . $data['expand'] . '', [],
+		    $this->option( 'log_items_priority', true ) );
+         }
         // check response status
 
         if ($response['status']) {
@@ -1407,6 +1415,8 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                 }
+                // update MPARTNAME
+                update_post_meta($my_product->get_id(),'mpartname', $item[$variation_field]);
                 // update attributes
                 if ($is_attrs != false) {
                     unset($thedata);
@@ -4570,10 +4580,11 @@ class WooAPI extends \PriorityAPI\API
         }
         // get the MCUSTNAME if any else get the cust
         $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
-        // check transient
-
+        // check mpartname
+	    $mpartname = get_post_meta($product->get_id(), 'mpartname', true);
+        $sku = $mpartname ?? $product->get_sku();
         // get special price
-        $special_price = $this->getSpecialPriceCustomer($custname, $product->get_sku());
+        $special_price = $this->getSpecialPriceCustomer($custname, $sku);
         if ($special_price != 0) {
             set_transient($transient, $special_price, 300);
             return $special_price;
@@ -4591,7 +4602,7 @@ class WooAPI extends \PriorityAPI\API
             $data = $GLOBALS['wpdb']->get_row('
                     SELECT price_list_price,price_list_quant
                     FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-                    WHERE product_sku = "' . esc_sql($product->get_sku()) . '"
+                    WHERE product_sku = "' . esc_sql($sku) . '"
                     AND price_list_code = "' . esc_sql($plist['PLNAME']) . '"
                     AND blog_id = ' . get_current_blog_id(),
                 ARRAY_A

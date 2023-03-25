@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 1.54.2
+ * Version: 2.0.0
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -192,7 +192,7 @@ add_action('plugins_loaded', function () {
             } else {
                 include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
             }
-            require P18AW_ADMIN_DIR . 'family-code.php';
+            require P18AW_ADMIN_DIR . 'product_extra_fields.php';
             if (WooAPI::instance()->option('cardPos')) {
                 require P18AW_CLASSES_DIR . 'card_pos/card_pos.php';
                 \CardPOS::instance()->run();   
