@@ -4582,7 +4582,7 @@ class WooAPI extends \PriorityAPI\API
         $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
         // check mpartname
 	    $mpartname = get_post_meta($product->get_id(), 'mpartname', true);
-        $sku = $mpartname ?? $product->get_sku();
+        $sku = !empty($mpartname) ? $mpartname : $product->get_sku();
         // get special price
         $special_price = $this->getSpecialPriceCustomer($custname, $sku);
         if ($special_price != 0) {
