@@ -1952,6 +1952,15 @@ class WooAPI extends \PriorityAPI\API
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
+                    // check if variation show be on web
+	                if($item[$show_in_web] != 'Y'){
+		                $variation_sku = $item[$search_field];
+                        // Get the variation object
+		                $variation = wc_get_product_id_by_sku($variation_sku);
+		                if (!$variation) {
+			                continue;
+		                }
+	                }
                     if ($item[$variation_field] !== '-') {
                         $search_by_value = (string)$item[$search_field];
                         $attributes = [];
