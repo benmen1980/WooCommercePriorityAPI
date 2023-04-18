@@ -194,6 +194,15 @@ msgstr ""
 msgid "TO:"
 msgstr ""
 
+msgid "Account report"
+msgstr ""
+
+msgid "Account"
+msgstr ""
+
+msgid "Click on the link to open the report"
+msgstr ""
+
 msgid "Priority Customer Documents"
 msgstr ""
 

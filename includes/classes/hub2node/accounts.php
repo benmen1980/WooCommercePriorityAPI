@@ -35,11 +35,11 @@ class Priority_sdk_accounts extends \PriorityAPI\API{
 			?>
 			<div class="woocommerce-MyAccount-content-priority-sdk-accounts">
 
-				<p><?php _e('Accounts','p18w'); ?></p>
+				<p><?php _e('Account','p18w'); ?></p>
 				<?php
 			    $res = json_decode($this->create_hub2sdk_request());
                 $url = $res->report_url;
-              //  $url = 'https://prioritydev.simplyct.co.il/netfiles/1e6022cCC42FCFE0C734670A328FA4685048CE4.htm';
+                //  $url = 'https://prioritydev.simplyct.co.il/netfiles/1e6022cCC42FCFE0C734670A328FA4685048CE4.htm';
                 ?>
 				<a href="<?php echo $url ?>" target="_blank"><?php _e('Click on the link to open the report', 'p18w') ?></a>
 			</div>
