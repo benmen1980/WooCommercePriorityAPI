@@ -28,14 +28,14 @@ class Priority_sdk_accounts extends \PriorityAPI\API{
 		register_activation_hook( __FILE__, 'my_custom_flush_rewrite_rules_priority_sdk_account' );
 		register_deactivation_hook( __FILE__, 'my_custom_flush_rewrite_rules_priority_sdk_account' );
 		add_filter('woocommerce_account_menu_items', function($items) {
-			$items['priority-sdk-account'] = __('Account report כרטסת', 'p18w');
+			$items['priority-sdk-account'] = __('Account report', 'p18w');
 			return $items;
 		});
 		add_action('woocommerce_account_priority-sdk-account_endpoint', function() {
 			?>
 			<div class="woocommerce-MyAccount-content-priority-sdk-accounts">
 
-				<p><?php _e('Accounts כרטסת','p18w'); ?></p>
+				<p><?php _e('Accounts','p18w'); ?></p>
 				<?php
 			    $res = json_decode($this->create_hub2sdk_request());
                 $url = $res->report_url;
