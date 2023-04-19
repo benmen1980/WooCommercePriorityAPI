@@ -1274,7 +1274,7 @@ class WooAPI extends \PriorityAPI\API
                 // update product
                 if ($product_id != 0) {
                     $data['ID'] = $product_id;
-                    $_product->set_status($this->option('item_status'));
+                 //   $_product->set_status($this->option('item_status'));
                     $_product->save();
                     // Update post
                     $id = $product_id;
