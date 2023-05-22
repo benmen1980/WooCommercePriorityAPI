@@ -1,8 +1,8 @@
 
 jQuery(document).ready(function ($) {
   //  setInitialPriceOnQtyOne();
-
     $(document).on('keyup change keydown keypress oninput', '.input-text.qty.text', function (event) {
+        console.log('qty changes...');
         let tr = document.getElementById('simply-tire-price-grid-rows').rows;
         let qty = $(event.target).first().val();
         let i;

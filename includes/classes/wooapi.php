@@ -159,6 +159,7 @@ class WooAPI extends \PriorityAPI\API
         }
         if ($this->option('sell_by_pl') == true) {
 	        include_once P18AW_FRONT_DIR . 'priceList/price_list.php';
+	        include_once P18AW_FRONT_DIR . 'price_list_variation/price_list_variation.php';
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
