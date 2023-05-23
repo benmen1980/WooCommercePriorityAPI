@@ -4886,7 +4886,8 @@ class WooAPI extends \PriorityAPI\API
     }
     function get_shipping_price($order, $is_order)
     {
-        $price_filed = $is_order ? 'VATPRICE' : 'TOTPRICE';
+	    $priceDisplay = get_option('woocommerce_tax_display');
+        $price_filed = $priceDisplay === 'incl' ? ($is_order ? 'VATPRICE' : 'TOTPRICE') : 'PRICE';
         // config
         $config = json_decode(stripslashes($this->option('setting-config')));
         $default_product = '000';
