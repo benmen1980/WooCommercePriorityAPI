@@ -1,12 +1,20 @@
-
 .price_list_tr, .price_list_tr td,.price_list_tr th {
-    border: 0.1rem solid black !important;
-    text-align: center;
+    /*border: 0.1rem solid black !important;*/
+    /*text-align: center;*/
+    /*margin-top: 3%;*/
+    /*margin-bottom: 3%;*/
+
+
+    text-align: inherit;
     margin-top: 3%;
+    margin: 12px;
     margin-bottom: 3%;
+    border: none;
+    border-bottom: solid rgba(43, 3, 79, 0.88);
+    padding: 2px;
+    font-size: 16px;
+
 }
 table.hidden-table{
     display: none;
 }
-
-
