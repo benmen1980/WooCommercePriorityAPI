@@ -1,6 +1,6 @@
 <?php
 
-add_action('wp_enqueue_scripts', 'my_theme_scripts_price_list_variation',999);
+
 function my_theme_scripts_price_list_variation()
 {
 	if (is_product() || is_shop() || is_cart() || is_product_category()) {
@@ -40,6 +40,7 @@ function simply_pricelist_variation_qty_table()
 			);
            // echo ('variation table here...<br>');
 			if ($data && (count($data) > 1 || (count($data) == 1 && $data[0]['price_list_quant'] > 1))) {
+				add_action('wp_enqueue_scripts', 'my_theme_scripts_price_list_variation',999);
 				// $product->set_regular_price($data[0]['price_list_price'])
 				ob_start();
 				?>
