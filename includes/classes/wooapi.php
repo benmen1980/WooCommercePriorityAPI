@@ -76,15 +76,15 @@ class WooAPI extends \PriorityAPI\API
         ];
         foreach ($syncs as $hook => $action) {
             // Schedule sync
-            if ($this->option($hook, false)) {
+         //   if ($this->option($hook, false)) {
 
-                add_action($hook, [$this, $action]);
+              //  add_action($hook, [$this, $action]);
 
                 if (!wp_next_scheduled($hook)) {
-                    wp_schedule_event(time(), $this->option($hook), $hook);
+              //      wp_schedule_event(time(), $this->option($hook), $hook);
                 }
 
-            }
+         //   }
         }
 
         // add actions for user profile
@@ -763,10 +763,14 @@ class WooAPI extends \PriorityAPI\API
                         break;
                     // invoice
                     case 'priority_invoice_status' :
-                        echo $invoice_status;
+                        if(!empty($invoice_status)){
+	                        echo $invoice_status;
+                        }
                         break;
                     case 'priority_invoice_number' :
+                        if(!empty($invoice_number)){
                         echo '<span>' . $invoice_number . '</span>'; // display the data
+                            }
                         break;
                     // reciept
                     case 'priority_recipe_status' :
@@ -2915,19 +2919,17 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncAinvoices()
     {
-        $query = new \WC_Order_Query(array(
-            //'limit' => get_option('posts_per_page'),
-            'limit' => 1000,
-            'orderby' => 'date',
-            'order' => 'DESC',
-            'return' => 'ids',
-            'meta_key' => 'priority_invoice_status', // The postmeta key field
-            'meta_compare' => 'NOT EXISTS', // The comparison argument
-        ));
-
-        $orders = $query->get_orders();
+	    $args = array(
+		    'post_type' => 'shop_order',
+		    'meta_query' => array(
+			    // Your meta query conditions
+		    ),
+		    'context' => 'specific_order_query'
+	    );
+	    $orders = wc_get_orders($args);
         foreach ($orders as $id) {
             $order = wc_get_order($id);
+	        $metadata = $order->get_meta_data();
             $priority_status = $order->get_meta('priority_invoice_status');
             if (!$priority_status) {
                 $response = $this->syncAinvoice($id);
