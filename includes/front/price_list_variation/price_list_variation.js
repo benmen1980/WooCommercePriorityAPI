@@ -25,45 +25,48 @@ console.log('price list variation loaded...');
 })(jQuery);
 
 jQuery(document).on('keyup change keydown keypress oninput', '.input-text.qty.text', function (event) {
-    console.log('variation qty changes...');
-    let tr = document.querySelector('.simply-tire-price-grid:not(.hidden-table) > tbody').rows;
-    let qty = jQuery(event.target).first().val();
-    let i;
-    var priceSpanBdi = document.querySelector('.woocommerce-variation-price > .price > .woocommerce-Price-amount > bdi');
-    let priceSpanBdiSpan = priceSpanBdi.querySelector('.woocommerce-Price-currencySymbol');
-    for (i = 0; i < tr.length ; i++) {
-        let td1;
-        let td = tr[i].querySelector('.simply-tire-price')
-        if(i == tr.length -1){
-            price = Number(tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent);
-            var text = priceSpanBdi.textContent;
-            // Replace the price in the text with the new price
-            var newText = text.replace(/\d+(\.\d+)?([^\d]*)/g, price.toFixed(2) + "$2");
-            priceSpanBdi.textContent = newText;
-            document.getElementById('realprice').value = price
-            break;
-        }else{
-            td1 = tr[i + 1].querySelector('.simply-tire-quantity');
+    //console.log('variation qty changes...');
+    let element = document.querySelector('.simply-tire-price-grid');
+    if(element) {
+        let tr = document.querySelector('.simply-tire-price-grid:not(.hidden-table) > tbody').rows;
+        let qty = jQuery(event.target).first().val();
+        let i;
+        var priceSpanBdi = document.querySelector('.woocommerce-variation-price > .price > .woocommerce-Price-amount > bdi');
+        let priceSpanBdiSpan = priceSpanBdi.querySelector('.woocommerce-Price-currencySymbol');
+        for (i = 0; i < tr.length; i++) {
+            let td1;
+            let td = tr[i].querySelector('.simply-tire-price')
+            if (i == tr.length - 1) {
+                price = Number(tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent);
+                var text = priceSpanBdi.textContent;
+                // Replace the price in the text with the new price
+                var newText = text.replace(/\d+(\.\d+)?([^\d]*)/g, price.toFixed(2) + "$2");
+                priceSpanBdi.textContent = newText;
+                document.getElementById('realprice').value = price
+                break;
+            } else {
+                td1 = tr[i + 1].querySelector('.simply-tire-quantity');
+            }
+            if (parseInt(qty) < parseInt(tr[i + 1].querySelector('.simply-tire-quantity').textContent)) {
+                price = Number(tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent);
+                let realprice = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
+                var text = priceSpanBdi.textContent;
+                // Replace the price in the text with the new price
+                var newText = text.replace(/\d+(\.\d+)?([^\d]*)/g, price.toFixed(2) + "$2");
+                priceSpanBdi.textContent = newText;
+                document.getElementById('realprice').value = realprice
+                break;
+            }
         }
-        if (parseInt(qty) < parseInt(tr[i+1].querySelector('.simply-tire-quantity').textContent)) {
-            price = Number(tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent);
-            let  realprice = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
-            var text = priceSpanBdi.textContent;
-            // Replace the price in the text with the new price
-            var newText = text.replace(/\d+(\.\d+)?([^\d]*)/g, price.toFixed(2) + "$2");
-            priceSpanBdi.textContent = newText;
-            document.getElementById('realprice').value = realprice
-            break;
-        }
-    }
-    if (price == undefined) {
-        if (i > 0 || parseInt(tr[i].querySelector('.simply-tire-quantity').textContent) <= parseInt(step)) {
-            price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
+        if (price == undefined) {
+            if (i > 0 || parseInt(tr[i].querySelector('.simply-tire-quantity').textContent) <= parseInt(step)) {
+                price = tr[i].querySelector('.simply-tire-price').querySelectorAll('span')[1].textContent
 
-        } else {
-            price = document.getElementById('price_regular').value;
+            } else {
+                price = document.getElementById('price_regular').value;
+            }
+            document.getElementById('realprice').value = price
         }
-        document.getElementById('realprice').value = price
     }
 })
 
