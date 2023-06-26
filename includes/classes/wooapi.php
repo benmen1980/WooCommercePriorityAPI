@@ -5363,61 +5363,57 @@ class WooAPI extends \PriorityAPI\API
         $fieldname = apply_filters('simply_set_priority_sku_field', $fieldname);
         return $fieldname;
     }
-    function save_uri_as_image($base64_img, $title)
-    {
+	function save_uri_as_image($base64_image, $title)
+	{
+		// Split the string.
+		$parts = explode(',', $base64_image);
+		// Split the first part on semicolon.
+		$type = explode(';', $parts[0]);
+		// Split the type part on slash.
+		$format = explode('/', $type[0]);
+		// The extension is the second part of the format.
+		$extension = $format[1]; // This should be 'jpeg' for a JPEG image.
+		$filename = $title . '.' . $extension;
 
-        // Upload dir.
-        $ar = explode(',', $base64_img);
-        $image_data = $ar[0];
-        $file_type = explode(';', explode(':', $image_data)[1])[0];
-        $extension = explode('/', $file_type)[1];
-        if ($extension != "jpg" && $extension != "png" &&
-            $extension != "jpeg" && $extension != "gif")
-            return [NULL, NULL];
-        $filename = $title . '.' . $extension;
-        $upload_dir = wp_upload_dir();
-        $upload_path = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $filename;
-        if (file_exists($upload_path)) {
-            $wp_filetype = wp_check_filetype($filename, null);
-            $attachment = array(
-                'guid' => $upload_dir['baseurl'] . '/simplyCT/' . $filename,
-                'post_mime_type' => $wp_filetype['type'],
-                'post_title' => sanitize_file_name($filename),
-                'post_content' => '',
-                'post_type' => 'listing_type',
-                'post_status' => 'inherit',
-            );
-            $attach_id = wp_insert_attachment($attachment, $upload_path);
-            $file = [$attach_id, $filename];
-            return $file;
-        }
-        if (!is_dir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
-            if (!@mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
-                $error = error_get_last();
-                echo $error['message'];
-            } else  mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT', 0777, true);
-        }
-        $img = $ar[1];
-        $img = str_replace(' ', '+', $img);
-        $decoded = base64_decode($img);
-        // Save the image in the uploads directory.
-        $upload_file = file_put_contents($upload_path, $decoded);
+		// Decode the base64 image.
+		list($type, $base64_image) = explode(';', $base64_image);
+		list(, $base64_image)      = explode(',', $base64_image);
+		$base64_image = str_replace(' ', '+', $base64_image);
+		$decoded_image = base64_decode($base64_image);
 
-        $attachment = array(
-            'post_mime_type' => $file_type,
-            'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
-            'post_content' => '',
-            'post_status' => 'inherit',
-            'guid' => $upload_dir['basedir'] . '/' . basename($filename)
-        );
+		// Save the image to the uploads directory.
+		$upload_dir = wp_upload_dir();
+		$file_path = $upload_dir['path'] . '/' . $filename;
+		file_put_contents($file_path, $decoded_image);
 
-        $attach_id = wp_insert_attachment($attachment, $upload_path);
-        // Generate the metadata for the attachment, and update the database record.
-        $attach_data = wp_generate_attachment_metadata( $attach_id, $upload_path);
-        wp_update_attachment_metadata( $attach_id, $attach_data );
-        $file = [$attach_id, $filename];
-        return $file;
-    }
+		if (file_exists($file_path)) {
+			$wp_filetype = wp_check_filetype($filename, null);
+			$attachment = array(
+				'guid' => $upload_dir['baseurl'] . '/' . $filename,
+				'post_mime_type' => $wp_filetype['type'],
+				'post_title' => sanitize_file_name($filename),
+				'post_content' => '',
+				'post_type' => 'listing_type',
+				'post_status' => 'inherit',
+			);
+			$attach_id = wp_insert_attachment($attachment, $file_path);
+			return [$attach_id, $filename];
+		}
+		$attachment = array(
+			'post_mime_type' => $type,
+			'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
+			'post_content' => '',
+			'post_status' => 'inherit',
+			'guid' => $upload_dir['basedir'] . '/' . basename($filename)
+		);
+		$attach_id = wp_insert_attachment($attachment, $file_path);
+		// Include the image.php file for the function wp_generate_attachment_metadata().
+		require_once(ABSPATH . 'wp-admin/includes/image.php');
+		//Generate the metadata for the attachment, and update the database record.
+		$attach_data = wp_generate_attachment_metadata( $attach_id, $file_path);
+		wp_update_attachment_metadata( $attach_id, $attach_data );
+		return [$attach_id, $filename];
+	}
     public function getStringBetween($str, $from, $to)
     {
         $sub = substr($str, strpos($str, $from) + strlen($from), strlen($str));
