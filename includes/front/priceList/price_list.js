@@ -2,14 +2,14 @@
 jQuery(document).ready(function ($) {
   //  setInitialPriceOnQtyOne();
     $(document).on('keyup change keydown keypress oninput', '.input-text.qty.text', function (event) {
+        console.log('qty changes...');
         let tr = document.getElementById('simply-tire-price-grid-rows').rows;
         let qty = $(event.target).first().val();
         let i;
-        let currencySymbol = document.querySelector('.woocommerce-Price-currencySymbol');
-        let priceSpan = document.querySelector('.woocommerce-Price-amount');
+        let entry = document.querySelector('.summary.entry-summary');
+        let priceSpan = entry.querySelector('.woocommerce-Price-amount');
         let priceSpanBdi = priceSpan.querySelector('bdi');
         let priceSpanBdiSpan = priceSpanBdi.querySelector('.woocommerce-Price-currencySymbol');
-        //let price =  priceSpanBdi.childNodes[1].textContent ;
         for (i = 0; i < tr.length ; i++) {
             let td1;
             let td = tr[i].querySelector('.simply-tire-price')
@@ -31,7 +31,6 @@ jQuery(document).ready(function ($) {
                 // Replace the price in the text with the new price
                 var newText = text.replace(/\d+(\.\d+)?([^\d]*)/g, price.toFixed(2) + "$2");
                 priceSpanBdi.textContent = newText;
-                //priceSpanBdi.childNodes[0].textContent = price;
                 document.getElementById('realprice').value = realprice
                 break;
             }
@@ -43,11 +42,11 @@ jQuery(document).ready(function ($) {
             } else {
                 price = document.getElementById('price_regular').value;
             }
-           // document.getElementsByClassName('woocommerce-Price-amount')[0].textContent = ('₪' + price)
             document.getElementById('realprice').value = price
         }
 
     })
+
 });
 function setInitialPriceOnQtyOne(){
     let initQty = document.getElementById('simply-tire-price-grid-rows').querySelectorAll('tr')[0].querySelectorAll('td')[0].textContent;

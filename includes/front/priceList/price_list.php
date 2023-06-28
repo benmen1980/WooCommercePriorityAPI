@@ -4,10 +4,13 @@ add_action('wp_enqueue_scripts', 'my_theme_scripts_price_list');
 function my_theme_scripts_price_list()
 {
     if (is_product() || is_shop() || is_cart() || is_product_category()) {
-        wp_enqueue_script('price_list', P18AW_FRONT_URL . 'priceList/price_list.js', array('jquery'), true);
-        wp_enqueue_style('priceList-css', P18AW_FRONT_URL . 'priceList/price_list.css');
+	    $product = wc_get_product();
 
-
+	    if ( is_product() && $product->is_type( 'variable' ) ) {
+	    }else{
+		    wp_enqueue_script('price_list', P18AW_FRONT_URL . 'priceList/price_list.js', array('jquery'), true);
+		    wp_enqueue_style('priceList-css', P18AW_FRONT_URL . 'priceList/price_list.css');
+	    }
     }
 }
 

@@ -76,15 +76,15 @@ class WooAPI extends \PriorityAPI\API
         ];
         foreach ($syncs as $hook => $action) {
             // Schedule sync
-            if ($this->option($hook, false)) {
+         //   if ($this->option($hook, false)) {
 
-                add_action($hook, [$this, $action]);
+              //  add_action($hook, [$this, $action]);
 
                 if (!wp_next_scheduled($hook)) {
-                    wp_schedule_event(time(), $this->option($hook), $hook);
+              //      wp_schedule_event(time(), $this->option($hook), $hook);
                 }
 
-            }
+         //   }
         }
 
         // add actions for user profile
@@ -158,7 +158,8 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         if ($this->option('sell_by_pl') == true) {
-            include_once P18AW_FRONT_DIR . 'priceList/price_list.php';
+	        include_once P18AW_FRONT_DIR . 'priceList/price_list.php';
+	        include_once P18AW_FRONT_DIR . 'price_list_variation/price_list_variation.php';
             // add overall customer discount
             add_action('woocommerce_cart_calculate_fees', [$this, 'add_customer_discount']);
             // filter products regarding to price list
@@ -762,10 +763,14 @@ class WooAPI extends \PriorityAPI\API
                         break;
                     // invoice
                     case 'priority_invoice_status' :
-                        echo $invoice_status;
+                        if(!empty($invoice_status)){
+	                        echo $invoice_status;
+                        }
                         break;
                     case 'priority_invoice_number' :
+                        if(!empty($invoice_number)){
                         echo '<span>' . $invoice_number . '</span>'; // display the data
+                            }
                         break;
                     // reciept
                     case 'priority_recipe_status' :
@@ -1074,15 +1079,14 @@ class WooAPI extends \PriorityAPI\API
         }
         return $price_html;
     }
-
     public function my_product_update($post)
     {
         if ($post->post_type == "product") {
             $productId = $post->ID;
             add_post_meta($productId, 'family_code', '');
+	        add_post_meta($productId, 'mpartname', '');
         }
     }
-
     public function post_order_status_to_priority($order_id)
     {
         // this code is currently working only for EINVOICES
@@ -1117,10 +1121,6 @@ class WooAPI extends \PriorityAPI\API
             $response_data = json_decode($response['body_raw'], true);
         }
     }
-
-    /**
-     * sync items from priority
-     */
     public function is_attribute_exists($slug)
     {
         $is_attr_exists = false;
@@ -1134,418 +1134,452 @@ class WooAPI extends \PriorityAPI\API
         }
         return $is_attr_exists;
     }
+    public function syncItemsPriority() {
 
-    public function syncItemsPriority()
-    {
-        $priority_version = (float)$this->option('priority-version');
-        // config
-        $raw_option = $this->option('sync_items_priority_config');
-        $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
-        $config = json_decode(stripslashes($raw_option));
-        $image_base_url = $config->image_base_url;
+	    $priority_version = (float) $this->option( 'priority-version' );
+	    // config
+	    $raw_option     = $this->option( 'sync_items_priority_config' );
+	    $raw_option     = str_replace( array( "\n", "\t", "\r" ), '', $raw_option );
+	    $config         = json_decode( stripslashes( $raw_option ) );
+	    $image_base_url = $config->image_base_url;
 
-        if ($config->sync_price == "true") {
-            $this->syncPricePriority();
-           // return;
-        }
-        $synclongtext = $config->synclongtext;
-        $daysback = (!empty((int)$config->days_back) ? $config->days_back : 1);
-        $url_addition_config = (!empty($config->additional_url) ? $config->additional_url : '');
-        $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
-        $search_field_web = (!empty($config->search_field_web) ? $config->search_field_web : '_sku');
-        $stock_status = (!empty($config->stock_status) ? $config->stock_status : 'outofstock');
-        $is_categories = (!empty($config->categories) ? $config->categories : null);
-        $statdes = (!empty($config->statdes) ? $config->statdes : false);
-        $is_attrs = (!empty($config->attrs) ? $config->attrs : false);
-        $brands = (!empty($config->brands) ? $config->brands : false);
-        $is_update_products = (!empty($config->is_update_products) ? $config->is_update_products : false);
-        $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
-	    $variation_field = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
-        // get the items simply by time stamp of today
-        $product_price_list = (!empty($config->product_price_list) ? $config->product_price_list : null);
-        $product_price_sale = (!empty($config->product_price_sale) ? $config->product_price_sale : null);
-        // get the items simply by time stamp of today
-        $stamp = mktime(0 - $daysback * 24, 0, 0);
-        $bod = date(DATE_ATOM, $stamp);
-        $date_filter = 'UDATE ge ' . urlencode($bod);
-        $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
-        if ($priority_version < 21.0) {
-            $data['select'] .= ',EXTFILENAME';
-        }
-        if ($product_price_list != null) {
-            $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
-        } else {
-            $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
-        }
-        $data = apply_filters('simply_syncItemsPriority_data', $data);
+	    if ( $config->sync_price == "true" ) {
+		    $this->syncPricePriority();
+		    // return;
+	    }
+	    $synclongtext        = $config->synclongtext;
+	    $daysback            = ( ! empty( (int) $config->days_back ) ? $config->days_back : 1 );
+	    $url_addition_config = ( ! empty( $config->additional_url ) ? $config->additional_url : '' );
+	    $search_field        = ( ! empty( $config->search_by ) ? $config->search_by : 'PARTNAME' );
+	    $search_field_web    = ( ! empty( $config->search_field_web ) ? $config->search_field_web : '_sku' );
+	    $stock_status        = ( ! empty( $config->stock_status ) ? $config->stock_status : 'outofstock' );
+	    $is_categories       = ( ! empty( $config->categories ) ? $config->categories : null );
+	    $statdes             = ( ! empty( $config->statdes ) ? $config->statdes : false );
+	    $is_attrs            = ( ! empty( $config->attrs ) ? $config->attrs : false );
+	    $brands              = ( ! empty( $config->brands ) ? $config->brands : false );
+	    $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
+	    $show_in_web         = ( ! empty( $config->show_in_web ) ? $config->show_in_web : 'SHOWINWEB' );
+	    $variation_field     = $this->option( 'variation_field' ) == 'true' ? $this->option( 'variation_field' ) : 'MPARTNAME';
+	    // get the items simply by time stamp of today
+	    $product_price_list = ( ! empty( $config->product_price_list ) ? $config->product_price_list : null );
+	    $product_price_sale = ( ! empty( $config->product_price_sale ) ? $config->product_price_sale : null );
+	    // get the items simply by time stamp of today
+	    $stamp          = mktime( 0 - $daysback * 24, 0, 0 );
+	    $bod            = date( DATE_ATOM, $stamp );
+	    $date_filter    = 'UDATE ge ' . urlencode( $bod );
+	    $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
+	    if ( $priority_version < 21.0 ) {
+		    $data['select'] .= ',EXTFILENAME';
+	    }
+	    if ( $product_price_list != null ) {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+	    } else {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    }
+	    $data = apply_filters( 'simply_syncItemsPriority_data', $data );
 
-        $response = $this->makeRequest('GET',
-            'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and '.$variation_field.' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
+
+	    if ( $config->ignore_variations == 'true' ) {
+        $response = $this->makeRequest( 'GET',
+            'LOGPART?$select=' . $data['select'].=',MPARTNAME'. '&$filter=' . $date_filter .  $url_addition_config .
             '&' . $data['expand'] . '', [],
-            $this->option('log_items_priority', true));
+            $this->option( 'log_items_priority', true ) );
+	    } else {
+	    $response = $this->makeRequest( 'GET',
+		    'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and ' . $variation_field . ' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
+		    '&' . $data['expand'] . '', [],
+		    $this->option( 'log_items_priority', true ) );
+         }
         // check response status
 
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
-            foreach ($response_data['value'] as $item) {
+            try {
+	            foreach ( $response_data['value'] as $item ) {
+		            if ( defined( 'WP_DEBUG' ) && true === WP_DEBUG ) {
+			            error_log($item['PARTNAME']);
+		            }
+                    if($item['PARTNAME']=='HP-H200GS'){
+                        $foo = 'Im here...';
+                    }
 
-                // add long text from Priority
-                $content = '';
-                $post_content = '';
-                if (isset($item['PARTTEXT_SUBFORM'])) {
-                    foreach ($item['PARTTEXT_SUBFORM'] as $text) {
-                        $content .= ' '.html_entity_decode($text);
-                    }
-                }
-                $data = [
-                    'post_author' => 1,
-                    //'post_content' =>  $content,
-                    'post_status' => $this->option('item_status'),
-                    'post_title' => $item['PARTDES'],
-                    'post_parent' => '',
-                    'post_type' => 'product',
-                ];
-                if ($synclongtext) {
-                    $data['post_content'] = $content;
-                }
-                // if product exsits, update
-                $search_by_value = (string)$item[$search_field];
-                $args = array(
-                    'post_type' => array('product', 'product_variation'),
-                    'post_status' => array('publish', 'draft'),
-                    'meta_query' => array(
-                        array(
-                            'key' => $search_field_web,
-                            'value' => $search_by_value
-                        )
-                    )
-                );
-                $product_id = 0;
-                $my_query = new \WP_Query($args);
-                if ($my_query->have_posts()) {
-                    while ($my_query->have_posts()) {
-                        $my_query->the_post();
-                        $product_id = get_the_ID();
-                    }
-                }
-                // if product variation skip
-                if ($product_id != 0) {
-                    $_product = wc_get_product($product_id);
-                    if (!$_product->is_type('simple')) {
-	                    /*
-	                    $pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
-	                    $foo = $_product->set_regular_price($pri_price);
-	                    update_post_meta($product_id, '_regular_price',$pri_price);
-	                     */
-                        continue;
-                    }
-                }
-                // delete not active
-                if ($statdes == true) {
-                    if ($item['STATDES'] == "לא פעיל") {
-                        if ($product_id != 0) {
-                            $_product->delete(true);
+		            // add long text from Priority
+		            $content      = '';
+		            $post_content = '';
+		            if ( isset( $item['PARTTEXT_SUBFORM'] ) ) {
+			            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
+				            $content .= ' ' . html_entity_decode( $text );
+			            }
+		            }
+		            $data = [
+			            'post_author' => 1,
+			            //'post_content' =>  $content,
+			            'post_status' => $this->option( 'item_status' ),
+			            'post_title'  => $item['PARTDES'],
+			            'post_parent' => '',
+			            'post_type'   => 'product',
+		            ];
+		            if ( $synclongtext ) {
+			            $data['post_content'] = $content;
+		            }
+		            // if product exsits, update
+		            $search_by_value = (string) $item[ $search_field ];
+		            $args            = array(
+			            'post_type'   => array( 'product', 'product_variation' ),
+			            'post_status' => array( 'publish', 'draft' ),
+			            'meta_query'  => array(
+				            array(
+					            'key'   => $search_field_web,
+					            'value' => $search_by_value
+				            )
+			            )
+		            );
+		            $product_id      = 0;
+		            $my_query        = new \WP_Query( $args );
+		            if ( $my_query->have_posts() ) {
+			            while ( $my_query->have_posts() ) {
+				            $my_query->the_post();
+				            $product_id = get_the_ID();
+			            }
+		            }
+		            // if product variation skip
+		            if ( $product_id != 0 ) {
+			            $_product = wc_get_product( $product_id );
+			            if ( ! $_product->is_type( 'simple' ) ) {
+				            $item['variation_id'] = $product_id;
+				            do_action( 'simply_update_variation_data', $item );
+				            /*
+							$pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+							$foo = $_product->set_regular_price($pri_price);
+							update_post_meta($product_id, '_regular_price',$pri_price);
+							 */
+				            continue;
+			            }
+		            }
+		            // delete not active
+		            if ( $statdes == true ) {
+			            if ( $item['STATDES'] == "לא פעיל" ) {
+				            if ( $product_id != 0 ) {
+					            $_product->delete( true );
 
-                        } else {
-                            //continue;
-                        }
-                        continue;
-                    }
-                }
-                // check if the item flagged as show in web, if not skip the item
-                if(isset($show_in_web)){
-                    if($product_id == 0 && $item[$show_in_web]!='Y'){
-                        continue;
-                    }
-                    if($product_id != 0 && $item[$show_in_web]!='Y'){
-                        $_product->set_status('draft');
-                        $_product->save();
-                        continue;
-                    }
-                }
-                // check if update existing products
-                if ($product_id != 0 && false == $is_update_products) {
-                    continue;
-                }
-                // update product
-                if ($product_id != 0) {
-                    $data['ID'] = $product_id;
-                    $_product->set_status($this->option('item_status'));
-                    $_product->save();
-                    // Update post
-                    $id = $product_id;
-                    global $wpdb;
-                    // @codingStandardsIgnoreStart
-                    if ($synclongtext) {
-                        $wpdb->query(
-                            $wpdb->prepare(
-                                "
+				            } else {
+					            //continue;
+				            }
+				            continue;
+			            }
+		            }
+		            // check if the item flagged as show in web, if not skip the item
+		            if ( isset( $show_in_web ) ) {
+			            if ( $product_id == 0 && $item[ $show_in_web ] != 'Y' ) {
+				            continue;
+			            }
+			            if ( $product_id != 0 && $item[ $show_in_web ] != 'Y' ) {
+				            $_product->set_status( 'draft' );
+				            $_product->save();
+				            continue;
+			            }
+		            }
+		            // check if update existing products
+		            if ( $product_id != 0 && false == $is_update_products ) {
+			            continue;
+		            }
+		            // update product
+		            if ( $product_id != 0 ) {
+			            $data['ID'] = $product_id;
+			            //   $_product->set_status($this->option('item_status'));
+			            $_product->save();
+			            // Update post
+			            $id = $product_id;
+			            global $wpdb;
+			            // @codingStandardsIgnoreStart
+			            if ( $synclongtext ) {
+				            $wpdb->query(
+					            $wpdb->prepare(
+						            "
 							UPDATE $wpdb->posts
 							SET post_title = '%s',
 							post_content = '%s'
 							WHERE ID = '%s'
 							",
-                                $item['PARTDES'],
-                                $content,
-                                $id
-                            )
-                        );
-                    } else {
-                        $wpdb->query(
-                            $wpdb->prepare(
-                                "
+						            $item['PARTDES'],
+						            $content,
+						            $id
+					            )
+				            );
+			            } else {
+				            $wpdb->query(
+					            $wpdb->prepare(
+						            "
 							UPDATE $wpdb->posts
 							SET post_title = '%s'
 							WHERE ID = '%s'
 							",
-                                $item['PARTDES'],
-                                $id
-                            )
-                        );
-                    }
-                } else {
-                    // Insert product
-                    $id = wp_insert_post($data);
-                    if ($id) {
-                        update_post_meta($id, '_sku', $search_by_value);
-                        update_post_meta($id, '_stock_status', $stock_status);
-                        if ($stock_status == 'outofstock') {
-                            update_post_meta($id, '_stock', 0);
-                            wp_set_post_terms($id, 'outofstock', 'product_visibility', true);
-                        }
-                    }
-                }
+						            $item['PARTDES'],
+						            $id
+					            )
+				            );
+			            }
+		            } else {
+			            // Insert product
+			            $id = wp_insert_post( $data );
+			            if ( $id ) {
+				            update_post_meta( $id, '_sku', $search_by_value );
+				            update_post_meta( $id, '_stock_status', $stock_status );
+				            if ( $stock_status == 'outofstock' ) {
+					            update_post_meta( $id, '_stock', 0 );
+					            wp_set_post_terms( $id, 'outofstock', 'product_visibility', true );
+				            }
+			            }
+		            }
 
-                // And finally (optionally if needed)
-                wc_delete_product_transients($id); // Clear/refresh the variation cache
-                // update product price
-                $item['product_id'] = $id;
-                $item = apply_filters('simply_syncItemsPriority_item', $item);
-                unset($item['id']);
-                if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
-                    $pri_price = wc_prices_include_tax() == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+		            // And finally (optionally if needed)
+		            wc_delete_product_transients( $id ); // Clear/refresh the variation cache
+		            // update product price
+		            $item['product_id'] = $id;
+		            $item               = apply_filters( 'simply_syncItemsPriority_item', $item );
+		            unset( $item['id'] );
+		            if ( $product_price_list != null && ! empty( $item['PARTINCUSTPLISTS_SUBFORM'] ) ) {
+			            $pri_price = wc_prices_include_tax() == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
-                } else {
-                    $pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
-                }
-                if ($id) {
-                    $my_product = new \WC_Product($id);
-                    if (!empty($show_in_web) && $item[$show_in_web] != 'Y') {
-                        $my_product->set_status('draft');
-                        $my_product->save();
-                        continue;
-                    }
-                    // price
-                    $my_product->set_regular_price($pri_price);
-                    if ($product_price_sale != null && !empty($item[$product_price_sale])) {
-                        $price_sale = $item[$product_price_sale];
-                        if ($price_sale != 0) {
-                            $my_product->set_sale_price($price_sale);
-                        }
-                    }
-                    // sales price make troubles. Roy need to think what to do with it.
+		            } else {
+			            $pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+		            }
+		            if ( $id ) {
+			            $my_product = new \WC_Product( $id );
+			            if ( ! empty( $show_in_web ) && $item[ $show_in_web ] != 'Y' ) {
+				            $my_product->set_status( 'draft' );
+				            $my_product->save();
+				            continue;
+			            }
+			            // price
+			            $my_product->set_regular_price( $pri_price );
+			            if ( $product_price_sale != null && ! empty( $item[ $product_price_sale ] ) ) {
+				            $price_sale = $item[ $product_price_sale ];
+				            if ( $price_sale != 0 ) {
+					            $my_product->set_sale_price( $price_sale );
+				            }
+			            }
+			            // sales price make troubles. Roy need to think what to do with it.
 //                    if (null == $my_product->get_sale_price()) {
-                    //   $my_product->set_sale_price(0);
+			            //   $my_product->set_sale_price(0);
 //                    }
-                    if (!empty($config->menu_order)) {
-                        $my_product->set_menu_order($item[$config->menu_order]);
-                    }
-                    if (!empty($my_product->get_meta_data('family_code', true))) {
-                        $my_product->update_meta_data('family_code', $item['FAMILYNAME']);
-                    } else {
-                        $my_product->add_meta_data('family_code', $item['FAMILYNAME']);
-                    }
-                    //$my_product->set_sale_price( $sales_price);
-                    $my_product->save();
-                    if (!empty($item['INVFLAG']) && $stock_status == 'outofstock') {
-                        update_post_meta($id, '_manage_stock', ($item['INVFLAG'] == 'Y') ? 'yes' : 'no');
-                    }
-                    //update_post_meta($id, '_regular_price', $pri_price);
-                    //update_post_meta($id, '_price',$pri_price );
-                    $taxon = 'product_cat';
-                    if (!empty($config->parent_category) || !empty($is_categories)) {
-                        $terms = get_the_terms($id, $taxon);
-                        foreach ($terms as $term) {
-                            wp_remove_object_terms($id, $term->term_id, $taxon);
-                        }
-                    }
-                    if (!empty($config->parent_category)) {
-                        $parent_category = wp_set_object_terms($id, $item[$config->parent_category], $taxon, true);
-                    }
-                    if (!empty($is_categories)) {
-                        // update categories
-                        $categories = [];
-                        foreach (explode(',', $config->categories) as $cat) {
-                            if (!empty($item[$cat])) {
-                                array_push($categories, $item[$cat]);
-                            }
-                        }
-                        if (!empty($categories)) {
-                            $d = 0;
-                            $terms = $categories;
-                            if (!empty($config->parent_category) && $parent_category[0] > 0) {
-                                $term_exists = term_exists($terms[0], $taxon, $parent_category);
-                                $childs = get_term_children($parent_category[0], $taxon);
-                                if (!empty($childs)) {
-                                    foreach ($childs as $child) {
-                                        $cat_c = get_term_by('id', $child, $taxon, 'ARRAY_A');
-                                        if ($cat_c['name'] == $terms[0]) {
-                                            $terms_cat = wp_set_object_terms($id, $child, $taxon, true);
-                                            $d = 1;
-                                        }
+			            if ( ! empty( $config->menu_order ) ) {
+				            $my_product->set_menu_order( $item[ $config->menu_order ] );
+			            }
+			            if ( ! empty( $my_product->get_meta_data( 'family_code', true ) ) ) {
+				            $my_product->update_meta_data( 'family_code', $item['FAMILYNAME'] );
+			            } else {
+				            $my_product->add_meta_data( 'family_code', $item['FAMILYNAME'] );
+			            }
+			            //$my_product->set_sale_price( $sales_price);
+			            $my_product->save();
+			            if ( ! empty( $item['INVFLAG'] ) && $stock_status == 'outofstock' ) {
+				            update_post_meta( $id, '_manage_stock', ( $item['INVFLAG'] == 'Y' ) ? 'yes' : 'no' );
+			            }
+			            //update_post_meta($id, '_regular_price', $pri_price);
+			            //update_post_meta($id, '_price',$pri_price );
+			            $taxon = 'product_cat';
+			            if ( ! empty( $config->parent_category ) || ! empty( $is_categories ) ) {
+				            $terms = get_the_terms( $id, $taxon );
+				            foreach ( $terms as $term ) {
+					            wp_remove_object_terms( $id, $term->term_id, $taxon );
+				            }
+			            }
+			            if ( ! empty( $config->parent_category ) ) {
+				            $parent_category = wp_set_object_terms( $id, $item[ $config->parent_category ], $taxon, true );
+			            }
+			            if ( ! empty( $is_categories ) ) {
+				            // update categories
+				            $categories = [];
+				            foreach ( explode( ',', $config->categories ) as $cat ) {
+					            if ( ! empty( $item[ $cat ] ) ) {
+						            array_push( $categories, $item[ $cat ] );
+					            }
+				            }
+				            if ( ! empty( $categories ) ) {
+					            $d     = 0;
+					            $terms = $categories;
+					            if ( ! empty( $config->parent_category ) && $parent_category[0] > 0 ) {
+						            $term_exists = term_exists( $terms[0], $taxon, $parent_category );
+						            $childs      = get_term_children( $parent_category[0], $taxon );
+						            if ( ! empty( $childs ) ) {
+							            foreach ( $childs as $child ) {
+								            $cat_c = get_term_by( 'id', $child, $taxon, 'ARRAY_A' );
+								            if ( $cat_c['name'] == $terms[0] ) {
+									            $terms_cat = wp_set_object_terms( $id, $child, $taxon, true );
+									            $d         = 1;
+								            }
+							            }
+						            }
+						            if ( empty( $term_exists ) || $d == 0 ) {
+							            $terms = wp_insert_term( $terms[0], $taxon, array( 'parent' => $parent_category[0] ) );
+						            }
+						            if ( is_wp_error( $terms ) ) {
+							            $error_message = $terms->get_error_message();
+						            } else {
+							            array_push( $terms, $item[ $config->parent_category ] );
+						            }
+
+
+					            }
+					            if ( is_wp_error( $terms ) ) {
+
+					            } else {
+                                    if ( $d != 1 ) {
+                                        wp_set_object_terms( $id, $terms, $taxon );
+                                    } else {
+                                        wp_set_object_terms( $id, $item[ $config->parent_category ], $taxon, true );
                                     }
-                                }
-                                if (empty($term_exists) || $d == 0)
-                                    $terms = wp_insert_term($terms[0], $taxon, array('parent' => $parent_category[0]));
-                                array_push($terms, $item[$config->parent_category]);
-
-                            }
-                            if ($d != 1)
-                                wp_set_object_terms($id, $terms, $taxon);
-                            else {
-                                wp_set_object_terms($id, $item[$config->parent_category], $taxon, true);
-                            }
+				                 }
 
 
-                        }
-                    }
+				            }
+			            }
 
-                }
-                // update attributes
-                if ($is_attrs != false) {
-                    unset($thedata);
-                    foreach ($item['PARTUNSPECS_SUBFORM'] as $attribute) {
-                        $attr_name = $attribute['SPECDES'];
-                        $attr_slug = strtolower($attribute['SPECNAME']);
-                        $attr_value = $attribute['VALUE'];
-                        if (!$this->is_attribute_exists($attr_slug)) {
-                            $attribute_id = wc_create_attribute(
-                                array(
-                                    'name' => $attr_name,
-                                    'slug' => $attr_slug,
-                                    'type' => 'select',
-                                    'order_by' => 'menu_order',
-                                    'has_archives' => 0,
-                                )
-                            );
-                        }
-                        wp_set_object_terms($id, $attr_value, 'pa_' . $attr_slug, false);
-                        $thedata['pa_' . $attr_slug] = array(
-                            'name' => 'pa_' . $attr_slug,
-                            'value' => '',
-                            'is_visible' => '1',
-                            'is_taxonomy' => '1'
-                        );
-                    }
-                    /* loop over array of custom attributes */
-                    $custom_attrs = [];
+		            }
+		            // update MPARTNAME
+		            update_post_meta( $my_product->get_id(), 'mpartname', $item[ $variation_field ] );
+		            // update attributes
+		            if ( $is_attrs != false ) {
+			            unset( $thedata );
+			            foreach ( $item['PARTUNSPECS_SUBFORM'] as $attribute ) {
+				            $attr_name  = $attribute['SPECDES'];
+				            $attr_slug  = strtolower( $attribute['SPECNAME'] );
+				            $attr_value = $attribute['VALUE'];
+				            if ( ! $this->is_attribute_exists( $attr_slug ) ) {
+					            $attribute_id = wc_create_attribute(
+						            array(
+							            'name'         => $attr_name,
+							            'slug'         => $attr_slug,
+							            'type'         => 'select',
+							            'order_by'     => 'menu_order',
+							            'has_archives' => 0,
+						            )
+					            );
+				            }
+				            wp_set_object_terms( $id, $attr_value, 'pa_' . $attr_slug, false );
+				            $thedata[ 'pa_' . $attr_slug ] = array(
+					            'name'        => 'pa_' . $attr_slug,
+					            'value'       => '',
+					            'is_visible'  => '1',
+					            'is_taxonomy' => '1'
+				            );
+			            }
+			            /* loop over array of custom attributes */
+			            $custom_attrs = [];
 
-                    $custom_attrs = apply_filters('simply_add_custom_attributes', $custom_attrs);
+			            $custom_attrs = apply_filters( 'simply_add_custom_attributes', $custom_attrs );
 
-                    if (!empty($custom_attrs)) {
-                        foreach ($custom_attrs as $attr) {
-                            $val = $attr[2];
-                            if (is_array($val)) {
-                                $val = array();
-                                foreach ($attr[2] as $v) {
-                                    if (($item[$v]) != NULL) {
-                                        $val[] = $item[$v];
-                                    }
-                                }
-                            } else if (empty($item[$val])) {
-                                continue;
-                            } else {
-                                $attr_value = $item[$val];
-                            }
+			            if ( ! empty( $custom_attrs ) ) {
+				            foreach ( $custom_attrs as $attr ) {
+					            $val = $attr[2];
+					            if ( is_array( $val ) ) {
+						            $val = array();
+						            foreach ( $attr[2] as $v ) {
+							            if ( ( $item[ $v ] ) != null ) {
+								            $val[] = $item[ $v ];
+							            }
+						            }
+					            } else if ( empty( $item[ $val ] ) ) {
+						            continue;
+					            } else {
+						            $attr_value = $item[ $val ];
+					            }
 
-                            $attr_name = $attr[0];
-                            $attr_slug = $attr[1];
-                            if (!$this->is_attribute_exists($attr_slug)) {
-                                $attribute_id = wc_create_attribute(
-                                    array(
-                                        'name' => $attr_name,
-                                        'slug' => $attr_slug,
-                                        'type' => 'select',
-                                        'order_by' => 'menu_order',
-                                        'has_archives' => 0,
-                                    )
-                                );
-                            } else {
-                                $attribute_id = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
-                            }
+					            $attr_name = $attr[0];
+					            $attr_slug = $attr[1];
+					            if ( ! $this->is_attribute_exists( $attr_slug ) ) {
+						            $attribute_id = wc_create_attribute(
+							            array(
+								            'name'         => $attr_name,
+								            'slug'         => $attr_slug,
+								            'type'         => 'select',
+								            'order_by'     => 'menu_order',
+								            'has_archives' => 0,
+							            )
+						            );
+					            } else {
+						            $attribute_id = 'pa_' . wc_sanitize_taxonomy_name( $attr_slug );
+					            }
 
-                            if (is_array($val)) {
-                                $taxonomy = 'pa_' . wc_sanitize_taxonomy_name($attr_slug);
-                                $val_id = array();
-                                foreach ($val as $option) {
-                                    {
+					            if ( is_array( $val ) ) {
+						            $taxonomy = 'pa_' . wc_sanitize_taxonomy_name( $attr_slug );
+						            $val_id   = array();
+						            foreach ( $val as $option ) {
+							            {
 
-                                        // Save the possible option value for the attribute which will be used for variation later
-                                        wp_set_object_terms($id, $option, $taxonomy, true);
-                                        // Get the term ID
-                                        $val_id[] = get_term_by('name', $option, $taxonomy)->term_id;
-                                    }
+								            // Save the possible option value for the attribute which will be used for variation later
+								            wp_set_object_terms( $id, $option, $taxonomy, true );
+								            // Get the term ID
+								            $val_id[] = get_term_by( 'name', $option, $taxonomy )->term_id;
+							            }
 
-                                }
-                                if (!empty($val_id)) {
-                                    $thedata[$attribute_id] = array(
-                                        'name' => $attribute_id,
-                                        'value' => $val_id, // Need to be term IDs
-                                        'is_visible' => 1,
-                                        'is_variation' => 1,
-                                        'is_taxonomy' => '1'
-                                    );
-                                }
+						            }
+						            if ( ! empty( $val_id ) ) {
+							            $thedata[ $attribute_id ] = array(
+								            'name'         => $attribute_id,
+								            'value'        => $val_id, // Need to be term IDs
+								            'is_visible'   => 1,
+								            'is_variation' => 1,
+								            'is_taxonomy'  => '1'
+							            );
+						            }
 
-                            } else {
-                                wp_set_object_terms($id, $attr_value, $attribute_id, false);
-                                $thedata[$attribute_id] = array(
-                                    'name' => $attribute_id,
-                                    'value' => $attr_value,
-                                    'is_visible' => '1',
-                                    'is_taxonomy' => '1'
-                                );
-                            }
-                        }
-                        if (!empty(($thedata))) {
-                            update_post_meta($id, '_product_attributes', $thedata);
-                        }
-                    }
-                }
-                //sync Brands
-                if (($brands) != false) {
-                    if (!empty($item[$brands]) && $id) {
-                        $br_tex='pwb-brand';
-                        $br_tex=apply_filters('simplyct_brand_tax',$br_tex);
-                        wp_set_object_terms($id, $item[$brands], $br_tex);
+					            } else {
+						            wp_set_object_terms( $id, $attr_value, $attribute_id, false );
+						            $thedata[ $attribute_id ] = array(
+							            'name'        => $attribute_id,
+							            'value'       => $attr_value,
+							            'is_visible'  => '1',
+							            'is_taxonomy' => '1'
+						            );
+					            }
+				            }
+				            if ( ! empty( ( $thedata ) ) ) {
+					            update_post_meta( $id, '_product_attributes', $thedata );
+				            }
+			            }
+		            }
+		            //sync Brands
+		            if ( ( $brands ) != false ) {
+			            if ( ! empty( $item[ $brands ] ) && $id ) {
+				            $br_tex = 'pwb-brand';
+				            $br_tex = apply_filters( 'simplyct_brand_tax', $br_tex );
+				            wp_set_object_terms( $id, $item[ $brands ], $br_tex );
 
-                    }
-                }
+			            }
+		            }
 
-                $item['product_id'] = $id;
-                do_action( 'simply_update_product_data', $item );
+		            $item['product_id'] = $id;
+		            do_action( 'simply_update_product_data', $item );
 
-                // sync image
-                $is_load_image = json_decode($config->is_load_image);
+		            // sync image
+		            $is_load_image = json_decode( $config->is_load_image );
+		            if ( false == $is_load_image ) {
+			            continue;
+		            }
+		            $sku          = $item[ $search_field ];
+		            $is_has_image = get_the_post_thumbnail_url( $id );
+		            if ( $this->option( 'update_image' ) == true || ! get_the_post_thumbnail_url( $id ) ) {
+			            $file_     = $this->load_image( $item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field );
+			            $attach_id = $file_[0];
+			            $file      = $file_[1];
+			            if ( empty( $file ) ) {
+				            continue;
+			            }
+			            include $file;
+			            require_once( ABSPATH . '/wp-admin/includes/image.php' );
+			            $attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+			            wp_update_attachment_metadata( $attach_id, $attach_data );
+			            set_post_thumbnail( $id, $attach_id );
+		            }
 
-                if (false == $is_load_image) {
-                    continue;
-                }
-                $sku = $item[$search_field];
-                $is_has_image = get_the_post_thumbnail_url($id);
-                if ($this->option('update_image') == true || !get_the_post_thumbnail_url($id)) {
-                    $file_ = $this->load_image($item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field);
-                    $attach_id = $file_[0];
-                    $file = $file_[1];
-                    include $file;
-                    require_once( ABSPATH . '/wp-admin/includes/image.php' );
-                    $attach_data = wp_generate_attachment_metadata($attach_id, $file);
-                    wp_update_attachment_metadata($attach_id, $attach_data);
-                    set_post_thumbnail($id, $attach_id);
-                }
 
-
-            }
+	            }
+            } catch (Exception $e) {
+		    // Exception handling code
+		    echo "Exception caught: " . $e->getMessage();
+	         }
             // add timestamp
             $this->updateOption('items_priority_update', time());
         } else {
@@ -1558,7 +1592,6 @@ class WooAPI extends \PriorityAPI\API
 
         return $response;
     }
-
     public function syncPricePriority()
     {
         $raw_option = $this->option('sync_items_priority_config');
@@ -1653,9 +1686,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $response;
     }
-
-    public
-    function simply_posts_where($where, $query)
+    public function simply_posts_where($where, $query)
     {
         global $wpdb;
         // Check if our custom argument has been set on current query.
@@ -1666,9 +1697,7 @@ class WooAPI extends \PriorityAPI\API
         }
         return $where;
     }
-
-    public
-    function simply_check_file_exists($file_name)
+    public function simply_check_file_exists($file_name)
     {
         add_filter('posts_where', array($this, 'simply_posts_where'), 10, 2);
         $args = array(
@@ -1691,7 +1720,6 @@ class WooAPI extends \PriorityAPI\API
             return false;
         }
     }
-
     function sync_product_attachemtns()
     {
         /*
@@ -1905,10 +1933,6 @@ class WooAPI extends \PriorityAPI\API
         return $output_string;
 
     }
-
-    /**
-     * sync items width variation from priority
-     */
     public function syncItemsPriorityVariation()
     {
         $priority_version = (float)$this->option('priority-version');
@@ -1939,7 +1963,7 @@ class WooAPI extends \PriorityAPI\API
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
-
+        $data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
@@ -1954,6 +1978,15 @@ class WooAPI extends \PriorityAPI\API
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
+                    // check if variation show be on web
+	                if($item[$show_in_web] != 'Y'){
+		                $variation_sku = $item[$search_field];
+                        // Get the variation object
+		                $variation = wc_get_product_id_by_sku($variation_sku);
+		                if (!$variation) {
+			                continue;
+		                }
+	                }
                     if ($item[$variation_field] !== '-') {
                         $search_by_value = (string)$item[$search_field];
                         $attributes = [];
@@ -1963,6 +1996,7 @@ class WooAPI extends \PriorityAPI\API
                                 $attributes[$attribute] = $attr['VALUE'];
                             }
                         }
+	                    $item['attributes'] = $attributes;
                         $item = apply_filters('simply_ItemsAtrrVariation', $item);
                         $attributes = $item['attributes'];
                         if ($attributes) {
@@ -2016,7 +2050,8 @@ class WooAPI extends \PriorityAPI\API
                                 'categories' => [
                                     $item[$is_categories]
                                 ],
-                                'attributes' => $attributes
+                                'attributes' => $attributes,
+                                'show_in_web' => $item[$show_in_web]
 
                             ];
                             /*
@@ -2103,7 +2138,8 @@ class WooAPI extends \PriorityAPI\API
                                 'stock' => $children['stock'],
                                 'image_id' => (!empty($attach_id) && $attach_id != 0) ? $attach_id : '', // optional
                                 'image_file' => (!empty($file_name)) ? $file_name : '', // optional
-                                'show_front' => $children['show_front']
+                                'show_front' => $children['show_front'],
+                                'show_in_web' => $children['show_in_web']
                             );
                             // The function to be run
                             create_product_variation($id, $variation_data);
@@ -2883,19 +2919,17 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncAinvoices()
     {
-        $query = new \WC_Order_Query(array(
-            //'limit' => get_option('posts_per_page'),
-            'limit' => 1000,
-            'orderby' => 'date',
-            'order' => 'DESC',
-            'return' => 'ids',
-            'meta_key' => 'priority_invoice_status', // The postmeta key field
-            'meta_compare' => 'NOT EXISTS', // The comparison argument
-        ));
-
-        $orders = $query->get_orders();
+	    $args = array(
+		    'post_type' => 'shop_order',
+		    'meta_query' => array(
+			    // Your meta query conditions
+		    ),
+		    'context' => 'specific_order_query'
+	    );
+	    $orders = wc_get_orders($args);
         foreach ($orders as $id) {
             $order = wc_get_order($id);
+	        $metadata = $order->get_meta_data();
             $priority_status = $order->get_meta('priority_invoice_status');
             if (!$priority_status) {
                 $response = $this->syncAinvoice($id);
@@ -4579,10 +4613,11 @@ class WooAPI extends \PriorityAPI\API
         }
         // get the MCUSTNAME if any else get the cust
         $custname = empty(get_user_meta($user->ID, 'priority_mcustomer_number', true)) ? get_user_meta($user->ID, 'priority_customer_number', true) : get_user_meta($user->ID, 'priority_mcustomer_number', true);
-        // check transient
-
+        // check mpartname
+	    $mpartname = get_post_meta($product->get_id(), 'mpartname', true);
+        $sku = !empty($mpartname) ? $mpartname : $product->get_sku();
         // get special price
-        $special_price = $this->getSpecialPriceCustomer($custname, $product->get_sku());
+        $special_price = $this->getSpecialPriceCustomer($custname, $sku);
         if ($special_price != 0) {
             set_transient($transient, $special_price, 300);
             return $special_price;
@@ -4600,7 +4635,7 @@ class WooAPI extends \PriorityAPI\API
             $data = $GLOBALS['wpdb']->get_row('
                     SELECT price_list_price,price_list_quant
                     FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-                    WHERE product_sku = "' . esc_sql($product->get_sku()) . '"
+                    WHERE product_sku = "' . esc_sql($sku) . '"
                     AND price_list_code = "' . esc_sql($plist['PLNAME']) . '"
                     AND blog_id = ' . get_current_blog_id(),
                 ARRAY_A
@@ -4853,7 +4888,8 @@ class WooAPI extends \PriorityAPI\API
     }
     function get_shipping_price($order, $is_order)
     {
-        $price_filed = $is_order ? 'VATPRICE' : 'TOTPRICE';
+	    $priceDisplay = get_option('woocommerce_tax_display');
+        $price_filed = $priceDisplay === 'incl' ? ($is_order ? 'VATPRICE' : 'TOTPRICE') : 'PRICE';
         // config
         $config = json_decode(stripslashes($this->option('setting-config')));
         $default_product = '000';
@@ -5327,61 +5363,57 @@ class WooAPI extends \PriorityAPI\API
         $fieldname = apply_filters('simply_set_priority_sku_field', $fieldname);
         return $fieldname;
     }
-    function save_uri_as_image($base64_img, $title)
-    {
+	function save_uri_as_image($base64_image, $title)
+	{
+		// Split the string.
+		$parts = explode(',', $base64_image);
+		// Split the first part on semicolon.
+		$type = explode(';', $parts[0]);
+		// Split the type part on slash.
+		$format = explode('/', $type[0]);
+		// The extension is the second part of the format.
+		$extension = $format[1]; // This should be 'jpeg' for a JPEG image.
+		$filename = $title . '.' . $extension;
 
-        // Upload dir.
-        $ar = explode(',', $base64_img);
-        $image_data = $ar[0];
-        $file_type = explode(';', explode(':', $image_data)[1])[0];
-        $extension = explode('/', $file_type)[1];
-        if ($extension != "jpg" && $extension != "png" &&
-            $extension != "jpeg" && $extension != "gif")
-            return [NULL, NULL];
-        $filename = $title . '.' . $extension;
-        $upload_dir = wp_upload_dir();
-        $upload_path = wp_get_upload_dir()['basedir'] . '/simplyCT/' . $filename;
-        if (file_exists($upload_path)) {
-            $wp_filetype = wp_check_filetype($filename, null);
-            $attachment = array(
-                'guid' => $upload_dir['baseurl'] . '/simplyCT/' . $filename,
-                'post_mime_type' => $wp_filetype['type'],
-                'post_title' => sanitize_file_name($filename),
-                'post_content' => '',
-                'post_type' => 'listing_type',
-                'post_status' => 'inherit',
-            );
-            $attach_id = wp_insert_attachment($attachment, $upload_path);
-            $file = [$attach_id, $filename];
-            return $file;
-        }
-        if (!is_dir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
-            if (!@mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT')) {
-                $error = error_get_last();
-                echo $error['message'];
-            } else  mkdir(wp_get_upload_dir()['basedir'] . '/simplyCT', 0777, true);
-        }
-        $img = $ar[1];
-        $img = str_replace(' ', '+', $img);
-        $decoded = base64_decode($img);
-        // Save the image in the uploads directory.
-        $upload_file = file_put_contents($upload_path, $decoded);
+		// Decode the base64 image.
+		list($type, $base64_image) = explode(';', $base64_image);
+		list(, $base64_image)      = explode(',', $base64_image);
+		$base64_image = str_replace(' ', '+', $base64_image);
+		$decoded_image = base64_decode($base64_image);
 
-        $attachment = array(
-            'post_mime_type' => $file_type,
-            'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
-            'post_content' => '',
-            'post_status' => 'inherit',
-            'guid' => $upload_dir['basedir'] . '/' . basename($filename)
-        );
+		// Save the image to the uploads directory.
+		$upload_dir = wp_upload_dir();
+		$file_path = $upload_dir['path'] . '/' . $filename;
+		file_put_contents($file_path, $decoded_image);
 
-        $attach_id = wp_insert_attachment($attachment, $upload_path);
-        // Generate the metadata for the attachment, and update the database record.
-        $attach_data = wp_generate_attachment_metadata( $attach_id, $upload_path);
-        wp_update_attachment_metadata( $attach_id, $attach_data );
-        $file = [$attach_id, $filename];
-        return $file;
-    }
+		if (file_exists($file_path)) {
+			$wp_filetype = wp_check_filetype($filename, null);
+			$attachment = array(
+				'guid' => $upload_dir['baseurl'] . '/' . $filename,
+				'post_mime_type' => $wp_filetype['type'],
+				'post_title' => sanitize_file_name($filename),
+				'post_content' => '',
+				'post_type' => 'listing_type',
+				'post_status' => 'inherit',
+			);
+			$attach_id = wp_insert_attachment($attachment, $file_path);
+			return [$attach_id, $filename];
+		}
+		$attachment = array(
+			'post_mime_type' => $type,
+			'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
+			'post_content' => '',
+			'post_status' => 'inherit',
+			'guid' => $upload_dir['basedir'] . '/' . basename($filename)
+		);
+		$attach_id = wp_insert_attachment($attachment, $file_path);
+		// Include the image.php file for the function wp_generate_attachment_metadata().
+		require_once(ABSPATH . 'wp-admin/includes/image.php');
+		//Generate the metadata for the attachment, and update the database record.
+		$attach_data = wp_generate_attachment_metadata( $attach_id, $file_path);
+		wp_update_attachment_metadata( $attach_id, $attach_data );
+		return [$attach_id, $filename];
+	}
     public function getStringBetween($str, $from, $to)
     {
         $sub = substr($str, strpos($str, $from) + strlen($from), strlen($str));

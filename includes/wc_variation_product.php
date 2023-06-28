@@ -222,6 +222,9 @@ function create_product_variation($product_id, $variation_data)
         $variation_id = wp_update_post($variation_post);
     } else {
         // Creating the product variation
+	    if($variation_data['show_in_web'] != 'Y'){
+			return;
+	    }
         $variation_id = wp_insert_post($variation_post);
     }
 
@@ -264,6 +267,14 @@ function create_product_variation($product_id, $variation_data)
         $variation->set_sale_price($variation_data['sale_price']);
     }
     $variation->set_regular_price($variation_data['regular_price']);
+	// if not show in web set price 0
+	if($variation_data['show_in_web'] != 'Y'){
+		$variation->set_regular_price(0.0);
+		$variation->set_price(0.0);
+		$variation->set_sale_price(0.0);
+
+
+	}
 
     // Stock
 
@@ -293,6 +304,9 @@ function create_product_variation($product_id, $variation_data)
     $variation->set_weight(''); // weight (reseting)
 
     $variation->save(); // Save the data
+
+	$variation_data['variation_id'] = $variation_id;
+	do_action( 'simply_update_variation_data', $variation_data );
 
     return $variation_id;
 }

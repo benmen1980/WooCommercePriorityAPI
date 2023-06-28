@@ -19,6 +19,17 @@ function simply_add_custom_general_fields()
         ?>
 
         </p>
+        <p class="form-field custom_field_type">
+            <label for="custom_field_mpartname"><?php echo __('Mpartname', 'p18a'); ?></label>
+            <span class="wrap">
+		<?php
+		$mpartname = get_post_meta($post->ID, 'mpartname', true);
+
+		echo $mpartname;
+
+		?>
+
+        </p>
     </div>
     <?php
 }

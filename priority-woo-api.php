@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 1.53.1
+ * Version: 2.2.7
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -151,7 +151,10 @@ add_action('plugins_loaded', function () {
             $obligo = WooAPI::instance()->option('obligo') == true;
             if ($obligo) {
                 require P18AW_FRONT_DIR . 'my-account/obligo.php';
-                \obligo::instance()->run();
+				// load sdk account
+	            require P18AW_CLASSES_DIR . 'hub2node/accounts.php';
+	            \obligo::instance()->run();
+                \priority_sdk_accounts::instance()->run();
                 //load prority orders excel
                 require P18AW_CLASSES_DIR . 'priority_excel_reports/priority_orders_excel.php';
                 \priority_orders_excel::instance()->run();
@@ -192,7 +195,7 @@ add_action('plugins_loaded', function () {
             } else {
                 include_once(P18AW_FRONT_DIR . 'selectusers/selectusers.php');
             }
-            require P18AW_ADMIN_DIR . 'family-code.php';
+            require P18AW_ADMIN_DIR . 'product_extra_fields.php';
             if (WooAPI::instance()->option('cardPos')) {
                 require P18AW_CLASSES_DIR . 'card_pos/card_pos.php';
                 \CardPOS::instance()->run();   
