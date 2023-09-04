@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 2.2.7
+ * Version: 2.2.8
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -158,6 +158,10 @@ add_action('plugins_loaded', function () {
                 //load prority orders excel
                 require P18AW_CLASSES_DIR . 'priority_excel_reports/priority_orders_excel.php';
                 \priority_orders_excel::instance()->run();
+
+                //load prority quotes excel
+                require P18AW_CLASSES_DIR . 'priority_quotes/priority_quote_excel.php';
+                \Priority_quotes_excel::instance()->run();
 
                 //load prority invoices
                 require P18AW_CLASSES_DIR . 'priority_invoices/priority_invoices.php';
