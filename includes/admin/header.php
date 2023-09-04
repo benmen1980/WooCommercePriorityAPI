@@ -14,11 +14,13 @@
                 <?php _e('Settings', 'p18a'); ?>
             </a>
         </li>
+        <?php if(!$this->option('cardPos')){ ?>
         <li>
             <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=syncs'); ?>" class="<?php if($this->get('tab') == 'syncs') echo 'active'; ?>">
                 <?php _e('Syncs', 'p18a'); ?>
             </a>
         </li>
+        <?php } ?>
         <li>
             <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=pricelist'); ?>" class="<?php if($this->get('tab') == 'pricelist') echo 'active'; ?>">
                 <?php _e('Price lists', 'p18a'); ?>
