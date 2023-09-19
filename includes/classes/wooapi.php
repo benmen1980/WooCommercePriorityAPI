@@ -2666,7 +2666,7 @@ class WooAPI extends \PriorityAPI\API
 
             $request = [
                 'CUSTNAME' => $priority_customer_number,
-                'CUSTDES' => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0],
+                'CUSTDES' => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $custdes,
                 'EMAIL' => $user->data->user_email,
                 'ADDRESS' => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
                 'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
