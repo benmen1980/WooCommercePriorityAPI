@@ -2437,6 +2437,7 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(1 - ($daysback * 24), 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = '('. rawurlencode('WARHSTRANSDATE ge ' . $bod . ' or PURTRANSDATE ge ' . $bod . ' or SALETRANSDATE ge ' . $bod) . ')';
+        $url_addition = apply_filters('simply_syncInventoryPriority_filter_addition', $url_addition);
         if ($this->option('variation_field')) {
             //  $url_addition .= ' and ' . $this->option( 'variation_field' ) . ' eq \'\' ';
         }
