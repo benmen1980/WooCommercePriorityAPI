@@ -2664,6 +2664,7 @@ class WooAPI extends \PriorityAPI\API
             }
 
             $custdes = !empty($meta['billing_company'][0]) ? $meta['billing_company'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0];
+            $custdes = apply_filters('simply_syncCustdes', $meta );
 
             $request = [
                 'CUSTNAME' => $priority_customer_number,
