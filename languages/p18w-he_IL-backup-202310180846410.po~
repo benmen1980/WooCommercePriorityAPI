@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2023-01-02 07:25+0000\n"
+"PO-Revision-Date: 2023-10-18 08:46+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -18,6 +18,12 @@ msgstr ""
 msgid "ACCNAME"
 msgstr "שם חשבון"
 
+msgid "Account"
+msgstr ""
+
+msgid "Account report"
+msgstr ""
+
 #: includes/front/my-account/obligo.php:170
 msgid "BALDATE"
 msgstr "תאריך למאזן"
@@ -29,6 +35,15 @@ msgstr "מספר פנקס"
 msgid "CDES"
 msgstr "פרטים"
 
+msgid "Click on the link to open the report"
+msgstr ""
+
+msgid "Contact"
+msgstr "איש הקשר"
+
+msgid "Counter"
+msgstr "שורה"
+
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Customer Name"
 msgstr "שם לקוח"
@@ -39,9 +54,18 @@ msgstr "שם לקוח"
 msgid "Date"
 msgstr "תאריך"
 
+msgid "Date Expiration"
+msgstr "בתוקף עד"
+
+msgid "Date QUOTE"
+msgstr "תאריך"
+
 #: includes/classes/priority_receipt/priority_receipt.php:83
 msgid "DEBIT"
 msgstr "חוֹבָה"
+
+msgid "Delivery Date"
+msgstr ""
 
 msgid "Description"
 msgstr "תאור מוצר"
@@ -56,7 +80,7 @@ msgstr "הנחה"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "Discounted Price"
-msgstr "מחיר מוזל"
+msgstr "מחיר <br/> לאחר הנחה"
 
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "DISPRICE"
@@ -106,6 +130,9 @@ msgstr "סוג חשבונית"
 msgid "Login to see prices"
 msgstr "התחבר כדי לראות מחירים"
 
+msgid "Manufacturer Part Number"
+msgstr "מק\"ט יצרן"
+
 msgid "NAME"
 msgstr "שם"
 
@@ -144,7 +171,7 @@ msgstr "שם תשלום"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "Percentage"
-msgstr "אחוז"
+msgstr "אחוז ההנחה"
 
 #: includes/front/sites/sites.php:68
 msgid "Please choose a site"
@@ -159,6 +186,12 @@ msgstr ""
 #: includes/classes/priority_invoices/priority_invoices.php:107
 msgid "Price"
 msgstr "מחיר"
+
+msgid "Price Discount"
+msgstr "מחיר ליחידה/מטר"
+
+msgid "Price without Discount"
+msgstr "מחיר לפני הנחה"
 
 msgid "Priority Cinvoices"
 msgstr "חשבוניות מרכזת פריוריטי"
@@ -182,6 +215,9 @@ msgstr "חשבוניות פריוריטי"
 msgid "Priority Orders"
 msgstr "הזמנות פריוריטי"
 
+msgid "Priority Quotes"
+msgstr "הצעות מחיר"
+
 #: includes/classes/priority_receipt/priority_receipt.php:44
 #: includes/classes/priority_receipt/priority_receipt.php:54
 msgid "Priority Receipts"
@@ -201,6 +237,12 @@ msgstr ""
 msgid "Priority Woocommerce API extension"
 msgstr ""
 
+msgid "Product Name"
+msgstr "תיאור מוצר"
+
+msgid "Purchase Orders"
+msgstr "הזמנתכם"
+
 #: includes/classes/priority_invoices/priority_invoices.php:94
 #: includes/classes/priority_receipt/priority_receipt.php:83
 #: includes/classes/priority_receipt/priority_receipt.php:96
@@ -213,6 +255,9 @@ msgstr "מחיר לכמות"
 msgid "Quantity"
 msgstr "כמות"
 
+msgid "Quote Number"
+msgstr "מספר הצעת מחיר"
+
 #. Author of the plugin
 msgid "Roi Holdings"
 msgstr ""
@@ -220,6 +265,9 @@ msgstr ""
 #: includes/front/sites/sites.php:146
 msgid "Site is missing"
 msgstr "אתר חסר. אנא בחר אתר מתוך הרשימה בחלק העליון של המסך."
+
+msgid "Status Order"
+msgstr "סטטוס הזמנה"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:90
 msgid "submit"
@@ -232,6 +280,15 @@ msgstr "סיומת"
 msgid "SUM1"
 msgstr "סה\"כ"
 
+msgid "Supply Time"
+msgstr "זמן אספקה בימים"
+
+msgid "Terms Payment"
+msgstr "תנאי תשלום"
+
+msgid "This product is not available in your pricelist"
+msgstr "מוצר זה לא זמין במחירון שלך"
+
 msgid "TO:"
 msgstr "עד תאריך:"
 
@@ -241,10 +298,13 @@ msgstr "סה\"כ לתשלום:"
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Total Price"
-msgstr "סה\"כ מחיר"
+msgstr "מחיר כול מע\"מ"
 
 msgid "Total Price Include VAT"
 msgstr "סה\"כ מחיר כולל מע\"מ"
+
+msgid "Unit Measure"
+msgstr "י. מידה"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94

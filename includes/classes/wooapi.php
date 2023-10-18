@@ -412,6 +412,9 @@ class WooAPI extends \PriorityAPI\API
                                 include P18AW_ADMIN_DIR . 'syncPOS.php';     
                             }
                             break;
+                        case 'myAccountUser':
+                            include P18AW_ADMIN_DIR . 'account.php';     
+                            break;    
                         //test sync price pos
                         case 'sync_price_pos';
                             $this->syncPricePriorityPos();
@@ -534,7 +537,7 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('sites', $this->post('sites'));
                 $this->updateOption('update_image', $this->post('update_image'));
                 $this->updateOption('mailing_list_field', $this->post('mailing_list_field'));
-                $this->updateOption('obligo', $this->post('obligo'));
+                // $this->updateOption('obligo', $this->post('obligo'));
                 $this->updateOption('cardPos', $this->post('cardPos'));
                 $this->updateOption('selectusers2', $this->post('selectusers2'));
                 $this->updateOption('packs', $this->post('packs'));
@@ -623,6 +626,21 @@ class WooAPI extends \PriorityAPI\API
 
 
                 $this->notify('Sync settings saved');
+            }
+            // save my account settings
+            if ($this->post('p18aw-save-my-account') && wp_verify_nonce($this->post('p18aw-nonce'), 'save-my-account')) {
+                $this->updateOption('obligo', $this->post('obligo'));
+                $this->updateOption('account_report', $this->post('account_report'));
+                $this->updateOption('priority_orders', $this->post('priority_orders'));
+                $this->updateOption('priority_quotes', $this->post('priority_quotes'));
+                $this->updateOption('priority_invoices', $this->post('priority_invoices'));
+                $this->updateOption('priority_receipts', $this->post('priority_receipts'));
+                $this->updateOption('priority_documents', $this->post('priority_documents'));
+                $this->updateOption('priority_delivery', $this->post('priority_delivery'));
+                $this->updateOption('priority_return', $this->post('priority_return'));
+                $this->updateOption('priority_cinvoices', $this->post('priority_cinvoices'));
+
+                $this->notify('My Account saved');
             }
 
 

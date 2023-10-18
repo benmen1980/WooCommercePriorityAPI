@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-02 07:24+0000\n"
+"POT-Creation-Date: 2023-10-18 08:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -194,6 +194,15 @@ msgstr ""
 msgid "TO:"
 msgstr ""
 
+msgid "Account report"
+msgstr ""
+
+msgid "Account"
+msgstr ""
+
+msgid "Click on the link to open the report"
+msgstr ""
+
 msgid "Priority Customer Documents"
 msgstr ""
 
@@ -249,4 +258,40 @@ msgid "Description"
 msgstr ""
 
 msgid "English Description"
+msgstr ""
+
+msgid "This product is not available in your pricelist"
+msgstr ""
+
+msgid "Date QUOTE"
+msgstr ""
+
+msgid "Priority Quotes"
+msgstr ""
+
+msgid "Date Expiration"
+msgstr ""
+
+msgid "Contact"
+msgstr ""
+
+msgid "Quote Number"
+msgstr ""
+
+msgid "Terms Payment"
+msgstr ""
+
+msgid "Counter"
+msgstr ""
+
+msgid "Product Name"
+msgstr ""
+
+msgid "Manufacturer Part Number"
+msgstr ""
+
+msgid "Unit Measure"
+msgstr ""
+
+msgid "Supply Time"
 msgstr ""

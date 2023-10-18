@@ -34,7 +34,7 @@
                     </td>
                     <td></td>
                     <td>
-                        <?php echo $this->option('account_report'); ?>
+                        <!-- <?php /*echo $this->option('account_report'); */?> -->
                         <input id="p18aw-accounts" type="checkbox" name="account_report"
                             form="p18aw-my-account-user" value ="on" <?php echo ($this->option('account_report') == true) ? 'checked="checked"' : ''; ?> 
                         />
