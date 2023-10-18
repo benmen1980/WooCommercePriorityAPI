@@ -66,16 +66,6 @@
                 </td>
                 <td></td>
                 <td>
-                    <input id="p18aw-sites" type="checkbox" name="sites"
-                           form="p18aw-settings" <?php if ($this->option('sites') == true) { ?> checked="checked" <?php } ?> />
-                </td>
-            </tr>
-            <tr>
-                <td class="p18a-label">
-                    <label for="p18a-obligo"><?php _e('Show user\'s Obligo in My Account  ?', 'p18a'); ?></label>
-                </td>
-                <td></td>
-                <td>
                     <input id="p18aw-obligo" type="checkbox" name="obligo"
                            form="p18aw-settings" <?php if ($this->option('obligo') == true) { ?> checked="checked" <?php } ?> />
                 </td>

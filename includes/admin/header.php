@@ -58,5 +58,10 @@
                 </a>
             </li>
         <?php } ?>
+        <li>
+            <a href="<?php echo admin_url('admin.php?page=' . P18AW_PLUGIN_ADMIN_URL . '&tab=myAccountUser'); ?>" class="<?php if($this->get('tab') == 'myAccountUser') echo 'active'; ?>">
+                <?php _e('My Account', 'p18a'); ?>
+            </a>
+        </li>
     </ul>
 </div>

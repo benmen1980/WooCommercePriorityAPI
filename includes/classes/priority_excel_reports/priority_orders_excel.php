@@ -24,7 +24,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		add_action( 'p18a_request_front_priorityorders',[$this,'request_front_priorityorders']);
 
 		add_action( 'wp_enqueue_scripts', function() {
-			//wp_enqueue_script('priority-woo-api-frontend', P18AW_ASSET_URL.'frontend.js', array('jquery'), time());
+			wp_enqueue_script('priority-woo-api-frontend', P18AW_ASSET_URL.'frontend.js', array('jquery'), time());
 			wp_enqueue_style( 'priority-woo-api-style', P18AW_ASSET_URL.'style.css', time() );
 			wp_enqueue_script('priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js');
 			wp_enqueue_style( 'priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
@@ -52,6 +52,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			<div class="woocommerce-MyAccount-content-priority-orders">
 
 				<p><?php _e('Priority Orders','p18w'); ?></p>
+				<?php do_action('add_message_front_priorityOrders'); ?>
 				<?php do_action('p18a_request_front_priorityorders'); ?>
 
 			</div>
@@ -73,15 +74,16 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL)';
         	
 		} else 
 		//by default enter date from begin of year to today
 		{
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$begindate = apply_filters('simply_request_data', $begindate);
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 
@@ -100,8 +102,8 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		echo "</form>";
 		echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
 		".__('Export Excel','p18w')." </a>";
-		echo "<table>";
-		echo "<tr class='row-titles'><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('BOOK Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
+		echo "<table class='priority-report-table'>";
+		echo "<tr class='row-titles'><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('Purchase Orders','p18w')."</td><td>".__('Status Order','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
 		$i = 1;
 
 		foreach ($data->value as $key => $value) {
@@ -109,14 +111,17 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				echo "<div class='cust-toggle plus' id='content-".$i."'>+</div>";
 			}
-			echo "</td><td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->BOOKNUM."</td><td>".$value->QUANT."</td><td>".$value->QPRICE."</td><td>".$value->PERCENT."</td><td>".$value->DISPRICE."</td><td>".$value->VAT."</td><td>".$value->TOTPRICE."</td></tr>";
+			echo "</td><td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->REFERENCE."</td><td>".$value->ORDSTATUSDES."</td><td>".$value->QPRICE.' '.$value->CODE."</td><td>".(($value->PERCENT == 0) ? '' : $value->PERCENT)."</td><td>".$value->DISPRICE.' '.$value->CODE."</td><td>".$value->VAT.' '.$value->CODE."</td><td>".$value->TOTPRICE.' '.$value->CODE."</td></tr>";
 				
 				if(!empty($value->ORDERITEMS_SUBFORM)) {
 					echo "<tr class='content_value subform-content-".$i."' style='display:none;'><td colspan='8'>";
-					echo "<table>";
-					echo "<tr><td>".__('Part Name','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Description','p18w')."</td></tr>";
+					echo "<table class='table-orders'>";
+					echo "<tr><td>".__('Part Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('Delivery Date','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('mifrat','p18w')."</td></tr>";
 					foreach($value->ORDERITEMS_SUBFORM as $subform) {
-						echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->QUANT."</td><td>".$subform->PRICE."</td><td>".$subform->PDES."</td></tr>";
+						echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->Y_9950_5_ESHB."</td><td class='product-row'>".$subform->PDES."</td><td>".(($subform->AROW_MITKABEL == null) ? '' : date('d/m/y',strtotime($subform->AROW_MITKABEL)))."</td><td>".$subform->QUANT."</td><td>".$subform->TUNITNAME."</td><td>".$subform->PRICE.' '.$subform->ICODE."</td><td>".$subform->QPRICE.' '.$subform->ICODE;
+						// $attache = apply_filters('add_attache_priority', $subform->Y_17934_5_ESHB);
+                        // echo $attache;
+						echo "</tr>";
 					}
 					echo "</table>";
 					echo "</td></tr>";
@@ -138,11 +143,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES)';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL)';
 		} else {
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
@@ -155,16 +160,16 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$f = fopen('php://output', 'w');
 		//add BOM to fix UTF-8 in Excel
         fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-		$array=array(__('Date','p18w'),__('Order Name','p18w'),__('BOOK Number','p18w'),__('Quantity','p18w'),__('Price','p18w'),__('Percentage','p18w'),__('Discounted Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Quantity','p18w'),__('Price','p18w'),__('Description','p18w'));
+		$array=array(__('Date','p18w'),__('Order Name','p18w'),__('Purchase Orders','p18w'),__('Status Order','p18w'),__('Price','p18w'),__('Percentage','p18w'),__('Discounted Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Manufacturer Part Number','p18w'),__('Description','p18w'),__('Delivery Date','p18w'),__('Quantity','p18w'),__('Unit Measure','p18w'),__('Price','p18w'),__('Total Price','p18w'));
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				foreach($value->ORDERITEMS_SUBFORM as $subform) {
-					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->QUANT,$subform->PRICE,$subform->PDES);
+					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE.' '.$value->CODE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE.' '.$value->CODE,$value->VAT.' '.$value->CODE,$value->TOTPRICE.' '.$value->CODE,$subform->PARTNAME,$subform->Y_9950_5_ESHB,$subform->PDES,date('d/m/y',strtotime($subform->AROW_MITKABEL)),$subform->QUANT,$subform->TUNITNAME,$subform->PRICE.' '.$subform->ICODE,$subform->QPRICE.' '.$subform->ICODE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->BOOKNUM,$value->QUANT,$value->QPRICE,$value->PERCENT,$value->DISPRICE,$value->VAT,$value->TOTPRICE);
+				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE.' '.$value->CODE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE.' '.$value->CODE,$value->VAT.' '.$value->CODE,$value->TOTPRICE.' '.$value->CODE);
 				fputcsv($f, $array);
 			}
 		}

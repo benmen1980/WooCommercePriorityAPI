@@ -24,7 +24,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         add_action( 'p18a_request_front_priorityquotes',[$this,'request_front_priorityquotes']);
 
         add_action( 'wp_enqueue_scripts', function() {
-            //wp_enqueue_script('priority-woo-api-frontend', P18AW_ASSET_URL.'frontend.js', array('jquery'), time());
+            wp_enqueue_script('priority-woo-api-frontend', P18AW_ASSET_URL.'frontend.js', array('jquery'), time());
             wp_enqueue_style( 'priority-woo-api-style', P18AW_ASSET_URL.'style.css', time() );
             wp_enqueue_script('priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js');
             wp_enqueue_style( 'priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
@@ -52,6 +52,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
             <div class="woocommerce-MyAccount-content-priority-orders">
 
                 <p><?php _e('Priority Quotes','p18w'); ?></p>
+                <?php do_action('add_message_front_priorityQuotes'); ?>
                 <?php do_action('p18a_request_front_priorityquotes'); ?>
 
             </div>
@@ -63,7 +64,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
     function request_front_priorityquotes() {
 
         $current_user             = wp_get_current_user();
-        $priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );
+        $priority_customer_number = get_user_meta( $current_user->ID, 'priority_customer_number', true );        
         
         // get the date inputs
         if(isset($_POST['from-date']) && isset($_POST['to-date'])) {
@@ -73,7 +74,8 @@ class Priority_quotes_excel extends \PriorityAPI\API{
             $from_date = urlencode($fdate);  // get from $_POST['from date']
             $to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-            $additionalurl = 'CPROF?$filter=PDATE ge '.$from_date.' and PDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES)';
+            $additionalurl = 'CPROF?$filter=PDATE ge '.$from_date.' and PDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=CPROFITEMS_SUBFORM($expand=CPROFITEMSTEXT_SUBFORM)';
+            // $additionalurl = 'CPROF?$filter=PDATE ge '.$from_date.' and PDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\'and ROYY_SHOWINWEB eq \'Y\'&$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES,BARCODE,SUPTIME,PERCENTPRICE,QPRICE,Y_17934_5_ESHB,TUNITNAME,ICODE)';
             
         } else 
         //by default enter date from begin of year to today
@@ -82,7 +84,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
             $begindate = apply_filters('simply_request_data', $begindate);
             $todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-            $additionalurl = 'CPROF?$filter=PDATE ge '.$begindate.' and PDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES)';
+            $additionalurl = 'CPROF?$filter=PDATE ge '.$begindate.' and PDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=CPROFITEMS_SUBFORM($expand=CPROFITEMSTEXT_SUBFORM)';
             //$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
         }
 
@@ -102,35 +104,50 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         echo "</form>";
         echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_quote&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
         ".__('Export Excel','p18w')." </a>";
-        echo "<table>";
-        echo "<tr class='row-titles'><td></td><td>".__('Date','p18w')."</td><td>".__('Date Expiration','p18w')."</td><td>".__('Contact','p18w')."</td><td>".__('Quote Name','p18w')."</td><td>".__('Quote Number','p18w')."</td><td>".__('Status Quote','p18w')."</td><td>".__('Terms Payment','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('button','p18w')."</td>";
-        echo "</tr>";
-        $i = 1;
+        echo "<table class='priority-report-table'>";
+        echo "<tr class='row-titles'><td></td><td>".__('Date QUOTE','p18w')."</td><td>".__('Date Expiration','p18w')."</td><td>".__('Contact','p18w')."</td><td>".__('Quote Number','p18w')."</td><td>".__('Terms Payment','p18w')."</td>";
+        echo "<td style='color:#eeee;'>".__('mifrat','p18w')."</td>";
+        echo "</tr>"; 
+        
+        $tableNumber = 1;
 
         foreach ($data->value as $key => $value) {
             echo "<tr><td>";
             if(!empty($value->CPROFITEMS_SUBFORM)) {
-                echo "<div class='cust-toggle plus' id='content-".$i."'>+</div>";
+                echo "<div class='cust-toggle plus' id='content-".$tableNumber."'>+</div>";
             }
-            echo "</td><td>".date( 'd/m/y',strtotime($value->PDATE))."</td><td>".date( 'd/m/y',strtotime($value->EXPIRYDATE))."</td><td>".$value->CPROFNUM."</td><td>".'הצעת מחיר: '.$value->CPROFNUM."</td><td>".$value->CPROFNUM."</td><td>".$value->CPROFNUM."</td><td>".$value->CPROFNUM."</td><td>".$value->QPRICE."</td><td>".$value->VAT."</td><td>".$value->TOTPRICE."</td>";
-            echo apply_filters('add_button_shopping_cart', $value);
+            echo "</td><td>".date( 'd/m/y',strtotime($value->PDATE))."</td><td>".date( 'd/m/y',strtotime($value->EXPIRYDATE))."</td><td>".$value->NAME."</td><td>".$value->CPROFNUM."</td><td>".$value->PAYDES."</td>";
+            $button_cart = apply_filters('add_button_shopping_cart', $value);
+            echo $button_cart;
             echo "</tr>";
-
-                if(!empty($value->CPROFITEMS_SUBFORM)) {
-                    echo "<tr class='content_value subform-content-".$i."' style='display:none;'><td colspan='8'>";
-                    echo "<table>";
-                    echo "<tr><td>".__('Counter','p18w')."</td><td>".__('Part Name','p18w')."</td><td>".__('Product Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Supply Time','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Price Discount','p18w')."</td><td>".__('Total Price','p18w')."</td></tr>";
+            
+            if(!empty($value->CPROFITEMS_SUBFORM)) {
+                    echo "<tr class='content_value subform-content-".$tableNumber."' style='display:none;'><td colspan='8'>";
+                    echo "<table class='table-quote'>";
+                    $i = 1;
+                    echo "<tr class='row-sub-titles'><td>".__('Counter','p18w')."</td><td>".__('Part Name','p18w')."</td><td>".__('Product Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Supply Time','p18w')."</td><td>".__('Price without Discount','p18w')."</td><td>".__('Price Discount','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__(' ','p18w')."</td></tr>";
                     foreach($value->CPROFITEMS_SUBFORM as $subform) {
                         // echo "<tr><td>";
                         echo "<tr><td>" . $i . "</td><td>";
-                        echo apply_filters('add_link_to_product', $subform);
+                        // echo apply_filters('add_link_to_product', $subform);
                         // .$subform->PARTNAME.
-                        echo "</td><td>".$subform->PDES."</td><td>".$subform->SKU."</td><td>".$subform->TQUANT."</td><td>".$subform->TQUANT."</td><td>".$subform->PRICE."</td><td>".$subform->PRICE."</td><td>".$subform->TOTPRICE."</td></tr>";
+                        $comment_text = $subform->CPROFITEMSTEXT_SUBFORM->TEXT;
+                        $comment  = ' ' . html_entity_decode( $comment_text );
+
+                        echo $subform->PARTNAME."</td><td class='product-row'>".$subform->PDES."<br/><p>".$comment."</p></td><td>".$subform->BARCODE."</td><td>".$subform->TQUANT."</td><td>".$subform->TUNITNAME."</td><td>".$subform->SUPTIME."</td><td>".$subform->PRICE.' '.$subform->ICODE."</td><td>".$subform->PERCENTPRICE.' '.$subform->ICODE."</td><td>".$subform->QPRICE.' '.$subform->ICODE."</td>";
+                        $values = array(
+                            'value1' => $subform->BARCODE,
+                            'value2' => $value->CPROFNUM
+                        );
+                        $attache = apply_filters('add_attache_priority_quote', $values);
+                        echo $attache;
+                        echo "</tr>";
+                        $i++;
                     }
                     echo "</table>";
                     echo "</td></tr>";
-                }
-            $i++;
+            }
+            $tableNumber++;
         }
         echo "</table>";
     }
@@ -147,12 +164,12 @@ class Priority_quotes_excel extends \PriorityAPI\API{
             $from_date = urlencode($fdate);  // get from $_POST['from date']
             $to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-            $additionalurl = 'CPROF?$filter=PDATE ge '.$from_date.' and PDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' &$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES)';
+            $additionalurl = 'CPROF?$filter=PDATE ge '.$from_date.' and PDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES,BARCODE,SUPTIME,PERCENTPRICE,QPRICE,Y_17934_5_ESHB,TUNITNAME,ICODE)';
         } else {
             $begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
             $begindate = apply_filters('simply_request_data', $begindate);
             $todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
-            $additionalurl = 'CPROF?$filter=PDATE ge '.$begindate.' and PDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES)';
+            $additionalurl = 'CPROF?$filter=PDATE ge '.$begindate.' and PDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=CPROFITEMS_SUBFORM($select=PARTNAME,TQUANT,PRICE,PDES,BARCODE,SUPTIME,PERCENTPRICE,QPRICE,Y_17934_5_ESHB,TUNITNAME,ICODE)';
             //$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
         }
         $args= [];
@@ -165,16 +182,16 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         $f = fopen('php://output', 'w');
         //add BOM to fix UTF-8 in Excel
         fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-        $array=array(__('Date','p18w'),__('Date Expiration','p18w'),__('Quote Name','p18w'),__('Quote Number','p18w'),__('Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Product Name','p18w'),__('Price','p18w'),__('Inventory','p18w'));
+        $array=array(__('Date QUOTE','p18w'),__('Date Expiration','p18w'),__('Contact','p18w'),__('Quote Number','p18w'),__('Part Name','p18w'),__('Product Name','p18w'),__('Manufacturer Part Number','p18w'),__('Quantity','p18w'),__('Unit Measure','p18w'),__('Supply Time','p18w'),__('Price','p18w'),__('Price Discount','p18w'),__('Total Price','p18w'));
         fputcsv($f, $array);
         foreach ($data->value as $key => $value) {
             if(!empty($value->CPROFITEMS_SUBFORM)) {
                 foreach($value->CPROFITEMS_SUBFORM as $subform) {
-                    $array=array(date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->CPROFNUM,$value->CPROFNUM,$value->QPRICE,$value->VAT,$value->TOTPRICE,$subform->PARTNAME,$subform->PDES,$subform->PRICE,$subform->TQUANT);
+                    $array=array(date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->NAME,$value->CPROFNUM,$value->PAYDES,$subform->PARTNAME,$subform->PDES,$subform->BARCODE,$subform->TQUANT,$subform->TUNITNAME,$subform->SUPTIME,$subform->PRICE.' '.$subform->ICODE,$subform->PERCENTPRICE.' '.$subform->ICODE,$subform->QPRICE.' '.$subform->ICODE);
                     fputcsv($f, $array);
                 }
             }else {
-                $array=array(date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->CPROFNUM,$value->CPROFNUM,$value->QPRICE,$value->VAT,$value->TOTPRICE);
+                $array=array(date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->NAME,$value->CPROFNUM,$value->PAYDES);
                 fputcsv($f, $array);
             }
         }

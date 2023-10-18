@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 2.3.1
+ * Version: 2.3.2
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -149,42 +149,63 @@ add_action('plugins_loaded', function () {
             }
             // load obligo
             $obligo = WooAPI::instance()->option('obligo') == true;
+            // load obligo
+            $obligo = WooAPI::instance()->option('obligo') == true;
             if ($obligo) {
                 require P18AW_FRONT_DIR . 'my-account/obligo.php';
-				// load sdk account
-	            require P18AW_CLASSES_DIR . 'hub2node/accounts.php';
-	            \obligo::instance()->run();
+                \obligo::instance()->run();
+            }
+			// load sdk account
+            $report = WooAPI::instance()->option('account_report') == true;
+            if ($report) {
+	            require P18AW_CLASSES_DIR . 'hub2node/accounts.php';            
                 \priority_sdk_accounts::instance()->run();
-                //load prority orders excel
-                require P18AW_CLASSES_DIR . 'priority_excel_reports/priority_orders_excel.php';
-                \priority_orders_excel::instance()->run();
-
-                //load prority quotes excel
+            }
+            // //load prority quotes
+            $quote = WooAPI::instance()->option('priority_quotes') == true;
+            if ($quote) { 
                 require P18AW_CLASSES_DIR . 'priority_quotes/priority_quote_excel.php';
                 \Priority_quotes_excel::instance()->run();
-
-                //load prority invoices
+            }
+            //load prority orders excel
+            $order = WooAPI::instance()->option('priority_orders') == true;
+            if ($order) {
+                require P18AW_CLASSES_DIR . 'priority_excel_reports/priority_orders_excel.php';
+                \priority_orders_excel::instance()->run();
+            }
+            //load prority invoices
+            $invoices = WooAPI::instance()->option('priority_invoices') == true;
+            if ($invoices) {
                 require P18AW_CLASSES_DIR . 'priority_invoices/priority_invoices.php';
                 \priority_invoices::instance()->run();
-
-                //load prority receipt
+            }
+            //load prority receipt
+            $receipt = WooAPI::instance()->option('priority_receipts') == true;
+            if ($receipt) {
                 require P18AW_CLASSES_DIR . 'priority_receipt/priority_receipt.php';
                 \priority_receipt::instance()->run();
-
-                //load prority document
+            }
+            //load prority document
+            $document = WooAPI::instance()->option('priority_documents') == true;
+            if ($document) {
                 require P18AW_CLASSES_DIR . 'priority_documents/priority_documents.php';
                 \priority_documents::instance()->run();
-
-                //load prority documents(return from customer)
+            }
+            //load prority documents(return from customer)
+            $delivery = WooAPI::instance()->option('priority_delivery') == true;
+            if ($delivery) {
                 require P18AW_CLASSES_DIR . 'priority_delivery_customer/priority_delivery_customer.php';
                 \priority_delivery_customer::instance()->run();
-
-
-                //load prority documents(return from customer)
+            }
+            //load prority documents(return from customer)
+            $return_customer = WooAPI::instance()->option('priority_return') == true;
+            if ($return_customer) {
                 require P18AW_CLASSES_DIR . 'priority_return_customer/priority_return_customer.php';
                 \priority_return_customer::instance()->run();
-
-                //load prority central invoices
+            }
+            //load prority central invoices
+            $cinvoices = WooAPI::instance()->option('priority_cinvoices') == true;
+            if ($cinvoices) {
                 require P18AW_CLASSES_DIR . 'priority_cinvoices/priority_cinvoices.php';
                 \priority_cinvoices::instance()->run();
             }
