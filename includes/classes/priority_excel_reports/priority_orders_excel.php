@@ -107,7 +107,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$i = 1;
 
 		foreach ($data->value as $key => $value) {
-			echo "<tr><td>";
+			echo "<tr class='row-sub-titles'><td>";
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				echo "<div class='cust-toggle plus' id='content-".$i."'>+</div>";
 			}
