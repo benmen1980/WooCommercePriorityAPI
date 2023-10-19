@@ -2,24 +2,24 @@
 .cust-toggle.plus{color: green;}
 .cust-toggle.minus{color: red;}
 .row-titles{background-color: #EDEDED;}
-/* .woocommerce-MyAccount-content table{display: block; overflow-x: auto;    white-space: nowrap;} */
-.woocommerce-MyAccount-content table .content_value td table tbody tr > *{padding:0.8em 1em;}
+/* .my-account-content table{display: block; overflow-x: auto;    white-space: nowrap;} */
+.my-account-content table .content_value td table tbody tr > *{padding:0.8em 1em;}
 form.priority_form{display:inline-flex; align-items: center;}
 form input#from-date, form input#to-date{max-width: 180px; margin: 0 15px;}
 form input[type='submit']{margin: 0px;}
 a.btn_export_excel{display: inline-block; margin:0 20px 0 0; background: #4E9CAF; padding: 10px; text-align: center; border-radius: 5px; color: white; font-weight: bold; line-height: 25px; text-decoration: none!important;}
 button#obligoSubmit{float: right; border: 1px solid #999999; background-color: red; color: #fff;}
-.woocommerce-MyAccount-content span.amount{font-weight: normal; color: #666;}
-.woocommerce-MyAccount-content table th{background-color: #EDEDED;}
-.woocommerce-MyAccount-content table .row-titles td {font-weight: bold;}
-.woocommerce-MyAccount-content table tr.sub_table_title, .woocommerce-MyAccount-content table tr.sub_table_title td { font-size: 20px; border: 0; color: red; text-decoration: underline;}
+.my-account-content span.amount{font-weight: normal; color: #666;}
+.my-account-content table th{background-color: #EDEDED;}
+.my-account-content table .row-titles td {font-weight: bold;}
+.my-account-content table tr.sub_table_title, .my-account-content table tr.sub_table_title td { font-size: 20px; border: 0; color: red; text-decoration: underline;}
 td.product-quantity-return input.qtty_return:disabled{background-color: #c1bcbc;}
 /* #select_users +.select2-container{height: 30px;} */
 #select_users +.select2-container .select2-selection--multiple{min-height: 55px;}
 div.user-detail-holder {overflow-x: auto;}
 table.priority-report-table {table-layout: fixed; border-spacing: 10px; width: 105%;}
 table.priority-report-table td {white-space: nowrap; }
-table.priority-report-table td, th{	padding: 10px; text-align: center;}
+table.priority-report-table td, th{	padding: 10px; text-align: center; font-size: 16px;}
 table.table-quote, table.table-orders{border-collapse: initial;}
 .product-row {white-space: wrap!important;  width: 200px;}
 

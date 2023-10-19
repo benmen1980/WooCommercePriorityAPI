@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2023-10-18 08:44+0000\n"
+"PO-Revision-Date: 2023-10-18 08:47+0000\n"
 "Last-Translator: ענבל משה\n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -65,7 +65,7 @@ msgid "DEBIT"
 msgstr "חוֹבָה"
 
 msgid "Delivery Date"
-msgstr ""
+msgstr "תאריך אספקה"
 
 msgid "Description"
 msgstr "תאור מוצר"
@@ -80,7 +80,7 @@ msgstr "הנחה"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "Discounted Price"
-msgstr "מחיר מוזל"
+msgstr "מחיר <br/> לאחר הנחה"
 
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "DISPRICE"
@@ -171,7 +171,7 @@ msgstr "שם תשלום"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "Percentage"
-msgstr "אחוז"
+msgstr "אחוז ההנחה"
 
 #: includes/front/sites/sites.php:68
 msgid "Please choose a site"
@@ -267,7 +267,7 @@ msgid "Site is missing"
 msgstr "אתר חסר. אנא בחר אתר מתוך הרשימה בחלק העליון של המסך."
 
 msgid "Status Order"
-msgstr ""
+msgstr "סטטוס הזמנה"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:90
 msgid "submit"
@@ -298,7 +298,7 @@ msgstr "סה\"כ לתשלום:"
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Total Price"
-msgstr "מחיר כול מע\"מ"
+msgstr "מחיר כולל מע\"מ"
 
 msgid "Total Price Include VAT"
 msgstr "סה\"כ מחיר כולל מע\"מ"

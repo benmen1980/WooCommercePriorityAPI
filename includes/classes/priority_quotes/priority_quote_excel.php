@@ -49,7 +49,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
 
             ?>
 
-            <div class="woocommerce-MyAccount-content-priority-orders">
+            <div class="woocommerce-MyAccount-content-priority-orders my-account-content">
 
                 <p><?php _e('Priority Quotes','p18w'); ?></p>
                 <?php do_action('add_message_front_priorityQuotes'); ?>
@@ -106,7 +106,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         ".__('Export Excel','p18w')." </a>";
         echo "<table class='priority-report-table'>";
         echo "<tr class='row-titles'><td></td><td>".__('Date QUOTE','p18w')."</td><td>".__('Date Expiration','p18w')."</td><td>".__('Contact','p18w')."</td><td>".__('Quote Number','p18w')."</td><td>".__('Terms Payment','p18w')."</td>";
-        echo "<td style='color:#eeee;'>".__('mifrat','p18w')."</td>";
+        echo "<td style='color: #fff0;'>".__('mifrat','p18w')."</td>";
         echo "</tr>"; 
         
         $tableNumber = 1;
@@ -139,7 +139,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
                             'value1' => $subform->BARCODE,
                             'value2' => $value->CPROFNUM
                         );
-                        $attache = apply_filters('add_attache_priority_quote', $values);
+                        $attache = apply_filters('add_attache_priority', $subform->Y_17934_5_ESHB);
                         echo $attache;
                         echo "</tr>";
                         $i++;

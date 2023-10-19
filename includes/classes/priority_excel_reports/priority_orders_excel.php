@@ -49,7 +49,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 
 			?>
 
-			<div class="woocommerce-MyAccount-content-priority-orders">
+			<div class="woocommerce-MyAccount-content-priority-orders my-account-content">
 
 				<p><?php _e('Priority Orders','p18w'); ?></p>
 				<?php do_action('add_message_front_priorityOrders'); ?>
@@ -74,7 +74,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,Y_17934_5_ESHB)';
         	
 		} else 
 		//by default enter date from begin of year to today
@@ -83,7 +83,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$begindate = apply_filters('simply_request_data', $begindate);
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,Y_17934_5_ESHB)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 
@@ -116,11 +116,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 				if(!empty($value->ORDERITEMS_SUBFORM)) {
 					echo "<tr class='content_value subform-content-".$i."' style='display:none;'><td colspan='8'>";
 					echo "<table class='table-orders'>";
-					echo "<tr><td>".__('Part Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('Delivery Date','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('mifrat','p18w')."</td></tr>";
+					echo "<tr><td>".__('Part Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('Delivery Date','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Total Price','p18w')."</td><td style='color: #fff0;'>".__('mifrat','p18w')."</td></tr>";
 					foreach($value->ORDERITEMS_SUBFORM as $subform) {
 						echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->Y_9950_5_ESHB."</td><td class='product-row'>".$subform->PDES."</td><td>".(($subform->AROW_MITKABEL == null) ? '' : date('d/m/y',strtotime($subform->AROW_MITKABEL)))."</td><td>".$subform->QUANT."</td><td>".$subform->TUNITNAME."</td><td>".$subform->PRICE.' '.$subform->ICODE."</td><td>".$subform->QPRICE.' '.$subform->ICODE;
-						// $attache = apply_filters('add_attache_priority', $subform->Y_17934_5_ESHB);
-                        // echo $attache;
+						$attache = apply_filters('add_attache_priority', $subform->Y_17934_5_ESHB);
+                        echo $attache;
 						echo "</tr>";
 					}
 					echo "</table>";

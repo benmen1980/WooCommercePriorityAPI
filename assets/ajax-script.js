@@ -8,19 +8,20 @@ jQuery(document).ready(function($) {
         // Add loader_active class to the clicked button
         button.addClass('loader_active');
 
-        console.log( $(this).data('num'));
+        console.log( button.data('num'));
         $.ajax({
             type: 'post',
             url: ajax_obj.ajaxurl,
             data: {
                 action: 'syncCPRofByNumber',
-                CPROFNUM: $(this).data('num'),
+                CPROFNUM: button.data('num'),
             },
             beforeSend: function (response) {
                 button.addClass('loader_active');
             },
             complete: function (response) {
                 console.log('complete');
+                console.log ('respone: ', response)
                 button.removeClass('loader_active');
                 //console.log(response);
                 //window.location.reload();
@@ -32,8 +33,8 @@ jQuery(document).ready(function($) {
 
                 button.removeClass('loader_active');
             },
-            error: function() {
-                console.log( 'AJAX error:');
+            error: function(response) {
+                console.log( 'AJAX error: ', response);
                 button.removeClass('loader_active');
             }
         });
