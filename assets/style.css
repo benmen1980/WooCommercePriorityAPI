@@ -17,11 +17,12 @@ td.product-quantity-return input.qtty_return:disabled{background-color: #c1bcbc;
 /* #select_users +.select2-container{height: 30px;} */
 #select_users +.select2-container .select2-selection--multiple{min-height: 55px;}
 div.user-detail-holder {overflow-x: auto;}
-table.priority-report-table {table-layout: fixed; border-spacing: 10px; width: 105%;}
-table.priority-report-table td {white-space: nowrap; }
-table.priority-report-table td, th{	padding: 10px; text-align: center; font-size: 16px;}
+table.priority-report-table {table-layout: fixed; border-spacing: 10px; width: 108%;}
+/* table.priority-report-table td {white-space: nowrap; } */
+table.priority-report-table td, th{	padding: 10px; text-align: center; font-size: 15px;}
 table.table-quote, table.table-orders{border-collapse: initial;}
 .product-row {white-space: wrap!important;  width: 200px;}
+.row-sub-titles {font-weight: bold;}
 
 button.btn_quote {position: relative;}
 .btn_quote.loader_active .loader_wrap{display: block; background-color: rgba(255,255,255,0.6);}
