@@ -1349,6 +1349,9 @@ class WooAPI extends \PriorityAPI\API
 					            update_post_meta( $id, '_stock', 0 );
 					            wp_set_post_terms( $id, 'outofstock', 'product_visibility', true );
 				            }
+                            if ( ! empty( $item['INVFLAG'] ) ) {
+                                update_post_meta( $id, '_manage_stock', ( $item['INVFLAG'] == 'Y' ) ? 'yes' : 'no' );
+                            }
 			            }
 		            }
 
@@ -1393,9 +1396,6 @@ class WooAPI extends \PriorityAPI\API
 			            }
 			            //$my_product->set_sale_price( $sales_price);
 			            $my_product->save();
-			            if ( ! empty( $item['INVFLAG'] ) && $stock_status == 'outofstock' ) {
-				            update_post_meta( $id, '_manage_stock', ( $item['INVFLAG'] == 'Y' ) ? 'yes' : 'no' );
-			            }
 			            //update_post_meta($id, '_regular_price', $pri_price);
 			            //update_post_meta($id, '_price',$pri_price );
 			            $taxon = 'product_cat';
