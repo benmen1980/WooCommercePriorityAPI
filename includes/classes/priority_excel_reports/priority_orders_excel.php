@@ -161,16 +161,16 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		$f = fopen('php://output', 'w');
 		//add BOM to fix UTF-8 in Excel
         fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-		$array=array(__('Date','p18w'),__('Order Name','p18w'),__('Purchase Orders','p18w'),__('Status Order','p18w'),__('Price','p18w'),__('Percentage','p18w'),__('Discounted Price','p18w'),__('VAT','p18w'),__('Total Price','p18w'),__('Part Name','p18w'),__('Manufacturer Part Number','p18w'),__('Description','p18w'),__('Delivery Date','p18w'),__('Quantity','p18w'),__('Unit Measure','p18w'),__('Price','p18w'),__('Total Price','p18w'));
+		$array=array(__('Date','p18w'),__('Delivery Date','p18w'),__('Order Name','p18w'),__('Purchase Orders','p18w'),__('Status Order','p18w'),__('Part Name','p18w'),__('Manufacturer Part Number','p18w'),__('Description','p18w'),__('Quantity','p18w'),__('Unit Measure','p18w'),__('Price','p18w'),__('Total Price','p18w'));
 		fputcsv($f, $array);
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				foreach($value->ORDERITEMS_SUBFORM as $subform) {
-					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE.' '.$value->CODE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE.' '.$value->CODE,$value->VAT.' '.$value->CODE,$value->TOTPRICE.' '.$value->CODE,$subform->PARTNAME,$subform->Y_9950_5_ESHB,$subform->PDES,date('d/m/y',strtotime($subform->AROW_MITKABEL)),$subform->QUANT,$subform->TUNITNAME,$subform->PRICE.' '.$subform->ICODE,$subform->QPRICE.' '.$subform->ICODE);
+					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),date('d/m/y',strtotime($subform->AROW_MITKABEL)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$subform->PARTNAME,$subform->Y_9950_5_ESHB,$subform->PDES,$subform->QUANT,$subform->TUNITNAME,$subform->PRICE.' '.$subform->ICODE,$subform->QPRICE.' '.$subform->ICODE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE.' '.$value->CODE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE.' '.$value->CODE,$value->VAT.' '.$value->CODE,$value->TOTPRICE.' '.$value->CODE);
+				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),date('d/m/y',strtotime($subform->AROW_MITKABEL)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE.' '.$value->CODE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE.' '.$value->CODE,$value->VAT.' '.$value->CODE,$value->TOTPRICE.' '.$value->CODE);
 				fputcsv($f, $array);
 			}
 		}

@@ -183,16 +183,16 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         $f = fopen('php://output', 'w');
         //add BOM to fix UTF-8 in Excel
         fputs($f, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-        $array=array(__('Date QUOTE','p18w'),__('Date Expiration','p18w'),__('Contact','p18w'),__('Quote Number','p18w'),__('Part Name','p18w'),__('Product Name','p18w'),__('Manufacturer Part Number','p18w'),__('Quantity','p18w'),__('Unit Measure','p18w'),__('Supply Time','p18w'),__('Price','p18w'),__('Price Discount','p18w'),__('Total Price','p18w'));
+        $array=array(__('Quote Number','p18w'),__('Date QUOTE','p18w'),__('Date Expiration','p18w'),__('Part Name','p18w'),__('Product Name','p18w'),__('Quantity','p18w'),__('Unit Measure','p18w'),__('Supply Time','p18w'),__('Price without Discount','p18w'),__('Price Discount','p18w'),__('Total Price','p18w'));
         fputcsv($f, $array);
         foreach ($data->value as $key => $value) {
             if(!empty($value->CPROFITEMS_SUBFORM)) {
                 foreach($value->CPROFITEMS_SUBFORM as $subform) {
-                    $array=array(date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->NAME,$value->CPROFNUM,$value->PAYDES,$subform->PARTNAME,$subform->PDES,$subform->BARCODE,$subform->TQUANT,$subform->TUNITNAME,$subform->SUPTIME,$subform->PRICE.' '.$subform->ICODE,$subform->PERCENTPRICE.' '.$subform->ICODE,$subform->QPRICE.' '.$subform->ICODE);
+                    $array=array($value->CPROFNUM,date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$subform->PARTNAME,$subform->PDES,$subform->TQUANT,$subform->TUNITNAME,$subform->SUPTIME,$subform->PRICE.' '.$subform->ICODE,$subform->PERCENTPRICE.' '.$subform->ICODE,$subform->QPRICE.' '.$subform->ICODE);
                     fputcsv($f, $array);
                 }
             }else {
-                $array=array(date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->NAME,$value->CPROFNUM,$value->PAYDES);
+                $array=array($value->CPROFNUM,date( 'd/m/y',strtotime($value->PDATE)),date( 'd/m/y',strtotime($value->EXPIRYDATE)),$value->PAYDES);
                 fputcsv($f, $array);
             }
         }
