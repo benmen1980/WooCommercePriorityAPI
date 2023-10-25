@@ -61,6 +61,7 @@ function create_product_variable($data)
         $file = $data['image_file'];
         $attach_id = $data['image_id'];
         include $file;
+        require_once( ABSPATH . '/wp-admin/includes/image.php' );
         $attach_data = wp_generate_attachment_metadata($attach_id, $file);
         wp_update_attachment_metadata($attach_id, $attach_data);
         set_post_thumbnail($product_id, $attach_id);

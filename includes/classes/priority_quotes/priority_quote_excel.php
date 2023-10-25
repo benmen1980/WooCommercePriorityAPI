@@ -106,10 +106,11 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         ".__('Export Excel','p18w')." </a>";
         echo "<table class='priority-report-table'>";
         echo "<tr class='row-titles'><td></td><td>".__('Date QUOTE','p18w')."</td><td>".__('Date Expiration','p18w')."</td><td>".__('Contact','p18w')."</td><td>".__('Quote Number','p18w')."</td><td>".__('Terms Payment','p18w')."</td>";
-        echo "<td style='color: #fff0;'>".__('mifrat','p18w')."</td>";
+        echo "<td>".__(' ','p18w')."</td>";
         echo "</tr>"; 
-        
+        date_default_timezone_set('Asia/Jerusalem');
         $tableNumber = 1;
+    
 
         foreach ($data->value as $key => $value) {
             echo "<tr><td>";
@@ -125,7 +126,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
                     echo "<tr class='content_value subform-content-".$tableNumber."' style='display:none;'><td colspan='8'>";
                     echo "<table class='table-quote'>";
                     $i = 1;
-                    echo "<tr class='row-sub-titles'><td>".__('Counter','p18w')."</td><td>".__('Part Name','p18w')."</td><td>".__('Product Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Supply Time','p18w')."</td><td>".__('Price without Discount','p18w')."</td><td>".__('Price Discount','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__(' ','p18w')."</td></tr>";
+                    echo "<tr class='row-sub-titles'><td>".__('Counter','p18w')."</td><td>".__('Part Name','p18w')."</td><td>".__('Product Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Supply Time','p18w')."</td><td>".__('Price without Discount','p18w')."</td><td>".__('Price Discount','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('mifrat','p18w')."</td></tr>";
                     foreach($value->CPROFITEMS_SUBFORM as $subform) {
                         // echo "<tr><td>";
                         echo "<tr><td>" . $i . "</td><td>";
@@ -134,7 +135,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
                         $comment_text = $subform->CPROFITEMSTEXT_SUBFORM->TEXT;
                         $comment  = ' ' . html_entity_decode( $comment_text );
 
-                        echo $subform->PARTNAME."</td><td class='product-row'>".$subform->PDES."<br/><p>".$comment."</p></td><td>".$subform->BARCODE."</td><td>".$subform->TQUANT."</td><td>".$subform->TUNITNAME."</td><td>".$subform->SUPTIME."</td><td>".$subform->PRICE.' '.$subform->ICODE."</td><td>".$subform->PERCENTPRICE.' '.$subform->ICODE."</td><td>".$subform->QPRICE.' '.$subform->ICODE."</td>";
+                        echo $subform->PARTNAME."</td><td class='product-row'>".$subform->PDES."<br/><p>".$comment."</p></td><td>".$subform->BARCODE."</td><td>".$subform->TQUANT."</td><td>".$subform->TUNITNAME."</td><td>".$subform->SUPTIME."</td><td class='price_row'>".$subform->PRICE.' '.$subform->ICODE."</td><td class='price_row'>".$subform->PERCENTPRICE.' '.$subform->ICODE."</td><td class='price_row'>".$subform->QPRICE.' '.$subform->ICODE."</td>";
                         $values = array(
                             'value1' => $subform->BARCODE,
                             'value2' => $value->CPROFNUM
