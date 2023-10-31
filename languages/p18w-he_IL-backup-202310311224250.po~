@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2023-10-22 19:15+0000\n"
+"PO-Revision-Date: 2023-10-31 12:24+0000\n"
 "Last-Translator: \n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -23,6 +23,9 @@ msgstr ""
 
 msgid "Account report"
 msgstr ""
+
+msgid "Balance"
+msgstr "כמות <br/>נותרת"
 
 #: includes/front/my-account/obligo.php:170
 msgid "BALDATE"
@@ -132,6 +135,9 @@ msgstr "התחבר כדי לראות מחירים"
 
 msgid "Manufacturer Part Number"
 msgstr "מק\"ט יצרן"
+
+msgid "mifrat"
+msgstr "מפרט"
 
 msgid "NAME"
 msgstr "שם"
@@ -298,7 +304,7 @@ msgstr "סה\"כ לתשלום:"
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Total Price"
-msgstr "מחיר כולל מע\"מ"
+msgstr "סה\"כ מחיר"
 
 msgid "Total Price Include VAT"
 msgstr "מחיר<br/>כולל מע\"מ"

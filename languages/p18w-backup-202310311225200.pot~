@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-18 08:35+0000\n"
+"POT-Creation-Date: 2023-10-31 12:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -300,4 +300,19 @@ msgid "Price without Discount"
 msgstr ""
 
 msgid "Price Discount"
+msgstr ""
+
+msgid "Purchase Orders"
+msgstr ""
+
+msgid "Status Order"
+msgstr ""
+
+msgid "Delivery Date"
+msgstr ""
+
+msgid "mifrat"
+msgstr ""
+
+msgid "Balance"
 msgstr ""
