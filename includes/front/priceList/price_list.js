@@ -9,8 +9,16 @@ jQuery(document).ready(function ($) {
             if(1 == initQty){
                 let priceSpan = document.querySelector('.woocommerce-Price-amount');
                 let priceSpanBdi = priceSpan.querySelector('bdi');
-                priceSpanBdi.childNodes[0].textContent = initialPrice;
-        
+                // Check if priceSpanBdi has child nodes and the first node is of type text
+                if (priceSpanBdi.childNodes.length > 0 && priceSpanBdi.childNodes[0].nodeType === Node.TEXT_NODE) {
+                    // Update the text content of the first child node
+                    priceSpanBdi.childNodes[0].textContent = initialPrice;
+                    console.log('Coin position on the right');
+                }  else {
+                    priceSpanBdi.childNodes[1].textContent = initialPrice;
+                    console.log('Coin position on the left');
+                }
+
             }
         }
     }
