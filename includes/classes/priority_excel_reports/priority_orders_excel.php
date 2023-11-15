@@ -147,6 +147,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,TBALANCE)';
 		} else {
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
+			$begindate = apply_filters('simply_excel_reports', $begindate);
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,TBALANCE)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
