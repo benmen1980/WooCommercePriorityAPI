@@ -2702,6 +2702,12 @@ class WooAPI extends \PriorityAPI\API
             if ($method == 'PATCH') {
                 $url_eddition = 'CUSTOMERS(\'' . $priority_customer_number . '\')';
                 unset($request['CUSTNAME']);
+                $config = json_decode(stripslashes($this->option('setting-config')));
+                $no_update_customer = $config->no_update_customer;
+                if ($no_update_customer = true ) {
+                    $response['code'] == '200';
+                    return $response;
+                }
             }
             $request["id"] = $id;
             $request = apply_filters('simply_syncCustomer', $request);
