@@ -94,10 +94,11 @@ function change_user(){
 }
 function simply_users_register_my_session()
 {
-    if (!session_id()) {
-        session_start();
+    if (!headers_sent() && session_id() == '') {
+        ob_start(); // Start output buffering
+		session_start();
+		ob_end_flush(); // Flush output buffer
     }
 }
 add_action('init', 'simply_users_register_my_session');
-
 
