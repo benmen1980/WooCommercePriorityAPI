@@ -4918,8 +4918,7 @@ class WooAPI extends \PriorityAPI\API
     }
     function get_shipping_price($order, $is_order)
     {
-	    $priceDisplay = get_option('woocommerce_tax_display_shop');
-        $price_filed = $priceDisplay === 'incl' ? ($is_order ? 'VATPRICE' : 'TOTPRICE') : 'PRICE';
+        $priceDisplay = get_option('woocommerce_tax_display_cart');
         // config
         $config = json_decode(stripslashes($this->option('setting-config')));
         $default_product = '000';
@@ -4931,7 +4930,10 @@ class WooAPI extends \PriorityAPI\API
             $method_title = $data['method_title'];
             $method_id = $data['method_id'];
             $instance_id = $data['instance_id'];
-            $shipping_price = $data['total'] + $data['total_tax'];
+
+            $price_filed = ($priceDisplay === 'incl') ? ($is_order ? 'VATPRICE' : 'TOTPRICE') : 'PRICE';
+            $shipping_price = ($price_filed === 'PRICE') ? $data['total'] : ($data['total'] + $data['total_tax']);
+
             $data = [
                 // 'PARTNAME' => $this->option('shipping_' . $shipping_method_id, $order->get_shipping_method()),
                 $this->get_sku_prioirty_dest_field() => $this->option('shipping_' . $method_id . '_' . $instance_id, $default_product),
