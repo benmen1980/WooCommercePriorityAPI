@@ -28,9 +28,25 @@ function create_product_variable($data)
 
     if (!empty($data['sku']) && $product_id) {
         $post_data['ID'] = $product_id;
+        $_product = wc_get_product( $product_id );
+
+        // check if the item flagged as show in web, if not skip the item
+        $show_in_web = $data['show_in_web'];
+        if ( isset( $show_in_web ) ) {
+            if ( $product_id == 0 &&  $show_in_web != 'Y' ) {
+                return $product_id;
+            }
+            if ( $product_id != 0 && $show_in_web != 'Y' ) {
+                $_product->set_status( 'draft' );
+                $_product->save();
+                return $product_id;
+            }
+        }
 
         // Update the product (post data)
         $product_id = wp_update_post($post_data);
+        // $_product->set_status($this->option('item_status'));
+        // $_product->save();
     } else {
         // Creating the product (post data)
         $product_id = wp_insert_post($post_data);
@@ -79,6 +95,17 @@ function create_product_variable($data)
     //$product->set_stock_quantity( $data['stock'] ); // Set a minimal stock quantity
     $product->set_manage_stock(false);
     $product->set_stock_status($data['stock']);
+
+    //shipping method
+    if (!empty($data['shipping_variable'])) {
+        $shipping_classes = get_terms(array('taxonomy' => 'product_shipping_class', 'hide_empty' => false));
+        foreach ($shipping_classes as $shipping_class) {
+            if ($data['shipping_variable'] == $shipping_class->name) {
+                // assign class to product
+                $product->set_shipping_class_id($shipping_class->term_id); // Set the shipping class ID
+            }
+        }
+    }
 
     // Tax class
     if (empty($data['tax_class']))
@@ -268,21 +295,24 @@ function create_product_variation($product_id, $variation_data)
         $variation->set_sale_price($variation_data['sale_price']);
     }
     $variation->set_regular_price($variation_data['regular_price']);
-	// if not show in web set price 0
-	if($variation_data['show_in_web'] != 'Y'){
-		$variation->set_regular_price(0.0);
-		$variation->set_price(0.0);
-		$variation->set_sale_price(0.0);
-
-
-	}
-
+    
     // Stock
 
     if (empty($variation_data['stock'])) {
         $variation->set_stock_status('outofstock');
     } else {
         $variation->set_stock_status($variation_data['stock']);
+    }
+
+    // if not show in web set price 0 and set status outofstock
+    if($variation_data['show_in_web'] != 'Y'){
+        $variation->set_regular_price(0.0);
+        $variation->set_price(0.0);
+        $variation->set_sale_price(0.0);
+
+        $variation->set_stock_status('outofstock');
+        $variation->set_stock(0);
+
     }
 
     /*if( ! empty($variation_data['stock_qty']) ){

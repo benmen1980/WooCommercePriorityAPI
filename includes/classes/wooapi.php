@@ -2043,7 +2043,9 @@ class WooAPI extends \PriorityAPI\API
                                 'stock' => 'Y',
                                 'variation' => [],
                                 'regular_price' => $price,
-                                'post_content' => $parents[$item[$variation_field]]['content']
+                                'post_content' => $parents[$item[$variation_field]]['content'],
+                                'show_in_web' => $item[$show_in_web],
+                                'shipping' => $item['SPEC7']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
 
@@ -2136,7 +2138,9 @@ class WooAPI extends \PriorityAPI\API
                             'attributes' => $parent['attributes'],
                             'categories' => $parent['categories'],
                             'tags' => $parent['tags'],
-                            'status' => $this->option('item_status')
+                            'status' => $this->option('item_status'),
+                            'show_in_web' => $parent['show_in_web'],
+                            'shipping_variable' => $parent['shipping']
                         ));
 
                         $parents[$sku_parent]['product_id'] = $id;
