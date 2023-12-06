@@ -3699,10 +3699,12 @@ class WooAPI extends \PriorityAPI\API
             }
 	    }
 	    if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() + $total_fee > 0)) {
+            $priceDisplay = get_option('woocommerce_tax_display_cart');
+            $price_discount = ($priceDisplay === 'incl') ? 'with_tax' : 'without_tax';
             $data['ORDERITEMS_SUBFORM'][] = [
                 $this->get_sku_prioirty_dest_field() => empty($coupon_num) ? '000' : $coupon_num, // change to other item
                 'TQUANT' => -1,
-                'VATPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax() + $total_fee ),
+                'VATPRICE' => ($price_discount === 'with_tax') ? 1 * floatval($order->get_discount_total() + $order->get_discount_tax() + $total_fee ) : 1 * floatval($order->get_discount_total() + $total_fee ),
                 'DUEDATE' => date('Y-m-d'),
 
 
