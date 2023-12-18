@@ -2139,7 +2139,7 @@ class WooAPI extends \PriorityAPI\API
                             'tags' => $parent['tags'],
                             'status' => $this->option('item_status'),
                             'show_in_web' => $parent_data['show_in_web'] != '' ? $parent_data['show_in_web'] : '',
-                            'shipping_variable' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : ''
+                            'shipping' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : ''
                         ));
 
                         $parents[$sku_parent]['product_id'] = $id;

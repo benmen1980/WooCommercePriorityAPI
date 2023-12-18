@@ -97,10 +97,10 @@ function create_product_variable($data)
     $product->set_stock_status($data['stock']);
 
     //shipping method
-    if (!empty($data['shipping_variable'])) {
+    if (!empty($data['shipping'])) {
         $shipping_classes = get_terms(array('taxonomy' => 'product_shipping_class', 'hide_empty' => false));
         foreach ($shipping_classes as $shipping_class) {
-            if ($data['shipping_variable'] == $shipping_class->name) {
+            if ($data['shipping'] == $shipping_class->name) {
                 // assign class to product
                 $product->set_shipping_class_id($shipping_class->term_id); // Set the shipping class ID
             }
