@@ -2045,7 +2045,7 @@ class WooAPI extends \PriorityAPI\API
                                 'stock' => 'Y',
                                 'variation' => [],
                                 'regular_price' => $price,
-                                'post_content' => $parents[$item[$variation_field]]['content'],
+                                'post_content' => $parents[$item[$variation_field]]['content']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
 
