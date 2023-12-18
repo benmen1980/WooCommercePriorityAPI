@@ -313,6 +313,20 @@ function create_product_variation($product_id, $variation_data)
         $variation->set_stock_status('outofstock');
         $variation->set_stock(0);
 
+        // remove a specific variation from all the variations of a variable product      
+        // Check if the product is a variable product
+        if ($product && $product->is_type('variable')) {
+            // Get the variations
+            $variations = $product->get_children();
+    
+            foreach ($variations as $variation) {
+                // Check if the current variation is the one to be removed
+                if ($variation == $variation_id) {
+                    // Remove the variation
+                    wp_delete_post($variation_id, true); // Set the second parameter to true to permanently delete the variation
+                }
+            }
+        }
     }
 
     /*if( ! empty($variation_data['stock_qty']) ){

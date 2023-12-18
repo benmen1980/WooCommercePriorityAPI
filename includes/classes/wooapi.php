@@ -1228,7 +1228,8 @@ class WooAPI extends \PriorityAPI\API
 		            $post_content = '';
 		            if ( isset( $item['PARTTEXT_SUBFORM'] ) ) {
 			            foreach ( $item['PARTTEXT_SUBFORM'] as $text ) {
-				            $content .= ' ' . html_entity_decode( $text );
+                            $clean_text = preg_replace('/<style>.*?<\/style>/s', '', $text);
+				            $content .= ' ' . html_entity_decode( $clean_text );
 			            }
 		            }
 		            $data = [
@@ -2033,7 +2034,8 @@ class WooAPI extends \PriorityAPI\API
                             }
                             if (isset($item['PARTTEXT_SUBFORM'])) {
                                 foreach ($item['PARTTEXT_SUBFORM'] as $text) {
-                                    $parents[$item[$variation_field]]['content'] .= $text;
+                                    $clean_text = preg_replace('/<style>.*?<\/style>/s', '', $text);
+                                    $parents[$item[$variation_field]]['content'] .= $clean_text;
                                 }
                             }
                             $parents[$item[$variation_field]] = [
@@ -2044,8 +2046,6 @@ class WooAPI extends \PriorityAPI\API
                                 'variation' => [],
                                 'regular_price' => $price,
                                 'post_content' => $parents[$item[$variation_field]]['content'],
-                                'show_in_web' => $item[$show_in_web],
-                                'shipping' => $item['SPEC7']
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
 
@@ -2118,13 +2118,12 @@ class WooAPI extends \PriorityAPI\API
                             $attach_id_parent = $file_parent[0];
                             $file_name_parent = $file_parent[1];
                         }
-                        $text = apply_filters('simply_modify_long_text', ['sku' => $sku_parent, 'text' => ''])['text'];
+                        $parent_data = apply_filters('simply_modify_long_text', ['sku' => $sku_parent, 'text' => '']);
 
                         $id = create_product_variable(array(
                             'author' => '', // optional
                             'title' => $parent['title'],
-                            'content' => $text != '' ? $text : $parent['post_content'],
-                            'excerpt' => '',
+                            'content' => $parent_data['text'] != '' ? $parent_data['text'] : $parent['post_content'],                            'excerpt' => '',
                             'regular_price' => '', // product regular price
                             'sale_price' => '', // product sale price (optional)
                             'stock' => $parent['stock'], // Set a minimal stock quantity
@@ -2139,8 +2138,8 @@ class WooAPI extends \PriorityAPI\API
                             'categories' => $parent['categories'],
                             'tags' => $parent['tags'],
                             'status' => $this->option('item_status'),
-                            'show_in_web' => $parent['show_in_web'],
-                            'shipping_variable' => $parent['shipping']
+                            'show_in_web' => $parent_data['show_in_web'] != '' ? $parent_data['show_in_web'] : '',
+                            'shipping_variable' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : ''
                         ));
 
                         $parents[$sku_parent]['product_id'] = $id;
