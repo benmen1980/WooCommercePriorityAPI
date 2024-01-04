@@ -3218,14 +3218,32 @@ class WooAPI extends \PriorityAPI\API
             'NSFLAG' => 'Y',
         ];
 
+        //check whether the customer already exists in Priority
+        $request = $this->makeRequest('GET', 
+        'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
+        $this->option('log_customers', true));
+
+        if ($request['status']) {
+            if ($request['code'] == '200') {
+                $is_customer = json_decode($request['body']);
+                $priority_cust_from_priority = $priority_customer_number;
+            }
+        }
+        //if it exists, update method patch
+        $method = !empty($priority_cust_from_priority) ? 'PATCH' : 'POST';
+        $url_eddition = 'CUSTOMERS';
+        if ($method == 'PATCH') {
+            $url_eddition = 'CUSTOMERS(\'' . $priority_customer_number . '\')';
+            unset($json_request['CUSTNAME']);
+        }
         //apply_filters
         $json_request['order_id'] = $order->get_id();
         $json_request = apply_filters('simply_post_prospect', $json_request);
         unset($json_request['order_id']);
-        $method = 'POST';
-        $response = $this->makeRequest($method, 'CUSTOMERS', ['body' => json_encode($json_request)], $this->option('log_customers_web', true));
+       
+        $response = $this->makeRequest($method, $url_eddition, ['body' => json_encode($json_request)], $this->option('log_customers_web', true));
         // set priority customer id
-        if ($response['status']) {
+        if ($method == 'POST' && $response['code'] == '201' || $method == 'PATCH' && $response['code'] == '200') {
             $data = json_decode($response['body']);
             $priority_customer_number = $data->CUSTNAME;
             update_post_meta($order->ID, 'prospect_custname', $priority_customer_number);
