@@ -5395,7 +5395,16 @@ class WooAPI extends \PriorityAPI\API
         foreach ($percentages as $item) {
             $percentage =+ is_numeric($item['PERCENT']) ? $item['PERCENT'] : 0.0;
         }
-        $subtotal = $woocommerce->cart->get_subtotal() + $woocommerce->cart->get_subtotal_tax();
+        //check if price display with tax
+
+        $priceDisplay = get_option('woocommerce_tax_display_cart');
+        if ($priceDisplay === 'incl') {
+            $subtotal = $woocommerce->cart->get_subtotal() + $woocommerce->cart->get_subtotal_tax();
+        }
+        else{
+            $subtotal = $woocommerce->cart->get_subtotal();
+        }
+
         $discount_price = $percentage * $subtotal / 100;
         $woocommerce->cart->add_fee(__('Discount ' . $percentage . '%', 'p18w'), -$discount_price, false, 'standard');
     }
