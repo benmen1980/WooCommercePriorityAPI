@@ -5059,6 +5059,8 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'billing_phone', $user['PHONE']);
                 update_user_meta($user_id, 'billing_postcode', $user['ZIP']);
 	            update_user_meta($user_id, 'customer_paydes', $user['PAYDES']);
+                update_user_meta($user_id, 'first_name', $user['CUSTDES']);
+
 
                 // $customer = new \WC_Customer($user_id);
                 // $customer->set_billing_address_1($user['ADDRESS']);
