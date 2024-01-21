@@ -1362,11 +1362,13 @@ class WooAPI extends \PriorityAPI\API
 		            $item['product_id'] = $id;
 		            $item               = apply_filters( 'simply_syncItemsPriority_item', $item );
 		            unset( $item['id'] );
+                    //check if WooCommerce Tax Settings are set
+                    $set_tax = get_option('woocommerce_calc_taxes');
 		            if ( $product_price_list != null && ! empty( $item['PARTINCUSTPLISTS_SUBFORM'] ) ) {
-			            $pri_price = wc_prices_include_tax() == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+			            $pri_price = (wc_prices_include_tax() == true || $set_tax == 'no') ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
 		            } else {
-			            $pri_price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+			            $pri_price = (wc_prices_include_tax() == true || $set_tax == 'no') ? $item['VATPRICE'] : $item['BASEPLPRICE'];
 		            }
 		            if ( $id ) {
 			            $my_product = new \WC_Product( $id );
@@ -1660,17 +1662,20 @@ class WooAPI extends \PriorityAPI\API
                         $product_id = get_the_ID();
                     }
                 }
+                //check if WooCommerce Tax Settings are set
+                $set_tax = get_option('woocommerce_calc_taxes');
+
                 // if product variation skip
                 if ($product_id != 0) {
                     if ($product_price_list != null) {
                         if (!empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
-                            $pri_price = wc_prices_include_tax() ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+                            $pri_price = (wc_prices_include_tax() || $set_tax == 'no') ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
                         } else {
                             continue;
                         }
                     } else {
-                        $pri_price = wc_prices_include_tax() ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                        $pri_price = (wc_prices_include_tax() || $set_tax == 'no') ? $item['VATPRICE'] : $item['BASEPLPRICE'];
 
                     }
                     $product = get_post($product_id);
@@ -2020,14 +2025,17 @@ class WooAPI extends \PriorityAPI\API
 	                    $item['attributes'] = $attributes;
                         $item = apply_filters('simply_ItemsAtrrVariation', $item);
                         $attributes = $item['attributes'];
+
+                        //check if WooCommerce Tax Settings are set
+                        $set_tax = get_option('woocommerce_calc_taxes');
                         if ($attributes) {
-                            $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+                            $price = (wc_prices_include_tax() == true || $set_tax == 'no') ? $item['VATPRICE'] : $item['BASEPLPRICE'];
                             // price refer to pricelist
 	                        if ($product_price_list != null && !empty($item['PARTINCUSTPLISTS_SUBFORM'])) {
-		                        $price = wc_prices_include_tax() == true ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
+		                        $price = (wc_prices_include_tax() == true || $set_tax == 'no') ? $item['PARTINCUSTPLISTS_SUBFORM'][0]['VATPRICE'] : $item['PARTINCUSTPLISTS_SUBFORM'][0]['PRICE'];
 
 	                        } else {
-		                        $price = wc_prices_include_tax() == true ? $item['VATPRICE'] : $item['BASEPLPRICE'];
+		                        $price = (wc_prices_include_tax() == true || $set_tax == 'no') ? $item['VATPRICE'] : $item['BASEPLPRICE'];
 	                        }
                             if (isset($parents[$item[$variation_field]]['content'])) {
                                 $parents[$item[$variation_field]]['content'] = '';
@@ -3354,6 +3362,9 @@ class WooAPI extends \PriorityAPI\API
         $priceList = !empty($priceListNumber) ? '&$filter=PLNAME eq ' . $priceListNumber . '' : '';
         $filter = empty(explode(',', $this->option('sync_pricelist_priority_warhsname'))[0]) ? '' : '$filter=STATDES eq \'פעיל\'';
         $response = $this->makeRequest('GET', 'PRICELIST?' . $filter . '&$select=PLNAME,PLDES,CODE' . $priceList . '&$expand=PARTPRICE2_SUBFORM($select=PARTNAME,QUANT,PRICE,VATPRICE)', [], $this->option('log_pricelist_priority', true));
+        
+        //check if WooCommerce Tax Settings are set
+        $set_tax = get_option('woocommerce_calc_taxes');
         // check response status
         if ($response['status']) {
 
@@ -3396,7 +3407,7 @@ class WooAPI extends \PriorityAPI\API
                             'price_list_code' => $list['PLNAME'],
                             'price_list_name' => $list['PLDES'],
                             'price_list_currency' => $list['CODE'],
-                            'price_list_price' => wc_prices_include_tax() ? $product['VATPRICE'] : (float)$product['PRICE'],
+                            'price_list_price' => (wc_prices_include_tax() || $set_tax == 'no') ? $product['VATPRICE'] : (float)$product['PRICE'],
                             'price_list_quant' => $product['QUANT'],
                             'blog_id' => $blog_id
                         ]);
@@ -3719,7 +3730,9 @@ class WooAPI extends \PriorityAPI\API
 	    }
 	    if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() + $total_fee > 0)) {
             $priceDisplay = get_option('woocommerce_tax_display_cart');
-            $price_discount = ($priceDisplay === 'incl') ? 'with_tax' : 'without_tax';
+            //check if WooCommerce Tax Settings are set
+            $set_tax = get_option('woocommerce_calc_taxes');
+            $price_discount = ($priceDisplay === 'incl' || $set_tax == 'no' ) ? 'with_tax' : 'without_tax';
             $data['ORDERITEMS_SUBFORM'][] = [
                 $this->get_sku_prioirty_dest_field() => empty($coupon_num) ? '000' : $coupon_num, // change to other item
                 'TQUANT' => -1,
@@ -4944,6 +4957,8 @@ class WooAPI extends \PriorityAPI\API
     function get_shipping_price($order, $is_order)
     {
         $priceDisplay = get_option('woocommerce_tax_display_cart');
+        //check if WooCommerce Tax Settings are set
+        $set_tax = get_option('woocommerce_calc_taxes');
         // config
         $config = json_decode(stripslashes($this->option('setting-config')));
         $default_product = '000';
@@ -4956,7 +4971,7 @@ class WooAPI extends \PriorityAPI\API
             $method_id = $data['method_id'];
             $instance_id = $data['instance_id'];
 
-            $price_filed = ($priceDisplay === 'incl') ? ($is_order ? 'VATPRICE' : 'TOTPRICE') : 'PRICE';
+            $price_filed = ($priceDisplay === 'incl' || $set_tax == 'no' ) ? ($is_order ? 'VATPRICE' : 'TOTPRICE') : 'PRICE';
             $shipping_price = ($price_filed === 'PRICE') ? $data['total'] : ($data['total'] + $data['total_tax']);
 
             $data = [
@@ -5398,7 +5413,9 @@ class WooAPI extends \PriorityAPI\API
         //check if price display with tax
 
         $priceDisplay = get_option('woocommerce_tax_display_cart');
-        if ($priceDisplay === 'incl') {
+        //check if WooCommerce Tax Settings are set
+        $set_tax = get_option('woocommerce_calc_taxes');
+        if ($priceDisplay === 'incl' || $set_tax == 'no' ) {
             $subtotal = $woocommerce->cart->get_subtotal() + $woocommerce->cart->get_subtotal_tax();
         }
         else{
