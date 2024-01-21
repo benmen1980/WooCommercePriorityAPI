@@ -1302,6 +1302,8 @@ class WooAPI extends \PriorityAPI\API
 		            }
 		            // check if update existing products
 		            if ( $product_id != 0 && false == $is_update_products ) {
+                        $item['product_id'] = $product_id;
+                        do_action('simply_update_product_price', $item);
 			            continue;
 		            }
 		            // update product
