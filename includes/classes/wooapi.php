@@ -5009,6 +5009,7 @@ class WooAPI extends \PriorityAPI\API
         $username_filed = $config->username_field ?? 'CUSTNAME';
         $password_field = $config->password_field;
         $first_name = $config->first_name ?? 'CUSTDES';
+        $billing_company = $config->billing_company ?? 'CUSTDES';
         $url_addition_config = !empty($config->additional_url) ? $config->additional_url : '';
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = urlencode(date(DATE_ATOM, $stamp));
@@ -5033,6 +5034,7 @@ class WooAPI extends \PriorityAPI\API
                 }
                 $password = $user[$password_field] ?? '123456';
                 $first_name = $user[$first_name];
+                $billing_company = $user[$billing_company];
                 $user_obj = get_user_by('login', $username);
                 $data = [
                     'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
@@ -5043,6 +5045,7 @@ class WooAPI extends \PriorityAPI\API
                     //'last_name'  => 'Doe',
                     'user_nickname' => $user['CUSTDES'],
                     'display_name' => $user['CUSTDES'],
+                    'billing_company' => $billing_company,
                     'role' => 'customer'
                 ];
                 if (!isset($user_obj->ID)) {
@@ -5079,6 +5082,7 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'billing_postcode', $user['ZIP']);
 	            update_user_meta($user_id, 'customer_paydes', $user['PAYDES']);
                 update_user_meta($user_id, 'first_name', $first_name);
+                update_user_meta($user_id, 'billing_company', $billing_company);
 
 
                 // $customer = new \WC_Customer($user_id);
