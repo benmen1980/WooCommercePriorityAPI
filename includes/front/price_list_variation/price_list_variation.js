@@ -32,6 +32,17 @@ jQuery(document).on('keyup change keydown keypress oninput', '.input-text.qty.te
         let qty = jQuery(event.target).first().val();
         let i;
         var priceSpanBdi = document.querySelector('.woocommerce-variation-price > .price > .woocommerce-Price-amount > bdi');
+        if(priceSpanBdi == null) {
+            priceSpan = document.querySelector('.woocommerce-Price-amount');
+            priceSpanBdi = priceSpan.querySelector('bdi');
+        }
+        else{
+            //delete woocomerce price amount
+            $('.summary.entry-summary p.price').css('display','none');
+
+        }
+
+
         let priceSpanBdiSpan = priceSpanBdi.querySelector('.woocommerce-Price-currencySymbol');
         for (i = 0; i < tr.length; i++) {
             let td1;
