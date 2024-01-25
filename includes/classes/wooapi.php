@@ -2128,7 +2128,7 @@ class WooAPI extends \PriorityAPI\API
                             $attach_id_parent = $file_parent[0];
                             $file_name_parent = $file_parent[1];
                         }
-                        $parent_data = apply_filters('simply_modify_long_text', ['sku' => $sku_parent, 'text' => '']);
+                        $parent_data = apply_filters('simply_modify_product_variable', ['sku' => $sku_parent, 'text' => '']);
 
                         $id = create_product_variable(array(
                             'author' => '', // optional
@@ -2148,7 +2148,7 @@ class WooAPI extends \PriorityAPI\API
                             'categories' => $parent['categories'],
                             'tags' => $parent['tags'],
                             'status' => $this->option('item_status'),
-                            'show_in_web' => $parent_data['show_in_web'] != '' ? $parent_data['show_in_web'] : '',
+                            'show_in_web' => $parent_data['show_in_web'] != '' ? $parent_data['show_in_web'] : $parent['show_in_web'],
                             'shipping' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : ''
                         ));
 
