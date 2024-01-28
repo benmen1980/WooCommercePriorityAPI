@@ -220,6 +220,76 @@ class CardPOS extends \PriorityAPI\API
     
     
     }
+    
+
+    //new function makeRequestCardPos with retry
+    // function makeRequestCardPos($method, $form_name = null, $form_action = null, $options = [], $log = false){
+    //     $args = [
+    //         'headers' => [
+    //             'Content-Type'  => 'application/json'
+    //         ],
+    //         'timeout'   => 45,
+    //         'method'    => strtoupper('POST'),
+    //         'sslverify' => WooAPI::instance()->option('sslverify', false)
+    //     ];
+    //     if ( ! empty($options)) {
+    //         $args = array_merge($args, $options);
+    //     }
+    
+    //     $raw_option = WooAPI::instance()->option('setting-config');
+    //     $raw_option = str_replace(array("\n", "\t", "\r"), '', $raw_option);
+    //     $config = json_decode(stripslashes($raw_option));
+    //     $ip = $config->IP;
+    
+    //     $url = sprintf('http://%s/PrioriPOSTestAPI/api/%s/%s',
+    //         $ip,
+    //         is_null($form_name) ? '' : stripslashes($form_name),
+    //         is_null($form_action) ? '' : stripslashes($form_action),
+    //     );
+    
+    //     //$response = wp_remote_request($url, $args);
+    //     $body_array = $this->makeRequestWithRetry($url, $args);
+    //     if(is_array( $body_array)){
+    //         return $body_array;
+    //     }
+    //     else{
+    //         $msg_error = $body_array;
+    //         $body_array = [];
+    //         $body_array['EdeaError']['DisplayErrorMessage'] = $msg_error;
+    //         return $body_array;
+    //     }
+
+    // }
+    // function makeRequestWithRetry($url, $args) {
+    //     $maxRetries = 1;
+    //     $retryInterval = 1000000; // 3 seconds
+    
+    //     $attempt = 1;
+
+    //     while ($attempt <= $maxRetries) {
+    //         $response = wp_remote_request($url, $args);
+    
+    //         // Check if the response indicates a timeout
+    //         if (is_wp_error( $response ) ) {
+    //             $body_array = $response->get_error_message();
+    //             usleep($retryInterval);
+    //             $attempt++;
+    //         } else {
+    //             $body_array = json_decode($response["body"], true);
+    //             $msg_error = $body_array['EdeaError']['ErrorMessage'];
+    //             if(!empty($msg_error) && $msg_error == 'General Error'){
+    //                 usleep($retryInterval);
+    //                 $attempt++;
+    //             }
+    //             else{
+    //                 return $body_array;
+    //             }
+    //         }
+    //     }
+    //     return $body_array;
+        
+    // }
+
 
     function check_user_by_mobile_phone($mobile_phone){
 
@@ -361,7 +431,7 @@ class CardPOS extends \PriorityAPI\API
             if(!username_exists($user_login)) {
                 $body_array = $this->check_user_by_mobile_phone($user_login); 
                 $error_code = $body_array["ErrorCode"];
-                if ($error_code == 0) {
+                if ($error_code === 0) {
                     $PosCustomersResult = $body_array["POSCustomersMembershipDetails"][0];
                    //if exist in priority check id and phone in login validation page 
                     if(!empty($PosCustomersResult)){
@@ -423,7 +493,7 @@ class CardPOS extends \PriorityAPI\API
         
                         $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                         $error_code = $body_array["ErrorCode"];
-                        if($error_code == 0){
+                        if($error_code === 0){
                             // on login, if user is club in priority check that he is club in the site
                             if(!empty($body_array["POSCustomerExtendedDetails"]["ClubsMemberships"])){
                                 if(get_user_meta( $user_id, 'is_club', true ) == 0){
@@ -504,18 +574,18 @@ class CardPOS extends \PriorityAPI\API
                 $result =  $this->check_user_by_mobile_phone($user_login);
                 //print_r($result); 
                 $error_code = $result["ErrorCode"];
-                if ($error_code == 0) {
+                if ($error_code === 0) {
                     $PosCustomersResult = $result["POSCustomersMembershipDetails"][0];
                     //if not exist in priority, create user
                     if(empty($PosCustomersResult)){
                         $result =  $this->check_user_by_phone($user_login);
                         $error_code = $result["ErrorCode"];
-                        if ($error_code == 0) {
+                        if ($error_code === 0) {
                             $PosCustomersResult = $result["POSCustomersMembershipDetails"][0];
                             if(empty($PosCustomersResult)){
                                 $result =  $this->check_user_by_id_num($account_id);
                                 $error_code = $result["ErrorCode"];
-                                if ($error_code == 0) {
+                                if ($error_code === 0) {
                                     $PosCustomersResult = $result["POSCustomersMembershipDetails"][0];
                                     if(empty($PosCustomersResult)){
                                         //echo 'current user:'.get_current_user_id();
@@ -573,7 +643,7 @@ class CardPOS extends \PriorityAPI\API
     
                                         $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                                         $error_code = $body_array["ErrorCode"];
-                                        if($error_code == 0){
+                                        if($error_code === 0){
                                             update_user_meta($user_id, 'priority_customer_number', $site_priority_customer_number, true);
                                             update_user_meta($user_id, 'has_to_edit_details', 0);
                                         }
@@ -637,7 +707,7 @@ class CardPOS extends \PriorityAPI\API
 
                                         $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                                         $error_code = $body_array["ErrorCode"];
-                                        if($error_code == 0){
+                                        if($error_code === 0){
                                         }
                                         else{
                                             $message = $body_array['EdeaError']['DisplayErrorMessage'];
@@ -680,7 +750,7 @@ class CardPOS extends \PriorityAPI\API
                             
                                             $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                                             $error_code = $body_array["ErrorCode"];
-                                            if($error_code == 0){
+                                            if($error_code === 0){
                                                 if(!empty($body_array["POSCustomerExtendedDetails"]["PointsPerPointsTypeDetails"])){
                                                     $points = $body_array["POSCustomerExtendedDetails"]["PointsPerPointsTypeDetails"][0]["TotalPoints"];
                                                     update_user_meta( $user_id, 'points_club', $points);
@@ -764,7 +834,7 @@ class CardPOS extends \PriorityAPI\API
 
                                 $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                                 $error_code = $body_array["ErrorCode"];
-                                if($error_code == 0){
+                                if($error_code === 0){
                                 }
                                 else{
                                     $message = $body_array['EdeaError']['DisplayErrorMessage'];
@@ -808,7 +878,7 @@ class CardPOS extends \PriorityAPI\API
                     
                                     $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                                     $error_code = $body_array["ErrorCode"];
-                                    if($error_code == 0){
+                                    if($error_code === 0){
                                         if(!empty($body_array["POSCustomerExtendedDetails"]["PointsPerPointsTypeDetails"])){
                                             $points = $body_array["POSCustomerExtendedDetails"]["PointsPerPointsTypeDetails"][0]["TotalPoints"];
                                             update_user_meta( $user_id, 'points_club', $points);
@@ -894,7 +964,7 @@ class CardPOS extends \PriorityAPI\API
 
                         $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                         $error_code = $body_array["ErrorCode"];
-                        if($error_code == 0){
+                        if($error_code === 0){
                         }
                         else{
                             $message = $body_array['EdeaError']['DisplayErrorMessage'];
@@ -939,7 +1009,7 @@ class CardPOS extends \PriorityAPI\API
             
                             $body_array = $this->makeRequestCardPos('POST', $form_name , $form_action, ['body' => json_encode($data)], true);
                             $error_code = $body_array["ErrorCode"];
-                            if($error_code == 0){
+                            if($error_code === 0){
                                 if(!empty($body_array["POSCustomerExtendedDetails"]["PointsPerPointsTypeDetails"])){
                                     $points = $body_array["POSCustomerExtendedDetails"]["PointsPerPointsTypeDetails"][0]["TotalPoints"];
                                     update_user_meta( $user_id, 'points_club', $points);
@@ -1024,7 +1094,7 @@ class CardPOS extends \PriorityAPI\API
                         "email" => $billing_email,
                         "phone" => $phone,
                         "birthday" => strtotime($birthdate),
-                        "lists" => [ $list_id => false ], //true or false depending on accept marketing checkbox
+                        //"lists" => [ $list_id => false ], //true or false depending on accept marketing checkbox
                      ];
                 }
                 $flashy->api->contacts->create($customer, 'email', false,true);
@@ -1628,7 +1698,7 @@ class CardPOS extends \PriorityAPI\API
     
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
             $response_data = $result['ItemStock'];
             $count = 0;
             $product_parent_ids = array();
@@ -1774,7 +1844,7 @@ class CardPOS extends \PriorityAPI\API
     
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
             write_custom_log('sync product inventory one year back response' );
             $response_data = $result['ItemStock'];
             $count = 0;
@@ -1910,7 +1980,7 @@ class CardPOS extends \PriorityAPI\API
     
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
             $response_data = $result['ItemPrice'];
             $count = 0;
             foreach($response_data as $item){
@@ -2006,7 +2076,7 @@ class CardPOS extends \PriorityAPI\API
             $data['ChunkNumber'] = $chunknumber;
             $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
             $error_code = $result["ErrorCode"];
-            if ($error_code == 0) {
+            if ($error_code === 0) {
                 $is_last_chunk = $result["IsLastChunk"];
                 $response_data = $result['ItemsSpecialPriceDetails'];
                 if(!empty($response_data)){
@@ -2142,7 +2212,7 @@ class CardPOS extends \PriorityAPI\API
             $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
             //write_custom_log('sync status order page'.$page_number.': '.json_encode($result) );
             $error_code = $result["ErrorCode"];
-            if ($error_code == 0) {
+            if ($error_code === 0) {
                 $is_last_page = $result["IsLastPage"];
                 $ordersStatus = $result["OrdersStatus"];
                 if(!empty($ordersStatus)){
@@ -2232,7 +2302,7 @@ class CardPOS extends \PriorityAPI\API
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
         $error_code = $result["ErrorCode"];
         $web_variation_sku = [];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
 
             $web_sku = $result['ItemCodes'];
             $product_web_ids = array();
@@ -2334,7 +2404,7 @@ class CardPOS extends \PriorityAPI\API
     
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => json_encode($data)], true); 
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
 
             $response_data = $result['ColorDetails'];
             foreach($response_data as $item){
@@ -2863,7 +2933,7 @@ class CardPOS extends \PriorityAPI\API
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
         // update transaction array in cart item to approve result to send it to close transaction after payment
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
             $result_order_items = $result["Transaction"]["OrderItems"];
             $first = 0;
             update_post_meta($order_id, 'response_transaction_update', $result);
@@ -2974,7 +3044,7 @@ class CardPOS extends \PriorityAPI\API
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
         // update transaction array in cart item to approve result to send it to close transaction after payment
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
             update_post_meta($order_id, 'response_transaction_approve', $result);
             $i = 0;
             
@@ -3139,7 +3209,7 @@ class CardPOS extends \PriorityAPI\API
                     $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
                     $error_code = $result["ErrorCode"];
                     update_post_meta($order_id, 'response_transaction_close', $result);
-                    if ($error_code == 0) {
+                    if ($error_code === 0) {
                         $ord_status = $result['EdeaError']['ErrorMessage']; //success
                         $ord_number = $result["TransactionNumber"];
                         $order->update_meta_data('priority_pos_cart_status', $ord_status);
@@ -3154,6 +3224,14 @@ class CardPOS extends \PriorityAPI\API
                             $message = $result['EdeaError']['ErrorMessage'];
                             $order->update_meta_data('priority_pos_cart_status', $message);
                             $order->save();
+                            $multiple_recipients = array(
+                                get_bloginfo('admin_email')
+    
+                            );
+                            $subj = 'Error sync order '.$order_id.' to priority';
+                            wp_mail( $multiple_recipients, $subj, $message );
+                            usleep(1000000);
+                            $this->temporary_transaction_for_repost($order_id);
                         }
 
                     }
@@ -3164,6 +3242,9 @@ class CardPOS extends \PriorityAPI\API
                     //order failed or canceled or not paid so cancel transaction
                 }
             }
+        }
+        else{
+            $this->temporary_transaction_for_repost($order_id);
         }
     }
 
@@ -3416,7 +3497,7 @@ class CardPOS extends \PriorityAPI\API
         $data = json_encode($data);
         $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
         $error_code = $result["ErrorCode"];
-        if ($error_code == 0) {
+        if ($error_code === 0) {
             //update_post_meta($order_id, 'response_transaction_update', $result);
 			echo 'update response';
 			echo "<pre>";
@@ -3446,7 +3527,7 @@ class CardPOS extends \PriorityAPI\API
             $data = json_encode($data);
             $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
             $error_code = $result["ErrorCode"];
-            if ($error_code == 0) {
+            if ($error_code === 0) {
                 update_post_meta($order_id, 'response_transaction_approve', $result);
                 $data = $result;
                 $gateway = $config->gateway ?? 'debug';
@@ -3547,7 +3628,7 @@ class CardPOS extends \PriorityAPI\API
                 $result = $this->makeRequestCardPos('POST', $form_name , $form_action,  ['body' => $data], true);
                 update_post_meta($order_id, 'response_transaction_close', $result);
                 $error_code = $result["ErrorCode"];
-                if ($error_code == 0) {
+                if ($error_code === 0) {
                     $ord_status = $result['EdeaError']['ErrorMessage']; //success
                     $ord_number = $result["TransactionNumber"];
                     $order->update_meta_data('priority_pos_cart_status', $ord_status);
