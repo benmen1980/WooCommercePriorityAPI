@@ -27,26 +27,31 @@ function create_product_variable($data)
     $product_id = wc_get_product_id_by_sku($data['sku']);
 
     if (!empty($data['sku']) && $product_id) {
-        $post_data['ID'] = $product_id;
-        $_product = wc_get_product( $product_id );
+        if($is_update_products == true){
+            $post_data['ID'] = $product_id;
+            $_product = wc_get_product( $product_id );
 
-        // check if the item flagged as show in web, if not skip the item
-        $show_in_web = $data['show_in_web'];
-        if ( isset( $show_in_web ) ) {
-            if ( $product_id == 0 &&  $show_in_web != 'Y' ) {
-                return $product_id;
+            // check if the item flagged as show in web, if not skip the item
+            $show_in_web = $data['show_in_web'];
+            if ( isset( $show_in_web ) ) {
+                if ( $product_id == 0 &&  $show_in_web != 'Y' ) {
+                    return $product_id;
+                }
+                if ( $product_id != 0 && $show_in_web != 'Y' ) {
+                    $_product->set_status( 'draft' );
+                    $_product->save();
+                    return $product_id;
+                }
             }
-            if ( $product_id != 0 && $show_in_web != 'Y' ) {
-                $_product->set_status( 'draft' );
-                $_product->save();
-                return $product_id;
-            }
+
+            // Update the product (post data)
+            $product_id = wp_update_post($post_data);
+            // $_product->set_status($this->option('item_status'));
+            // $_product->save();
         }
-
-        // Update the product (post data)
-        $product_id = wp_update_post($post_data);
-        // $_product->set_status($this->option('item_status'));
-        // $_product->save();
+        else{
+            return $product_id;
+        }
     } else {
         // Creating the product (post data)
         $product_id = wp_insert_post($post_data);
@@ -245,9 +250,15 @@ function create_product_variation($product_id, $variation_data)
     $variation_id = wc_get_product_id_by_sku($variation_data['sku']);
 
     if (!empty($variation_data['sku']) && $variation_id) {
-        $variation_post['ID'] = $variation_id;
-        // Update the product variation
-        $variation_id = wp_update_post($variation_post);
+        if($is_update_products == true){
+            $variation_post['ID'] = $variation_id;
+            // Update the product variation
+            $variation_id = wp_update_post($variation_post);
+        }
+        else{
+            do_action( 'simply_update_variation_price', $variation_data );
+            return;
+        }
     } else {
         // Creating the product variation
 	    if($variation_data['show_in_web'] != 'Y'){

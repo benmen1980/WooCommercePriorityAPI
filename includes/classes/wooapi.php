@@ -1974,11 +1974,13 @@ class WooAPI extends \PriorityAPI\API
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
         $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
+        $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
         $image_base_url = $config->image_base_url;
         $res = $this->option('sync_variations_priority_config');
         $res = str_replace(array('.', "\n", "\t", "\r"), '', $res);
         $config_v = json_decode(stripslashes($res));
         $show_in_web = (!empty($config_v->show_in_web) ? $config_v->show_in_web :  $show_in_web);
+        $is_update_products = !empty($config_v->is_update_products) ? $config_v->is_update_products : $is_update_products;
         $show_front = !empty($config_v->show_front) ? $config_v->show_front : null;
         $daysback = !empty((int)$config_v->days_back) ? $config_v->days_back : (!empty((int)$config->days_back) ? $config->days_back : 1);
         $stamp = mktime(0 - $daysback * 24, 0, 0);
@@ -2149,6 +2151,7 @@ class WooAPI extends \PriorityAPI\API
                             'tags' => $parent['tags'],
                             'status' => $this->option('item_status'),
                             'show_in_web' => $parent_data['show_in_web'] != '' ? $parent_data['show_in_web'] : $parent['show_in_web'],
+                            'is_update_products' => $is_update_products,
                             'shipping' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : ''
                         ));
 
@@ -2172,7 +2175,8 @@ class WooAPI extends \PriorityAPI\API
                                 'image_id' => (!empty($attach_id) && $attach_id != 0) ? $attach_id : '', // optional
                                 'image_file' => (!empty($file_name)) ? $file_name : '', // optional
                                 'show_front' => $children['show_front'],
-                                'show_in_web' => $children['show_in_web']
+                                'show_in_web' => $children['show_in_web'],
+                                'is_update_products' => $is_update_products,
                             );
                             // The function to be run
                             create_product_variation($id, $variation_data);
