@@ -4291,6 +4291,14 @@ class WooAPI extends \PriorityAPI\API
     public function syncOverTheCounterInvoice($order_id)
     {
         $order = new \WC_Order($order_id);
+
+        //check pament method user
+        $is_continue = 'true';
+        $is_continue = apply_filters('check_order_is_payment', $order);
+        if ($is_continue == 'false') {
+            return;
+        }
+        
         $user = $order->get_user();
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
