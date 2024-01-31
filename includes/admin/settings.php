@@ -186,6 +186,32 @@
 
             </tr>
 
+            <?php if($this->option('walkin_hide_price')){ ?>
+                <tr>
+                    <td colspan="2">
+                        <label> <?php _e('text for non registered user', 'p18a'); ?> </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="p18a-label">
+                        <label for="p18a-text-display-for-non-register"><?php _e('text to display', 'p18a'); ?></label>
+                    </td>
+                    <td>
+                        <input id="p18aw-text-display-for-non-register" type="text" name="text-display-for-non-register" form="p18aw-settings"
+                            size="5" value="<?php echo $this->option('text-display-for-non-register'); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="p18a-label">
+                        <label for="p18a-link-display-for-non-register"><?php _e('link (optional)', 'p18a'); ?></label>
+                    </td>
+                    <td>
+                        <input id="p18aw-link-display-for-non-register" type="text" name="link-display-for-non-register" form="p18aw-settings"
+                            size="5" value="<?php echo $this->option('link-display-for-non-register'); ?>">
+                    </td>
+                </tr>
+            <?php } ?>
 
             <tr>
                 <td colspan="2">

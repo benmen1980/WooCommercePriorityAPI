@@ -125,7 +125,10 @@ class WooAPI extends \PriorityAPI\API
 
     function bbloomer_print_login_to_see()
     {
-        echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'p18w') . '</a>';
+        // echo '<a href="' . get_permalink(wc_get_page_id('myaccount')) . '">' . __('Login to see prices', 'p18w') . '</a>';
+        $text_display = !empty($this->option('text-display-for-non-register')) ? $this->option('text-display-for-non-register') : __('Login to see prices', 'p18w');
+        $link_display = !empty($this->option('link-display-for-non-register'))? $this->option('link-display-for-non-register') : '#';
+        echo '<a href="' .  $link_display . '">' . $text_display . '</a>';
     }
 
     /**
@@ -534,6 +537,8 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('sell_by_pl', $this->post('sell_by_pl'));
                 $this->updateOption('product_family', $this->post('product_family'));
                 $this->updateOption('walkin_hide_price', $this->post('walkin_hide_price'));
+                $this->updateOption('text-display-for-non-register', $this->post('text-display-for-non-register'));
+                $this->updateOption('link-display-for-non-register', $this->post('link-display-for-non-register'));
                 $this->updateOption('sites', $this->post('sites'));
                 $this->updateOption('update_image', $this->post('update_image'));
                 $this->updateOption('mailing_list_field', $this->post('mailing_list_field'));
