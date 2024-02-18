@@ -3699,7 +3699,7 @@ class WooAPI extends \PriorityAPI\API
                 $data['ORDERITEMS_SUBFORM'][] = [
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),
                     'TQUANT' => (int)$item->get_quantity(),
-                    'VPRICE' => $discount_type == 'in_line' ? $line_before_discount / (int)$item->get_quantity() : 0.0,
+                    'VPRICE' => $discount_type == 'in_line' ? ($line_before_discount + $line_tax) / (int)$item->get_quantity() : 0.0,
                     'PERCENT' => $discount_type == 'in_line' ? $discount : 0.0,
                     'REMARK1' => isset($parameters['REMARK1']) ? $parameters['REMARK1'] : '',
                     'DUEDATE' => date('Y-m-d'),
