@@ -3376,6 +3376,7 @@ class WooAPI extends \PriorityAPI\API
         
         //check if WooCommerce Tax Settings are set
         $set_tax = get_option('woocommerce_calc_taxes');
+        
         // check response status
         if ($response['status']) {
 
@@ -3420,8 +3421,36 @@ class WooAPI extends \PriorityAPI\API
                             'price_list_currency' => $list['CODE'],
                             'price_list_price' => (wc_prices_include_tax() || $set_tax == 'no') ? $product['VATPRICE'] : (float)$product['PRICE'],
                             'price_list_quant' => $product['QUANT'],
+                            'price_list_percent' => $product['PERCENT'],
+                            'price_list_disprice' => wc_prices_include_tax() ? (float)$product['DVATPRICE'] : (float)$product['DPRICE'],
                             'blog_id' => $blog_id
                         ]);
+
+                           //update regular price for WooCommerce product from base price list
+                           if ($list['PLNAME'] == 'בסיס') {
+                            $sku =  $product['PARTNAME'];
+                            $items = get_posts(array(
+                                        'post_type'      => 'product',
+                                        'post_status'    => 'publish',
+                                        'meta_query' => array(
+                                            array(
+                                                'key' => '_sku',
+                                                'value' => $sku
+                                            )
+                                        )
+                                    ));
+                            if($items){
+                                foreach ($items as $item) {
+                                    $item_id = $item->ID;
+                                    $my_product = new \WC_Product( $item_id );                              
+                                    $price = (wc_prices_include_tax() == true || $set_tax == 'no') ? (float)$product['VATPRICE'] : (float)$product['PRICE'];                                   
+                                    $my_product->set_regular_price( $price );
+                                    $my_product->set_price( $price );
+                                    $my_product->save();
+
+                                }
+                            }
+                        }
 
                     }
 
