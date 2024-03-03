@@ -1221,6 +1221,9 @@ class WooAPI extends \PriorityAPI\API
             $response_data = json_decode($response['body_raw'], true);
             try {
 	            foreach ( $response_data['value'] as $item ) {
+                    //if you want customized syncItemsPriority, activate the function
+                    $item = apply_filters('simply_syncItemsPriorityAdapt', $item);
+
 		            if ( defined( 'WP_DEBUG' ) && true === WP_DEBUG ) {
 			            error_log($item['PARTNAME']);
 		            }
@@ -1606,6 +1609,8 @@ class WooAPI extends \PriorityAPI\API
 
 
 	            }
+                //activate the action if you have a syncItemsPriority match
+                do_action('syncItemsPriorityAdapt');
             } catch (Exception $e) {
 		    // Exception handling code
 		    echo "Exception caught: " . $e->getMessage();
