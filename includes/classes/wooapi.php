@@ -3056,15 +3056,17 @@ class WooAPI extends \PriorityAPI\API
                 break;
             // pelecard
             case 'pelecard';
-                $order_cc_meta = $order->get_meta('_transaction_data');
-                $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
-                // data
-                $payaccount = $order_cc_meta['CreditCardNumber'];
-                $ccuid = $order_cc_meta['Token'];
-                $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
-                $confnum = $order_cc_meta['ConfirmationKey'];
-                $numpay = 1;
-                $firstpay = 0.0;
+                if ($order->get_payment_method_title() !== 'PayPal') {
+                    $order_cc_meta = $order->get_meta('_transaction_data');
+                    $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
+                    // data
+                    $payaccount = $order_cc_meta['CreditCardNumber'];
+                    $ccuid = $order_cc_meta['Token'];
+                    $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
+                    $confnum = $order_cc_meta['ConfirmationKey'];
+                    $numpay = 1;
+                    $firstpay = 0.0;
+                }
                 break;
             // credit guard
             case 'creditguard';
@@ -3177,7 +3179,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
         //paypel
-        if ($order->get_payment_method() == 'paypal') {
+        if ($order->get_payment_method() == 'paypal' || $order->get_payment_method_title() == 'PayPal') {
             $data = [
                 'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
                 'QPRICE' => floatval($order->get_total())
