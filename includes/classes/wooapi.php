@@ -2715,7 +2715,8 @@ class WooAPI extends \PriorityAPI\API
             
             $request = [
                 'CUSTNAME' => $priority_customer_number,
-                'CUSTDES' => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $custdes,
+                // 'CUSTDES' => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $custdes,
+                'CUSTDES' => !empty($custdes) ? $custdes : $meta['nickname'][0],
                 'EMAIL' => $user->data->user_email,
                 'ADDRESS' => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
                 'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
@@ -3232,9 +3233,12 @@ class WooAPI extends \PriorityAPI\API
             // I want to post to priority and get the number from the template
             //  return ;
         }
+
+        $custdes = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        $custdes = apply_filters('simply_syncProspect_custdes', $custdes, $order );
         $json_request = [
             'CUSTNAME' => $priority_customer_number,
-            'CUSTDES' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'CUSTDES' => $custdes,
             'EMAIL' => $order->get_billing_email(),
             'ADDRESS' => $order->get_billing_address_1(),
             'ADDRESS2' => $order->get_billing_address_2(),
