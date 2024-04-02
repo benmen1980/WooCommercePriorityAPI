@@ -5090,7 +5090,7 @@ class WooAPI extends \PriorityAPI\API
                     continue;
                 }
                 $password = $user[$password_field] ?? '123456';
-                $first_name = $user[$first_name];
+                $name = $user[$first_name];
                 $billing_company = $user[$billing_company];
                 $user_obj = get_user_by('login', $username);
                 $data = [
@@ -5098,7 +5098,7 @@ class WooAPI extends \PriorityAPI\API
                     'user_login' => $username,
                     'user_pass' => $password,
                     'email' => $email,
-                    'first_name' => $first_name,
+                    'first_name' => $name,
                     //'last_name'  => 'Doe',
                     'user_nickname' => $user['CUSTDES'],
                     'display_name' => $user['CUSTDES'],
@@ -5138,7 +5138,7 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'billing_phone', $user['PHONE']);
                 update_user_meta($user_id, 'billing_postcode', $user['ZIP']);
 	            update_user_meta($user_id, 'customer_paydes', $user['PAYDES']);
-                update_user_meta($user_id, 'first_name', $first_name);
+                update_user_meta($user_id, 'first_name', $name);
                 update_user_meta($user_id, 'billing_company', $billing_company);
 
 
