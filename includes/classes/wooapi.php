@@ -3057,7 +3057,7 @@ class WooAPI extends \PriorityAPI\API
                 break;
             // pelecard
             case 'pelecard';
-                if ($order->get_payment_method_title() !== 'PayPal') {
+            if ($order->get_payment_method_title() !== 'PayPal' && $order->get_payment_method_title() !== 'שובר BUYME -  GiftZone') {
                     $order_cc_meta = $order->get_meta('_transaction_data');
                     $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
                     // data
@@ -3180,7 +3180,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
         //paypel
-        if ($order->get_payment_method() == 'paypal' || $order->get_payment_method_title() == 'PayPal') {
+        if ($order->get_payment_method() == 'paypal' || $order->get_payment_method_title() == 'PayPal' || $order->get_payment_method_title() == 'שובר BUYME -  GiftZone') {
             $data = [
                 'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
                 'QPRICE' => floatval($order->get_total())
