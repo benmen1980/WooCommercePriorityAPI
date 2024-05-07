@@ -27,7 +27,7 @@ class ProductPriceList extends \WP_List_Table
 
         // get all products assigned to price list
         $products = $GLOBALS['wpdb']->get_results('
-            SELECT product_sku, price_list_currency, price_list_price,price_list_quant
+            SELECT product_sku, price_list_currency, price_list_price,price_list_disprice,price_list_quant
             FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
             WHERE price_list_code = "' . urldecode($_GET['pricelist']) . '"
             AND blog_id = ' . get_current_blog_id(),
@@ -67,6 +67,7 @@ class ProductPriceList extends \WP_List_Table
                 $this->priceListData[$id] = [
                     'currency' => $product['price_list_currency'],
                     'price' => $product['price_list_price'],
+                    'price_discount' => $product['price_list_disprice'],
                     'sku' => $product['product_sku'],
                     'quant' => $product['price_list_quant'],
                 ];
@@ -114,6 +115,7 @@ class ProductPriceList extends \WP_List_Table
             'name' => __('Product name', 'p18a'),
             'sku' => __('SKU', 'p18a'),
             'price' => __('Price', 'p18a'),
+            'price_discount' => __('Price after discount', 'p18a'),
             'quant' => __('Quant', 'p18a'),
             'currency' => __('Currency', 'p18a'),
         ];
@@ -140,6 +142,7 @@ class ProductPriceList extends \WP_List_Table
                 break;
             case 'sku':
             case 'price':
+            case 'price_discount':
             case 'currency':
             case  'quant':
 

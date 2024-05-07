@@ -48,27 +48,29 @@ function modify_cart_item_price( $cart ) {
 		$new_price = $product->get_regular_price();
 		$id        = get_current_user_id();
 		if ( ! empty( get_user_meta( $id, 'custpricelists', true ) ) ) {
-			$price_list = get_user_meta( $id, 'custpricelists', true );
+			$price_lists = get_user_meta( $id, 'custpricelists', true );
 		} else {
 			$locale        = get_locale();
-			$price_list[0] = [ 'PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base' ];
+			$price_lists[0] = [ 'PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base' ];
 		};
 
-		if ( ! empty( $price_list ) ) {
-			$price_list = $price_list[0]["PLNAME"];
-			$sql        = '
-                    SELECT  *
-                    FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-                    WHERE product_sku = \'' . $product->get_sku() . '\' and price_list_code=\'' . $price_list . '\' 
-                    ORDER BY price_list_quant ASC';
-			$data       = $GLOBALS['wpdb']->get_results( $sql,
-				ARRAY_A
-			);
-			foreach ( $data as $item ) {
-				if ( $quantity >= $item['price_list_quant'] ) {
-					$new_price = (float)$item['price_list_price'];
-				}
-			}
+		if ( ! empty( $price_lists ) ) {
+            foreach ($price_lists as $price_list) {
+                $price_list = $price_list["PLNAME"];
+                $sql        = '
+                        SELECT  *
+                        FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
+                        WHERE product_sku = \'' . $product->get_sku() . '\' and price_list_code=\'' . $price_list . '\' 
+                        ORDER BY price_list_quant ASC';
+                $data       = $GLOBALS['wpdb']->get_results( $sql,
+                    ARRAY_A
+                );
+                foreach ( $data as $item ) {
+                    if ( $quantity >= $item['price_list_quant'] ) {
+                        $new_price = (float)$item['price_list_disprice'];
+                    }
+                }
+            }
 		}
 
 // Set the new price for the cart item
@@ -110,7 +112,7 @@ function simply_modify_product_price( $passed, $product_id, $quantity, $variatio
 	        );
             foreach ($data as $item){
                 if($quantity >= $item['price_list_quant']){
-                    $new_price = $item['price_list_price'];
+                    $new_price = $item['price_list_disprice'];
                 }
             }
         }
@@ -126,56 +128,68 @@ function simply_pricelist_qty_table()
     $price = $product->get_regular_price();
     $id = get_current_user_id();
     if(!empty(get_user_meta($id, 'custpricelists', true))){
-	    $price_list =   get_user_meta($id, 'custpricelists', true);
-        }else{
+	    $price_lists =   get_user_meta($id, 'custpricelists', true);
+    } else{
 	    $locale = get_locale();
-        $price_list[0] = ['PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base'];
-            };
+        $price_lists[0] = ['PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base'];
+    };
 
-    if (!empty($price_list)) {
-        $price_list = $price_list[0]["PLNAME"];
-        $sql = '
-            SELECT  *
-            FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
-            WHERE product_sku = \'' . $product->get_sku() . '\' and price_list_code=\'' . $price_list . '\' 
-            ORDER BY price_list_quant ASC';
-        $data = $GLOBALS['wpdb']->get_results($sql,
-            ARRAY_A
-        );
-        if ($data && (count($data) > 1 || (count($data) == 1 && $data[0]['price_list_quant'] > 1))) {
-            // $product->set_regular_price($data[0]['price_list_price'])
-            ?>
-            <input type="hidden" name="price_regular" id="price_regular" value="<?= $price ?>">
-            <table style="width:100%" class="simply-tire-price-grid">
-                <thead>
-                <tr class="price_list_tr">
-                    <th class="price_list_td"><?php _e('Quantity','woocommerce');?></th>
-                    <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
-                </tr>
-                </thead>
-                <tbody id="simply-tire-price-grid-rows">
+    if (!empty($price_lists)) {
+        foreach ($price_lists as $price_list) {
+            $price_list = $price_list["PLNAME"];
+            $sql = '
+                SELECT  *
+                FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
+                WHERE product_sku = \'' . $product->get_sku() . '\' and price_list_code=\'' . $price_list . '\' 
+                ORDER BY price_list_quant ASC';
+            $data = $GLOBALS['wpdb']->get_results($sql,
+                ARRAY_A
+            );
+            if ($data && (count($data) > 1 || (count($data) == 1 && $data[0]['price_list_quant'] >= 1))) {
+                // $product->set_regular_price($data[0]['price_list_price'])
+                ?>
+                <input type="hidden" name="price_regular" id="price_regular" value="<?= $price ?>">
+                
+                <?php       
+                if (has_filter('change_design_pricelist_qty_table') ) {
+                    $data = apply_filters('change_design_pricelist_qty_table', $data);
+                } else {
+                ?> 
+                    <table style="width:100%" class="simply-tire-price-grid">
+                        <thead>
+                        <tr class="price_list_tr">
+                            <th class="price_list_td"><?php _e('Quantity','woocommerce');?></th>
+                            <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
+                        </tr>
+                        </thead>
+                        <tbody id="simply-tire-price-grid-rows">
+                        <?php
+                        foreach ($data as $item) {
+                            $price = $item["price_list_disprice"];
+                            $float_price = $item["price_list_price"];
+                            $quantity = $item["price_list_quant"];
+                            $arr = apply_filters('simply_tire_pricing_filter_price_and_quantity', ['price'=>$price,'quantity' => $quantity]);
+                            $price = $arr['price'];
+                            $quantity = $arr['quantity'];
+                            ?>
+                            <tr class="price_list_tr">
+                                <td class="simply-tire-quantity"><?= $quantity ?></td>
+                                <td class="simply-tire-price"><span class="simply-tire-price-number"> <?= $price ?></span><span hidden class="simply-tire-price-float"><?= $float_price ?></span></td>
+                            </tr>
+                        <?php
+                        }
+                        ?>
+                        </tbody>
+                    </table>
                 <?php
-                foreach ($data as $item) {
-                    $price = $item["price_list_price"];
-                    $float_price = $price;
-                    $quantity = $item["price_list_quant"];
-	                $arr = apply_filters('simply_tire_pricing_filter_price_and_quantity', ['price'=>$price,'quantity' => $quantity]);
-                    $price = $arr['price'];
-                    $quantity = $arr['quantity'];
-                    ?>
-                    <tr class="price_list_tr">
-                        <td class="simply-tire-quantity"><?= $quantity ?></td>
-                        <td class="simply-tire-price"><span> <?= $price ?></span><span hidden><?= $float_price ?></span></td>
-
-                    </tr>
-                    <?php
                 }
-                ?></tbody>
-            </table>
-            <?php
-
+                break;
+            }
+        
         }
     }
+
+
 }
 
 ?>
