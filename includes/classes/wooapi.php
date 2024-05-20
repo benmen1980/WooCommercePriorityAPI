@@ -694,9 +694,22 @@ class WooAPI extends \PriorityAPI\API
             }
 
         });
+        // check the version of woocommerce plugin
+        $plugin_folder = get_plugins( '/woocommerce' );
+        if ( isset( $plugin_folder[ 'woocommerce.php' ]['Version'] ) ) {
+                $woocommerce_version = $plugin_folder[ 'woocommerce.php' ]['Version'];
+        };
+        if ($woocommerce_version >= '8.8.3') {
+            $wc_orders_columns_hook = 'manage_woocommerce_page_wc-orders_columns';
+            $wc_orders_custom_column_hook = 'manage_woocommerce_page_wc-orders_custom_column';
+        };
+        if ($woocommerce_version < '8.8.3') {
+            $wc_orders_columns_hook = 'manage_edit-shop_order_columns';
+            $wc_orders_custom_column_hook = 'manage_shop_order_posts_custom_column';
+        };
         //  add Priority order status to orders page
         // ADDING A CUSTOM COLUMN TITLE TO ADMIN ORDER LIST
-        add_filter('manage_edit-shop_order_columns',
+        add_filter($wc_orders_columns_hook,
             function ($columns) {
                 // Set "Actions" column after the new colum
                 $action_column = $columns['order_actions']; // Set the title in a variable
@@ -744,7 +757,7 @@ class WooAPI extends \PriorityAPI\API
             }, 999);
 
         // ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
-        add_action('manage_shop_order_posts_custom_column',
+        add_action($wc_orders_custom_column_hook,
             function ($column, $post_id) {
 
                 // HERE get the data from your custom field (set the correct meta key below)
