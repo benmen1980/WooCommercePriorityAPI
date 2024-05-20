@@ -761,7 +761,7 @@ class WooAPI extends \PriorityAPI\API
             function ($column, $post_id) {
 
                 if (is_object($post_id)) {
-                    $post_id = $post_id->ID; 
+                    $post_id = $post_id>get_id();  
                 }  
                 // HERE get the data from your custom field (set the correct meta key below)
                 if ($this->option('post_order_checkout')) {
