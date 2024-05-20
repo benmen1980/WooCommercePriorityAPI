@@ -760,6 +760,9 @@ class WooAPI extends \PriorityAPI\API
         add_action($wc_orders_custom_column_hook,
             function ($column, $post_id) {
 
+                if (is_object($post_id)) {
+                    $post_id = $post_id->ID; 
+                }  
                 // HERE get the data from your custom field (set the correct meta key below)
                 if ($this->option('post_order_checkout')) {
                     $order_status = get_post_meta($post_id, 'priority_order_status', true);
