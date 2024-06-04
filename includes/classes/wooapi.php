@@ -3073,7 +3073,7 @@ class WooAPI extends \PriorityAPI\API
                 break;
             // pelecard
             case 'pelecard';
-            if ($order->get_payment_method_title() !== 'PayPal' && $order->get_payment_method_title() !== 'שובר BUYME -  GiftZone') {
+                if ($order->get_payment_method_title() !== 'PayPal' && $order->get_payment_method_title() !== 'BUYME') {
                     $order_cc_meta = $order->get_meta('_transaction_data');
                     $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
                     // data
@@ -3196,7 +3196,7 @@ class WooAPI extends \PriorityAPI\API
         }
 
         //paypel
-        if ($order->get_payment_method() == 'paypal' || $order->get_payment_method_title() == 'PayPal' || $order->get_payment_method_title() == 'שובר BUYME -  GiftZone') {
+        if ($order->get_payment_method() == 'paypal' || $order->get_payment_method_title() == 'PayPal' || $order->get_payment_method_title() == 'BUYME') {
             $data = [
                 'PAYMENTCODE' => !empty($card_type) ? $card_type : $paymentcode,
                 'QPRICE' => floatval($order->get_total())
@@ -5107,7 +5107,7 @@ class WooAPI extends \PriorityAPI\API
                 }
                 $password = $user[$password_field] ?? '123456';
                 $name = $user[$first_name];
-                $billing_company = $user[$billing_company];
+                $company = $user[$billing_company];
                 $user_obj = get_user_by('login', $username);
                 $data = [
                     'ID' => isset($user_obj->ID) ? $user_obj->ID : null,
@@ -5118,7 +5118,7 @@ class WooAPI extends \PriorityAPI\API
                     //'last_name'  => 'Doe',
                     'user_nickname' => $user['CUSTDES'],
                     'display_name' => $user['CUSTDES'],
-                    'billing_company' => $billing_company,
+                    'billing_company' => $company,
                     'role' => 'customer'
                 ];
                 if (!isset($user_obj->ID)) {
@@ -5155,7 +5155,7 @@ class WooAPI extends \PriorityAPI\API
                 update_user_meta($user_id, 'billing_postcode', $user['ZIP']);
 	            update_user_meta($user_id, 'customer_paydes', $user['PAYDES']);
                 update_user_meta($user_id, 'first_name', $name);
-                update_user_meta($user_id, 'billing_company', $billing_company);
+                update_user_meta($user_id, 'billing_company', $company);
 
 
                 // $customer = new \WC_Customer($user_id);
