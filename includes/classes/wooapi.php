@@ -5456,19 +5456,27 @@ class WooAPI extends \PriorityAPI\API
             $blog_id = get_current_blog_id();
             // price lists table
             $table = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family';
+            $table_temp = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family_temp';
             // delete all existing data from price list table
-            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            // $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
             // decode raw response
             $data = json_decode($response['body_raw'], true);
             if (isset($data['value'])) {
                 foreach ($data['value'] as $list) {
-                    $GLOBALS['wpdb']->insert($table, [
+                    $GLOBALS['wpdb']->insert($table_temp, [
                         'familyname' => $list['FAMILYNAME'],
                         'custname' => $list['CUSTNAME'],
                         'discounts' => (float)$list['PERCENT'],
                         'blog_id' => $blog_id
                     ]);
                 }
+
+                // truncate SpecialPriceProductFamily
+                $GLOBALS['wpdb']->query('TRUNCATE TABLE ' . $table);
+
+                $sql = " INSERT INTO $table
+                        SELECT * FROM $table_temp ";
+                $GLOBALS['wpdb']->query($sql);
 
             }
         } else {
