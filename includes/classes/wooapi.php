@@ -5483,7 +5483,7 @@ class WooAPI extends \PriorityAPI\API
             $priceList = [];
             if (isset($data['value'])) {
                 foreach ($data['value'] as $list) {
-                    $GLOBALS['wpdb']->insert($table, [
+                    $GLOBALS['wpdb']->insert($table_temp, [
                         'partname' => $list['PARTNAME'],
                         'custname' => $list['CUSTNAME'],
                         'price' => (float)$list['PRICE'],
