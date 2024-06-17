@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 2.6.2
+ * Version: 2.6.3
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -98,20 +98,7 @@ register_activation_hook(P18AW_SELF, function () {
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
     dbDelta($sql);
-
-    /* open temp table - special price product family */
-    $table_temp = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family_temp';
-    $sql = "CREATE TEMPORARY TABLE $table_temp (
-        id  INT AUTO_INCREMENT,
-        blog_id INT,
-        custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-        familyname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-        discounts DECIMAL(6,3),
-        PRIMARY KEY  (id)
-    )";
-    $GLOBALS['wpdb']->query($sql);
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    
+ 
     /* special price item customer */
     $table = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer';
     $sql = "CREATE TABLE $table (

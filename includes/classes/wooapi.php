@@ -3412,9 +3412,32 @@ class WooAPI extends \PriorityAPI\API
 
             // price lists table
             $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
+            $table_temp = $GLOBALS['wpdb']->prefix . 'p18a_pricelists_temp';
+            /* open temp table - price lists */
+            $sql = "CREATE TEMPORARY TABLE $table_temp (
+                id  INT AUTO_INCREMENT,
+                blog_id INT,
+                product_sku VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                price_list_code VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                price_list_name VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                price_list_currency VARCHAR(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, 
+                price_list_price DECIMAL(12,2), 
+                price_list_disprice DECIMAL(12,2),
+                price_list_percent DECIMAL(12,2),
+                price_list_quant INT,
+                PRIMARY KEY  (id)
+            )";
 
-            // delete all existing data from price list table
-            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            $create_result = $GLOBALS['wpdb']->query($sql);
+
+            // Check if the table was created successfully
+            if ($create_result === false) {
+                $GLOBALS['wpdb']->print_error();
+                exit;
+            }
+
+            // delete all existing data from price list table temp
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table_temp);
 
             // decode raw response
             $data = json_decode($response['body_raw'], true);
@@ -3438,10 +3461,10 @@ class WooAPI extends \PriorityAPI\API
                     foreach ($list['PARTPRICE2_SUBFORM'] as $product) {
 
                         if($product['PARTNAME'] =='1240-TX-240'){
-                        $foo = $product['PARTNAME'];
+                            $foo = $product['PARTNAME'];
                         }
 
-                       $res =  $GLOBALS['wpdb']->insert($table, [
+                        $res =  $GLOBALS['wpdb']->insert($table_temp, [
                             'product_sku' => $product['PARTNAME'],
                             'price_list_code' => $list['PLNAME'],
                             'price_list_name' => $list['PLDES'],
@@ -3453,8 +3476,9 @@ class WooAPI extends \PriorityAPI\API
                             'blog_id' => $blog_id
                         ]);
 
-                           //update regular price for WooCommerce product from base price list
-                           if ($list['PLNAME'] == 'בסיס') {
+
+                        //update regular price for WooCommerce product from base price list
+                        if ($list['PLNAME'] == 'בסיס') {
                             $sku =  $product['PARTNAME'];
                             $items = get_posts(array(
                                         'post_type'      => 'product',
@@ -3482,6 +3506,19 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                 }
+
+                // truncate pricelists table
+                global $wpdb;
+                $wpdb->query('TRUNCATE TABLE ' . $table);
+
+                $sql = "INSERT INTO $table
+                        SELECT * FROM $table_temp ";
+
+                $result = $wpdb->query($sql);
+
+                if ($result === false) {
+                    $wpdb->print_error(); 
+                } 
 
                 // add timestamp
                 $this->updateOption('pricelist_priority_update', time());
@@ -4771,8 +4808,8 @@ class WooAPI extends \PriorityAPI\API
         // get price list
         $plists = get_user_meta($user->ID, 'custpricelists', true);
         if (empty($plists)) {
-            set_transient($transient, $price, 300);
-            return $price;
+            set_transient($transient, (float)$price * $family_discount, 300);
+            return (float)$price * $family_discount;
         }
         foreach ($plists as $plist) {
             $data = $GLOBALS['wpdb']->get_row('
@@ -5421,8 +5458,26 @@ class WooAPI extends \PriorityAPI\API
             $blog_id = get_current_blog_id();
             // price lists table
             $table = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer';
-            // delete all existing data from price list table
-            $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            $table_temp = $GLOBALS['wpdb']->prefix . 'p18a_special_price_item_customer_temp';
+            /* open temp table - special price item customer */
+            $sql = "CREATE TEMPORARY TABLE $table_temp (
+                id  INT AUTO_INCREMENT,
+                blog_id INT,
+                custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                partname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                price DECIMAL(6,3),
+                PRIMARY KEY  (id)
+            )";
+
+            $create_result = $GLOBALS['wpdb']->query($sql);
+
+            // Check if the table was created successfully
+            if ($create_result === false) {
+                $GLOBALS['wpdb']->print_error();
+                exit;
+            }
+            // delete all existing data from pecial price item customer table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table_temp);
             // decode raw response
             $data = json_decode($response['body_raw'], true);
             $priceList = [];
@@ -5437,6 +5492,19 @@ class WooAPI extends \PriorityAPI\API
                 }
                 // add timestamp
                 // $this->updateOption('pricelist_priority_update', time());
+
+                // truncate SpecialPriceItemCustomer
+                global $wpdb;
+                $wpdb->query('TRUNCATE TABLE ' . $table);
+
+                $sql = "INSERT INTO $table 
+                        SELECT * FROM $table_temp";
+
+                $result = $wpdb->query($sql);
+
+                if ($result === false) {
+                    $wpdb->print_error(); 
+                } 
             }
         } else {
             $this->sendEmailError(
@@ -5457,8 +5525,24 @@ class WooAPI extends \PriorityAPI\API
             // price lists table
             $table = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family';
             $table_temp = $GLOBALS['wpdb']->prefix . 'p18a_sync_special_price_product_family_temp';
-            // delete all existing data from price list table
-            // $GLOBALS['wpdb']->query('DELETE FROM ' . $table);
+            /* open temp table - special price product family */
+            $sql = "CREATE TEMPORARY TABLE $table_temp (
+                id  INT AUTO_INCREMENT,
+                blog_id INT,
+                custname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                familyname VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                discounts DECIMAL(6,3),
+                PRIMARY KEY  (id)
+            )";
+            $create_result = $GLOBALS['wpdb']->query($sql);
+
+            // Check if the table was created successfully
+            if ($create_result === false) {
+                $GLOBALS['wpdb']->print_error();
+                exit;
+            }
+            // delete all existing data from Special Price Product Family table
+            $GLOBALS['wpdb']->query('DELETE FROM ' . $table_temp);
             // decode raw response
             $data = json_decode($response['body_raw'], true);
             if (isset($data['value'])) {
@@ -5472,12 +5556,17 @@ class WooAPI extends \PriorityAPI\API
                 }
 
                 // truncate SpecialPriceProductFamily
-                $GLOBALS['wpdb']->query('TRUNCATE TABLE ' . $table);
+                global $wpdb;
+                $wpdb->query('TRUNCATE TABLE ' . $table);
 
-                $sql = " INSERT INTO $table
-                        SELECT * FROM $table_temp ";
-                $GLOBALS['wpdb']->query($sql);
+                $sql = "INSERT INTO $table (id, blog_id, custname, familyname, discounts)
+                        SELECT id, blog_id, custname, familyname, discounts FROM $table_temp";
 
+                $result = $wpdb->query($sql);
+
+                if ($result === false) {
+                    $wpdb->print_error(); 
+                }
             }
         } else {
             $this->sendEmailError(
