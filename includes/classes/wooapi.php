@@ -695,7 +695,7 @@ class WooAPI extends \PriorityAPI\API
 
         });
         // check the version of woocommerce plugin
-        $plugin_folder = get_plugins( '/woocommerce' );
+        /*$plugin_folder = get_plugins( '/woocommerce' );
         if ( isset( $plugin_folder[ 'woocommerce.php' ]['Version'] ) ) {
                 $woocommerce_version = $plugin_folder[ 'woocommerce.php' ]['Version'];
         };
@@ -706,10 +706,10 @@ class WooAPI extends \PriorityAPI\API
         if ($woocommerce_version < '8.8.3') {
             $wc_orders_columns_hook = 'manage_edit-shop_order_columns';
             $wc_orders_custom_column_hook = 'manage_shop_order_posts_custom_column';
-        };
+        };*/
         //  add Priority order status to orders page
         // ADDING A CUSTOM COLUMN TITLE TO ADMIN ORDER LIST
-        add_filter($wc_orders_columns_hook,
+        add_filter('manage_edit-shop_order_columns',
             function ($columns) {
                 // Set "Actions" column after the new colum
                 $action_column = $columns['order_actions']; // Set the title in a variable
@@ -757,7 +757,7 @@ class WooAPI extends \PriorityAPI\API
             }, 999);
 
         // ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
-        add_action($wc_orders_custom_column_hook,
+        add_action('manage_shop_order_posts_custom_column',
             function ($column, $post_id) {
 
                 if (is_object($post_id)) {
@@ -2708,6 +2708,13 @@ class WooAPI extends \PriorityAPI\API
                 $priority_cust_from_wc = $custname;
             }
             if (!empty($priority_cust_from_wc)) {
+                $custname = apply_filters('simply_search_customer_in_priority', ['user_id' => $id, 'order' => $order])['CUSTNAME'];
+                if (!empty($custname)) {
+                    update_user_meta($id, 'priority_customer_number', $custname);
+                    $body = ['CUSTNAME' => $custname];
+                    $response['body'] = json_encode($body);
+                    return $response;
+                }
                 $priority_customer_number = $priority_cust_from_wc;
             } else {
                 $priority_customer_number = 'WEB-' . (string)$user->data->ID;
