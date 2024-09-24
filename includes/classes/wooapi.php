@@ -1367,6 +1367,12 @@ class WooAPI extends \PriorityAPI\API
 				            );
 			            }
 		            } else {
+                        //add action to prevent sync new products
+                        $is_to_sync = true;
+                        $is_to_sync = apply_filters('simply_sync_new_products',$item);
+                        if($is_to_sync == false){
+                            continue;
+                        }
 			            // Insert product
 			            $id = wp_insert_post( $data );
 			            if ( $id ) {
