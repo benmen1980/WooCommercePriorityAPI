@@ -1230,13 +1230,14 @@ class WooAPI extends \PriorityAPI\API
 		    'LOGPART?$select=' . $data['select'] . '&$filter=' . $date_filter . ' and ' . $variation_field . ' eq \'\' and ISMPART ne \'Y\' ' . $url_addition_config .
 		    '&' . $data['expand'] . '', [],
 		    $this->option( 'log_items_priority', true ) );
-         }
+        }
         // check response status
-
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
+            $skus = [];
             try {
 	            foreach ( $response_data['value'] as $item ) {
+                    $skus[] = $item[$search_field];
                     //if you want customized syncItemsPriority, activate the function
                     $item = apply_filters('simply_syncItemsPriorityAdapt', $item);
 
@@ -1332,6 +1333,7 @@ class WooAPI extends \PriorityAPI\API
 		            }
 		            // update product
 		            if ( $product_id != 0 ) {
+                        
 			            $data['ID'] = $product_id;
 			            $_product->set_status($this->option('item_status'));
 			            $_product->save();
@@ -1639,6 +1641,7 @@ class WooAPI extends \PriorityAPI\API
 	         }
             // add timestamp
             $this->updateOption('items_priority_update', time());
+            $this->syncInventoryPriorityBySku($skus);
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_items_priority'),
@@ -1646,6 +1649,7 @@ class WooAPI extends \PriorityAPI\API
                 $response['body']
             );
         }
+        
 
         return $response;
     }
@@ -2629,6 +2633,147 @@ class WooAPI extends \PriorityAPI\API
             );
         }
     }
+
+
+    /**
+     * sync inventory from priority by sku arrays
+     */
+    public
+    function syncInventoryPriorityBySku($skus)
+    {
+        // get the items by sku
+        $conditions = [];
+
+        // Loop through each SKU in the array
+        foreach ($skus as $sku) {
+            // Append each condition for PARTNAME eq 'sku'
+            $conditions[] = "PARTNAME eq '{$sku}'";
+        }
+        $url_addition = '(' . implode(' OR ', $conditions) . ')';
+        //$url_addition = '('. 'PARTNAME eq \''.$sku . '\')';
+        $url_addition = apply_filters('simply_syncInventoryPriority_by_sku_filter_addition', $url_addition);
+
+        $option_filed = explode(',', $this->option('sync_inventory_warhsname'))[2];
+        $data['select'] = (!empty($option_filed) ? $option_filed . ',PARTNAME' : 'PARTNAME');
+
+        $wh_name = explode(',', $this->option('sync_inventory_warhsname'))[0];
+        $status = explode(',', $this->option('sync_inventory_warhsname'))[4];
+        if (!empty($wh_name)) {
+            if (!empty($status)) {
+                $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'' . $wh_name . '\' and CUSTNAME eq \'' . $status . '\')';
+
+            } else {
+                $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=WARHSNAME eq \'' . $wh_name . '\')';
+            }
+        } else if (!empty($status)) {
+            $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM($filter=CUSTNAME eq \'' . $status . '\')';
+        } else {
+            $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
+        }
+        $data['expand'] = $expand;
+	    $data = apply_filters('simply_syncInventoryPriorityBySku_data', $data);
+        $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$url_addition.' and INVFLAG eq \'Y\' &' . $data['expand'], [], $this->option('log_items_priority', false));
+        // check response status        // check response status
+        if ($response['status']) {
+            $data = json_decode($response['body_raw'], true);
+            foreach ($data['value'] as $item) {
+                // if product exsits, update
+                $field = (!empty($option_filed) ? $option_filed : 'PARTNAME');
+                $args = array(
+                    'post_type' => array('product', 'product_variation'),
+                    'meta_query' => array(
+                        array(
+                            'key' => '_sku',
+                            'value' => $item[$field]
+                        )
+                    )
+                );
+                $my_query = new \WP_Query($args);
+                if ($my_query->have_posts()) {
+                    while ($my_query->have_posts()) {
+                        $my_query->the_post();
+                        $product_id = get_the_ID();
+                    }
+                } else {
+                    $product_id = 0;
+                }
+                //if ($id = wc_get_product_id_by_sku($item['PARTNAME'])) {
+                if (!$product_id == 0) {
+                    // update_post_meta($product_id, '_sku', $item['PARTNAME']);
+                    // get the stock by part availability
+                    $stock = $item['LOGCOUNTERS_SUBFORM'][0]['DIFF'];
+
+                    // get the stock by specific warehouse
+                    $wh_name = explode(',', $this->option('sync_inventory_warhsname'))[0];
+                    if (!empty($wh_name)) {
+                        $stock = 0;
+                    }
+                    $foo = $this->option('sync_inventory_warhsname');
+                    $foo2 = explode(',', $this->option('sync_inventory_warhsname'))[1];
+                    $is_deduct_order = explode(',', $this->option('sync_inventory_warhsname'))[1] == 'ORDER';
+                    $orders = $item['LOGCOUNTERS_SUBFORM'][0]['ORDERS'];
+                    if(!empty($wh_name)) {
+                        foreach ($item['PARTBALANCE_SUBFORM'] as $wh_stock) {
+                            $stock += $wh_stock['TBALANCE'] > 0 ? $wh_stock['TBALANCE'] : 0; // stock
+                        }
+                    }
+                    if ($is_deduct_order) {
+                        $stock = $stock - $orders > 0 ? $stock - $orders : 0; // stock - orders
+                    }
+                    $statuses = explode(',', $this->option('sync_inventory_warhsname'))[4];
+                    if (!empty($statuses)) {
+                        $stock -= $this->get_items_total_by_status($product_id);
+                        $item['order_status_qty'] = $this->get_items_total_by_status($product_id);
+                    }
+                    if($item['PARTNAME']=='8511'){
+                        $foo = 'haaa';
+                    }
+                    $item['stock'] = $stock;
+                    $item = apply_filters('simply_sync_inventory_priority', $item);
+                    $stock = $item['stock'];
+                    update_post_meta($product_id, '_stock', $stock);
+                    // set stock status
+                    if (intval($stock) > 0) {
+                        // update_post_meta($product_id, '_stock_status', 'instock');
+                        $stock_status = 'instock';
+                    } else {
+                        // update_post_meta($product_id, '_stock_status', 'outofstock');
+                        $stock_status = 'outofstock';
+                    }
+                    //$variation = wc_get_product($product_id);
+                    //$variation->set_stock_status($stock_status);
+                    $product = wc_get_product($product_id);
+                    if ($product->post_type == 'product_variation') {
+                        $var = new \WC_Product_Variation($product_id);
+                        $var->set_stock_status($stock_status);
+                        $var->set_manage_stock(true);
+                        $var->save();
+                    }
+                    if ($product->post_type == 'product') {
+                        $product->set_stock_status($stock_status);
+                        $product->set_manage_stock(true);
+                    }
+                    $product->save();
+                }
+                // add filter here
+                if (function_exists('simply_code_after_sync_inventory_by_sku'))
+                {
+                    simply_code_after_sync_inventory_by_sku($product_id,$item);
+                }
+            }
+            $this->updateOption('items_priority_update', time());
+        } else {
+            /**
+             * t149
+             */
+            $this->sendEmailError(
+                $this->option('email_error_sync_items_priority'),
+                'Error Sync Inventory Priority by sku',
+                $response['body']
+            );
+        }
+    }
+
 
     public
     function syncPacksPriority()
@@ -4581,8 +4726,13 @@ class WooAPI extends \PriorityAPI\API
             $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
         $data = apply_filters('simply_request_data_receipt', $data);
+        // echo "<pre style='direction:ltr;white-space: pre-wrap;word-wrap: break-word;'>";
+        // print_r($data);
+        // echo "</pre>";
+        // die();
         // make request
         $response = $this->makeRequest('POST', 'TINVOICES', ['body' => json_encode($data, JSON_UNESCAPED_SLASHES)], $this->option('log_receipts_priority', true));
+        
         if ($response['code'] <= 201 && $response['code'] >= 200) {
             $body_array = json_decode($response["body"], true);
 
