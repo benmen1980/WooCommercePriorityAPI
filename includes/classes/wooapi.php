@@ -1641,7 +1641,8 @@ class WooAPI extends \PriorityAPI\API
 	         }
             // add timestamp
             $this->updateOption('items_priority_update', time());
-            $this->syncInventoryPriorityBySku($skus);
+            if(!empty($skus))
+                $this->syncInventoryPriorityBySku($skus);
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_items_priority'),
