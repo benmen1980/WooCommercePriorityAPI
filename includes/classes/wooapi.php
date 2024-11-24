@@ -3341,6 +3341,14 @@ class WooAPI extends \PriorityAPI\API
                 $validmonth = $this->getStringBetween($data, '"ExpDate_MMYY":"', '"');
                 $confnum = $this->getStringBetween($data, '"ApprovalNumber":"', '"');
                 break;
+            case 'gocredit':
+                $idnum = $order->get_meta('CreditCardHolderPersonalID');
+                $payaccount = $order->get_meta('CreditCard4Digits');
+                $validmonth = $order->get_meta('CreditCardExpiryDateMMYY');
+                $numpay = $order->get_meta('NumberOfPayments');
+                $ccuid = $order->get_meta('Token');
+                $confnum = $order->get_meta('TransactionID');
+                break;
             // debug
             case 'debug';
                 $payaccount = '123456789';
