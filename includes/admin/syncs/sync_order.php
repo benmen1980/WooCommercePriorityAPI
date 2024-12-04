@@ -26,6 +26,12 @@ if (isset($_GET['ord'])) {
         $response = $this->syncOrder($order_id);
         $message .= simply_create_message_repost($response);
     }
+    // sync shipment
+    if ($this->option('post_document_d_checkout')) {
+        $message .= '<h1>Priority API, sync Shipping to Priority</h1>';
+        $response = $this->syncDocumentD($order_id);
+        $message .= simply_create_message_repost($response);
+    }
     // sync OTC
     if ($this->option('post_einvoice_checkout')) {
         $message .= '<h1>Priority API, sync Over The Counter Invoice to Priority</h1>';

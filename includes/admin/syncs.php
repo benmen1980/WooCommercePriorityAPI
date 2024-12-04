@@ -551,6 +551,25 @@ $format2 = 'd/m/Y H:i:s';
                            value="<?= empty($this->option('otc_order_field')) ? 'DETAILS' : $this->option('otc_order_field') ?>"></input>
                 </td>
             </tr>
+            <!-- sync Shipment -->
+            <tr>
+                <td class="p18a-label">
+                    <?php _e('Shipment', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox" name="post_document_d_checkout" form="p18aw-sync"
+                           value="1" <?php if ($this->option('post_document_d_checkout')) echo 'checked'; ?> />
+                </td>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td>
+                    <input type="text" style="width:300px" name="document_d_order_field" form="p18aw-sync"
+                           placeholder="Enter BOOKNUM or DETAILS"
+                           value="<?= empty($this->option('document_d_order_field')) ? 'BOOKNUM' : $this->option('document_d_order_field') ?>"></input>
+                </td>
+            </tr>
             <!-- sync POS -->
             <tr>
                 <td class="p18a-label">

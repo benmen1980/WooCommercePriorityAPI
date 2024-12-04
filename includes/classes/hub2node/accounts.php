@@ -54,6 +54,9 @@ class Priority_sdk_accounts extends \PriorityAPI\API{
 	    $username = $this->option('username');
 	    $password = $this->option('password');
 	    $url = 'https://'.$this->option('url');
+		if( false !== strpos( $url, 'p.priority-connect.online' ) ) {
+			$url = 'https://p.priority-connect.online/wcf/service.svc';
+		}
 	    $tabulaini = $this->option('application');
 	    $language = '1';
 	    $company = $this->option('environment');
