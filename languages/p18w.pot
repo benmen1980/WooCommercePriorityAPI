@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-31 12:25+0000\n"
+"POT-Creation-Date: 2024-12-04 07:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -318,4 +318,40 @@ msgid "Balance"
 msgstr ""
 
 msgid "Price Unit"
+msgstr ""
+
+msgid "BALANCE"
+msgstr ""
+
+msgid "MAX_OBLIGO"
+msgstr ""
+
+msgid "CUSTDES"
+msgstr ""
+
+msgid "ACC_DEBIT"
+msgstr ""
+
+msgid "ORDNUM"
+msgstr ""
+
+msgid "DEBTBAL"
+msgstr ""
+
+msgid "RIGHTBAL"
+msgstr ""
+
+msgid "BAL"
+msgstr ""
+
+msgid "FNCDATE"
+msgstr ""
+
+msgid "Error, duplicate 1: ACC_DEBIT"
+msgstr ""
+
+msgid "Order confirmation"
+msgstr ""
+
+msgid "Presentation of the invoice"
 msgstr ""

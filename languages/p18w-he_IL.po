@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2023-10-31 12:28+0000\n"
+"PO-Revision-Date: 2024-12-04 07:55+0000\n"
 "Last-Translator: \n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -12,7 +12,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.6.4; wp-6.2.3"
+"X-Loco-Version: 2.6.14; wp-6.7.1"
+
+msgid "ACC_DEBIT"
+msgstr "סך חובות פתוחים"
 
 #: includes/classes/priority_receipt/priority_receipt.php:83
 msgid "ACCNAME"
@@ -22,14 +25,20 @@ msgid "Account"
 msgstr ""
 
 msgid "Account report"
+msgstr "דוח כרטסת לקוח"
+
+msgid "BAL"
 msgstr ""
+
+msgid "BALANCE"
+msgstr "יתרה"
 
 msgid "Balance"
 msgstr "כמות <br/>נותרת"
 
 #: includes/front/my-account/obligo.php:170
 msgid "BALDATE"
-msgstr "תאריך למאזן"
+msgstr "תאריך החיוב"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "BOOK Number"
@@ -46,6 +55,9 @@ msgstr "איש הקשר"
 
 msgid "Counter"
 msgstr "שורה"
+
+msgid "CUSTDES"
+msgstr "כרטיס לקוח"
 
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "Customer Name"
@@ -66,6 +78,9 @@ msgstr "תאריך"
 #: includes/classes/priority_receipt/priority_receipt.php:83
 msgid "DEBIT"
 msgstr "חוֹבָה"
+
+msgid "DEBTBAL"
+msgstr "חובה"
 
 msgid "Delivery Date"
 msgstr "תאריך אספקה"
@@ -98,6 +113,9 @@ msgstr "מספר תעודה"
 msgid "English Description"
 msgstr "תאור מוצר אנגלית"
 
+msgid "Error, duplicate 1: ACC_DEBIT"
+msgstr ""
+
 msgid "Export Excel"
 msgstr "ייצוא לאקסל"
 
@@ -106,6 +124,9 @@ msgstr "שם קובץ"
 
 msgid "File Path"
 msgstr "נתיב הקובץ"
+
+msgid "FNCDATE"
+msgstr "תאריך לתשלום"
 
 #: includes/front/my-account/obligo.php:170
 msgid "FNCNUM"
@@ -136,6 +157,9 @@ msgstr "התחבר כדי לראות מחירים"
 msgid "Manufacturer Part Number"
 msgstr "מק\"ט יצרן"
 
+msgid "MAX_OBLIGO"
+msgstr "סך אשראי מאושר"
+
 msgid "mifrat"
 msgstr "מפרט"
 
@@ -155,9 +179,17 @@ msgstr "אובליגו"
 msgid "Open Payment"
 msgstr "תשלומים פתוחים"
 
+msgid "Order confirmation"
+msgstr "אישור הזמנה"
+
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 msgid "Order Name"
 msgstr "מספר הזמנה"
+
+#, fuzzy
+#| msgid "ORDNAME"
+msgid "ORDNUM"
+msgstr "הזמנה"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:107
 #: includes/classes/priority_invoices/priority_invoices.php:107
@@ -186,6 +218,9 @@ msgstr "אנא בחר אתר."
 #: includes/front/sites/sites.php:61
 msgid "Please select"
 msgstr ""
+
+msgid "Presentation of the invoice"
+msgstr "הצגת החשבונית"
 
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:94
 #: includes/classes/priority_excel_reports/priority_orders_excel.php:107
@@ -266,6 +301,9 @@ msgstr "כמות"
 
 msgid "Quote Number"
 msgstr "מספר הצעת מחיר"
+
+msgid "RIGHTBAL"
+msgstr "זכות"
 
 #. Author of the plugin
 msgid "Roi Holdings"
