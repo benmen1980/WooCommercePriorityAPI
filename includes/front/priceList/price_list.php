@@ -159,7 +159,7 @@ function simply_pricelist_qty_table()
                         <thead>
                         <tr class="price_list_tr">
                             <th class="price_list_td"><?php _e('Quantity','woocommerce');?></th>
-                            <th class="price_list_td"><?php _e('Price','woocommerce');?></th>
+                            <th class="price_list_td"><?php _e('Price Unit','p18w');?></th>
                         </tr>
                         </thead>
                         <tbody id="simply-tire-price-grid-rows">

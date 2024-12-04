@@ -696,22 +696,14 @@ class WooAPI extends \PriorityAPI\API
             }
 
         });
-        // check the version of woocommerce plugin
-        /*$plugin_folder = get_plugins( '/woocommerce' );
-        if ( isset( $plugin_folder[ 'woocommerce.php' ]['Version'] ) ) {
-                $woocommerce_version = $plugin_folder[ 'woocommerce.php' ]['Version'];
-        };
-        if ($woocommerce_version >= '8.8.3') {
-            $wc_orders_columns_hook = 'manage_woocommerce_page_wc-orders_columns';
-            $wc_orders_custom_column_hook = 'manage_woocommerce_page_wc-orders_custom_column';
-        };
-        if ($woocommerce_version < '8.8.3') {
-            $wc_orders_columns_hook = 'manage_edit-shop_order_columns';
-            $wc_orders_custom_column_hook = 'manage_shop_order_posts_custom_column';
-        };*/
+        // Checking if woocommerce custom order table is enabled
+        $data_storage_order = get_option('woocommerce_custom_orders_table_enabled');
+        $wc_orders_columns_hook = ($data_storage_order == 'yes') ? 'manage_woocommerce_page_wc-orders_columns' : 'manage_edit-shop_order_columns';
+        $wc_orders_custom_column_hook = ($data_storage_order == 'yes') ? 'manage_woocommerce_page_wc-orders_custom_column' : 'manage_shop_order_posts_custom_column';
+
         //  add Priority order status to orders page
         // ADDING A CUSTOM COLUMN TITLE TO ADMIN ORDER LIST
-        add_filter('manage_edit-shop_order_columns',
+        add_filter($wc_orders_columns_hook,
             function ($columns) {
                 // Set "Actions" column after the new colum
                 $action_column = $columns['order_actions']; // Set the title in a variable
@@ -767,46 +759,50 @@ class WooAPI extends \PriorityAPI\API
             }, 999);
 
         // ADDING THE DATA FOR EACH ORDERS BY "Platform" COLUMN
-        add_action('manage_shop_order_posts_custom_column',
+        add_action($wc_orders_custom_column_hook,
             function ($column, $post_id) {
 
-                if (is_object($post_id)) {
-                    $post_id = $post_id>get_id();  
-                }  
+                if (is_array($post_id)) {
+                    $post_id = $post_id['id'];
+                } elseif (is_object($post_id)) {
+                    $post_id = $post_id->get_id();
+                } 
+
                 // HERE get the data from your custom field (set the correct meta key below)
+                $order = wc_get_order( $post_id );
                 if ($this->option('post_order_checkout')) {
-                    $order_status = get_post_meta($post_id, 'priority_order_status', true);
-                    $order_number = get_post_meta($post_id, 'priority_order_number', true);
+                    $order_status = $order->get_meta( 'priority_order_status', true );
+                    $order_number = $order->get_meta( 'priority_order_number', true );
                     if (empty($order_status)) $order_status = '';
                     if (strlen($order_status) > 25) $order_status = '<div class="tooltip">Error<span class="tooltiptext">' . $order_status . '</span></div>';
                     if (empty($order_number)) $order_number = '';
                 }
                 if ($this->option('post_document_d_checkout')) {
-                    $document_d_status = get_post_meta($post_id, 'priority_document_d_status', true);
-                    $document_d_number = get_post_meta($post_id, 'priority_document_d_number', true);
+                    $document_d_status = $order->get_meta( 'priority_document_d_status', true );
+                    $document_d_number = $order->get_meta( 'priority_document_d_number', true );
                     if (empty($document_d_status)) $document_d_status = '';
                     if (strlen($document_d_status) > 25) $document_d_status = '<div class="tooltip">Error<span class="tooltiptext">' . $document_d_status . '</span></div>';
                     if (empty($document_d_number)) $document_d_number = '';
                 }
                 if ($this->option('post_einvoice_checkout') || $this->option('post_ainvoice_checkout')) {
-                    $invoice_number = get_post_meta($post_id, 'priority_invoice_number', true);
-                    $invoice_status = get_post_meta($post_id, 'priority_invoice_status', true);
+                    $invoice_number = $order->get_meta( 'priority_invoice_number', true );
+                    $invoice_status = $order->get_meta( 'priority_invoice_status', true );
                     if (empty($invoice_status)) $invoice_status = '';
                     if (strlen($invoice_status) > 15) $invoice_status = '<div class="tooltip">Error<span class="tooltiptext">' . $invoice_status . '</span></div>';
                     if (empty($invoice_number)) $invoice_number = '';
                 }
                 // recipe
                 if ($this->option('post_receipt_checkout') || $this->option('obligo') == true) {
-                    $recipe_status = get_post_meta($post_id, 'priority_recipe_status', true);
-                    $recipe_number = get_post_meta($post_id, 'priority_recipe_number', true);
+                    $recipe_status =$order->get_meta( 'priority_recipe_status', true );
+                    $recipe_number = $order->get_meta( 'priority_recipe_number', true );
                     if (empty($recipe_status)) $recipe_status = '';
                     if (strlen($recipe_status) > 15) $recipe_status = '<div class="tooltip">Error<span class="tooltiptext">' . $recipe_status . '</span></div>';
                     if (empty($recipe_number)) $recipe_number = '';
                 }
                 //POS
                 if ($this->option('post_pos_checkout')) {
-                    $pos_status = get_post_meta($post_id, 'priority_pos_status', true);
-                    $pos_number = get_post_meta($post_id, 'priority_pos_number', true);
+                    $pos_status = $order->get_meta( 'priority_pos_status', true );
+                    $pos_number = $order->get_meta( 'priority_pos_number', true );
                     if (empty($pos_status)) $pos_status = '';
                     if (strlen($pos_status) > 0 && $pos_status != 'Success') $pos_status = '<div class="tooltip">Error<span class="tooltiptext">' . $pos_status . '</span></div>';
                     if (empty($pos_number)) $pos_number = '';
@@ -1261,7 +1257,10 @@ class WooAPI extends \PriorityAPI\API
             $skus = [];
             try {
 	            foreach ( $response_data['value'] as $item ) {
-                    $skus[] = $item[$search_field];
+
+                    if ( $item[ $show_in_web ] == 'Y' )
+                        $skus[] = $item[$search_field];
+
                     //if you want customized syncItemsPriority, activate the function
                     $item = apply_filters('simply_syncItemsPriorityAdapt', $item);
 
@@ -1486,7 +1485,7 @@ class WooAPI extends \PriorityAPI\API
 						            if ( ! empty( $childs ) ) {
 							            foreach ( $childs as $child ) {
 								            $cat_c = get_term_by( 'id', $child, $taxon, 'ARRAY_A' );
-								            if ( $cat_c['name'] == $terms[0] ) {
+								            if ( html_entity_decode($cat_c['name']) == $terms[0] ) {
 									            $terms_cat = wp_set_object_terms( $id, $child, $taxon, true );
 									            $d         = 1;
 								            }
@@ -1655,7 +1654,13 @@ class WooAPI extends \PriorityAPI\API
 			            set_post_thumbnail( $id, $attach_id );
 		            }
 
-
+                    // update the time in product
+                    if ( $id ) {
+                        wp_update_post([
+                            'ID' => $id,
+                            'post_modified' => current_time('mysql'),
+                        ]);
+                    }
 	            }
                 //activate the action if you have a syncItemsPriority match
                 do_action('syncItemsPriorityAdapt');
@@ -1665,8 +1670,10 @@ class WooAPI extends \PriorityAPI\API
 	         }
             // add timestamp
             $this->updateOption('items_priority_update', time());
-            if(!empty($skus))
+            if(!empty($skus)) {
+                usleep(2000000);
                 $this->syncInventoryPriorityBySku($skus);
+            }
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_items_priority'),
@@ -4035,7 +4042,7 @@ class WooAPI extends \PriorityAPI\API
             $data['ORDERITEMS_SUBFORM'][] = [
                 $this->get_sku_prioirty_dest_field() => empty($coupon_num) ? '000' : $coupon_num, // change to other item
                 'TQUANT' => -1,
-                'VATPRICE' => ($price_discount === 'with_tax') ? 1 * floatval($order->get_discount_total() + $order->get_discount_tax() + $total_fee ) : 1 * floatval($order->get_discount_total() + $total_fee ),
+                'VATPRICE' => ($price_discount === 'with_tax') ? -1 * floatval($order->get_discount_total() + $order->get_discount_tax() + $total_fee ) : -1 * floatval($order->get_discount_total() + $total_fee ),
                 'DUEDATE' => date('Y-m-d'),
 
 
@@ -5020,7 +5027,9 @@ class WooAPI extends \PriorityAPI\API
             // payment info
             $data['TPAYMENT2_SUBFORM'][] = $this->get_credit_card_data($order, false);
         }
+        $data['orderId'] = $order_id;
         $data = apply_filters('simply_request_data_receipt', $data);
+        unset($data['orderId']);
         // echo "<pre style='direction:ltr;white-space: pre-wrap;word-wrap: break-word;'>";
         // print_r($data);
         // echo "</pre>";
