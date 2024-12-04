@@ -1,6 +1,8 @@
 <?php
 
 use PriorityWoocommerceAPI\WooAPI;
+add_action('wp_ajax_get_invoice_url', [Obligo::class, 'get_invoice_url_callback']);
+add_action('wp_ajax_nopriv_get_invoice_url', [Obligo::class, 'get_invoice_url_callback']);
 
 /**
  * Created by PhpStorm.
@@ -48,6 +50,10 @@ class Obligo extends \PriorityAPI\API
             wp_enqueue_script('my_custom_script', P18AW_ASSET_URL . 'frontend.js', ['jquery']);
 
             wp_localize_script('my_custom_script', 'ajax_object', array('ajaxurl' => admin_url('admin-ajax.php')));
+
+            wp_localize_script('ajax-scripts', 'ajax_obj', array( 
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			));
         });
         function my_custom_flush_rewrite_rules()
         {
@@ -264,18 +270,26 @@ class Obligo extends \PriorityAPI\API
         $current_user = wp_get_current_user();
         $priority_customer_number = get_user_meta($current_user->ID, 'priority_customer_number', true);
         // $priority_customer_number = apply_filters('simply_priority_customer_number_obligo', $current_user);
-        $additionalurl = 'OBLIGO?$select=OBLIGO,CUST&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'' . $priority_customer_number . '\'';
+        $additionalurl = 'OBLIGO?$select=CUSTDES,MAX_OBLIGO,ACC_DEBIT,CUST&$expand=OBLIGO_FNCITEMS_SUBFORM&$filter=CUSTNAME eq \'' . $priority_customer_number . '\'';
         $args = [];
         $response = $this->makeRequest("GET", $additionalurl, $args, true);
         $data = json_decode($response['body']);
 
         if (!empty($data->value)) {
-            echo "<table>";
-            foreach ($data->value[0] as $key => $value) {
+            //The arrangement of the object is adjusted to the order
+            $order_data = ['CUSTDES', 'MAX_OBLIGO', 'ACC_DEBIT', 'CUST'];
+            $sorted_data = new stdClass();
+            foreach ($order_data as $key) {
+                $sorted_data->$key = property_exists($data->value[0], $key) ? $data->value[0]->$key : null;
+            }            
+            echo "<table style='width: 50%;'>";
+            foreach ($sorted_data as $key => $value) {
                 if ($key == 'OBLIGO_FNCITEMS_SUBFORM' || $key == 'CUST') {
                     continue;
                 }
                 echo "<tr>";
+                if ( $key == 'MAX_OBLIGO' || $key == 'ACC_DEBIT' )
+                    $value = number_format($value, 2, '.', ',') . ' ש"ח';
                 echo "<td>" . __($key, 'p18w') . "</td><td>" . __($value, 'p18w') . "</td>";
                 echo "</tr>";
             }
@@ -284,8 +298,15 @@ class Obligo extends \PriorityAPI\API
 
             echo '<input type="hidden" name="action" value="my_action_obligo" />';
 
+            $save_number = $priority_customer_number;
+
+            $accounts_table  = apply_filters( 'simply_accounts_receivable_table', $priority_customer_number );
+
+            if ($accounts_table !== $save_number && !empty($accounts_table)) 
+                return;
+
             echo "<table> <tr>";
-            echo "<th></th><th>" . esc_html__('BALDATE', 'p18w') . "</th> <th>" . esc_html__('FNCNUM', 'p18w') . "</th> <th>" . esc_html__('IVNUM', 'p18w') . "</th> <th>" . esc_html__('DETAILS', 'p18w') . "</th> <th>" . esc_html__('SUM1', 'p18w') . "</th>";
+            echo "<th></th><th>" . esc_html__('BALDATE', 'p18w') . "</th> <th>" . esc_html__('FNCDATE', 'p18w') . "</th> <th>" . esc_html__('FNCNUM', 'p18w') . "</th> <th>" . esc_html__('IVNUM', 'p18w') . "</th> <th>" . esc_html__('DETAILS', 'p18w') . "</th> <th>" . esc_html__('SUM1', 'p18w') . "</th><th></th>";
             echo "</tr>";
             global $woocommerce;
             $items = $woocommerce->cart->get_cart();
@@ -300,8 +321,13 @@ class Obligo extends \PriorityAPI\API
             }
 
             $i = 1;
+            $todayDate = new DateTime();
             foreach ($data->value[0]->OBLIGO_FNCITEMS_SUBFORM as $key => $value) {
-                echo "<tr>";
+                //Checking whether the date has passed
+                $fncDate = new DateTime($value->FNCDATE);
+                $red = ($todayDate > $fncDate) ? 'red' : ''; 
+
+                echo "<tr class='pass_date " . $red . "'>";
                 $arr = array('sum' => $value->SUM1, 'ivnum' => $value->IVNUM);
 
                 //check if already pay for this ivnum
@@ -321,7 +347,6 @@ class Obligo extends \PriorityAPI\API
                     }
                 }
 
-
                 $date = $value->BALDATE;
                 $createDate = new DateTime($date);
                 $strip = $createDate->format('d/m/y');
@@ -335,16 +360,42 @@ class Obligo extends \PriorityAPI\API
                 //echo "<input type='hidden' name='obligo_chk_sum[]' value='" . $value->SUM1 . "'>";
                 //echo "<input type='hidden' name='obligo_chk_ivnum[]' value='" . $value->IVNUM . "'>";
 
-                foreach ($value as $Fkey => $Fvalue) {
-                    if ($Fkey == 'BALDATE' || $Fkey == 'FNCNUM' || $Fkey == 'IVNUM' || $Fkey == 'DETAILS' || $Fkey == 'SUM1') {
+                // Create the array object in a new order
+                $order = ['BALDATE', 'FNCDATE', 'FNCNUM', 'IVNUM', 'FNCPATNAME', 'DETAILS', 'SUM1', 'CODE', 'FNCREF2', 'FNCIREF1', 'FNCIREF2'];
+                $sortedValue = new stdClass();
+                foreach ($order as $key) {
+                    $sortedValue->$key = property_exists($value, $key) ? $value->$key : null;
+                }
+
+                foreach ($sortedValue as $Fkey => $Fvalue) {
+                    if ($Fkey == 'BALDATE' || $Fkey == 'FNCDATE' || $Fkey == 'FNCNUM' || $Fkey == 'IVNUM' || $Fkey == 'DETAILS' || $Fkey == 'SUM1') {
                         if ($Fkey == 'BALDATE') {
                             $timestamp = strtotime($Fvalue);
                             echo "<td>" . date('d/m/y', $timestamp) . "</td>";
+                        } elseif ($Fkey == 'FNCDATE') {
+                            $timestampFnc = strtotime($Fvalue);
+                            echo "<td>" . date('d/m/y', $timestampFnc) . "</td>";
                         } else {
+                            if ( $Fkey == 'SUM1' )
+                                $Fvalue = number_format($Fvalue, 2, '.', ',') . ' ש"ח';
                             echo "<td>" . $Fvalue . "</td>";
                         }
                     }
                 }
+                                                    			
+                echo "<td>
+                        <button style='font-size: 13px!important;' type='button' class='btn_open_ivnum' data-ivnum='" . htmlspecialchars($value->IVNUM, ENT_QUOTES, 'UTF-8') . "'>" 
+                            . __('Presentation of the invoice', 'p18w') . "
+                            <div class='loader_wrap'>
+                                <div class='loader_spinner'>
+                                    
+                                    <div class='line'></div>
+                                    <div class='line'></div>
+                                    <div class='line'></div>
+                                </div>
+                            </div>
+                        </button>
+                    </td>";
                 echo "</tr>";
                 $i++;
             }
@@ -392,7 +443,6 @@ class Obligo extends \PriorityAPI\API
         }
 
     }
-
 
     function skyverge_empty_cart_notice()
     {
@@ -500,7 +550,6 @@ class Obligo extends \PriorityAPI\API
         return $is_purchasable;
     }
 
-
     function redirect_visitor()
     {
         if (is_page('cart') || is_cart()) {
@@ -514,6 +563,77 @@ class Obligo extends \PriorityAPI\API
             }
         }
     }
+
+    public function create_hub2sdk_invoice_request($invoice_number){
+        $username = $this->option('username');
+        $password = $this->option('password');
+        $url = 'https://'.$this->option('url');
+        if( false !== strpos( $url, 'p.priority-connect.online' ) ) {
+            $url = 'https://p.priority-connect.online/wcf/service.svc';
+        }
+        $tabulaini = $this->option('application');
+        $language = '1';
+        $company = $this->option('environment');
+        $devicename = 'devicename';
+        $appid = $this->option('X-App-Id');
+        $appkey = $this->option('X-App-Key');
+		
+        $array['IVNUM'] = $invoice_number;
+        $array['credentials']['appname'] = 'demo';
+        $array['credentials']['username'] = $username;
+        $array['credentials']['password'] = $password;
+        $array['credentials']['url'] = $url;
+        $array['credentials']['tabulaini'] = $tabulaini;
+        $array['credentials']['language'] = $language;
+        $array['credentials']['profile']['company'] = $company;
+        $array['credentials']['devicename'] = $devicename;
+        $array['credentials']['appid'] = $appid;
+        $array['credentials']['appkey'] = $appkey;
+
+        $curl = curl_init();
+        curl_setopt_array( $curl, array(
+            CURLOPT_URL            => 'prinodehub1-env.eba-gdu3xtku.us-west-2.elasticbeanstalk.com/printCinvoice',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode($array),
+            CURLOPT_HTTPHEADER     => array(
+                'Content-Type: application/json'
+            ),
+        ) );
+
+        $response = curl_exec( $curl );
+
+        curl_close( $curl );
+        return $response;
+
+    }
+
+	public static function get_invoice_url_callback() {
+		if (isset($_POST['ivnum'])) {
+			$ivnumber = sanitize_text_field($_POST['ivnum']);
+
+			// Get an instance of the class
+			$instance = self::instance();
+			// Call your function to get the order URL
+			try {
+				$response = json_decode($instance->create_hub2sdk_invoice_request($ivnumber));
+				$url = $response->invoice_url ?? '';
+				if (!empty($url)) {
+					wp_send_json_success($url);
+				} else {
+					wp_send_json_error(['message' => 'URL not found']);
+				}
+			} catch (Exception $e) {
+				wp_send_json_error(['message' => $e->getMessage()]);
+			}
+	
+		} else {
+			wp_send_json_error($response);
+		}
+	}
 }
-
-

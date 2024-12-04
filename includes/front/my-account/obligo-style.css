@@ -14,3 +14,12 @@
 .banner_obligo button:hover{
     opacity: 0.8;
 }
+tr.pass_date.red {
+    color: red;
+}
+table {
+    width: 100%;
+    border-spacing: 6px;
+    margin-top: 20px;
+    table-layout: auto;
+}

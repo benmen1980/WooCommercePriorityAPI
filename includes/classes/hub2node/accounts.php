@@ -64,6 +64,8 @@ class Priority_sdk_accounts extends \PriorityAPI\API{
 	    $appid = $this->option('X-App-Id');
 	    $appkey = $this->option('X-App-Key');
 	    $array['CUSTNAME'] = $priority_customer_number;
+		$array['CODE'] = 'ש\'ח';
+        $array['YEAR'] = '2023';
 	    $array['credentials']['appname'] = 'demo';
 	    $array['credentials']['username'] = $username;
 	    $array['credentials']['password'] = $password;

@@ -1,4 +1,8 @@
 <?php
+
+add_action('wp_ajax_get_order_url', [Priority_orders_excel::class, 'get_order_url_callback']);
+add_action('wp_ajax_nopriv_get_order_url', [Priority_orders_excel::class, 'get_order_url_callback']);
+
 class Priority_orders_excel extends \PriorityAPI\API{
 	private static $instance; // api instance
 
@@ -28,6 +32,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			wp_enqueue_style( 'priority-woo-api-style', P18AW_ASSET_URL.'style.css', time() );
 			wp_enqueue_script('priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js');
 			wp_enqueue_style( 'priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
+			wp_enqueue_script('ajax-scripts', P18AW_ASSET_URL.'ajax-script.js', array('jquery'));
+			// The wp_localize_script allows us to output the ajax_url path for our script to use.
+			wp_localize_script('ajax-scripts', 'ajax_obj', array( 
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			));
 		});
 
 		add_action('init', function() {
@@ -103,7 +112,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
 		".__('Export Excel','p18w')." </a>";
 		echo "<table class='priority-report-table'>";
-		echo "<tr class='row-titles'><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('Purchase Orders','p18w')."</td><td>".__('Status Order','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price Include VAT','p18w')."</td></tr>";
+		echo "<tr class='row-titles'><td></td><td></td><td>".__('Date','p18w')."</td><td>".__('Order Name','p18w')."</td><td>".__('Purchase Orders','p18w')."</td><td>".__('Status Order','p18w')."</td><td>".__('Price','p18w')."</td><td>".__('Percentage','p18w')."</td><td>".__('Discounted Price','p18w')."</td><td>".__('VAT','p18w')."</td><td>".__('Total Price Include VAT','p18w')."</td></tr>";
 		date_default_timezone_set('Asia/Jerusalem');
 		$i = 1;
 
@@ -112,26 +121,40 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				echo "<div class='cust-toggle plus' id='content-".$i."'>+</div>";
 			}
-			echo "</td><td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->REFERENCE."</td><td>".$value->ORDSTATUSDES."</td><td>".$value->QPRICE.' '.$value->CODE."</td><td>".(($value->PERCENT == 0) ? '' : $value->PERCENT)."</td><td>".$value->DISPRICE.' '.$value->CODE."</td><td>".$value->VAT.' '.$value->CODE."</td><td>".$value->TOTPRICE.' '.$value->CODE."</td></tr>";
+			echo "</td>";
+						
+			echo "<td>
+					<button style='font-size: 13px!important;' type='button' class='btn_open_order' data-order-name='" . htmlspecialchars($value->ORDNAME, ENT_QUOTES, 'UTF-8') . "'>" 
+						. __('Order confirmation', 'p18w') . "
+						<div class='loader_wrap'>
+							<div class='loader_spinner'>
+								<div class='line'></div>
+								<div class='line'></div>
+								<div class='line'></div>
+							</div>
+						</div>
+					</button>
+				</td>";
 				
-				if(!empty($value->ORDERITEMS_SUBFORM)) {
-					echo "<tr class='content_value subform-content-".$i."' style='display:none;'><td colspan='8'>";
-					echo "<table class='table-orders'>";
-					echo "<tr class='row-sub-titles'><td>".__('Part Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('Delivery Date','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Balance','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Price Unit','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('mifrat','p18w')."</td></tr>";
-					foreach($value->ORDERITEMS_SUBFORM as $subform) {
-						echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->Y_9950_5_ESHB."</td><td class='product-row'>".$subform->PDES."</td><td>".(($subform->AROW_MITKABEL == null) ? '' : date('d/m/y',strtotime($subform->AROW_MITKABEL)))."</td><td>".$subform->QUANT."</td><td>".$subform->TBALANCE."</td><td>".$subform->TUNITNAME."</td><td class='price_row'>".$subform->PRICE.' '.$subform->ICODE."</td><td class='price_row'>".$subform->QPRICE.' '.$subform->ICODE;
-						$attache = apply_filters('add_attache_priority', $subform->SPEC14);
-                        echo $attache;
-						echo "</tr>";
-					}
-					echo "</table>";
-					echo "</td></tr>";
+			echo "<td>".date( 'd/m/y',strtotime($value->CURDATE))."</td><td>".$value->ORDNAME."</td><td>".$value->REFERENCE."</td><td>".$value->ORDSTATUSDES."</td><td>".$value->QPRICE.' '.$value->CODE."</td><td>".(($value->PERCENT == 0) ? '' : $value->PERCENT)."</td><td>".$value->DISPRICE.' '.$value->CODE."</td><td>".$value->VAT.' '.$value->CODE."</td><td>".$value->TOTPRICE.' '.$value->CODE."</td></tr>";
+				
+			if(!empty($value->ORDERITEMS_SUBFORM)) {
+				echo "<tr class='content_value subform-content-".$i."' style='display:none;'><td colspan='8'>";
+				echo "<table class='table-orders'>";
+				echo "<tr class='row-sub-titles'><td>".__('Part Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('Delivery Date','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Balance','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Price Unit','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('mifrat','p18w')."</td></tr>";
+				foreach($value->ORDERITEMS_SUBFORM as $subform) {
+					echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->Y_9950_5_ESHB."</td><td class='product-row'>".$subform->PDES."</td><td>".(($subform->AROW_MITKABEL == null) ? '' : date('d/m/y',strtotime($subform->AROW_MITKABEL)))."</td><td>".$subform->QUANT."</td><td>".$subform->TBALANCE."</td><td>".$subform->TUNITNAME."</td><td class='price_row'>".$subform->PRICE.' '.$subform->ICODE."</td><td class='price_row'>".$subform->QPRICE.' '.$subform->ICODE;
+					$attache = apply_filters('add_attache_priority', $subform->SPEC14);
+					echo $attache;
+					echo "</tr>";
 				}
+				echo "</table>";
+				echo "</td></tr>";
+			}
 			$i++;
 		}
 		echo "</table>";
 	}
-	
 
 	function my_action_exporttoexcel() {
 		$current_user             = wp_get_current_user();
@@ -178,5 +201,77 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		}
 
 	    wp_die(); // this is required to terminate immediately and return a proper response
+	}
+
+	public function create_hub2sdk_orders_request($priority_order_number){
+        $username = $this->option('username');
+        $password = $this->option('password');
+        $url = 'https://'.$this->option('url');
+        if( false !== strpos( $url, 'p.priority-connect.online' ) ) {
+            $url = 'https://p.priority-connect.online/wcf/service.svc';
+        }
+        $tabulaini = $this->option('application');
+        $language = '1';
+        $company = $this->option('environment');
+        $devicename = 'devicename';
+        $appid = $this->option('X-App-Id');
+        $appkey = $this->option('X-App-Key');
+		
+        $array['ORDNAME'] = $priority_order_number;
+        $array['credentials']['appname'] = 'demo';
+        $array['credentials']['username'] = $username;
+        $array['credentials']['password'] = $password;
+        $array['credentials']['url'] = $url;
+        $array['credentials']['tabulaini'] = $tabulaini;
+        $array['credentials']['language'] = $language;
+        $array['credentials']['profile']['company'] = $company;
+        $array['credentials']['devicename'] = $devicename;
+        $array['credentials']['appid'] = $appid;
+        $array['credentials']['appkey'] = $appkey;
+
+        $curl = curl_init();
+        curl_setopt_array( $curl, array(
+            CURLOPT_URL            => 'prinodehub1-env.eba-gdu3xtku.us-west-2.elasticbeanstalk.com/printSalesOrder',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode($array),
+            CURLOPT_HTTPHEADER     => array(
+                'Content-Type: application/json'
+            ),
+        ) );
+
+        $response = curl_exec( $curl );
+
+        curl_close( $curl );
+        return $response;
+    }
+
+	public static function get_order_url_callback() {
+		if (isset($_POST['ordname'])) {
+			$ordname = sanitize_text_field($_POST['ordname']);
+
+			// Get an instance of the class
+			$instance = self::instance();
+			// Call your function to get the order URL
+			try {
+				$response = json_decode($instance->create_hub2sdk_orders_request($ordname));
+				$url = $response->order_url ?? '';
+				if (!empty($url)) {
+					wp_send_json_success($url);
+				} else {
+					wp_send_json_error(['message' => 'URL not found']);
+				}
+			} catch (Exception $e) {
+				wp_send_json_error(['message' => $e->getMessage()]);
+			}
+	
+		} else {
+			wp_send_json_error($response);
+		}
 	}
 }

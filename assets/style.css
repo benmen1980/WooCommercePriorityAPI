@@ -25,9 +25,9 @@ table.table-quote, table.table-orders{border-collapse: initial;}
 .row-sub-titles {font-weight: bold;}
 tr .price_row {white-space: nowrap;}
 
-button.btn_quote {position: relative;}
-.btn_quote.loader_active .loader_wrap{display: block; background-color: rgba(255,255,255,0.6);}
-.btn_quote.loader_active:after { content: none;}
+button.btn_quote, button.btn_open_order, button.btn_open_ivnum {position: relative; border: none; padding: 8px 16px; border-radius: 100px;}
+button.loader_active .loader_wrap{display: block; background-color: rgba(255,255,255,0.6);}
+button.loader_active:after { content: none;}
 .loader_wrap {position: absolute; top: 0; right: 0; width: 100%; height: 100%; display: none; z-index: 1;}
 .loader_wrap.active { display: block;}
 .loader_wrap .loader_spinner {width: 100%; justify-content: center; display: flex; height: 100%; align-items: center;}

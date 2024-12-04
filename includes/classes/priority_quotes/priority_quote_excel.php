@@ -118,8 +118,10 @@ class Priority_quotes_excel extends \PriorityAPI\API{
                 echo "<div class='cust-toggle plus' id='content-".$tableNumber."'>+</div>";
             }
             echo "</td><td>".date( 'd/m/y',strtotime($value->PDATE))."</td><td>".date( 'd/m/y',strtotime($value->EXPIRYDATE))."</td><td>".$value->NAME."</td><td>".$value->CPROFNUM."</td><td>".$value->PAYDES."</td>";
+            $original_value = $value;
             $button_cart = apply_filters('add_button_shopping_cart', $value);
-            echo $button_cart;
+            if ($button_cart !== $original_value && !empty($button_cart))
+                echo $button_cart;
             echo "</tr>";
             
             if(!empty($value->CPROFITEMS_SUBFORM)) {
