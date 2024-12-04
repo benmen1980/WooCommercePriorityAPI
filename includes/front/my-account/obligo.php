@@ -47,7 +47,7 @@ class Obligo extends \PriorityAPI\API
             add_rewrite_endpoint('obligo', EP_ROOT | EP_PAGES);
         });
         add_action('wp_enqueue_scripts', function () {
-            wp_enqueue_script('my_custom_script', P18AW_ASSET_URL . 'frontend.js', ['jquery']);
+			wp_enqueue_script('priority-woo-api-frontend', P18AW_ASSET_URL.'frontend.js', array('jquery'), time());
 
             wp_localize_script('my_custom_script', 'ajax_object', array('ajaxurl' => admin_url('admin-ajax.php')));
 
