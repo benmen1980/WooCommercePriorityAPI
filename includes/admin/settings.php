@@ -226,6 +226,16 @@
 
             $zones = WC_Shipping_Zones::get_zones();
 
+            // Include the default zone
+            $default_zone = new WC_Shipping_Zone(0); // Zone ID 0 represents the default zone
+            
+            if(empty($zones)){
+				$zones[] = [
+					'id'   => $default_zone->get_id(),
+					'zone_name' => $default_zone->get_zone_name(),
+					'zone_order' => $default_zone->get_zone_order(),
+				];
+			}
             foreach ($zones as $zone) {
 
                 $worldwide = new \WC_Shipping_Zone($zone['id']);
