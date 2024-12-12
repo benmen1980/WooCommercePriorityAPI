@@ -43,7 +43,7 @@ class WooAPI extends \PriorityAPI\API
         $syncs = [
             'sync_items_priority' => 'syncItemsPriority',
             'sync_items_priority_variation' => 'syncItemsPriorityVariation',
-            'sync_items_web' => 'syncItemsWeb',
+            // 'sync_items_web' => 'syncItemsWeb',
             'sync_inventory_priority' => 'syncInventoryPriority',
             'sync_pricelist_priority' => 'syncPriceLists',
             'sync_productfamily_priority' => 'syncSpecialPriceProductFamily',
@@ -570,10 +570,10 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('log_items_priority_variation', $this->post('log_items_priority_variation'));
                 $this->updateOption('auto_sync_items_priority_variation', $this->post('auto_sync_items_priority_variation'));
                 $this->updateOption('email_error_sync_items_priority_variation', $this->post('email_error_sync_items_priority_variation'));
-                $this->updateOption('log_items_web', $this->post('log_items_web'));
+                /*$this->updateOption('log_items_web', $this->post('log_items_web'));
                 $this->updateOption('sync_items_web', $this->post('sync_items_web'));
                 $this->updateOption('auto_sync_items_web', $this->post('auto_sync_items_web'));
-                $this->updateOption('email_error_sync_items_web', $this->post('email_error_sync_items_web'));
+                $this->updateOption('email_error_sync_items_web', $this->post('email_error_sync_items_web'));*/
                 $this->updateOption('log_inventory_priority', $this->post('log_inventory_priority'));
                 $this->updateOption('auto_sync_inventory_priority', $this->post('auto_sync_inventory_priority'));
                 $this->updateOption('email_error_sync_inventory_priority', $this->post('email_error_sync_inventory_priority'));
@@ -926,7 +926,7 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
-                case 'sync_items_web':
+                /*case 'sync_items_web':
 
                     try {
                         $this->syncItemsWeb();
@@ -934,7 +934,7 @@ class WooAPI extends \PriorityAPI\API
                         exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
                     }
 
-                    break;
+                    break;*/
                 case 'sync_inventory_priority':
 
 
@@ -3271,7 +3271,7 @@ class WooAPI extends \PriorityAPI\API
                     $ccuid = $order_cc_meta['Token'];
                     $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
                     $confnum = $order_cc_meta['ConfirmationKey'];
-                    $numpay = 1;
+                    $numpay = !empty( $order_cc_meta['TotalPayments'] ) ? $order_cc_meta['TotalPayments'] : 1;
                     $firstpay = 0.0;
                 }
                 break;
