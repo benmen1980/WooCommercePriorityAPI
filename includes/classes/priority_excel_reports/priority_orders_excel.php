@@ -124,7 +124,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			echo "</td>";
 						
 			echo "<td>
-					<button style='font-size: 13px!important;' type='button' class='btn_open_order' data-order-name='" . htmlspecialchars($value->ORDNAME, ENT_QUOTES, 'UTF-8') . "'>" 
+					<button style='font-size: 13px!important;' type='button' class='open_doc btn_open_order' data-order-name='" . htmlspecialchars($value->ORDNAME, ENT_QUOTES, 'UTF-8') . "'>" 
 						. __('Order confirmation', 'p18w') . "
 						<div class='loader_wrap'>
 							<div class='loader_spinner'>

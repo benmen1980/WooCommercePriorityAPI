@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Priority Woocommerce API\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-14 09:00+0000\n"
-"PO-Revision-Date: 2024-12-04 07:55+0000\n"
+"PO-Revision-Date: 2024-12-12 08:19+0000\n"
 "Last-Translator: \n"
 "Language-Team: עִבְרִית\n"
 "Language: he_IL\n"
@@ -100,6 +100,9 @@ msgstr "הנחה"
 msgid "Discounted Price"
 msgstr "מחיר <br/> לאחר הנחה"
 
+msgid "Display the quote"
+msgstr "להצגת ההצעה"
+
 #: includes/classes/priority_invoices/priority_invoices.php:94
 msgid "DISPRICE"
 msgstr "מחיר הנחה"
@@ -174,6 +177,9 @@ msgstr ""
 #, fuzzy
 msgid "Obligo"
 msgstr "אובליגו"
+
+msgid "Open a quote"
+msgstr "לפתיחת הצעת המחיר"
 
 #: includes/front/my-account/obligo.php:167
 msgid "Open Payment"
