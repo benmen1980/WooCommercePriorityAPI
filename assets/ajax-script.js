@@ -90,6 +90,11 @@ jQuery(document).ready(function($) {
     $('.btn_open_ivnum').click(function() {
         var button = $(this);
 
+        //Opening a window to receive the url
+        const newWindow = window.open('', '_blank'); 
+        newWindow.document.write('<html><head><title>טעינה...</title></head><body style="direction: rtl; display: flex; justify-content: center; align-items: center; text-align: center;"><p>הקובץ בטעינה, אנא המתן...</p></body></html>');
+        newWindow.document.close()
+
         // Add loader_active class to the clicked button
         button.addClass('loader_active');
 
@@ -108,16 +113,19 @@ jQuery(document).ready(function($) {
                 button.removeClass('loader_active');
             },
             success: function(response) {
+                button.removeClass('loader_active');
                 if (response.success) {
                     console.log( 'AJAX sucsses: ', response.data);
-                    window.open(response.data, '_blank');
+                    newWindow.location.href = response.data;
                 } else {
                     console.log('Error:', response);
+                    newWindow.document.body.innerHTML = '<p>אירעה שגיאה, נסה שוב מאוחר יותר.</p>';
                 }
                 button.removeClass('loader_active');
             },           
             error: function(response) {
                 console.log( 'AJAX error: ', response);
+                newWindow.document.body.innerHTML = '<p>אירעה שגיאה בחיבור לשרת. מסה שוב מאוחר יותר</p>'; 
                 button.removeClass('loader_active');
             }
         });
