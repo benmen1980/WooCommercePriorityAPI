@@ -241,8 +241,8 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         $appid = $this->option('X-App-Id');
         $appkey = $this->option('X-App-Key');
 		
-        $array['ORDNAME'] = $priority_quote_number;
-        $array['FORMAT'] = '-2';
+        $array['CPROFNUM'] = $priority_quote_number;
+        $array['FORMAT'] = '-107';
         $array['credentials']['appname'] = 'demo';
         $array['credentials']['username'] = $username;
         $array['credentials']['password'] = $password;
