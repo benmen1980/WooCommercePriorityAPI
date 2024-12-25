@@ -1,4 +1,8 @@
 <?php
+
+add_action('wp_ajax_get_quote_url', [Priority_quotes_excel::class, 'get_quote_url_callback']);
+add_action('wp_ajax_nopriv_get_quote_url', [Priority_quotes_excel::class, 'get_quote_url_callback']);
+
 class Priority_quotes_excel extends \PriorityAPI\API{
     private static $instance; // api instance
 
@@ -28,6 +32,11 @@ class Priority_quotes_excel extends \PriorityAPI\API{
             wp_enqueue_style( 'priority-woo-api-style', P18AW_ASSET_URL.'style.css', time() );
             wp_enqueue_script('priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js');
             wp_enqueue_style( 'priority-woo-api-jquery-ui', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' );
+            wp_enqueue_script('ajax-scripts', P18AW_ASSET_URL.'ajax-script.js', array('jquery'));
+			// The wp_localize_script allows us to output the ajax_url path for our script to use.
+			wp_localize_script('ajax-scripts', 'ajax_obj', array( 
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			));
         });
 
         add_action('init', function() {
@@ -105,7 +114,7 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         echo "<a class='btn_export_excel' href='".admin_url( 'admin-ajax.php' )."?action=my_action_exporttoexcel_quote&from_date=".$in_fdata."&to_date=".$in_tdata."' target='_blank'> 
         ".__('Export Excel','p18w')." </a>";
         echo "<table class='priority-report-table'>";
-        echo "<tr class='row-titles'><td></td><td>".__('Date QUOTE','p18w')."</td><td>".__('Date Expiration','p18w')."</td><td>".__('Contact','p18w')."</td><td>".__('Quote Number','p18w')."</td><td>".__('Terms Payment','p18w')."</td>";
+        echo "<tr class='row-titles'><td></td><td></td><td>".__('Date QUOTE','p18w')."</td><td>".__('Date Expiration','p18w')."</td><td>".__('Contact','p18w')."</td><td>".__('Quote Number','p18w')."</td><td>".__('Terms Payment','p18w')."</td>";
         echo "<td>".__(' ','p18w')."</td>";
         echo "</tr>"; 
         date_default_timezone_set('Asia/Jerusalem');
@@ -117,7 +126,22 @@ class Priority_quotes_excel extends \PriorityAPI\API{
             if(!empty($value->CPROFITEMS_SUBFORM)) {
                 echo "<div class='cust-toggle plus' id='content-".$tableNumber."'>+</div>";
             }
-            echo "</td><td>".date( 'd/m/y',strtotime($value->PDATE))."</td><td>".date( 'd/m/y',strtotime($value->EXPIRYDATE))."</td><td>".$value->NAME."</td><td>".$value->CPROFNUM."</td><td>".$value->PAYDES."</td>";
+            echo "</td>";
+
+            echo "<td>
+                    <button style='font-size: 13px!important;' type='button' class='open_doc btn_open_quote' data-quote-num='" . htmlspecialchars($value->CPROFNUM, ENT_QUOTES, 'UTF-8') . "'>" 
+                        . __('Display the quote', 'p18w') . "
+                        <div class='loader_wrap'>
+                            <div class='loader_spinner'>
+                                <div class='line'></div>
+                                <div class='line'></div>
+                                <div class='line'></div>
+                            </div>
+                        </div>
+                    </button>
+                </td>";
+            
+            echo "<td>".date( 'd/m/y',strtotime($value->PDATE))."</td><td>".date( 'd/m/y',strtotime($value->EXPIRYDATE))."</td><td>".$value->NAME."</td><td>".$value->CPROFNUM."</td><td>".$value->PAYDES."</td>";
             $original_value = $value;
             $button_cart = apply_filters('add_button_shopping_cart', $value);
             if ($button_cart !== $original_value && !empty($button_cart))
@@ -202,4 +226,77 @@ class Priority_quotes_excel extends \PriorityAPI\API{
 
         wp_die(); // this is required to terminate immediately and return a proper response
     }
+
+    public function create_hub2sdk_orders_request($priority_quote_number){
+        $username = $this->option('username');
+        $password = $this->option('password');
+        $url = 'https://'.$this->option('url');
+        if( false !== strpos( $url, 'p.priority-connect.online' ) ) {
+            $url = 'https://p.priority-connect.online/wcf/service.svc';
+        }
+        $tabulaini = $this->option('application');
+        $language = '1';
+        $company = $this->option('environment');
+        $devicename = 'devicename';
+        $appid = $this->option('X-App-Id');
+        $appkey = $this->option('X-App-Key');
+		
+        $array['CPROFNUM'] = $priority_quote_number;
+        $array['FORMAT'] = '-107';
+        $array['credentials']['appname'] = 'demo';
+        $array['credentials']['username'] = $username;
+        $array['credentials']['password'] = $password;
+        $array['credentials']['url'] = $url;
+        $array['credentials']['tabulaini'] = $tabulaini;
+        $array['credentials']['language'] = $language;
+        $array['credentials']['profile']['company'] = $company;
+        $array['credentials']['devicename'] = $devicename;
+        $array['credentials']['appid'] = $appid;
+        $array['credentials']['appkey'] = $appkey;
+
+        $curl = curl_init();
+        curl_setopt_array( $curl, array(
+            CURLOPT_URL            => 'prinodehub1-env.eba-gdu3xtku.us-west-2.elasticbeanstalk.com/printPriceQuote',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode($array),
+            CURLOPT_HTTPHEADER     => array(
+                'Content-Type: application/json'
+            ),
+        ) );
+
+        $response = curl_exec( $curl );
+
+        curl_close( $curl );
+        return $response;
+    }
+
+	public static function get_quote_url_callback() {
+		if (isset($_POST['quotemun'])) {
+			$quotemun = sanitize_text_field($_POST['quotemun']);
+
+			// Get an instance of the class
+			$instance = self::instance();
+			// Call your function to get the order URL
+			try {
+				$response = json_decode($instance->create_hub2sdk_orders_request($quotemun));
+				$url = $response->order_url ?? '';
+				if (!empty($url)) {
+					wp_send_json_success($url);
+				} else {
+					wp_send_json_error(['message' => 'URL not found']);
+				}
+			} catch (Exception $e) {
+				wp_send_json_error(['message' => $e->getMessage()]);
+			}
+	
+		} else {
+			wp_send_json_error($response);
+		}
+	}
 }

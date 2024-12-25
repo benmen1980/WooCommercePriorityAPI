@@ -151,11 +151,11 @@ $format2 = 'd/m/Y H:i:s';
                 </td>
                 <td>
                     <input type="checkbox" name="log_items_web" form="p18aw-sync"
-                           value="1" <?php if ($this->option('log_items_web')) echo 'checked'; ?> />
+                           value="1" <?php if ($this->option('log_items_web')) echo 'checked'; ?> disabled/>
                 </td>
                 <td></td>
                 <td>
-                    <select name="auto_sync_items_web" form="p18aw-sync">
+                    <select name="auto_sync_items_web" form="p18aw-sync" disabled>
                         <option value="" <?php if (!$this->option('auto_sync_items_web')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
                         <option value="hourly" <?php if ($this->option('auto_sync_items_web') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
                         <option value="daily" <?php if ($this->option('auto_sync_items_web') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
@@ -172,13 +172,13 @@ $format2 = 'd/m/Y H:i:s';
                     ?>
                 </td>
                 <td>
-                    <a href="#" class="button p18aw-sync" data-sync="sync_items_web"><?php _e('Sync', 'p18a'); ?></a>
+                    <a href="#" class="button p18aw-sync" data-sync="sync_items_web" disabled ><?php _e('Sync', 'p18a'); ?></a>
                 </td>
 
                 <td>
                     <input type="text" style="width:300px" name="sync_items_web" form="p18aw-sync"
                            placeholder="enter SKU and days_back specific or default"
-                           value="<?php echo($this->option('sync_items_web')) ?>"></input>
+                           value="<?php echo($this->option('sync_items_web')) ?>" disabled ></input>
                 </td>
             </tr>
 

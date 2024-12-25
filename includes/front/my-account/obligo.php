@@ -384,7 +384,7 @@ class Obligo extends \PriorityAPI\API
                 }
                                                     			
                 echo "<td>
-                        <button style='font-size: 13px!important;' type='button' class='btn_open_ivnum' data-ivnum='" . htmlspecialchars($value->IVNUM, ENT_QUOTES, 'UTF-8') . "'>" 
+                        <button style='font-size: 13px!important;' type='button' class='open_doc btn_open_ivnum' data-ivnum='" . htmlspecialchars($value->IVNUM, ENT_QUOTES, 'UTF-8') . "'>" 
                             . __('Presentation of the invoice', 'p18w') . "
                             <div class='loader_wrap'>
                                 <div class='loader_spinner'>
