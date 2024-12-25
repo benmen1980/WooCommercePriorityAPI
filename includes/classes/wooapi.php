@@ -51,7 +51,8 @@ class WooAPI extends \PriorityAPI\API
             'sync_order_status_priority' => 'syncPriorityOrderStatus',
             'sync_sites_priority' => 'syncSites',
             'sync_c_products_priority' => 'syncCustomerProducts',
-            'sync_customer_to_wp_user' => 'sync_priority_customers_to_wp'
+            'sync_customer_to_wp_user' => 'sync_priority_customers_to_wp',
+            'sync_attachments_priority' => 'sync_product_attachemtns'
         ];
 
         foreach ($syncs as $hook => $action) {
@@ -601,6 +602,10 @@ class WooAPI extends \PriorityAPI\API
                 $this->updateOption('auto_sync_c_products_priority', $this->post('auto_sync_c_products_priority'));
                 $this->updateOption('log_c_products_priority', $this->post('log_c_products_priority'));
                 $this->updateOption('email_error_sync_einvoices_web', $this->post('email_error_sync_einvoices_web'));
+                $this->updateOption('log_attachments_priority', $this->post('log_attachments_priority'));
+                $this->updateOption('auto_sync_attachments_priority', $this->post('auto_sync_attachments_priority'));
+                $this->updateOption('sync_attachments_priority_config', $this->post('sync_attachments_priority_config'));
+                
                 // extra data
                 $this->updateOption('sync_inventory_warhsname', $this->post('sync_inventory_warhsname'));
                 $this->updateOption('sync_pricelist_priority_warhsname', $this->post('sync_pricelist_priority_warhsname'));
@@ -1221,7 +1226,8 @@ class WooAPI extends \PriorityAPI\API
 	    $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
 	    $show_in_web         = ( ! empty( $config->show_in_web ) ? $config->show_in_web : 'SHOWINWEB' );
 	    $variation_field     = $this->option( 'variation_field' ) == 'true' ? $this->option( 'variation_field' ) : 'MPARTNAME';
-	    // get the items simply by time stamp of today
+	    $sync_inventory_by_skus = ( ! empty( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
+        // get the items simply by time stamp of today
 	    $product_price_list = ( ! empty( $config->product_price_list ) ? $config->product_price_list : null );
 	    $product_price_sale = ( ! empty( $config->product_price_sale ) ? $config->product_price_sale : null );
 	    // get the items simply by time stamp of today
@@ -1258,9 +1264,10 @@ class WooAPI extends \PriorityAPI\API
             try {
 	            foreach ( $response_data['value'] as $item ) {
 
-                    if ( $item[ $show_in_web ] == 'Y' )
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
                         $skus[] = $item[$search_field];
-
+                    }
+                        
                     //if you want customized syncItemsPriority, activate the function
                     $item = apply_filters('simply_syncItemsPriorityAdapt', $item);
 
@@ -1671,7 +1678,8 @@ class WooAPI extends \PriorityAPI\API
             // add timestamp
             $this->updateOption('items_priority_update', time());
             if(!empty($skus)) {
-                usleep(2000000);
+                //wait for 15 minutes if syncitem very long
+                sleep(900);
                 $this->syncInventoryPriorityBySku($skus);
             }
         } else {
@@ -1851,7 +1859,7 @@ class WooAPI extends \PriorityAPI\API
         $response_data = json_decode($response['body_raw'], true);
         foreach ($response_data['value'] as $item) {
             $search_by_value = $item[$search_field];
-            $sku = $item[$search_field];
+            $sku = $item[$search_field]; 
             //$product_id = wc_get_product_id_by_sku($sku);
             $args = array(
                 'post_type' => 'product',
@@ -1926,7 +1934,7 @@ class WooAPI extends \PriorityAPI\API
                 };
             }
             else{
-                $response_gallery = $this->makeRequest('GET', 'LOGPART?$filter=PARTNAME eq \'' . $search_by_value . '\' &$select=' . $search_field_select . '&$expand=PARTEXTFILE_SUBFORM($select=EXTFILENAME,EXTFILEDES,SUFFIX;$filter=ITAI_ADDKATALOG eq \'Y\' and (SUFFIX eq \'png\' or SUFFIX eq \'jpeg\' or SUFFIX eq \'jpg\'))', [], $this->option('log_attachments_priority', true));
+                $response_gallery = $this->makeRequest('GET', 'LOGPART?$filter=PARTNAME eq \'' . $search_by_value . '\' &$select=' . $search_field_select . '&$expand=PARTEXTFILE_SUBFORM($select=EXTFILENAME,EXTFILEDES,SUFFIX;$filter=(SUFFIX eq \'png\' or SUFFIX eq \'jpeg\' or SUFFIX eq \'jpg\'))', [], $this->option('log_attachments_priority', true));
                 $data_gallery = json_decode($response_gallery['body']);
                 $data_gallery_item = $data_gallery->value[0];
 
@@ -2703,7 +2711,7 @@ class WooAPI extends \PriorityAPI\API
             $expand = '$expand=LOGCOUNTERS_SUBFORM,PARTBALANCE_SUBFORM';
         }
         $data['expand'] = $expand;
-	    $data = apply_filters('simply_syncInventoryPriorityBySku_data', $data);
+	    $data = apply_filters('simply_syncInventoryPriority_data', $data);
         $response = $this->makeRequest('GET', 'LOGPART?$select='.$data['select'].'&$filter='.$url_addition.' and INVFLAG eq \'Y\' &' . $data['expand'], [], $this->option('log_items_priority', false));
         // check response status        // check response status
         if ($response['status']) {
@@ -2788,9 +2796,9 @@ class WooAPI extends \PriorityAPI\API
                     $product->save();
                 }
                 // add filter here
-                if (function_exists('simply_code_after_sync_inventory_by_sku'))
+                if (function_exists('simply_code_after_sync_inventory'))
                 {
-                    simply_code_after_sync_inventory_by_sku($product_id,$item);
+                    simply_code_after_sync_inventory($product_id,$item);
                 }
             }
             $this->updateOption('items_priority_update', time());

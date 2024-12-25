@@ -71,7 +71,6 @@ $format2 = 'd/m/Y H:i:s';
                 </td>
 
             </tr>
-
             <tr>
                 <td class="p18a-label">
                     <?php _e('Items Priority Variation > Web', 'p18a'); ?>
@@ -109,7 +108,42 @@ $format2 = 'd/m/Y H:i:s';
                               form="p18aw-sync"><?= $this->option('sync_variations_priority_config') ?></textarea>
                 </td>
             </tr>
+            <tr>
+                <td class="p18a-label">
+                    <?php _e('Gallery Attachments Priority > Web', 'p18a'); ?>
+                </td>
+                <td>
+                    <input type="checkbox"  name="log_attachments_priority" form="p18aw-sync" value="1" <?php if($this->option('log_attachments_priority')) echo 'checked'; ?> />
+                </td>
+                <td></td>
+                <td>
+                    <select name="auto_sync_attachments_priority" form="p18aw-sync">
+                        <option value="" <?php if( ! $this->option('auto_sync_attachments_priority')) echo 'selected'; ?>><?php _e('None', 'p18a'); ?></option>
+                        <option value="hourly" <?php if($this->option('auto_sync_attachments_priority') == 'hourly') echo 'selected'; ?>><?php _e('Every hour', 'p18a'); ?></option>
+                        <option value="daily" <?php if($this->option('auto_sync_attachments_priority') == 'daily') echo 'selected'; ?>><?php _e('Once a day', 'p18a'); ?></option>
+                        <option value="twicedaily" <?php if($this->option('auto_sync_attachments_priority') == 'twicedaily') echo 'selected'; ?>><?php _e('Twice a day', 'p18a'); ?></option>
+                    </select>
+                </td>
+                <td data-sync-time="sync_attachments_priority">
+                    <?php 
+                    if ($timestamp = $this->option('attachments_priority_update', false)) {
+                         echo(get_date_from_gmt(date($format, $timestamp),$format2));
+                    } else {
+                        _e('Never', 'p18a');
+                    }
+                    ?>
+                </td>
+                <td>
+                    <a href="#" class="button p18aw-sync" data-sync="sync_attachments_priority"><?php _e('Sync', 'p18a'); ?></a>
+                </td>
 
+                <td>
+					<textarea style="width:300px !important; height:45px !important;"  name="sync_attachments_priority_config"
+                              form="p18aw-sync"
+                              placeholder=""
+                    ><?php echo  stripslashes($this->option('sync_attachments_priority_config'))?></textarea >
+                </td>
+            </tr>
 
             <tr>
                 <td class="p18a-label">
