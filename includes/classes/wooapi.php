@@ -931,6 +931,14 @@ class WooAPI extends \PriorityAPI\API
                     }
 
                     break;
+                case 'sync_attachments_priority':
+                    try {
+                        //$this->sync_product_attachemtns();
+                        $this->sync_product_attachemtns();
+                    } catch (Exception $e) {
+                        exit(json_encode(['status' => 0, 'msg' => $e->getMessage()]));
+                    }
+                    break;
                 /*case 'sync_items_web':
 
                     try {
