@@ -4305,7 +4305,9 @@ class WooAPI extends \PriorityAPI\API
             $taxes = $item->get_taxes();
             // Loop through taxes array to get the right label
             foreach ($taxes['subtotal'] as $rate_id => $tax) {
-                $tax_label = +$tax; // <== Here the line item tax label
+                if ($tax !== "") {
+                    $tax_label += (float)$tax; // <== Here the line item tax label
+                }
             }
 
             // get meta
@@ -4768,7 +4770,9 @@ class WooAPI extends \PriorityAPI\API
             $taxes = $item->get_taxes();
             // Loop through taxes array to get the right label
             foreach ($taxes['subtotal'] as $rate_id => $tax) {
-                $tax_label = +$tax; // <== Here the line item tax label
+                if ($tax !== "") {
+                    $tax_label += (float)$tax; // <== Here the line item tax label
+                }
             }
             // get meta
             foreach ($item->get_meta_data() as $meta) {
@@ -4951,7 +4955,9 @@ class WooAPI extends \PriorityAPI\API
             $taxes = $item->get_taxes();
             // Loop through taxes array to get the right label
             foreach ($taxes['subtotal'] as $rate_id => $tax) {
-                $tax_label = +$tax; // <== Here the line item tax label
+                if ($tax !== "") {
+                    $tax_label += (float)$tax; // <== Here the line item tax label
+                }
             }
 
 
