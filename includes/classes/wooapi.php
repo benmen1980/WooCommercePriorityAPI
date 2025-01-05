@@ -2077,7 +2077,12 @@ class WooAPI extends \PriorityAPI\API
         if ($priority_version < 21.0) {
             $data['select'] .= 'EXTFILENAME';
         }
-        $data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
+        if ( $product_price_list != null ) {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM,PARTINCUSTPLISTS_SUBFORM($select=PLNAME,PRICE,VATPRICE;$filter=PLNAME eq \'' . $product_price_list . '\')';
+	    } else {
+		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
+	    }
+        //$data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
