@@ -111,6 +111,28 @@ if (isset($_GET['ord'])) {
     echo $message;
     echo '<br><br><br><h2>' . __('Refresh this page to re post again', 'woocommerce') . '</h2>';
     echo '<br><br><br><a href="edit.php?post_type=shop_order">' . __('Back to order list', 'woocommerce') . '</a>';
-} else {
+} 
+elseif (isset($_GET['ordunidress'])) {
+    $order_id = $_GET['ordunidress'];
+    $message = '';
+    // sync customer
+    /*$order = new \WC_Order($order_id);
+    $user_id = $order->get_user_id();
+    $message .= '<h1>Priority API, sync Customer to Priority</h1>';
+    $response = $this->getPriorityCustomer($order);
+    $message .= simply_create_message_repost($response);*/
+    // sync order    
+    $message .= '<h1>Priority API, sync Order to Priority</h1>';
+    if (function_exists('syncOrderCustomUnidress'))
+    {
+        $response = syncOrderCustomUnidress($order_id, true);
+    }
+    $message .= simply_create_message_repost($response);
+    // message
+    echo $message;
+    echo '<br><br><br><h2>' . __('Refresh this page to re post again', 'woocommerce') . '</h2>';
+    echo '<br><br><br><a href="edit.php?post_type=shop_order">' . __('Back to order list', 'woocommerce') . '</a>';
+}
+else {
     wp_die('You got her by mistake ?');
 }
