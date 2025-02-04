@@ -1253,6 +1253,7 @@ class WooAPI extends \PriorityAPI\API
 	    }
 	    $data = apply_filters( 'simply_syncItemsPriority_data', $data );
 
+        $this->import_start();
 
 	    if ( $config->ignore_variations == 'true' ) {
         $response = $this->makeRequest( 'GET',
@@ -1458,9 +1459,9 @@ class WooAPI extends \PriorityAPI\API
 				            }
 			            }
 			            // sales price make troubles. Roy need to think what to do with it.
-//                    if (null == $my_product->get_sale_price()) {
+                        // if (null == $my_product->get_sale_price()) {
 			            //   $my_product->set_sale_price(0);
-//                    }
+                        // }
 			            if ( ! empty( $config->menu_order ) ) {
 				            $my_product->set_menu_order( $item[ $config->menu_order ] );
 			            }
@@ -1685,6 +1686,7 @@ class WooAPI extends \PriorityAPI\API
 	         }
             // add timestamp
             $this->updateOption('items_priority_update', time());
+            $this->import_finish();
             if(!empty($skus)) {
                 //wait for 15 minutes if syncitem very long
                 sleep(900);
@@ -5073,7 +5075,10 @@ class WooAPI extends \PriorityAPI\API
             $ord_number = $body_array["IVNUM"];
             $order->update_meta_data('priority_recipe_status', $ord_status);
             $order->update_meta_data('priority_recipe_number', $ord_number);
+            apply_filters('simply_after_post_receipt', ['IVNUM' => $ord_number,'order_id' => $order_id]);
             $order->save();
+
+            
         }else{
             $message = $response['message'] . '<br>' . $response['body'] . '<br>';
             $mes_arr = json_decode($response['body']);
@@ -6244,6 +6249,23 @@ class WooAPI extends \PriorityAPI\API
             return $arr;
         }
     }
+
+
+    function import_start() {
+		wp_suspend_cache_invalidation( true );
+		wp_defer_term_counting( true );
+		wp_defer_comment_counting( true );
+	}
+	
+	function import_finish() {
+		wp_suspend_cache_invalidation( false );
+		wp_cache_flush();
+		wp_defer_term_counting( false );
+		wp_defer_comment_counting( false );
+		delete_option( "product_cat_children" );
+		//wp_update_term_count_now(get_terms(['taxonomy' => 'product_cat', 'fields' => 'ids']), 'product_cat'); // Updates counts.
+		wc_update_product_lookup_tables();
+	}
 
 }
 
