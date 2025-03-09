@@ -1241,7 +1241,7 @@ class WooAPI extends \PriorityAPI\API
 	    // get the items simply by time stamp of today
 	    $stamp          = mktime( 0 - $daysback * 24, 0, 0 );
 	    $bod            = date( DATE_ATOM, $stamp );
-	    $date_filter    = 'UDATE ge ' . urlencode( $bod );
+	    $date_filter    = 'UDATE ge ' . urlencode( $bod ) ;
 	    $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,BARCODE,SHOWINWEB,SPEC1,SPEC2,SPEC3,SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,FAMILYDES,INVFLAG,FAMILYNAME';
 	    if ( $priority_version < 21.0 ) {
 		    $data['select'] .= ',EXTFILENAME';
@@ -1266,6 +1266,7 @@ class WooAPI extends \PriorityAPI\API
 		    '&' . $data['expand'] . '', [],
 		    $this->option( 'log_items_priority', true ) );
         }
+        
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
@@ -1372,10 +1373,12 @@ class WooAPI extends \PriorityAPI\API
 		            }
 		            // update product
 		            if ( $product_id != 0 ) {
-                        
 			            $data['ID'] = $product_id;
 			            $_product->set_status($this->option('item_status'));
 			            $_product->save();
+                        if ($item[ $show_in_web ] == 'Y' ) {
+                            do_action('custom_change_product_status', $product_id);
+                        }
 			            // Update post
 			            $id = $product_id;
 			            global $wpdb;
@@ -1492,44 +1495,68 @@ class WooAPI extends \PriorityAPI\API
 						            array_push( $categories, $item[ $cat ] );
 					            }
 				            }
-				            if ( ! empty( $categories ) ) {
-					            $d     = 0;
-					            $terms = $categories;
-					            if ( ! empty( $config->parent_category ) && $parent_category[0] > 0 ) {
-						            $term_exists = term_exists( $terms[0], $taxon, $parent_category );
-						            $childs      = get_term_children( $parent_category[0], $taxon );
-						            if ( ! empty( $childs ) ) {
-							            foreach ( $childs as $child ) {
-								            $cat_c = get_term_by( 'id', $child, $taxon, 'ARRAY_A' );
-								            if ( html_entity_decode($cat_c['name']) == $terms[0] ) {
-									            $terms_cat = wp_set_object_terms( $id, $child, $taxon, true );
-									            $d         = 1;
-								            }
-							            }
-						            }
-						            if ( empty( $term_exists ) || $d == 0 ) {
-							            $terms = wp_insert_term( $terms[0], $taxon, array( 'parent' => $parent_category[0] ) );
-						            }
-						            if ( is_wp_error( $terms ) ) {
-							            $error_message = $terms->get_error_message();
-						            } else {
-							            array_push( $terms, $item[ $config->parent_category ] );
-						            }
+                            if ( ! empty( $categories ) ) {
+								$d     = 0;
+								$terms = $categories;
 
+								if ( ! empty( $config->parent_category ) && $parent_category[0] > 0 ) {
 
-					            }
-					            if ( is_wp_error( $terms ) ) {
+									// Check if term exists under parent category
+									$term_exists = term_exists( $terms[0], $taxon, $parent_category );
 
-					            } else {
-                                    if ( $d != 1 ) {
-                                        wp_set_object_terms( $id, $terms, $taxon );
-                                    } else {
-                                        wp_set_object_terms( $id, $item[ $config->parent_category ], $taxon, true );
-                                    }
-				                 }
+									// If WPML is active, get translated parent category ID
+									if ( function_exists('icl_object_id') ) {
+										$current_lang = apply_filters('wpml_current_language', NULL);
+										$parent_category[0] = icl_object_id($parent_category[0], $taxon, true, $current_lang);
+									}
 
+									// Get child categories of parent
+									$childs = get_term_children( $parent_category[0], $taxon );
 
-				            }
+									if ( ! empty( $childs ) ) {
+										foreach ( $childs as $child ) {
+											// If WPML is active, get translated child ID
+											if ( function_exists('icl_object_id') ) {
+												$child = icl_object_id($child, $taxon, true, $current_lang);
+											}
+
+											$cat_c = get_term_by( 'id', $child, $taxon, 'ARRAY_A' );
+
+											if ( $cat_c && html_entity_decode($cat_c['name']) == $terms[0] ) {
+												$terms_cat = wp_set_object_terms( $id, $child, $taxon, true );
+												$d         = 1;
+											}
+										}
+									}
+
+									// If term does not exist, insert it under the correct WPML parent category
+									if ( empty( $term_exists ) || $d == 0 ) {
+										$terms = wp_insert_term( $terms[0], $taxon, array( 'parent' => $parent_category[0] ) );
+
+										// Ensure newly inserted term is assigned in WPML
+										if ( function_exists('icl_object_id') && ! is_wp_error($terms) ) {
+											$terms['term_id'] = icl_object_id($terms['term_id'], $taxon, true, $current_lang);
+										}
+									}
+
+									if ( is_wp_error( $terms ) ) {
+										$error_message = $terms->get_error_message();
+									} else {
+										array_push( $terms, $item[ $config->parent_category ] );
+									}
+								}
+
+								if ( ! is_wp_error( $terms ) ) {
+									if ( $d != 1 ) {
+										wp_set_object_terms( $id, $terms, $taxon );
+									} else {
+										// Get translated category only if WPML is active
+										$translated_term_id = function_exists('icl_object_id') ? icl_object_id($item[ $config->parent_category ], $taxon, true, $current_lang) : $item[ $config->parent_category ];
+
+										wp_set_object_terms( $id, $translated_term_id, $taxon, true );
+									}
+								}
+							}
 			            }
 
 		            }
@@ -4105,6 +4132,7 @@ class WooAPI extends \PriorityAPI\API
             $ord_number = $body_array[$ordname_field];
             $order->update_meta_data('priority_order_status', $ord_status);
             $order->update_meta_data('priority_order_number', $ord_number);
+            apply_filters('simply_after_post_order', ['ORDNAME' => $ord_number,'order_id' => $order_id]);
             $order->save();
         } else {
             $mes_arr = json_decode($response['body']);

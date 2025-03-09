@@ -151,29 +151,28 @@ class simplypay extends \PriorityAPI\API{
     function simplypay(){
         if(isset($_GET['i'])){
             global $wpdb;
-            $sql_result = $wpdb->get_results(
-                'select
-                            p.order_id,
-                            p.order_item_id,
-                            p.order_item_name,
-                            p.order_item_type,
-                            pm.meta_value    
-                                                   
-                            from
-                            '.$wpdb->prefix.'woocommerce_order_items as p,
-                            '.$wpdb->prefix.'woocommerce_order_itemmeta as pm,
-                             '.$wpdb->prefix.'posts
-                            where order_item_type = \'line_item\' 
-                            and p.order_item_id = pm.order_item_id
-                            and pm.meta_key = \'product-ivnum\' 
-                            and p.order_item_id = pm.order_item_id 
-                            and pm.meta_value = \''.$_GET['i'].'\'
-                            and p.order_id = '.$wpdb->prefix.'posts.ID
-                            and '.$wpdb->prefix.'posts.post_status <> \'wc-cancelled\'
-                            group by
-                            p.order_item_id'
-            );
-            if(sizeof($sql_result)>0){
+            $invoice_number = isset($_GET['i']) ? esc_sql($_GET['i']) : '';
+
+            $sql_result = $wpdb->get_results($wpdb->prepare(
+                "SELECT 
+                    p.order_id,
+                    p.order_item_id,
+                    p.order_item_name,
+                    p.order_item_type,
+                    pm.meta_value
+                FROM {$wpdb->prefix}woocommerce_order_items AS p
+                JOIN {$wpdb->prefix}woocommerce_order_itemmeta AS pm 
+                    ON p.order_item_id = pm.order_item_id
+                JOIN {$wpdb->prefix}posts AS posts
+                    ON p.order_id = posts.ID
+                WHERE order_item_type = 'line_item'
+                    AND pm.meta_key = 'product-ivnum'
+                    AND pm.meta_value = %s
+                    AND posts.post_status NOT IN ('wc-cancelled', 'wc-pending')
+                GROUP BY p.order_item_id",
+                $invoice_number
+            ));
+            if(!empty($sql_result)){
                 if(empty($_GET['debug'])) {
                     wp_die(__('This invoice had already been paid!', 'simply'));
                     $url = home_url() . '/duplicate-invoice';
@@ -212,7 +211,7 @@ class simplypay extends \PriorityAPI\API{
                     'email'           => $customer_info['email'],
                     'data'            => $customer_info['data']  // for extra custom fields
                 )
-            );
+            );            
             return $cart_item_data;
         }
     }
@@ -258,7 +257,7 @@ class simplypay extends \PriorityAPI\API{
         $item_detail = 'IVNUM_';
         //require P18AW_CLASSES_DIR . 'wooapi.php';
         $config = json_decode(stripslashes($this->option('setting-config')));
-        $item_detail = $config->simply_pay_note ?? 'IVNUM';
+        $item_detail = $config->simply_pay_note ?? 'IVNUM';        
         if( isset( $cart_item['_other_options']['product-ivnum'] ) ) {
             $custom_items[] = array( "name" => $item_detail, "value" => $cart_item['_other_options']['product-ivnum'] );
         }
