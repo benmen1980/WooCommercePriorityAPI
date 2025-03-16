@@ -15,10 +15,7 @@ function simply_populate_users($atts)
 
     $transient_valid = false;
     $transient_name = SimplyCookieHandler::get( SIMPLY_CHANGE_USER_TRANSIENT_PREFIX );
-    if( ! empty( $transient_name ) ) {
-        $transient_valid = true;
-    }
-    if( $transient_data = get_transient( $transient_name ) ) {
+    if( ! empty( $transient_name ) && ( $transient_data = get_transient( $transient_name ) ) ) {
         $transient_valid = true;
     }
 
