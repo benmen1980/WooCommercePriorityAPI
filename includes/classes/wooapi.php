@@ -1717,7 +1717,11 @@ class WooAPI extends \PriorityAPI\API
             if(!empty($skus)) {
                 //wait for 15 minutes if syncitem very long
                 sleep(900);
-                $this->syncInventoryPriorityBySku($skus);
+                //$this->syncInventoryPriorityBySku($skus);
+                 // Split SKUs into chunks of 20 and call syncInventoryPriorityBySku for each
+                foreach (array_chunk($skus, 20) as $chunk) {
+                    $this->syncInventoryPriorityBySku($chunk);
+                }
             }
         } else {
             $this->sendEmailError(
