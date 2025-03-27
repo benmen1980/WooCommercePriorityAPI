@@ -263,6 +263,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 				$response = json_decode($instance->create_hub2sdk_orders_request($ordname));
 				$url = $response->order_url ?? '';
 				if (!empty($url)) {
+					do_action('simply_approve_order_request', $ordname);
 					wp_send_json_success($url);
 				} else {
 					wp_send_json_error(['message' => 'URL not found']);
