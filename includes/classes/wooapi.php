@@ -1682,7 +1682,7 @@ class WooAPI extends \PriorityAPI\API
 			            continue;
 		            }
 		            $sku          = $item[ $search_field ];
-		            $is_has_image = get_the_post_thumbnail_url( $id );
+		            //$is_has_image = get_the_post_thumbnail_url( $id );
 		            if ( $this->option( 'update_image' ) == true || ! get_the_post_thumbnail_url( $id ) ) {
 			            $file_     = $this->load_image( $item['EXTFILENAME'] ?? '', $image_base_url, $priority_version, $sku, $search_field );
 			            $attach_id = $file_[0];
@@ -1690,9 +1690,9 @@ class WooAPI extends \PriorityAPI\API
 			            if ( empty( $file ) ) {
 				            continue;
 			            }
-			            include $file;
+			            //include $file;
 			            require_once( ABSPATH . '/wp-admin/includes/image.php' );
-			            $attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+                        $attach_data = wp_generate_attachment_metadata( $attach_id, get_attached_file($attach_id) );
 			            wp_update_attachment_metadata( $attach_id, $attach_data );
 			            set_post_thumbnail( $id, $attach_id );
 		            }
@@ -6193,6 +6193,14 @@ class WooAPI extends \PriorityAPI\API
 		// Save the image to the uploads directory.
 		$upload_dir = wp_upload_dir();
 		$file_path = $upload_dir['path'] . '/' . $filename;
+
+        // Make sure file name is unique 
+        $counter = 0;
+        while( file_exists( $file_path ) ) {
+            $filename = $title . '-' . ++$counter . '.' . $extension;
+            $file_path = $upload_dir['path'] . '/' . $filename;
+        };
+
 		file_put_contents($file_path, $decoded_image);
 
 		if (file_exists($file_path)) {
@@ -6202,7 +6210,6 @@ class WooAPI extends \PriorityAPI\API
 				'post_mime_type' => $wp_filetype['type'],
 				'post_title' => sanitize_file_name($filename),
 				'post_content' => '',
-				'post_type' => 'listing_type',
 				'post_status' => 'inherit',
 			);
 			$attach_id = wp_insert_attachment($attachment, $file_path);
@@ -6258,6 +6265,20 @@ class WooAPI extends \PriorityAPI\API
                 $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
                 $is_uri = strpos('1' . $product_full_url, 'http') > 0 ? false : true;
                 if ($priority_version >= 21.0 && $is_uri) {
+                    if( ($product_id = wc_get_product_id_by_sku($sku)) && ($attach_id = get_post_thumbnail_id($product_id)) ) {
+                        // Decode the base64 image.
+                        list($type, $base64_image) = explode(';', $priority_image_path);
+                        list(, $base64_image)      = explode(',', $priority_image_path);
+                        $base64_image = str_replace(' ', '+', $base64_image);
+                        $decoded_image = base64_decode($base64_image);
+
+                        $current_file = get_attached_file($attach_id);
+                        if( file_exists($current_file) && sha1_file($current_file) === sha1($decoded_image) ) {
+                            // same file, don't save it
+                            return [ null, null ];
+                        }
+                    }
+
                     $file = $this->save_uri_as_image($priority_image_path, $sku);
                     $attach_id = $file[0];
                     $file_name = $file[1];

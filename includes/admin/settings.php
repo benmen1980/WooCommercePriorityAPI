@@ -314,7 +314,7 @@
 
 
                 <td>
-                    <label for="p18a-update_image"><?php _e('Over write existing images ?', 'p18a'); ?></label>
+                    <label for="p18a-update_image"><?php _e('Overwrite existing images ?', 'p18a'); ?></label>
                     <input id="p18aw-sites" type="checkbox" name="update_image"
                            form="p18aw-settings" <?php if ($this->option('update_image') == true) { ?> checked="checked" <?php } ?> />
                 </td>
