@@ -1420,7 +1420,7 @@ class WooAPI extends \PriorityAPI\API
 			            // Insert product
 			            $id = wp_insert_post( $data );
 			            if ( $id ) {
-				            update_post_meta( $id, '_sku', $search_by_value );
+				            update_post_meta( $id, '_sku', wp_slash($search_by_value) );
 				            update_post_meta( $id, '_stock_status', $stock_status );
 				            if ( $stock_status == 'outofstock' ) {
 					            update_post_meta( $id, '_stock', 0 );
