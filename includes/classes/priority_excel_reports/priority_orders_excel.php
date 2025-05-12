@@ -83,7 +83,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,SPEC14,TBALANCE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,PRDATE,AROW_MITKABEL,SPEC14,TBALANCE)';
         	
 		} else 
 		//by default enter date from begin of year to today
@@ -92,7 +92,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$begindate = apply_filters('simply_excel_reports', $begindate);
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
 
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,SPEC14,TBALANCE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,PRDATE,AROW_MITKABEL,SPEC14,TBALANCE)';
 			$additionalurl = apply_filters('simply_orders_excel_data', $additionalurl);
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\'  &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
@@ -144,7 +144,7 @@ class Priority_orders_excel extends \PriorityAPI\API{
 				echo "<table class='table-orders'>";
 				echo "<tr class='row-sub-titles'><td>".__('Part Name','p18w')."</td><td>".__('Manufacturer Part Number','p18w')."</td><td>".__('Description','p18w')."</td><td>".__('Delivery Date','p18w')."</td><td>".__('Quantity','p18w')."</td><td>".__('Balance','p18w')."</td><td>".__('Unit Measure','p18w')."</td><td>".__('Price Unit','p18w')."</td><td>".__('Total Price','p18w')."</td><td>".__('mifrat','p18w')."</td></tr>";
 				foreach($value->ORDERITEMS_SUBFORM as $subform) {
-					echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->Y_9950_5_ESHB."</td><td class='product-row'>".$subform->PDES."</td><td>".(($subform->AROW_MITKABEL == null) ? '' : date('d/m/y',strtotime($subform->AROW_MITKABEL)))."</td><td>".$subform->QUANT."</td><td>".$subform->TBALANCE."</td><td>".$subform->TUNITNAME."</td><td class='price_row'>".$subform->PRICE.' '.$subform->ICODE."</td><td class='price_row'>".$subform->QPRICE.' '.$subform->ICODE;
+					echo "<tr><td>".$subform->PARTNAME."</td><td>".$subform->Y_9950_5_ESHB."</td><td class='product-row'>".$subform->PDES."</td><td>".(($subform->AROW_MITKABEL == null) ? '' : ((date('d/m/y',strtotime($subform->AROW_MITKABEL)) >= date('d/m/y',strtotime($subform->PRDATE))) ? date('d/m/y',strtotime($subform->AROW_MITKABEL)) : date('d/m/y',strtotime($subform->PRDATE))))."</td><td>".$subform->QUANT."</td><td>".$subform->TBALANCE."</td><td>".$subform->TUNITNAME."</td><td class='price_row'>".$subform->PRICE.' '.$subform->ICODE."</td><td class='price_row'>".$subform->QPRICE.' '.$subform->ICODE;
 					$attache = apply_filters('add_attache_priority', $subform->SPEC14);
 					echo $attache;
 					echo "</tr>";
@@ -168,12 +168,12 @@ class Priority_orders_excel extends \PriorityAPI\API{
 			$from_date = urlencode($fdate);  // get from $_POST['from date']
         	$to_date   = urlencode($tdate);  // get from $_POST['from date']
 
-	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,TBALANCE)';
+	   		$additionalurl = 'ORDERS?$filter=CURDATE ge '.$from_date.' and CURDATE le '.$to_date.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,PRDATE,AROW_MITKABEL,TBALANCE)';
 		} else {
 			$begindate = urlencode(date(DATE_ATOM, strtotime('first day of january this year')));
 			$begindate = apply_filters('simply_excel_reports', $begindate);
 			$todaydate = urlencode(date(DATE_ATOM, strtotime('now')));
-			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,AROW_MITKABEL,TBALANCE)';
+			$additionalurl = 'ORDERS?$filter=CURDATE ge '.$begindate.' and CURDATE le '.$todaydate.' and CUSTNAME eq \''.$priority_customer_number.'\' and ROYY_SHOWINWEB eq \'Y\'&$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE,PDES,Y_9950_5_ESHB,ICODE,QPRICE,TUNITNAME,PRDATE,AROW_MITKABEL,TBALANCE)';
 			//$additionalurl = 'ORDERS?$filter=CUSTNAME eq \''.$priority_customer_number.'\' &$expand=ORDERITEMS_SUBFORM($select=PARTNAME,QUANT,PRICE)';
 		}
 		$args= [];
@@ -192,11 +192,11 @@ class Priority_orders_excel extends \PriorityAPI\API{
 		foreach ($data->value as $key => $value) {
 			if(!empty($value->ORDERITEMS_SUBFORM)) {
 				foreach($value->ORDERITEMS_SUBFORM as $subform) {
-					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),date('d/m/y',strtotime($subform->AROW_MITKABEL)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$subform->PARTNAME,$subform->Y_9950_5_ESHB,$subform->PDES,$subform->QUANT,$subform->TBALANCE,$subform->TUNITNAME,$subform->PRICE,$subform->QPRICE);
+					$array=array(date( 'd/m/y',strtotime($value->CURDATE)),(($subform->AROW_MITKABEL == null) ? '' : ((date('d/m/y',strtotime($subform->AROW_MITKABEL)) >= date('d/m/y',strtotime($subform->PRDATE))) ? date('d/m/y',strtotime($subform->AROW_MITKABEL)) : date('d/m/y',strtotime($subform->PRDATE)))),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$subform->PARTNAME,$subform->Y_9950_5_ESHB,$subform->PDES,$subform->QUANT,$subform->TBALANCE,$subform->TUNITNAME,$subform->PRICE,$subform->QPRICE);
 					fputcsv($f, $array);
 				}
 			}else {
-				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),date('d/m/y',strtotime($subform->AROW_MITKABEL)),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE,$value->VAT,$value->TOTPRICEE);
+				$array=array(date( 'd/m/y',strtotime($value->CURDATE)),(($subform->AROW_MITKABEL == null) ? '' : ((date('d/m/y',strtotime($subform->AROW_MITKABEL)) >= date('d/m/y',strtotime($subform->PRDATE))) ? date('d/m/y',strtotime($subform->AROW_MITKABEL)) : date('d/m/y',strtotime($subform->PRDATE)))),$value->ORDNAME,$value->REFERENCE,$value->ORDSTATUSDES,$value->QPRICE,(($value->PERCENT == 0) ? '' : $value->PERCENT),$value->DISPRICE,$value->VAT,$value->TOTPRICEE);
 				fputcsv($f, $array);
 			}
 		}
