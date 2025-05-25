@@ -4917,6 +4917,10 @@ class WooAPI extends \PriorityAPI\API
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
         $user_meta = get_user_meta($user_id);
+        
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
+
         //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
         $cust_number = $this->get_cust_name($order);
 
@@ -4934,6 +4938,15 @@ class WooAPI extends \PriorityAPI\API
 //        ){
 //            $data['CDES'] = empty($order->get_billing_company()) ? $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() : $order->get_billing_company();
 //        }
+
+        // cart discount header
+        $cart_discount = floatval($order->get_total_discount());
+        $cart_discount_tax = floatval($order->get_discount_tax());
+        $order_total = floatval($order->get_subtotal() + $order->get_shipping_total());
+        $order_discount = ($cart_discount / $order_total) * 100.0;
+        if ('header' == $discount_type) {
+            $data['PERCENT'] = $order_discount;
+        }
 
         // order comments
         $priority_version = (float)$this->option('priority-version');
@@ -4999,18 +5012,42 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
 
-
-            if ($product) {
+            if ($product) {                
+                $line_before_discount = (float)$item->get_subtotal();
+                $line_tax = (float)$item->get_subtotal_tax();
+                $line_after_discount = (float)$item->get_total();
+                $discount = ($line_before_discount - $line_after_discount) / $line_before_discount * 100.0;
 
                 $data['EINVOICEITEMS_SUBFORM'][] = [
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),
                     'TQUANT' => (int)$item->get_quantity(),
-                    'TOTPRICE' => round((float)($item->get_total() + $tax_label), 2),
+                    'PRICE' => $discount_type == 'in_line' ? $line_before_discount / (int)$item->get_quantity() : 0.0,
+                    'PERCENT' => $discount_type == 'in_line' ? $discount : 0.0,
                     'id' => $item->get_id(),
                 ];
+                
+                if ($discount_type != 'in_line') {
+                    $data['EINVOICEITEMS_SUBFORM'][sizeof($data['EINVOICEITEMS_SUBFORM']) - 1]['TOTPRICE'] = $line_before_discount + $line_tax;
+                }
             }
-
         }
+
+         // additional line cart discount
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        if (!empty($config)){
+	        $coupon_num = $config->coupon_num;
+        }
+        
+        // additional line cart discount
+        if ($discount_type == 'additional_line' && ($order->get_discount_total() + $order->get_discount_tax() > 0)) {
+            //if($discount_type == 'additional_line'){
+            $data['EINVOICEITEMS_SUBFORM'][] = [
+                $this->get_sku_prioirty_dest_field() => empty($coupon_num) ? '000' : $coupon_num, // change to other item
+                'TOTPRICE' => -1 * floatval($order->get_discount_total() + $order->get_discount_tax()),
+                'TQUANT' => -1,
+            ];
+        }
+
         // shipping rate
         if (!empty($this->get_shipping_price($order, false))) {
             $data['EINVOICEITEMS_SUBFORM'][] = $this->get_shipping_price($order, false);
