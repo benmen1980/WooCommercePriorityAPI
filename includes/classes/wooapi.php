@@ -3315,6 +3315,19 @@ class WooAPI extends \PriorityAPI\API
                 $s = explode('=', $var);
                 $payment_type = $s[1];
                 break;
+            case 'yaad-sarig2';
+                $strArr = [];
+                $yaad_credit_card_payment = $order->get_meta('yaad_credit_card_payment');
+                parse_str($yaad_credit_card_payment, $strArr);
+
+                $ccuid = $strArr['UID'];
+                $payaccount = $strArr['L4digit'];
+                $validmonth = $strArr['Tmonth'].substr($strArr['Tyear'], -2);
+                $confnum = $strArr['ACode'];
+                $numpay = $strArr['Payments'];
+                $firstpay = $strArr['firstPayment'];
+                $card_type = $strArr['Brand'];
+                break;
             // pelecard
             case 'pelecard';
                 if ($order->get_payment_method_title() !== 'PayPal' && $order->get_payment_method_title() !== 'BUYME') {
@@ -5074,6 +5087,7 @@ class WooAPI extends \PriorityAPI\API
             $ord_number = $body_array["IVNUM"];
             $order->update_meta_data('priority_invoice_status', $ord_status);
             $order->update_meta_data('priority_invoice_number', $ord_number);
+            apply_filters('simply_after_post_otc', ['IVNUM' => $ord_number,'order_id' => $order_id]);
             $order->save();
         }else{
             $message = $response['message'] . '' . json_encode($response);

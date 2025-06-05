@@ -66,8 +66,8 @@
                 </td>
                 <td></td>
                 <td>
-                    <input id="p18aw-obligo" type="checkbox" name="obligo"
-                           form="p18aw-settings" <?php if ($this->option('obligo') == true) { ?> checked="checked" <?php } ?> />
+                    <input id="p18aw-sites" type="checkbox" name="sites"
+                           form="p18aw-settings" <?php if ($this->option('sites') == true) { ?> checked="checked" <?php } ?> />
                 </td>
             </tr>
             <tr>
