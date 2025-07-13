@@ -6314,7 +6314,7 @@ class WooAPI extends \PriorityAPI\API
                 }
                 $product_full_url = str_replace('../../system/mail', $images_url, $priority_image_path);
                 $product_full_url = str_replace('‏‏', '%E2%80%8F%E2%80%8F', $product_full_url);
-                $is_uri = strpos('1' . $product_full_url, 'http') > 0 ? false : true;
+                $is_uri = substr($product_full_url, 0, 5) == "data:" ? true : false;
                 if ($priority_version >= 21.0 && $is_uri) {
                     if( ($product_id = wc_get_product_id_by_sku($sku)) && ($attach_id = get_post_thumbnail_id($product_id)) ) {
                         // Decode the base64 image.
