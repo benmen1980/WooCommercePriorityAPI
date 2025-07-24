@@ -2103,8 +2103,10 @@ class WooAPI extends \PriorityAPI\API
         $stamp = mktime(0 - $daysback * 24, 0, 0);
         $bod = date(DATE_ATOM, $stamp);
         $url_addition = 'UDATE ge ' . $bod;
-        $variation_field       = $this->option('variation_field') =='true' ? $this->option('variation_field') : 'MPARTNAME';
-        $variation_field_title = $this->option('variation_field_title') == 'true' ? $this->option('variation_field_title') : 'MPARTDES';
+   
+        $variation_field       = !empty($this->option('variation_field'))  ? $this->option('variation_field') : 'MPARTNAME';
+        $variation_field_title = !empty($this->option('variation_field_title'))  ? $this->option('variation_field_title') : 'MPARTDES';
+        
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
@@ -2149,6 +2151,7 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
 	                    $item['attributes'] = $attributes;
+
                         $item = apply_filters('simply_ItemsAtrrVariation', $item);
                         $attributes = $item['attributes'];
 
@@ -2172,6 +2175,7 @@ class WooAPI extends \PriorityAPI\API
                                     $parents[$item[$variation_field]]['content'] .= $clean_text;
                                 }
                             }
+                            $price = apply_filters('simply_ItemsPriceVariation', $item);
                             $parents[$item[$variation_field]] = [
                                 'sku' => $item[$variation_field],
                                 //'crosssell' => $item['ROYL_SPECDES1'],
@@ -2183,9 +2187,9 @@ class WooAPI extends \PriorityAPI\API
                                 //isset($item['PARTTEXT_SUBFORM']['TEXT']) && !empty($item['PARTTEXT_SUBFORM']['TEXT']) ? $item['PARTTEXT_SUBFORM']['TEXT'] : $parents[$item[$variation_field]]['post_content']
                             ];
 
-//                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
-//
-//                            }
+                            //                            if (isset($item['PARTTEXT_SUBFORM']['TEXT'])&&!empty($item['PARTTEXT_SUBFORM']['TEXT'])) {
+                            //
+                            //                            }
 
                             if ($priority_version >= 21.0 && true == $is_load_image) {
                                 $response = $this->makeRequest('GET', 'LOGPART?$select=EXTFILENAME&$filter=PARTNAME eq \'' . $search_by_value . '\'', [], $this->option('log_items_priority', true));
@@ -2193,7 +2197,7 @@ class WooAPI extends \PriorityAPI\API
                                 $item['EXTFILENAME'] = $data->value[0]->EXTFILENAME;
                             }
                             if (!empty($show_in_web)) {
-                                $parents[$item[$variation_field]][$show_in_web] = $item[$show_in_web];
+                                $parents[$item[$variation_field]]['show_in_web'] = $item[$show_in_web];
                             }
                             $childrens[$item[$variation_field]][$search_by_value] = [
                                 'sku' => $search_by_value,
@@ -2207,9 +2211,13 @@ class WooAPI extends \PriorityAPI\API
                                     $item[$is_categories]
                                 ],
                                 'attributes' => $attributes,
-                                'show_in_web' => $item[$show_in_web]
+                                'show_in_web' => $item[$show_in_web],
 
                             ];
+
+                            $childrens = apply_filters('simply_ItemsVariation', array('childrens' => $childrens,'item' =>$item));
+                          
+
                             /*
 	                        if ($config->sync_price != "true") {
 		                        $childrens[$item[$variation_field]][$search_by_value]['regular_price']= $price;
@@ -2241,6 +2249,9 @@ class WooAPI extends \PriorityAPI\API
                             }
                         }
                         $product_cross_sells[$value['cross_sells']][] = $partname;
+
+                        //Allow external modification of the final parent structure
+                        $parents[$partname] = apply_filters('custom_filter_parent_product_data', $parents[$partname], $childrens[$partname], $partname);
                     } else {
                         unset($parents[$partname]);
                     }
@@ -2254,10 +2265,11 @@ class WooAPI extends \PriorityAPI\API
                         }
                         $parent_data = apply_filters('simply_modify_product_variable', ['sku' => $sku_parent, 'text' => '']);
 
-                        $id = create_product_variable(array(
+                        $product_data = array(
                             'author' => '', // optional
                             'title' => $parent['title'],
-                            'content' => $parent_data['text'] != '' ? $parent_data['text'] : $parent['post_content'],                            'excerpt' => '',
+                            'content' => $parent_data['text'] != '' ? $parent_data['text'] : $parent['post_content'],
+                            'excerpt' => '',
                             'regular_price' => '', // product regular price
                             'sale_price' => '', // product sale price (optional)
                             'stock' => $parent['stock'], // Set a minimal stock quantity
@@ -2267,15 +2279,20 @@ class WooAPI extends \PriorityAPI\API
                             'sku' => $sku_parent, // optional
                             'tax_class' => '', // optional
                             'weight' => '', // optional
-                            // For NEW attributes/values use NAMES (not slugs)
                             'attributes' => $parent['attributes'],
                             'categories' => $parent['categories'],
                             'tags' => $parent['tags'],
                             'status' => $this->option('item_status'),
-                            'show_in_web' => $parent_data['show_in_web'] != '' ? $parent_data['show_in_web'] : $parent['show_in_web'],
+                            'show_in_web' => (isset($parent_data['show_in_web']) && $parent_data['show_in_web'] !== null)
+                                ? $parent_data['show_in_web'] : $parent['show_in_web'],
                             'is_update_products' => $is_update_products,
-                            'shipping' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : ''
-                        ));
+                            'shipping' => $parent_data['shipping'] != '' ? $parent_data['shipping'] : '',
+                        );
+
+                        $product_data = apply_filters('custom_product_data_before_create', $product_data, $parent);
+
+                        $id = create_product_variable($product_data);
+
 
                         $parents[$sku_parent]['product_id'] = $id;
                         foreach ($parent['variation'] as $sku_children => $children) {
@@ -2286,6 +2303,7 @@ class WooAPI extends \PriorityAPI\API
                                 $attach_id = $file[0];
                                 $file_name = $file[1];
                             }
+
                             $variation_data = array(
                                 'attributes' => $children['attributes'],
                                 'sku' => $sku_children,
@@ -2299,7 +2317,10 @@ class WooAPI extends \PriorityAPI\API
                                 'show_front' => $children['show_front'],
                                 'show_in_web' => $children['show_in_web'],
                                 'is_update_products' => $is_update_products,
+
                             );
+
+                            $variation_data = apply_filters('custom_variation_data_before_create', $variation_data, $children);
                             // The function to be run
                             create_product_variation($id, $variation_data);
                         }
