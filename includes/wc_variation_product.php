@@ -198,7 +198,7 @@ function create_product_variable($data)
                 'name' => $taxonomy_name,
                 'value' => '',
                 'position' => '',
-                'is_visible' => 0,
+                'is_visible' => 1,
                 'is_variation' => $is_variation,
                 'is_taxonomy' => 1
             );

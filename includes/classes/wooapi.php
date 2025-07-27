@@ -1279,7 +1279,12 @@ class WooAPI extends \PriorityAPI\API
                     }
                         
                     //if you want customized syncItemsPriority, activate the function
-                    $item = apply_filters('simply_syncItemsPriorityAdapt', $item);
+                    //$item = apply_filters('simply_syncItemsPriorityAdapt', $item);
+                    if (function_exists('simply_syncItemsPriorityAdapt'))
+                    {
+                        simply_syncItemsPriorityAdapt($item);
+                        continue;
+                    }
 
 		            if ( defined( 'WP_DEBUG' ) && true === WP_DEBUG ) {
 			            error_log($item['PARTNAME']);
@@ -3612,6 +3617,12 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncDataAfterOrder($order_id)
     {
+        $sync_payment_complete = true;
+        $sync_payment_complete = apply_filters('simply_sync_payment_complete', $order_id);
+        if($sync_payment_complete == false){
+            return;
+        }
+
         $order = new \WC_Order($order_id);
         // check order status against config
         $config = json_decode(stripslashes($this->option('setting-config')));
