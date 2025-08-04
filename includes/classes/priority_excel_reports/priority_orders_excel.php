@@ -101,6 +101,14 @@ class Priority_orders_excel extends \PriorityAPI\API{
         
 		$args= [];
 		$response = $this->makeRequest( "GET", $additionalurl, $args, true );
+		// if is error send email
+		if (!$response['status']) {
+			$this->sendEmailError(
+                [],
+                'Error priority Order Reports',
+                $response['body']
+            );
+		}
 		$data     = json_decode( $response['body'] );
 		
 		$in_fdata = isset($_POST['from-date']) ? $_POST['from-date'] : '';
@@ -266,13 +274,28 @@ class Priority_orders_excel extends \PriorityAPI\API{
 					do_action('simply_approve_order_request', $ordname);
 					wp_send_json_success($url);
 				} else {
+					$this->sendEmailError(
+						[],
+						'Error View PDF order Priority',
+						'URL is empty - not found'
+					);
 					wp_send_json_error(['message' => 'URL not found']);
 				}
 			} catch (Exception $e) {
+				$this->sendEmailError(
+					[],
+					'Error Viewing Order from Priority',
+					'message: ' . $e->getMessage()
+				);
 				wp_send_json_error(['message' => $e->getMessage()]);
 			}
 	
 		} else {
+			$this->sendEmailError(
+				[],
+				'Error Viewing Order from Priority',
+				'error: ' . $response
+			);
 			wp_send_json_error($response);
 		}
 	}
