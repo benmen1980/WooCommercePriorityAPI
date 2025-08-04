@@ -8,6 +8,8 @@
  * @since 3.0.0
  */
 
+
+
 function create_product_variable($data)
 {
 
@@ -27,7 +29,7 @@ function create_product_variable($data)
     $product_id = wc_get_product_id_by_sku($data['sku']);
 
     if (!empty($data['sku']) && $product_id) {
-        if($is_update_products == true){
+        if($data['is_update_products'] == true){
             $post_data['ID'] = $product_id;
             $_product = wc_get_product( $product_id );
 
@@ -150,6 +152,7 @@ function create_product_variable($data)
         }
     }
 
+
     ## ---------------------- VARIATION TAGS ---------------------- ##
 
 
@@ -185,13 +188,18 @@ function create_product_variable($data)
                     ))
                 );
             }
+            $is_variation = 1;
+            
+            $is_variation = apply_filters('simply_select_attr_for_variations', $key);
+            
 
+        
             $product_attributes[$taxonomy_name] = array(
                 'name' => $taxonomy_name,
                 'value' => '',
                 'position' => '',
-                'is_visible' => 0,
-                'is_variation' => 1,
+                'is_visible' => 1,
+                'is_variation' => $is_variation,
                 'is_taxonomy' => 1
             );
 
@@ -221,6 +229,12 @@ function create_product_variable($data)
 
         update_post_meta($product_id, '_product_attributes', $product_attributes);
     }
+
+
+    ## ---------------------- VARIATION CUSTOM TAXONOMY ---------------------- ##
+    $data['id'] = $product_id;
+    do_action( 'simply_update_parent_data', $data );
+
     $product->save(); // Save the data
 
     return $product_id;
@@ -250,7 +264,7 @@ function create_product_variation($product_id, $variation_data)
     $variation_id = wc_get_product_id_by_sku($variation_data['sku']);
 
     if (!empty($variation_data['sku']) && $variation_id) {
-        if($is_update_products == true){
+        if($variation_data['is_update_products'] == true){
             $variation_post['ID'] = $variation_id;
             // Update the product variation
             $variation_id = wp_update_post($variation_post);
@@ -264,7 +278,7 @@ function create_product_variation($product_id, $variation_data)
 	    if($variation_data['show_in_web'] != 'Y'){
 			return;
 	    }
-        $variation_id = wp_insert_post($variation_post);
+        $variation_id = wp_insert_post($variation_post); //67
     }
 
     // Get an instance of the WC_Product_Variation object
@@ -348,6 +362,7 @@ function create_product_variation($product_id, $variation_data)
         $variation->set_manage_stock(false);
     }*/
 
+
     update_post_meta($variation_id, 'product_code', $variation_data['product_code']);
     if (!empty($variation_data['image_id']) && !empty($variation_data['image_file'])) {
         $file = $variation_data['image_file'];
@@ -359,10 +374,12 @@ function create_product_variation($product_id, $variation_data)
     }
     $variation->set_weight(''); // weight (reseting)
 
-    $variation->save(); // Save the data
+   
 
 	$variation_data['variation_id'] = $variation_id;
 	do_action( 'simply_update_variation_data', $variation_data );
+
+    $variation->save(); // Save the data
 
     return $variation_id;
 }
