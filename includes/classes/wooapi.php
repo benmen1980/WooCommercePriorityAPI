@@ -3148,6 +3148,14 @@ class WooAPI extends \PriorityAPI\API
             }
             $response = $this->syncProspect($order);
         } else {
+            $custname = apply_filters('simply_search_customer_in_priority', ['order' => $order,
+                'CUSTNAME' => null])['CUSTNAME'];
+            if (!empty($custname)) {
+                $body = ['CUSTNAME' => $custname];
+                $response['body'] = json_encode($body);
+                update_post_meta($order_id, 'prospect_custname', $custname);
+                return $response;
+            }
             $response = $this->syncCustomer($order);
         }
         return $response;
@@ -4091,7 +4099,8 @@ class WooAPI extends \PriorityAPI\API
                 $line_before_discount = (float)$item->get_subtotal();
                 $line_tax = (float)$item->get_subtotal_tax();
                 $line_after_discount = (float)$item->get_total();
-                $discount = ($line_before_discount - $line_after_discount) / ($line_before_discount ?: 1) * 100.0;
+                $discount = ($line_before_discount != 0) ? (($line_before_discount - $line_after_discount) / $line_before_discount * 100.0) : 0;
+
                 $data['ORDERITEMS_SUBFORM'][] = [
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),
                     'TQUANT' => (int)$item->get_quantity(),
@@ -4421,7 +4430,7 @@ class WooAPI extends \PriorityAPI\API
                 $line_before_discount = (float)$item->get_subtotal();
                 $line_tax = (float)$item->get_subtotal_tax();
                 $line_after_discount = (float)$item->get_total();
-                $discount = ($line_before_discount - $line_after_discount) / ($line_before_discount ?: 1) * 100.0;
+                $discount = ($line_before_discount != 0) ? (($line_before_discount - $line_after_discount) / $line_before_discount * 100.0) : 0;
                 $data['TRANSORDER_D_SUBFORM'][] = [
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),
                     'TQUANT' => (int)$item->get_quantity(),
@@ -4879,7 +4888,7 @@ class WooAPI extends \PriorityAPI\API
                 $line_before_discount = (float)$item->get_subtotal();
                 $line_tax = (float)$item->get_subtotal_tax();
                 $line_after_discount = (float)$item->get_total();
-                $discount = ($line_before_discount - $line_after_discount) / $line_before_discount * 100.0;
+                $discount = ($line_before_discount != 0) ? (($line_before_discount - $line_after_discount) / $line_before_discount * 100.0) : 0;
                 $data['AINVOICEITEMS_SUBFORM'][] = [
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),
                     'TQUANT' => (int)$item->get_quantity(),
@@ -5061,7 +5070,7 @@ class WooAPI extends \PriorityAPI\API
                 $line_before_discount = (float)$item->get_subtotal();
                 $line_tax = (float)$item->get_subtotal_tax();
                 $line_after_discount = (float)$item->get_total();
-                $discount = ($line_before_discount - $line_after_discount) / $line_before_discount * 100.0;
+                $discount = ($line_before_discount != 0) ? (($line_before_discount - $line_after_discount) / $line_before_discount * 100.0) : 0;
 
                 $data['EINVOICEITEMS_SUBFORM'][] = [
                     $this->get_sku_prioirty_dest_field() => $product->get_sku(),

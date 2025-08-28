@@ -37,8 +37,15 @@ class Priority_sdk_accounts extends \PriorityAPI\API{
 
 				<p><?php _e('Account','p18w'); ?></p>
 				<?php
-			    $res = json_decode($this->create_hub2sdk_request());
-                $url = $res->report_url;
+					$res = json_decode($this->create_hub2sdk_request());
+					$url = $res->report_url;
+					if (empty($url)) {
+						$this->sendEmailError(
+							[],
+							'Error URL is empty in priority sdk accounts',
+							'URL not found'
+						);
+					}
                 //  $url = 'https://prioritydev.simplyct.co.il/netfiles/1e6022cCC42FCFE0C734670A328FA4685048CE4.htm';
                 ?>
 				<a href="<?php echo $url ?>" target="_blank"><?php _e('Click on the link to open the report', 'p18w') ?></a>

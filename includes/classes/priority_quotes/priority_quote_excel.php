@@ -101,6 +101,14 @@ class Priority_quotes_excel extends \PriorityAPI\API{
         
         $args= [];
         $response = $this->makeRequest( "GET", $additionalurl, $args, true );
+        // if is error send email
+		if (!$response['status']) {
+			$this->sendEmailError(
+                [],
+                'Error priority Quote Reports',
+                $response['body']
+            );
+		}
         $data     = json_decode( $response['body'] );
 
         
@@ -290,13 +298,28 @@ class Priority_quotes_excel extends \PriorityAPI\API{
                     do_action('simply_open_quote_request', $quotemun);
 					wp_send_json_success($url);
 				} else {
+                    $this->sendEmailError(
+						[],
+						'Error View PDF Quote Priority',
+						'URL is empty'
+					);
 					wp_send_json_error(['message' => 'URL not found']);
 				}
 			} catch (Exception $e) {
+                $this->sendEmailError(
+					[],
+					'Error Viewing Quote from Priority',
+					'message: ' . $e->getMessage()
+				);
 				wp_send_json_error(['message' => $e->getMessage()]);
 			}
 	
 		} else {
+            $this->sendEmailError(
+				[],
+				'Error Viewing Quote from Priority',
+				'error: ' . $response
+			);
 			wp_send_json_error($response);
 		}
 	}

@@ -345,9 +345,9 @@ function create_product_variation($product_id, $variation_data)
             // Get the variations
             $variations = $product->get_children();
     
-            foreach ($variations as $variation) {
+            foreach ($variations as $child_var) {
                 // Check if the current variation is the one to be removed
-                if ($variation == $variation_id) {
+                if ($child_var == $variation_id) {
                     // Remove the variation
                     wp_delete_post($variation_id, true); // Set the second parameter to true to permanently delete the variation
                 }
