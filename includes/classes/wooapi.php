@@ -407,6 +407,9 @@ class WooAPI extends \PriorityAPI\API
                             $order = wc_get_order($order_id);
                             echo $order->get_status();
                             break;
+                        case 'sync_order_status';
+                            $this->syncPriorityOrderStatus();
+                            break;
                         case 'test';
                             echo 'this is just a test' . PHP_EOL;
 
@@ -3054,7 +3057,7 @@ class WooAPI extends \PriorityAPI\API
         $date = date('Y-m-d');
         $prev_date = date(DATE_ATOM, strtotime($date . ' -10 day'));
         $url_addition .= 'CURDATE ge ' . urlencode($prev_date);
-        $response = $this->makeRequest('GET', $url_addition, null, true);
+        $response = $this->makeRequest('GET', $url_addition, [], true);
         $orders = json_decode($response['body'], true)['value'];
         $output = '';
         foreach ($orders as $el) {
@@ -3062,7 +3065,8 @@ class WooAPI extends \PriorityAPI\API
             $order = wc_get_order($order_id);
             $pri_status = $el['ORDSTATUSDES'];
             if ($order) {
-                update_post_meta($order_id, 'priority_order_status', $pri_status);
+                $order->update_meta_data('priority_invoice_status', $pri_status);
+				$order->save();
                 $output .= '<br>' . $order_id . ' ' . $pri_status . ' ';
             }
         }
@@ -3073,7 +3077,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
-        $response = $this->makeRequest('GET', $url_addition, null, true);
+        $response = $this->makeRequest('GET', $url_addition, [], true);
         $orders = json_decode($response['body'], true)['value'];
         $output = '';
         foreach ($orders as $el) {
@@ -3082,8 +3086,9 @@ class WooAPI extends \PriorityAPI\API
             $order = wc_get_order($order_id);
             $pri_status = $el['STATDES'];
             if ($order) {
-                update_post_meta($order_id, 'priority_invoice_status', $pri_status);
-                update_post_meta($order_id, 'priority_invoice_number', $ivnum);
+                $order->update_meta_data('priority_invoice_status', $pri_status);
+            	$order->update_meta_data('priority_invoice_number', $ivnum);
+				$order->save();
                 $output .= '<br>' . $order_id . ' ' . $pri_status . ' ';
             }
         }
@@ -3094,7 +3099,7 @@ class WooAPI extends \PriorityAPI\API
         $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
 
-        $response = $this->makeRequest('GET', $url_addition, null, true);
+        $response = $this->makeRequest('GET', $url_addition, [], true);
         $orders = json_decode($response['body'], true)['value'];
         $output = '';
         foreach ($orders as $el) {
@@ -3103,9 +3108,9 @@ class WooAPI extends \PriorityAPI\API
             $order = wc_get_order($order_id);
             $pri_status = $el['STATDES'];
             if ($order) {
-                update_post_meta($order_id, 'priority_invoice_status', $pri_status);
-                update_post_meta($order_id, 'priority_invoice_number', $ivnum);
-                $output .= '<br>' . $order_id . ' ' . $pri_status . ' ';
+                $order->update_meta_data('priority_invoice_status', $pri_status);
+            	$order->update_meta_data('priority_invoice_number', $ivnum);
+				$order->save();;
             }
         }
         // recipe
@@ -3114,8 +3119,7 @@ class WooAPI extends \PriorityAPI\API
         //$prev_date = date('Y-m-d', strtotime($date . ' -10 day'));
         $url_addition .= 'IVDATE ge ' . urlencode($prev_date);
         $url_addition .= ' and STORNOFLAG ne \'Y\'';
-
-        $response = $this->makeRequest('GET', $url_addition, null, true);
+        $response = $this->makeRequest('GET', $url_addition, [], true);
         $orders = json_decode($response['body'], true)['value'];
         $output = '';
         foreach ($orders as $el) {
@@ -3124,8 +3128,9 @@ class WooAPI extends \PriorityAPI\API
             $ivnum = $el['IVNUM'];
             $pri_status = $el['STATDES'];
             if ($order) {
-                update_post_meta($order_id, 'priority_recipe_status', $pri_status);
-                update_post_meta($order_id, 'priority_recipe_number', $ivnum);
+                $order->update_meta_data('priority_invoice_status', $pri_status);
+            	$order->update_meta_data('priority_invoice_number', $ivnum);
+				$order->save();
                 $output .= '<br>' . $order_id . ' ' . $pri_status . ' ';
             }
         }
