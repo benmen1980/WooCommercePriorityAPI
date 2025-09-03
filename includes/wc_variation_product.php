@@ -157,9 +157,11 @@ function create_product_variable($data)
     ## ---------------------- VARIATION TAGS ---------------------- ##
 
 
-    if ($data['tags'] && is_array($data['tags']))
+    if ($data['tags'] && is_array($data['tags'])){
+        $data = apply_filters('simply_set_tags', $data);
         wp_set_object_terms($product_id, $data['tags'], 'product_tag', true);
-
+    }
+       
 
     ## ---------------------- VARIATION ATTRIBUTES ---------------------- ##
 

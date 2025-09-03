@@ -2098,6 +2098,7 @@ class WooAPI extends \PriorityAPI\API
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
+        $has_tag = (!empty($config->tags) ? $config->tags : null);
         $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
         $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
         $image_base_url = $config->image_base_url;
@@ -2217,6 +2218,9 @@ class WooAPI extends \PriorityAPI\API
                                 'image' => $item['EXTFILENAME'],
                                 'categories' => [
                                     $item[$is_categories]
+                                ],
+                                'tags' => [
+                                    $item[$has_tag]
                                 ],
                                 'attributes' => $attributes,
                                 'show_in_web' => $item[$show_in_web],
@@ -3110,7 +3114,8 @@ class WooAPI extends \PriorityAPI\API
             if ($order) {
                 $order->update_meta_data('priority_invoice_status', $pri_status);
             	$order->update_meta_data('priority_invoice_number', $ivnum);
-				$order->save();;
+				$order->save();
+                do_action('simply_update_order_status', ['order_id' => $order_id , 'status' => $pri_status ] );
             }
         }
         // recipe
