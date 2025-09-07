@@ -22,7 +22,7 @@ class simplypay extends \PriorityAPI\API{
     }
     private function __construct()
     {
-        if(isset($_GET['c'])||isset($_GET['i'])){
+        if( isset( $_GET['c'] ) || isset( $_GET['i'] ) || isset( $_GET['d'] ) ) {
             add_filter( 'wc_add_to_cart_message_html', [$this,'remove_add_to_cart_message']);
             // remove this if you want to allow adding paymnets to cart with different iv or price
             add_filter( 'woocommerce_add_to_cart_validation', [$this,'simply_custom_add_to_cart_before'] );
@@ -37,7 +37,7 @@ class simplypay extends \PriorityAPI\API{
         add_filter( 'woocommerce_checkout_fields' , [$this,'custom_override_checkout_fields'],10,1 );
         add_filter( 'woocommerce_checkout_get_value',[$this,'override_checkout__fields'],10,2);
         add_filter( 'woocommerce_get_item_data', [$this,'render_custom_data_on_cart_checkout'], 10, 2 );
-        add_action( 'woocommerce_checkout_create_order_line_item', [$this,'custom_field_update_order_item_meta'], 20, 4 );
+        // add_action( 'woocommerce_checkout_create_order_line_item', [$this,'custom_field_update_order_item_meta'], 20, 4 );
         add_action( 'woocommerce_checkout_update_order_meta', [$this,'my_custom_checkout_field_update_order_meta']);
         add_action( 'woocommerce_after_order_notes',[$this,'my_custom_checkout_field']);
     }
@@ -149,42 +149,45 @@ class simplypay extends \PriorityAPI\API{
         endswitch;
     }
     function simplypay(){
-        if(isset($_GET['i'])){
-            global $wpdb;
-            $invoice_number = isset($_GET['i']) ? esc_sql($_GET['i']) : '';
+        if ( isset( $_GET['i'] ) || isset( $_GET['d'] )) {
+            if(isset($_GET['i'])){
+                global $wpdb;
+                $invoice_number = isset($_GET['i']) ? esc_sql($_GET['i']) : '';
 
-            $sql_result = $wpdb->get_results($wpdb->prepare(
-                "SELECT 
-                    p.order_id,
-                    p.order_item_id,
-                    p.order_item_name,
-                    p.order_item_type,
-                    pm.meta_value
-                FROM {$wpdb->prefix}woocommerce_order_items AS p
-                JOIN {$wpdb->prefix}woocommerce_order_itemmeta AS pm 
-                    ON p.order_item_id = pm.order_item_id
-                JOIN {$wpdb->prefix}posts AS posts
-                    ON p.order_id = posts.ID
-                WHERE order_item_type = 'line_item'
-                    AND pm.meta_key = 'product-ivnum'
-                    AND pm.meta_value = %s
-                    AND posts.post_status NOT IN ('wc-cancelled', 'wc-pending')
-                GROUP BY p.order_item_id",
-                $invoice_number
-            ));
-            if(!empty($sql_result)){
-                if(empty($_GET['debug'])) {
-                    wp_die(__('This invoice had already been paid!', 'simply'));
-                    $url = home_url() . '/duplicate-invoice';
-                    wp_redirect($url);
-                    exit;
+                $sql_result = $wpdb->get_results($wpdb->prepare(
+                    "SELECT 
+                        p.order_id,
+                        p.order_item_id,
+                        p.order_item_name,
+                        p.order_item_type,
+                        pm.meta_value
+                    FROM {$wpdb->prefix}woocommerce_order_items AS p
+                    JOIN {$wpdb->prefix}woocommerce_order_itemmeta AS pm 
+                        ON p.order_item_id = pm.order_item_id
+                    JOIN {$wpdb->prefix}posts AS posts
+                        ON p.order_id = posts.ID
+                    WHERE order_item_type = 'line_item'
+                        AND pm.meta_key = 'product-ivnum'
+                        AND pm.meta_value = %s
+                        AND posts.post_status NOT IN ('wc-cancelled', 'wc-pending')
+                    GROUP BY p.order_item_id",
+                    $invoice_number
+                ));
+                if(!empty($sql_result)){
+                    if(empty($_GET['debug'])) {
+                        wp_die(__('This invoice had already been paid!', 'simply'));
+                        //wp_redirect(home_url('/duplicate-invoice'));
+                        //exit;
+                    }
                 }
             }
-            $cart_item_data['_other_options']['product-ivnum'] = $_GET['i'] ;
+
+            $cart_item_data['_other_options']['product-ivnum'] =  isset($_GET['i']) ? $_GET['i'] :  $_GET['d'];
             // get the customer info according to the IVNUM
             $customer_info = [
-                'docno'           => $_GET['i'],
+                'docno'           => isset($_GET['i']) ? $_GET['i'] :  $_GET['d'],
                 'price'           => $_GET['pr'],
+                'token'           => $_GET['r'],
                 'first_name'      => '',
                 'last_name'       => '',
                 'street'  => '',
@@ -194,6 +197,7 @@ class simplypay extends \PriorityAPI\API{
                 'email'           => '',
                 'data'            => ''
             ];
+
             // need to filter here
             $customer_info = apply_filters( 'simply_request_customer_data', $customer_info );
             $cart_item_data['_other_options']['product-price'] = $customer_info['price'] ;
@@ -293,4 +297,15 @@ class simplypay extends \PriorityAPI\API{
 
 }
 
-
+// Redirect to page 404 from all other pages of the site
+add_action( 'template_redirect', 'redirect_all_except_checkout' );
+function redirect_all_except_checkout() {
+    if ( ! is_checkout() && ! is_order_received_page() ) {
+        global $wp_query;
+        $wp_query->set_404();
+        status_header(404);
+        nocache_headers();
+        include( get_query_template( '404' ) );
+        exit;
+    }
+}
