@@ -46,8 +46,9 @@ function create_product_variable($data)
                 }
             }
 
-            // Update the product (post data)
+            $post_data = apply_filters( 'simply_update_parent_status', $post_data );
             $product_id = wp_update_post($post_data);
+            
             // $_product->set_status($this->option('item_status'));
             // $_product->save();
         }
@@ -156,9 +157,11 @@ function create_product_variable($data)
     ## ---------------------- VARIATION TAGS ---------------------- ##
 
 
-    if ($data['tags'] && is_array($data['tags']))
+    if ($data['tags'] && is_array($data['tags'])){
+        $data = apply_filters('simply_set_tags', $data);
         wp_set_object_terms($product_id, $data['tags'], 'product_tag', true);
-
+    }
+       
 
     ## ---------------------- VARIATION ATTRIBUTES ---------------------- ##
 
