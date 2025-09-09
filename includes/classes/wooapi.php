@@ -3375,15 +3375,21 @@ class WooAPI extends \PriorityAPI\API
             // pelecard
             case 'pelecard';
                 if ($order->get_payment_method_title() !== 'PayPal' && $order->get_payment_method_title() !== 'BUYME') {
-                    $order_cc_meta = $order->get_meta('_transaction_data');
-                    $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
-                    // data
-                    $payaccount = $order_cc_meta['CreditCardNumber'];
-                    $ccuid = $order_cc_meta['Token'];
-                    $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
-                    $confnum = $order_cc_meta['ConfirmationKey'];
-                    $numpay = !empty( $order_cc_meta['TotalPayments'] ) ? $order_cc_meta['TotalPayments'] : 1;
-                    $firstpay = 0.0;
+                    $pelecard_transaction_data = get_post_meta( $order->ID, '_transaction_data' );
+                    foreach ( $pelecard_transaction_data as $order_cc_meta ) {
+                        //print_r($order_cc_meta);
+                        if($order_cc_meta["StatusCode"] != '000'){
+                            continue;
+                        }
+                        $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
+                        // data
+                        $payaccount = $order_cc_meta['CreditCardNumber'];
+                        $ccuid = $order_cc_meta['Token'];
+                        $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
+                        $confnum = $order_cc_meta['ConfirmationKey'];
+                        $numpay = !empty( $order_cc_meta['TotalPayments'] ) ? $order_cc_meta['TotalPayments'] : 1;
+                        $firstpay = 0.0;
+                    }
                 }
                 break;
             // credit guard
