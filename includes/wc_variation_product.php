@@ -191,9 +191,9 @@ function create_product_variable($data)
                     ))
                 );
             }
-            $is_variation = 1;
+            //$is_variation = 1;
             
-            $is_variation = apply_filters('simply_select_attr_for_variations', $key);
+            $is_variation = apply_filters('simply_select_attr_for_variations', 1, $key);
             
 
         
