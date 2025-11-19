@@ -191,8 +191,8 @@ function create_product_variable($data)
                     ))
                 );
             }
-            //$is_variation = 1;
             
+            //$is_variation = 1;
             $is_variation = apply_filters('simply_select_attr_for_variations', 1, $key);
             
 
@@ -225,7 +225,13 @@ function create_product_variable($data)
          * t205
          */
         $product_attributes_old = get_post_meta($product_id, '_product_attributes', true);
-        $product_attributes = array_merge($product_attributes, is_array($product_attributes_old) ? $product_attributes_old : []);
+        
+        //$product_attributes = array_merge($product_attributes, is_array($product_attributes_old) ? $product_attributes_old : []);
+        if (is_array($product_attributes_old)) {
+            // Overwrite old attributes with new ones
+            $product_attributes = array_merge($product_attributes_old, $product_attributes);
+        }
+        
         /**
          * end t205
          */
@@ -264,7 +270,7 @@ function create_product_variation($product_id, $variation_data)
         'guid' => $product->get_permalink()
     );
 
-    $variation_id = wc_get_product_id_by_sku($variation_data['sku']);
+    $variation_id = wc_get_product_id_by_sku($variation_data['sku']); //315
 
     if (!empty($variation_data['sku']) && $variation_id) {
         if($variation_data['is_update_products'] == true){
@@ -347,15 +353,43 @@ function create_product_variation($product_id, $variation_data)
             // Get the variations
             $variations = $product->get_children();
     
-            foreach ($variations as $child_var) {
-                // Check if the current variation is the one to be removed
-                if ($child_var == $variation_id) {
-                    // Remove the variation
-                    wp_delete_post($variation_id, true); // Set the second parameter to true to permanently delete the variation
-                }
-            }
+            foreach ($variations as $vid) {
+				if ($vid == $variation_id) {
+					$delete_variation = new WC_Product_Variation($variation_id);
+					$delete_variation->delete( true ); 
+					//wp_delete_post($variation_id, true);
+					// After deleting, check if parent has ANY remaining variation
+					//wc_delete_product_transients($product_id);
+
+					// Reload product to get fresh children list
+					$product = wc_get_product($product_id);
+					$remaining = $product->get_children();
+					
+
+					// If NO variations left → set product to draft
+					if (empty($remaining)) {
+
+						$product->set_status( 'draft' ); 
+    					$product->save();
+					}
+					return $variation_id; // IMPORTANT to stop before $variation->save()
+				}
+			}
         }
     }
+
+    if ($variation_data['show_in_web'] == 'Y') {
+
+		$product = wc_get_product($product_id);
+		$children = $product->get_children();
+		
+		if (!empty($children) && apply_filters( 'simply_should_publish_pdt', true, $product_id )) {
+			
+			$product->set_status( 'publish' ); 
+    		$product->save();
+		}
+	}
+
 
     /*if( ! empty($variation_data['stock_qty']) ){
         $variation->set_stock_quantity( $variation_data['stock_qty'] );

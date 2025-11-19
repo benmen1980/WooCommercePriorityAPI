@@ -399,6 +399,9 @@ class WooAPI extends \PriorityAPI\API
                         case 'syncItemsPriority';
                             $this->syncItemsPriority();
                             break;
+                        case 'syncInventoryPriorityBySku';
+                            $this->syncInventoryPriorityBySku(array("KBOP0678","KBOP0677","KBOP0667","KBOP0666"));
+                            break;
                         case 'sync_items';
                             $this->syncItemsWeb();
                             break;
@@ -2129,7 +2132,8 @@ class WooAPI extends \PriorityAPI\API
         //$data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
-        $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
+        $filter = $variation_field . ' ne \'\' and ' .$variation_field_title . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
+        $filter = 'SPEC11 eq \'B-52\' or SPEC11 eq \'TUXEDO\'';
         $response = $this->makeRequest('GET',
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&'.$data['expand'],
             [], $this->option('log_items_priority_variation', true));
