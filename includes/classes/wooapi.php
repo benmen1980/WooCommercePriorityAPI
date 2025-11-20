@@ -399,9 +399,6 @@ class WooAPI extends \PriorityAPI\API
                         case 'syncItemsPriority';
                             $this->syncItemsPriority();
                             break;
-                        case 'syncInventoryPriorityBySku';
-                            $this->syncInventoryPriorityBySku(array("KBOP0678","KBOP0677","KBOP0667","KBOP0666"));
-                            break;
                         case 'sync_items';
                             $this->syncItemsWeb();
                             break;
