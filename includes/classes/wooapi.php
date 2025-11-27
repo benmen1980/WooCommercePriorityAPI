@@ -1724,7 +1724,7 @@ class WooAPI extends \PriorityAPI\API
             $this->import_finish();
             if(!empty($skus)) {
                 //wait for 15 minutes if syncitem very long
-                sleep(900);
+                //sleep(900);
                 //$this->syncInventoryPriorityBySku($skus);
                  // Split SKUs into chunks of 20 and call syncInventoryPriorityBySku for each
                 foreach (array_chunk($skus, 20) as $chunk) {
@@ -2115,7 +2115,7 @@ class WooAPI extends \PriorityAPI\API
    
         $variation_field       = !empty($this->option('variation_field'))  ? $this->option('variation_field') : 'MPARTNAME';
         $variation_field_title = !empty($this->option('variation_field_title'))  ? $this->option('variation_field_title') : 'MPARTDES';
-        
+        $sync_inventory_by_skus = ( ! empty( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
@@ -2129,18 +2129,23 @@ class WooAPI extends \PriorityAPI\API
         //$data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
-        $filter = $variation_field . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
+        $filter = $variation_field . ' ne \'\' and ' .$variation_field_title . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
+        $filter = 'SPEC11 eq \'B-52\' or SPEC11 eq \'TUXEDO\'';
         $response = $this->makeRequest('GET',
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&'.$data['expand'],
             [], $this->option('log_items_priority_variation', true));
         // check response status
         if ($response['status']) {
             $response_data = json_decode($response['body_raw'], true);
+            $skus = [];
             $product_cross_sells = [];
             $parents = [];
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
+                        $skus[] = $item[$search_field];
+                    }
                     // check if variation show be on web
 	                if($item[$show_in_web] != 'Y'){
 		                $variation_sku = $item[$search_field];
@@ -2184,7 +2189,7 @@ class WooAPI extends \PriorityAPI\API
                                     $parents[$item[$variation_field]]['content'] .= $clean_text;
                                 }
                             }
-                            $price = apply_filters('simply_ItemsPriceVariation', $item);
+                            $price = apply_filters('simply_ItemsPriceVariation', $price, $item);
                             $parents[$item[$variation_field]] = [
                                 'sku' => $item[$variation_field],
                                 //'crosssell' => $item['ROYL_SPECDES1'],
@@ -2227,7 +2232,8 @@ class WooAPI extends \PriorityAPI\API
 
                             ];
 
-                            $childrens = apply_filters('simply_ItemsVariation', array('childrens' => $childrens,'item' =>$item));
+                            $childrens = apply_filters('simply_ItemsVariation', $childrens, $item );
+                            //$childrens = apply_filters('simply_ItemsVariation', array('childrens' => $childrens,'item' =>$item));
                           
 
                             /*
@@ -2372,6 +2378,15 @@ class WooAPI extends \PriorityAPI\API
             }
             // add timestamp
             $this->updateOption('items_priority_variation_update', time());
+            if(!empty($skus)) {
+                //wait for 15 minutes if syncitem very long
+                //sleep(900);
+                //$this->syncInventoryPriorityBySku($skus);
+                 // Split SKUs into chunks of 20 and call syncInventoryPriorityBySku for each
+                foreach (array_chunk($skus, 20) as $chunk) {
+                    $this->syncInventoryPriorityBySku($chunk);
+                }
+            }
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_items_priority_variation'),
@@ -3375,15 +3390,21 @@ class WooAPI extends \PriorityAPI\API
             // pelecard
             case 'pelecard';
                 if ($order->get_payment_method_title() !== 'PayPal' && $order->get_payment_method_title() !== 'BUYME') {
-                    $order_cc_meta = $order->get_meta('_transaction_data');
-                    $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
-                    // data
-                    $payaccount = $order_cc_meta['CreditCardNumber'];
-                    $ccuid = $order_cc_meta['Token'];
-                    $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
-                    $confnum = $order_cc_meta['ConfirmationKey'];
-                    $numpay = !empty( $order_cc_meta['TotalPayments'] ) ? $order_cc_meta['TotalPayments'] : 1;
-                    $firstpay = 0.0;
+                    $pelecard_transaction_data = get_post_meta( $order->ID, '_transaction_data' );
+                    foreach ( $pelecard_transaction_data as $order_cc_meta ) {
+                        //print_r($order_cc_meta);
+                        if($order_cc_meta["StatusCode"] != '000'){
+                            continue;
+                        }
+                        $paymentcode = !empty($order_cc_meta['CreditCardCompanyClearer']) ? $order_cc_meta['CreditCardCompanyClearer'] : $paymentcode;
+                        // data
+                        $payaccount = $order_cc_meta['CreditCardNumber'];
+                        $ccuid = $order_cc_meta['Token'];
+                        $validmonth = $order_cc_meta['CreditCardExpDate'] ?? '';
+                        $confnum = $order_cc_meta['ConfirmationKey'];
+                        $numpay = !empty( $order_cc_meta['TotalPayments'] ) ? $order_cc_meta['TotalPayments'] : 1;
+                        $firstpay = 0.0;
+                    }
                 }
                 break;
             // credit guard
