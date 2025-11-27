@@ -169,7 +169,7 @@ class simplypay extends \PriorityAPI\API{
                     WHERE order_item_type = 'line_item'
                         AND pm.meta_key = 'product-ivnum'
                         AND pm.meta_value = %s
-                        AND posts.post_status NOT IN ('wc-cancelled', 'wc-pending')
+                        AND posts.post_status NOT IN ('wc-cancelled', 'wc-pending', 'wc-failed', 'draft')
                     GROUP BY p.order_item_id",
                     $invoice_number
                 ));
@@ -190,7 +190,7 @@ class simplypay extends \PriorityAPI\API{
                 'token'           => $_GET['r'],
                 'first_name'      => '',
                 'last_name'       => '',
-                'street'  => '',
+                'street'          => '',
                 'postcode'        => '',
                 'city'            => '',
                 'phone'           => '',
@@ -300,7 +300,7 @@ class simplypay extends \PriorityAPI\API{
 // Redirect to page 404 from all other pages of the site
 add_action( 'template_redirect', 'redirect_all_except_checkout' );
 function redirect_all_except_checkout() {
-    if ( ! is_checkout() && ! is_order_received_page() ) {
+    if ( ! is_checkout() && ! is_order_received_page()  && ! is_page('privacy-policy') ) {
         global $wp_query;
         $wp_query->set_404();
         status_header(404);
