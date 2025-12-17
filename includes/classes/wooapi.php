@@ -2130,7 +2130,6 @@ class WooAPI extends \PriorityAPI\API
         $data = apply_filters('simply_syncItemsPriority_data', $data);
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' .$variation_field_title . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
-        $filter = 'SPEC11 eq \'B-52\' or SPEC11 eq \'TUXEDO\'';
         $response = $this->makeRequest('GET',
             'LOGPART?$select=' . $data['select'] . '&$filter=' . $filter . '&'.$data['expand'],
             [], $this->option('log_items_priority_variation', true));
@@ -2143,7 +2142,7 @@ class WooAPI extends \PriorityAPI\API
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
-                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus === true){
                         $skus[] = $item[$search_field];
                     }
                     // check if variation show be on web
@@ -3178,7 +3177,7 @@ class WooAPI extends \PriorityAPI\API
             if (!empty($custname)) {
                 $body = ['CUSTNAME' => $custname];
                 $response['body'] = json_encode($body);
-                update_post_meta($order_id, 'prospect_custname', $custname);
+                update_post_meta($order_id, 'priority_customer_number', $custname);
                 return $response;
             }
             $response = $this->syncCustomer($order);

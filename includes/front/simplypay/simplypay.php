@@ -175,7 +175,8 @@ class simplypay extends \PriorityAPI\API{
                 ));
                 if(!empty($sql_result)){
                     if(empty($_GET['debug'])) {
-                        wp_die(__('This invoice had already been paid!', 'simply'));
+                        $message = apply_filters('simply_invoice_already_paid_message', __('This invoice had already been paid!', 'simply'), $invoice_number);
+                        wp_die($message);
                         //wp_redirect(home_url('/duplicate-invoice'));
                         //exit;
                     }
