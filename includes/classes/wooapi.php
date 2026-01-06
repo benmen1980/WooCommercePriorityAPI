@@ -2982,7 +2982,7 @@ class WooAPI extends \PriorityAPI\API
             if (empty($priority_cust_from_wc)) {
                 $custname = apply_filters('simply_search_customer_in_priority', ['user_id' => $id, 'order' => $order])['CUSTNAME'];
                 if (!empty($custname)) {
-                    update_user_meta($id, 'priority_customer_number', $custname);
+                    update_user_meta($id, 'priority_customer_number', $custname['CUSTNAME']);
                     $body = ['CUSTNAME' => $custname];
                     $response['body'] = json_encode($body);
                     return $response;
