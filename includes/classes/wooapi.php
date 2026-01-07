@@ -1237,7 +1237,7 @@ class WooAPI extends \PriorityAPI\API
 	    $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
 	    $show_in_web         = ( ! empty( $config->show_in_web ) ? $config->show_in_web : 'SHOWINWEB' );
 	    $variation_field     = $this->option( 'variation_field' ) == 'true' ? $this->option( 'variation_field' ) : 'MPARTNAME';
-	    $sync_inventory_by_skus = ( ! empty( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
+	    $sync_inventory_by_skus = ( isset( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
         // get the items simply by time stamp of today
 	    $product_price_list = ( ! empty( $config->product_price_list ) ? $config->product_price_list : null );
 	    $product_price_sale = ( ! empty( $config->product_price_sale ) ? $config->product_price_sale : null );
@@ -2098,6 +2098,7 @@ class WooAPI extends \PriorityAPI\API
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
+        $brands = ( ! empty( $config->brands ) ? $config->brands : false );
         $has_tag = (!empty($config->tags) ? $config->tags : null);
         $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
         $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
@@ -2115,7 +2116,7 @@ class WooAPI extends \PriorityAPI\API
    
         $variation_field       = !empty($this->option('variation_field'))  ? $this->option('variation_field') : 'MPARTNAME';
         $variation_field_title = !empty($this->option('variation_field_title'))  ? $this->option('variation_field_title') : 'MPARTDES';
-        $sync_inventory_by_skus = ( ! empty( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
+        $sync_inventory_by_skus = ( isset( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
@@ -2142,7 +2143,7 @@ class WooAPI extends \PriorityAPI\API
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
-                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus === true){
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
                         $skus[] = $item[$search_field];
                     }
                     // check if variation show be on web
@@ -2212,6 +2213,15 @@ class WooAPI extends \PriorityAPI\API
                             if (!empty($show_in_web)) {
                                 $parents[$item[$variation_field]]['show_in_web'] = $item[$show_in_web];
                             }
+                            $categories = [];
+                            if ( ! empty( $is_categories ) ) {
+                                // update categories
+                                foreach ( explode( ',', $config->categories ) as $cat ) {
+                                    if ( ! empty( $item[ $cat ] ) ) {
+                                        array_push( $categories, $item[ $cat ] );
+                                    }
+                                }
+                            }
                             $childrens[$item[$variation_field]][$search_by_value] = [
                                 'sku' => $search_by_value,
                                 'regular_price' => $price,
@@ -2220,12 +2230,11 @@ class WooAPI extends \PriorityAPI\API
                                 'title' => $item['PARTDES'],
                                 'stock' => ($item['INVFLAG'] == 'Y') ? 'instock' : 'outofstock',
                                 'image' => $item['EXTFILENAME'],
-                                'categories' => [
-                                    $item[$is_categories]
-                                ],
+                                'categories' => $categories,
                                 'tags' => [
                                     $item[$has_tag]
                                 ],
+                                'brands' => ( $brands ) != false ? $item[ $brands ] : null,
                                 'attributes' => $attributes,
                                 'show_in_web' => $item[$show_in_web],
 
@@ -2250,6 +2259,7 @@ class WooAPI extends \PriorityAPI\API
                     if (count($childrens[$partname])) {
                         $parents[$partname]['categories'] = end($childrens[$partname])['categories'];
                         $parents[$partname]['tags'] = end($childrens[$partname])['tags'];
+                        $parents[$partname]['brands'] = end($childrens[$partname])['brands'];
                         $parents[$partname]['variation'] = $childrens[$partname];
                         $parents[$partname]['title'] = $parents[$partname]['title'];
                         // $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
@@ -2299,6 +2309,7 @@ class WooAPI extends \PriorityAPI\API
                             'attributes' => $parent['attributes'],
                             'categories' => $parent['categories'],
                             'tags' => $parent['tags'],
+                            'brands' => $parent['brands'],
                             'status' => $this->option('item_status'),
                             'show_in_web' => (isset($parent_data['show_in_web']) && $parent_data['show_in_web'] !== null)
                                 ? $parent_data['show_in_web'] : $parent['show_in_web'],
@@ -6218,6 +6229,21 @@ class WooAPI extends \PriorityAPI\API
     }
 	function save_uri_as_image($base64_image, $title)
 	{
+        // Save SHA1 Checksum for all attachments - This logic prevets duplicate images from beeing created
+        $posts_ids = get_posts(array(
+            'numberposts'   => -1,
+            'post_type'     => 'attachment',
+            'meta_key'      => '_simply_sha1',
+            'meta_compare'  => 'NOT EXISTS', // Only get attachemtns without SHA1 Checksum (for better performances)
+            'fields'        => 'ids' // We only need the IDs
+        ));
+        foreach( $posts_ids as $image_id ) {
+            $image_path = wp_get_original_image_path( $image_id ); // Get the server path of the main image (Not the URL)
+            if( file_exists( $image_path ) ) {
+                update_post_meta( $image_id, '_simply_sha1', sha1_file($image_path) );
+            }
+        }
+
 		// Split the string.
 		$parts = explode(',', $base64_image);
 		// Split the first part on semicolon.
@@ -6234,6 +6260,18 @@ class WooAPI extends \PriorityAPI\API
 		$base64_image = str_replace(' ', '+', $base64_image);
 		$decoded_image = base64_decode($base64_image);
 
+        // Check if we already have this file in the DB based on SHA1 Checksum
+        $posts = get_posts(array(
+            'numberposts'   => 1, // One is enough
+            'post_type'     => 'attachment',
+            'meta_key'      => '_simply_sha1',
+            'meta_value'    => sha1($decoded_image)
+        ));
+        if( ! empty( $posts ) ) {
+            // Return the existing attachemnt instead of creating a duplicate
+            return [ $posts[0]->ID, $posts[0]->post_title ];
+        }
+
 		// Save the image to the uploads directory.
 		$upload_dir = wp_upload_dir();
 		$file_path = $upload_dir['path'] . '/' . $filename;
@@ -6247,6 +6285,7 @@ class WooAPI extends \PriorityAPI\API
 
 		file_put_contents($file_path, $decoded_image);
 
+        // Just to be sure (The file SHOULD exists because of file_put_contents in the previuos line)
 		if (file_exists($file_path)) {
 			$wp_filetype = wp_check_filetype($filename, null);
 			$attachment = array(
@@ -6257,8 +6296,15 @@ class WooAPI extends \PriorityAPI\API
 				'post_status' => 'inherit',
 			);
 			$attach_id = wp_insert_attachment($attachment, $file_path);
+            update_post_meta( $attach_id, '_simply_sha1', sha1($decoded_image) ); // Save SHA1 Checksum for the new upload
+            // Include the image.php file for the function wp_generate_attachment_metadata().
+		    require_once(ABSPATH . 'wp-admin/includes/image.php');
+            $attach_data = wp_generate_attachment_metadata( $attach_id, $file_path);
+
 			return [$attach_id, $filename];
 		}
+
+        // We shouldn't get to this part, legacy code
 		$attachment = array(
 			'post_mime_type' => $type,
 			'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
@@ -6267,6 +6313,7 @@ class WooAPI extends \PriorityAPI\API
 			'guid' => $upload_dir['basedir'] . '/' . basename($filename)
 		);
 		$attach_id = wp_insert_attachment($attachment, $file_path);
+        update_post_meta( $attach_id, '_simply_sha1', sha1($decoded_image) ); // Save SHA1 Checksum for the new upload
 		// Include the image.php file for the function wp_generate_attachment_metadata().
 		require_once(ABSPATH . 'wp-admin/includes/image.php');
 		//Generate the metadata for the attachment, and update the database record.
