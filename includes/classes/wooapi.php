@@ -1237,7 +1237,7 @@ class WooAPI extends \PriorityAPI\API
 	    $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
 	    $show_in_web         = ( ! empty( $config->show_in_web ) ? $config->show_in_web : 'SHOWINWEB' );
 	    $variation_field     = $this->option( 'variation_field' ) == 'true' ? $this->option( 'variation_field' ) : 'MPARTNAME';
-	    $sync_inventory_by_skus = ( isset( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
+	    $sync_inventory_by_skus = ( ! empty( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
         // get the items simply by time stamp of today
 	    $product_price_list = ( ! empty( $config->product_price_list ) ? $config->product_price_list : null );
 	    $product_price_sale = ( ! empty( $config->product_price_sale ) ? $config->product_price_sale : null );
@@ -2098,7 +2098,6 @@ class WooAPI extends \PriorityAPI\API
         $is_load_image = (!empty($config->is_load_image) ? true : false);
         $search_field = (!empty($config->search_by) ? $config->search_by : 'PARTNAME');
         $is_categories = (!empty($config->categories) ? $config->categories : null);
-        $brands = ( ! empty( $config->brands ) ? $config->brands : false );
         $has_tag = (!empty($config->tags) ? $config->tags : null);
         $show_in_web = (!empty($config->show_in_web) ? $config->show_in_web : 'SHOWINWEB');
         $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
@@ -2116,7 +2115,7 @@ class WooAPI extends \PriorityAPI\API
    
         $variation_field       = !empty($this->option('variation_field'))  ? $this->option('variation_field') : 'MPARTNAME';
         $variation_field_title = !empty($this->option('variation_field_title'))  ? $this->option('variation_field_title') : 'MPARTDES';
-        $sync_inventory_by_skus = ( isset( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
+        $sync_inventory_by_skus = ( ! empty( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
         $data['select'] = 'PARTNAME,PARTDES,BASEPLPRICE,VATPRICE,STATDES,SHOWINWEB,SPEC1,SPEC2,SPEC3,
         SPEC4,SPEC5,SPEC6,SPEC7,SPEC8,SPEC9,SPEC10,SPEC11,SPEC12,SPEC13,SPEC14,SPEC15,SPEC16,SPEC17,SPEC18,SPEC19,SPEC20,INVFLAG,ISMPART,MPARTNAME,MPARTDES,FAMILYDES';
         if ($priority_version < 21.0) {
@@ -2143,7 +2142,7 @@ class WooAPI extends \PriorityAPI\API
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
-                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus === true){
                         $skus[] = $item[$search_field];
                     }
                     // check if variation show be on web
@@ -2213,15 +2212,6 @@ class WooAPI extends \PriorityAPI\API
                             if (!empty($show_in_web)) {
                                 $parents[$item[$variation_field]]['show_in_web'] = $item[$show_in_web];
                             }
-                            $categories = [];
-                            if ( ! empty( $is_categories ) ) {
-                                // update categories
-                                foreach ( explode( ',', $config->categories ) as $cat ) {
-                                    if ( ! empty( $item[ $cat ] ) ) {
-                                        array_push( $categories, $item[ $cat ] );
-                                    }
-                                }
-                            }
                             $childrens[$item[$variation_field]][$search_by_value] = [
                                 'sku' => $search_by_value,
                                 'regular_price' => $price,
@@ -2230,11 +2220,12 @@ class WooAPI extends \PriorityAPI\API
                                 'title' => $item['PARTDES'],
                                 'stock' => ($item['INVFLAG'] == 'Y') ? 'instock' : 'outofstock',
                                 'image' => $item['EXTFILENAME'],
-                                'categories' => $categories,
+                                'categories' => [
+                                    $item[$is_categories]
+                                ],
                                 'tags' => [
                                     $item[$has_tag]
                                 ],
-                                'brands' => ( $brands ) != false ? $item[ $brands ] : null,
                                 'attributes' => $attributes,
                                 'show_in_web' => $item[$show_in_web],
 
@@ -2259,7 +2250,6 @@ class WooAPI extends \PriorityAPI\API
                     if (count($childrens[$partname])) {
                         $parents[$partname]['categories'] = end($childrens[$partname])['categories'];
                         $parents[$partname]['tags'] = end($childrens[$partname])['tags'];
-                        $parents[$partname]['brands'] = end($childrens[$partname])['brands'];
                         $parents[$partname]['variation'] = $childrens[$partname];
                         $parents[$partname]['title'] = $parents[$partname]['title'];
                         // $parents[$partname]['post_content'] = $parents[$partname]['post_content'];
@@ -2309,7 +2299,6 @@ class WooAPI extends \PriorityAPI\API
                             'attributes' => $parent['attributes'],
                             'categories' => $parent['categories'],
                             'tags' => $parent['tags'],
-                            'brands' => $parent['brands'],
                             'status' => $this->option('item_status'),
                             'show_in_web' => (isset($parent_data['show_in_web']) && $parent_data['show_in_web'] !== null)
                                 ? $parent_data['show_in_web'] : $parent['show_in_web'],
@@ -2977,106 +2966,105 @@ class WooAPI extends \PriorityAPI\API
     public
     function syncCustomer($order)
     {
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $no_update_customer = $config->no_update_customer;
         $id = $order->get_user_id();
-        if (null == $this->option('post_customers')) {
-            $priority_customer_number = $this->option('walkin_number');
-            $response['priority_customer_number'] = $priority_customer_number;
-            $response['message'] = 'this is a walk in number';
-            return $response;
+        $user = get_userdata($id);
+        $meta = get_user_meta($id);
+        $priority_customer_number = get_user_meta($id, 'priority_customer_number', true);
+        $priority_cust_from_wc = $priority_customer_number;
+        if (!empty($priority_customer_number)) {
+            if ($no_update_customer === 'true') {
+                $response['code'] == '200';
+                return $response;
+            }
         }
-        // check user
-        if ($user = get_userdata($id)) {
-            $meta = get_user_meta($id);
-            // if already assigned value it is stronger
-            $priority_cust_from_wc = get_user_meta($id, 'priority_customer_number', true);
-            // search customer number in Priority
-            if (empty($priority_cust_from_wc)) {
-                $custname = apply_filters('simply_search_customer_in_priority', ['user_id' => $id, 'order' => $order])['CUSTNAME'];
-                if (!empty($custname)) {
-                    update_user_meta($id, 'priority_customer_number', $custname['CUSTNAME']);
-                    $body = ['CUSTNAME' => $custname];
-                    $response['body'] = json_encode($body);
-                    return $response;
-                }
-            }
-            if (!empty($custname)) {
-                $priority_cust_from_wc = $custname;
-            }
-            if (!empty($priority_cust_from_wc)) {
-                $custname = apply_filters('simply_search_customer_in_priority', ['user_id' => $id, 'order' => $order])['CUSTNAME'];
-                if (!empty($custname)) {
-                    update_user_meta($id, 'priority_customer_number', $custname);
-                    $body = ['CUSTNAME' => $custname];
-                    $response['body'] = json_encode($body);
-                    return $response;
-                }
-                $priority_customer_number = $priority_cust_from_wc;
-            } else {
-                $priority_customer_number = 'WEB-' . (string)$user->data->ID;
-                /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
-                if ('prospect_email' == $this->option('prospect_field')) {
-                    $priority_customer_number = $user->data->user_email;
-                    if (null == $priority_customer_number) {
-                        return;
-                    }
-                }
-                if ('prospect_cellphone' == $this->option('prospect_field')) {
-                    $priority_customer_number = $meta['billing_phone'][0];
-                    if (null == $priority_customer_number) {
-                        return;
-                    }
-                }
+        else{
+            $priority_customer_number = $this->option('walkin_number');
+      
+            if (null == $this->option('post_customers') || !empty($priority_customer_number)) {
+                $response['priority_customer_number'] = $priority_customer_number;
+                $response['message'] = 'this is a walk in number';
+                return $response;
             }
 
-            $custdes = !empty($meta['billing_company'][0]) ? $meta['billing_company'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0];
-            $custdes = apply_filters('simply_syncCustdes', $custdes, $meta );
-            
-            $request = [
-                'CUSTNAME' => $priority_customer_number,
-                // 'CUSTDES' => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $custdes,
-                'CUSTDES' => !empty($custdes) ? $custdes : $meta['nickname'][0],
-                'EMAIL' => $user->data->user_email,
-                'ADDRESS' => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
-                'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
-                'STATEA' => isset($meta['billing_city']) ? $meta['billing_city'][0] : '',
-                'ZIP' => isset($meta['billing_postcode']) ? $meta['billing_postcode'][0] : '',
-                //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
-                'PHONE' => isset($meta['billing_phone']) ? $meta['billing_phone'][0] : '',
-                'EDOCUMENTS' => 'Y',
-                'NSFLAG' => 'Y',
-            ];
-            $method = !empty($priority_cust_from_wc) ? 'PATCH' : 'POST';
-            $url_eddition = 'CUSTOMERS';
-            if ($method == 'PATCH') {
-                $url_eddition = 'CUSTOMERS(\'' . $priority_customer_number . '\')';
-                unset($request['CUSTNAME']);
-                $config = json_decode(stripslashes($this->option('setting-config')));
-                 $no_update_customer = $config->no_update_customer;
-                if ($no_update_customer === 'true') {
-                    $response['code'] == '200';
-                    return $response;
+            $priority_customer_number = 'WEB-' . (string)$user->data->ID;
+            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
+            if ('prospect_email' == $this->option('prospect_field')) {
+                $priority_customer_number = $user->data->user_email;
+            }
+            if ('prospect_cellphone' == $this->option('prospect_field')) {
+                $priority_customer_number = $meta['billing_phone'][0];
+                if (null == $priority_customer_number) {
+                    $this->sendEmailError(
+                        [$this->option('email_error_sync_customers_web')],
+                        'Error Sync Customers - No Phone',
+                        $order->get_id().' Customer has no phone number'
+                    );
+                    return;
                 }
             }
-            $request["id"] = $id;
-            $request = apply_filters('simply_syncCustomer', $request);
-            unset($request["id"]);
-            $json_request = json_encode($request);
-            $response = $this->makeRequest($method, $url_eddition, ['body' => $json_request], true);
-            if ($method == 'POST' && $response['code'] == '201' || $method == 'PATCH' && $response['code'] == '200') {
-                $data = json_decode($response['body']);
-                $priority_customer_number = $data->CUSTNAME;
-                update_user_meta($id, 'priority_customer_number', $priority_customer_number);
-            } // set priority customer id
-            else {
-                $this->sendEmailError(
-                    [$this->option('email_error_sync_customers_web')],
-                    'Error Sync Customers',
-                    $response['body']
-                );
+            $priority_customer_number = apply_filters('simply_syncCustname', $priority_customer_number, $meta );
+            $request = $this->makeRequest('GET', 
+            'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
+            $this->option('log_customers', true));
+
+            if ($request['status']) {
+                if ($request['code'] == '200') {
+                    $is_customer = json_decode($request['body']);
+                    $priority_cust_from_priority = $priority_customer_number;
+                }
             }
-            // add timestamp
-            //$this->updateOption('post_customers', time());
         }
+  
+        $custdes = !empty($meta['billing_company'][0]) ? $meta['billing_company'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0];
+        $custdes = apply_filters('simply_syncCustdes', $custdes, $meta );
+        
+        $request = [
+            'CUSTNAME' => $priority_customer_number,
+            // 'CUSTDES' => empty($meta['first_name'][0]) ? $meta['nickname'][0] : $custdes,
+            'CUSTDES' => !empty($custdes) ? $custdes : $meta['nickname'][0],
+            'EMAIL' => $user->data->user_email,
+            'ADDRESS' => isset($meta['billing_address_1']) ? $meta['billing_address_1'][0] : '',
+            'ADDRESS2' => isset($meta['billing_address_2']) ? $meta['billing_address_2'][0] : '',
+            'STATEA' => isset($meta['billing_city']) ? $meta['billing_city'][0] : '',
+            'ZIP' => isset($meta['billing_postcode']) ? $meta['billing_postcode'][0] : '',
+            //   'COUNTRYNAME' => isset($meta['billing_country']) ? $this->countries[$meta['billing_country'][0]] : '',
+            'PHONE' => isset($meta['billing_phone']) ? $meta['billing_phone'][0] : '',
+            'EDOCUMENTS' => 'Y',
+            'NSFLAG' => 'Y',
+        ];
+        $method = !empty($priority_cust_from_wc) ? 'PATCH' : 'POST';
+        $url_eddition = 'CUSTOMERS';
+        if ($method == 'PATCH') {
+            if ($no_update_customer === 'true') {
+                $response['code'] == '200';
+                update_user_meta($id, 'priority_customer_number', $priority_customer_number);
+                return $response;
+            }
+            $url_eddition = 'CUSTOMERS(\'' . $priority_customer_number . '\')';
+            unset($request['CUSTNAME']);
+        }
+        $request["id"] = $id;
+        $request = apply_filters('simply_syncCustomer', $request);
+        unset($request["id"]);
+        $json_request = json_encode($request);
+        $response = $this->makeRequest($method, $url_eddition, ['body' => $json_request], true);
+        if ($method == 'POST' && $response['code'] == '201' || $method == 'PATCH' && $response['code'] == '200') {
+            $data = json_decode($response['body']);
+            $priority_customer_number = $data->CUSTNAME;
+            update_user_meta($id, 'priority_customer_number', $priority_customer_number);
+        } // set priority customer id
+        else {
+            $this->sendEmailError(
+                [$this->option('email_error_sync_customers_web')],
+                'Error Sync Customers',
+                $response['body']
+            );
+        }
+        // add timestamp
+        //$this->updateOption('post_customers', time());
+        
         return $response;
     }
     public function syncPriorityOrderStatus()
@@ -3171,96 +3159,24 @@ class WooAPI extends \PriorityAPI\API
     {
         $order_id = $order->get_id();
         $user_id = $order->get_user_id();
-        if ($user_id == 0) {
-            /*  לעשות קוד קאסטום שבודק מול שליפה מפרירויטי ואם מצא אז לא ממשיך */
-            $custname = apply_filters('simply_search_customer_in_priority', ['order' => $order,
-                'CUSTNAME' => null])['CUSTNAME'];
-            if (!empty($custname)) {
-                $body = ['CUSTNAME' => $custname];
-                $response['body'] = json_encode($body);
+        $custname = apply_filters('simply_search_customer_in_priority', ['order' => $order,'CUSTNAME' => null])['CUSTNAME'];
+        if (!empty($custname)) {
+            if ($user_id == 0) {
                 update_post_meta($order_id, 'prospect_custname', $custname);
-                return $response;
+            } else {
+                update_user_meta($user_id, 'priority_customer_number', $custname);
             }
+            $body = ['CUSTNAME' => $custname];
+            $response['body'] = json_encode($body);
+            //return $response;
+        }
+        if ($user_id == 0) {
             $response = $this->syncProspect($order);
         } else {
-            $custname = apply_filters('simply_search_customer_in_priority', ['order' => $order,
-                'CUSTNAME' => null])['CUSTNAME'];
-            if (!empty($custname)) {
-                $body = ['CUSTNAME' => $custname];
-                $response['body'] = json_encode($body);
-                update_post_meta($order_id, 'priority_customer_number', $custname);
-                return $response;
-            }
             $response = $this->syncCustomer($order);
         }
         return $response;
 
-        get_user_meta($order->get_user_id(), 'priority_customer_number', true);
-        if (!empty(get_post_meta($order_id, 'cust_name', true))) {
-            $response['args']['body'] = get_post_meta($order_id, 'cust_name', true);
-            $response['message'] = "Exists cust_name";
-            $response['body'] = "";
-            return $response;
-        }
-        $cust_data = [$order, null, $this];
-        $cust_data = apply_filters('simply_modify_customer_number', $cust_data);
-        if (!empty($cust_data[1])) {
-            $cust_number = $cust_data[1];
-            add_post_meta($order_id, 'cust_name', $cust_number);
-            $response['args']['body'] = get_post_meta($order_id, 'cust_name', true);
-            $response['message'] = "simply_modify_customer_number";
-            $response['body'] = "";
-            return $response;
-        }
-        /*  לקוח מזדמן */
-        $cust_numbers = explode('|', $this->option('walkin_number'));
-        $country = (!empty($order->get_shipping_country()) ? $order->get_shipping_country() : $order->get_billing_country());
-        $walk_in_customer = (($country == 'IL' ? $cust_numbers[0] : isset($cust_numbers[1])) ? $cust_numbers[1] : $cust_numbers[0]);
-        $walk_in_customer = !empty($walk_in_customer) ? $walk_in_customer : $cust_numbers[0];
-        /*   אם מסומן צק בוקס של register customer */
-        if ($this->option('post_customers')) {
-            if ($order->get_customer_id()) {
-                $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
-                /* אם אין לו מספר אז תיצור אותו */
-                if (empty($cust_number)) {
-                    $response = $this->syncCustomer($order);
-                    if ($response['code'] == '201') {
-                        $cust_number = get_user_meta($order->get_customer_id(), 'priority_customer_number', true);
-                        add_post_meta($order_id, 'cust_name', $cust_number);
-                        $response['args']['body'] = "Registered Customers";
-                        $response['message'] = "add Registered Customers To Priority With cust_name";
-                        $response['body'] = get_post_meta($order_id, 'cust_name', true);
-                        return $response;
-                    } else {
-                        $response['args']['body'] = "Eror in created New Registered Customer";
-                        $response['message'] = "add Registered Customers To Priority With cust_name";
-                        $response['body'] = $response["code"];
-                        return $response;
-                    }
-                } else {
-                    add_post_meta($order_id, 'cust_name', $cust_number);
-                    $response['args']['body'] = "Registered Customers Exists";
-                    $response['message'] = "Registered Customer Exists In Priority With cust_name";
-                    $response['body'] = get_post_meta($order_id, 'cust_name', true);
-                    return $response;
-                }
-            }
-        }
-        /*  אם מסומן צק בוקס של prospect */
-        if ($this->option('post_prospect')) {
-            $cust_number = $this->syncProspect($order);
-            add_post_meta($order_id, 'cust_name', $cust_number);
-            $response['args']['body'] = get_post_meta($order_id, 'cust_name', true);
-            $response['message'] = "Add Customers";
-            $response['body'] = "add Prospect Customers To Priority With cust_name";
-            return $response;
-        }
-        // walk in customer
-        update_post_meta($order_id, 'cust_name', $walk_in_customer);
-        $response['args']['body'] = get_post_meta($order_id, 'cust_name', true);
-        $response['message'] = "walk_in_customer";
-        $response['body'] = "";
-        return $response;
     }
     public function syncOrders()
     {
@@ -3571,23 +3487,43 @@ class WooAPI extends \PriorityAPI\API
     }
     public function syncProspect($order)
     {
-        if (null == $this->option('post_prospect')) {
-            $priority_customer_number = $this->option('walkin_number');
-            update_post_meta($order->ID, 'prospect_custname', $priority_customer_number);
-            $response['priority_customer_number'] = $priority_customer_number;
-            $response['message'] = 'this is a walk in number';
-            return $response;
-        }
-        if ('prospect_email' == $this->option('prospect_field')) {
-            $priority_customer_number = $order->get_billing_email();
-        } elseif ('prospect_cellphone' == $this->option('prospect_field')) {
-            $priority_customer_number = $order->get_billing_phone();
-        }
+        $priority_customer_number = get_post_meta($order->ID, 'prospect_custname', true);
+        $priority_cust_from_priority = $priority_customer_number;
 
-        // if the CUSTNAME is empty, do not POST to Priority
-        if (null == $priority_customer_number) {
-            // I want to post to priority and get the number from the template
-            //  return ;
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $no_update_customer = $config->no_update_customer;
+        if (!empty($priority_customer_number)) {
+            if ($no_update_customer === 'true') {
+                $response['code'] == '200';
+                return $response;
+            }
+        }
+        else{
+            $priority_customer_number = $this->option('walkin_number');
+            if (null == $this->option('post_prospect') && !empty($priority_customer_number)) {
+                update_post_meta($order->ID, 'prospect_custname', $priority_customer_number);
+                $response['priority_customer_number'] = $priority_customer_number;
+                $response['message'] = 'this is a walk in number';
+                return $response;
+            }
+            if ('prospect_email' == $this->option('prospect_field')) {
+                $priority_customer_number = $order->get_billing_email();
+            } elseif ('prospect_cellphone' == $this->option('prospect_field')) {
+                $priority_customer_number = $order->get_billing_phone();
+            }
+            $priority_customer_number = apply_filters('simply_syncProspect_custname', $priority_customer_number, $order );
+
+             //check whether the customer already exists in Priority
+            $request = $this->makeRequest('GET', 
+            'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
+            $this->option('log_customers', true));
+
+            if ($request['status']) {
+                if ($request['code'] == '200') {
+                    $is_customer = json_decode($request['body']);
+                    $priority_cust_from_priority = $priority_customer_number;
+                }
+            }
         }
 
         $custdes = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
@@ -3604,21 +3540,16 @@ class WooAPI extends \PriorityAPI\API
             'NSFLAG' => 'Y',
         ];
 
-        //check whether the customer already exists in Priority
-        $request = $this->makeRequest('GET', 
-        'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
-        $this->option('log_customers', true));
-
-        if ($request['status']) {
-            if ($request['code'] == '200') {
-                $is_customer = json_decode($request['body']);
-                $priority_cust_from_priority = $priority_customer_number;
-            }
-        }
+       
         //if it exists, update method patch
         $method = !empty($priority_cust_from_priority) ? 'PATCH' : 'POST';
         $url_eddition = 'CUSTOMERS';
         if ($method == 'PATCH') {
+             if ($no_update_customer === 'true') {
+                $response['code'] == '200';
+                update_post_meta($order->ID, 'prospect_custname', $priority_customer_number);
+                return $response;
+            }
             $url_eddition = 'CUSTOMERS(\'' . $priority_customer_number . '\')';
             unset($json_request['CUSTNAME']);
         }
@@ -3946,35 +3877,15 @@ class WooAPI extends \PriorityAPI\API
     }
     function get_cust_name($order)
     {
-        $cust_number = apply_filters('simply_modify_customer_number', ['order' => $order,
-            'CUSTNAME' => null])['CUSTNAME'];
-        if (!empty($cust_number)) {
-            return $cust_number;
-        }
-        $walk_in_number = $this->option('walkin_number');
         if ($order->get_user_id() != 0) {
-            if ($this->option('post_customers') == true) {
-                $cust_number = get_user_meta($order->get_user_id(), 'priority_customer_number', true);
-            } else {
-                $cust_number = $walk_in_number;
-            }
-        } else {
-            if ($this->option('post_prospect')) {
-                if ('prospect_email' == $this->option('prospect_field')) {
-                    $cust_number = $order->get_billing_email();
-                } else {
-                    $cust_number = $order->get_billing_phone();
-                }
-            } else {
-                $cust_number = $walk_in_number;
-            }
-            if (!empty(get_post_meta($order->ID, 'prospect_custname', true))) {
-                $cust_number = get_post_meta($order->ID, 'prospect_custname', true);
-            }
-
+            $cust_number = get_user_meta($order->get_user_id(), 'priority_customer_number', true);
+        }
+        else{
+            $cust_number = get_post_meta($order->ID, 'prospect_custname', true);
         }
         return $cust_number;
     }
+    
     public function syncOrder($id)
     {
         if (isset(WC()->session)) {
@@ -3994,7 +3905,6 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($raw_option));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
         $cust_number = $this->get_cust_name($order);
         $data = [
             'CUSTNAME' => $cust_number,
@@ -4002,9 +3912,7 @@ class WooAPI extends \PriorityAPI\API
             'CURDATE' => date('Y-m-d', strtotime($order->get_date_created())),
             $this->option('order_order_field') => $order->get_order_number(),
             //'DCODE' => $priority_dep_number, // this is the site in Priority
-            //'DETAILS' => $user_department,
-
-
+            //'DETAILS' => $user_department
         ];
         if (!empty($order->get_meta('site', true))) {
             $data['DCODE'] = $order->get_meta('site');
@@ -4325,7 +4233,6 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($raw_option));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
         $cust_number = $this->get_cust_name($order);
         $data = [
             'CUSTNAME' => $cust_number,
@@ -4803,6 +4710,7 @@ class WooAPI extends \PriorityAPI\API
 
     public function syncAinvoice($id)
     {
+
         if (isset(WC()->session)) {
             $session = WC()->session->get('session_vars');
             if ($session['ordertype'] == 'obligo_payment') {
@@ -4810,6 +4718,11 @@ class WooAPI extends \PriorityAPI\API
             }
         }
         $order = new \WC_Order($id);
+        $is_continue = 'true';
+        $is_continue = apply_filters('check_if_continue', $order);
+        if ($is_continue == 'false') {
+            return;
+        }
         $user = $order->get_user();
         $user_id = $order->get_user_id();
         // $user_id = $order->user_id;
@@ -4818,7 +4731,6 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($this->option('setting-config')));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
         $cust_number = $this->get_cust_name($order);
 
         $data = [
@@ -5016,7 +4928,6 @@ class WooAPI extends \PriorityAPI\API
         $config = json_decode(stripslashes($this->option('setting-config')));
         $discount_type = (!empty($config->discount_type) ? $config->discount_type : 'additional_line'); // header , in_line , additional_line
 
-        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
         $cust_number = $this->get_cust_name($order);
 
         $data = [
@@ -5199,7 +5110,7 @@ class WooAPI extends \PriorityAPI\API
         $order = new \WC_Order($order_id);
         $user_id = $order->get_user_id();
         $order_user = get_userdata($user_id); //$user_id is passed as a parameter
-        //$cust_number = get_post_meta($order->get_id(), 'cust_name', true);
+
         $cust_number = $this->get_cust_name($order);
         $data = [
             'CUSTNAME' => $cust_number,
@@ -6307,21 +6218,6 @@ class WooAPI extends \PriorityAPI\API
     }
 	function save_uri_as_image($base64_image, $title)
 	{
-        // Save SHA1 Checksum for all attachments - This logic prevets duplicate images from beeing created
-        $posts_ids = get_posts(array(
-            'numberposts'   => -1,
-            'post_type'     => 'attachment',
-            'meta_key'      => '_simply_sha1',
-            'meta_compare'  => 'NOT EXISTS', // Only get attachemtns without SHA1 Checksum (for better performances)
-            'fields'        => 'ids' // We only need the IDs
-        ));
-        foreach( $posts_ids as $image_id ) {
-            $image_path = wp_get_original_image_path( $image_id ); // Get the server path of the main image (Not the URL)
-            if( file_exists( $image_path ) ) {
-                update_post_meta( $image_id, '_simply_sha1', sha1_file($image_path) );
-            }
-        }
-
 		// Split the string.
 		$parts = explode(',', $base64_image);
 		// Split the first part on semicolon.
@@ -6338,18 +6234,6 @@ class WooAPI extends \PriorityAPI\API
 		$base64_image = str_replace(' ', '+', $base64_image);
 		$decoded_image = base64_decode($base64_image);
 
-        // Check if we already have this file in the DB based on SHA1 Checksum
-        $posts = get_posts(array(
-            'numberposts'   => 1, // One is enough
-            'post_type'     => 'attachment',
-            'meta_key'      => '_simply_sha1',
-            'meta_value'    => sha1($decoded_image)
-        ));
-        if( ! empty( $posts ) ) {
-            // Return the existing attachemnt instead of creating a duplicate
-            return [ $posts[0]->ID, $posts[0]->post_title ];
-        }
-
 		// Save the image to the uploads directory.
 		$upload_dir = wp_upload_dir();
 		$file_path = $upload_dir['path'] . '/' . $filename;
@@ -6363,7 +6247,6 @@ class WooAPI extends \PriorityAPI\API
 
 		file_put_contents($file_path, $decoded_image);
 
-        // Just to be sure (The file SHOULD exists because of file_put_contents in the previuos line)
 		if (file_exists($file_path)) {
 			$wp_filetype = wp_check_filetype($filename, null);
 			$attachment = array(
@@ -6374,15 +6257,8 @@ class WooAPI extends \PriorityAPI\API
 				'post_status' => 'inherit',
 			);
 			$attach_id = wp_insert_attachment($attachment, $file_path);
-            update_post_meta( $attach_id, '_simply_sha1', sha1($decoded_image) ); // Save SHA1 Checksum for the new upload
-            // Include the image.php file for the function wp_generate_attachment_metadata().
-		    require_once(ABSPATH . 'wp-admin/includes/image.php');
-            $attach_data = wp_generate_attachment_metadata( $attach_id, $file_path);
-
 			return [$attach_id, $filename];
 		}
-
-        // We shouldn't get to this part, legacy code
 		$attachment = array(
 			'post_mime_type' => $type,
 			'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
@@ -6391,7 +6267,6 @@ class WooAPI extends \PriorityAPI\API
 			'guid' => $upload_dir['basedir'] . '/' . basename($filename)
 		);
 		$attach_id = wp_insert_attachment($attachment, $file_path);
-        update_post_meta( $attach_id, '_simply_sha1', sha1($decoded_image) ); // Save SHA1 Checksum for the new upload
 		// Include the image.php file for the function wp_generate_attachment_metadata().
 		require_once(ABSPATH . 'wp-admin/includes/image.php');
 		//Generate the metadata for the attachment, and update the database record.
