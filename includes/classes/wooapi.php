@@ -1254,7 +1254,7 @@ class WooAPI extends \PriorityAPI\API
 	    } else {
 		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
 	    }
-	    $data = apply_filters( 'simply_syncItemsPriority_data', $data );
+	    $data = apply_filters( 'simply_syncItemsPriority_data', $data, $config, null );
 
         $this->import_start();
 
@@ -1277,7 +1277,7 @@ class WooAPI extends \PriorityAPI\API
             try {
 	            foreach ( $response_data['value'] as $item ) {
 
-                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus === true){
                         $skus[] = $item[$search_field];
                     }
                         
@@ -2128,7 +2128,7 @@ class WooAPI extends \PriorityAPI\API
 		    $data['expand'] = '$expand=PARTUNSPECS_SUBFORM,PARTTEXT_SUBFORM';
 	    }
         //$data['expand'] = '$expand=PARTUNSPECS_SUBFORM';
-        $data = apply_filters('simply_syncItemsPriority_data', $data);
+        $data = apply_filters( 'simply_syncItemsPriority_data', $data, $config, $config_v );
         $url_addition_config = (!empty($config_v->additional_url) ? $config_v->additional_url : '');
         $filter = $variation_field . ' ne \'\' and ' .$variation_field_title . ' ne \'\' and ' . urlencode($url_addition) . ' ' . $url_addition_config;
         $response = $this->makeRequest('GET',
@@ -2143,7 +2143,7 @@ class WooAPI extends \PriorityAPI\API
             $childrens = [];
             if ($response_data['value'][0] > 0) {
                 foreach ($response_data['value'] as $item) {
-                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus === true){
                         $skus[] = $item[$search_field];
                     }
                     // check if variation show be on web
