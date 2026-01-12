@@ -2990,15 +2990,7 @@ class WooAPI extends \PriorityAPI\API
                 return $response;
             }
         }
-        else{
-            $priority_customer_number = $this->option('walkin_number');
-      
-            if (null == $this->option('post_customers') || !empty($priority_customer_number)) {
-                $response['priority_customer_number'] = $priority_customer_number;
-                $response['message'] = 'this is a walk in number';
-                return $response;
-            }
-
+        if (!null == $this->option('post_customers')) {
             $priority_customer_number = 'WEB-' . (string)$user->data->ID;
             /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
             if ('prospect_email' == $this->option('prospect_field')) {
@@ -3026,6 +3018,9 @@ class WooAPI extends \PriorityAPI\API
                     $priority_cust_from_priority = $priority_customer_number;
                 }
             }
+        }
+        else{
+            return;
         }
   
         $custdes = !empty($meta['billing_company'][0]) ? $meta['billing_company'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0];
@@ -3183,9 +3178,27 @@ class WooAPI extends \PriorityAPI\API
         }
         if ($user_id == 0) {
             $response = $this->syncProspect($order);
+            $custname = get_post_meta($order->ID, 'prospect_custname', true);
+            if ( !empty($custname)) {
+                $custname = $this->option('walkin_number');
+                update_post_meta($order_id, 'prospect_custname', $custname);
+                $response['priority_customer_number'] = $custname;
+                $response['message'] = 'this is a walk in number';
+                return $response;
+            }
+
         } else {
             $response = $this->syncCustomer($order);
+            $custname = get_user_meta($order->get_user_id(), 'priority_customer_number', true);
+            if ( !empty($custname)) {
+                $custname = $this->option('walkin_number');
+                update_user_meta($user_id, 'priority_customer_number', $custname);
+                $response['priority_customer_number'] = $custname;
+                $response['message'] = 'this is a walk in number';
+                return $response;
+            }
         }
+           
         return $response;
 
     }
@@ -3509,14 +3522,9 @@ class WooAPI extends \PriorityAPI\API
                 return $response;
             }
         }
-        else{
-            $priority_customer_number = $this->option('walkin_number');
-            if (null == $this->option('post_prospect') && !empty($priority_customer_number)) {
-                update_post_meta($order->ID, 'prospect_custname', $priority_customer_number);
-                $response['priority_customer_number'] = $priority_customer_number;
-                $response['message'] = 'this is a walk in number';
-                return $response;
-            }
+
+                
+        if (!null == $this->option('post_prospect') ) {                            
             if ('prospect_email' == $this->option('prospect_field')) {
                 $priority_customer_number = $order->get_billing_email();
             } elseif ('prospect_cellphone' == $this->option('prospect_field')) {
@@ -3535,6 +3543,9 @@ class WooAPI extends \PriorityAPI\API
                     $priority_cust_from_priority = $priority_customer_number;
                 }
             }
+        }
+        else{
+            return;
         }
 
         $custdes = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
