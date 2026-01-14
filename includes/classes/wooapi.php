@@ -2990,41 +2990,44 @@ class WooAPI extends \PriorityAPI\API
                 return $response;
             }
         }
-        if (!null == $this->option('post_customers')) {
-            $priority_customer_number = 'WEB-' . (string)$user->data->ID;
-            /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
-            if ('prospect_email' == $this->option('prospect_field')) {
-                $priority_customer_number = $user->data->user_email;
-            }
-            if ('prospect_cellphone' == $this->option('prospect_field')) {
-                $priority_customer_number = $meta['billing_phone'][0];
-                if (null == $priority_customer_number) {
-                    $this->sendEmailError(
-                        [$this->option('email_error_sync_customers_web')],
-                        'Error Sync Customers - No Phone',
-                        $order->get_id().' Customer has no phone number'
-                    );
-                    return;
-                }
-            }
-            $priority_customer_number = apply_filters('simply_syncCustname', $priority_customer_number, $meta );
-            $request = $this->makeRequest('GET', 
-            'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
-            $this->option('log_customers', true));
-
-            if ($request['status']) {
-                if ($request['code'] == '200') {
-                    $is_customer = json_decode($request['body']);
-                    $priority_cust_from_priority = $priority_customer_number;
-                }
-            }
-        }
         else{
-            return;
+            if ($this->option('post_customers')) {
+                $priority_customer_number = 'WEB-' . (string)$user->data->ID;
+                /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
+                if ('prospect_email' == $this->option('prospect_field')) {
+                    $priority_customer_number = $user->data->user_email;
+                }
+                if ('prospect_cellphone' == $this->option('prospect_field')) {
+                    $priority_customer_number = $meta['billing_phone'][0];
+                    if (null == $priority_customer_number) {
+                        $this->sendEmailError(
+                            [$this->option('email_error_sync_customers_web')],
+                            'Error Sync Customers - No Phone',
+                            $order->get_id().' Customer has no phone number'
+                        );
+                        return;
+                    }
+                }
+                $priority_customer_number = apply_filters('simply_syncCustname', $priority_customer_number, $meta );
+            }
+            else{
+                return;
+            }
         }
-  
+        $request = $this->makeRequest('GET', 
+        'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
+        $this->option('log_customers', true));
+
+        if ($request['status']) {
+            if ($request['code'] == '200') {
+                $is_customer = json_decode($request['body']);
+                $priority_cust_from_priority = $priority_customer_number;
+            }
+        }
+
         $custdes = !empty($meta['billing_company'][0]) ? $meta['billing_company'][0] : $meta['first_name'][0] . ' ' . $meta['last_name'][0];
-        $custdes = apply_filters('simply_syncCustdes', $custdes, $meta );
+        $custdes = apply_filters('simply_syncCustdes', $custdes, $meta, $order);
+
         
         $request = [
             'CUSTNAME' => $priority_customer_number,
@@ -3179,18 +3182,17 @@ class WooAPI extends \PriorityAPI\API
         if ($user_id == 0) {
             $response = $this->syncProspect($order);
             $custname = get_post_meta($order->ID, 'prospect_custname', true);
-            if ( !empty($custname)) {
+            if (empty($custname)) {
                 $custname = $this->option('walkin_number');
                 update_post_meta($order_id, 'prospect_custname', $custname);
                 $response['priority_customer_number'] = $custname;
                 $response['message'] = 'this is a walk in number';
                 return $response;
             }
-
         } else {
             $response = $this->syncCustomer($order);
             $custname = get_user_meta($order->get_user_id(), 'priority_customer_number', true);
-            if ( !empty($custname)) {
+            if (empty($custname)) {
                 $custname = $this->option('walkin_number');
                 update_user_meta($user_id, 'priority_customer_number', $custname);
                 $response['priority_customer_number'] = $custname;
@@ -3198,7 +3200,6 @@ class WooAPI extends \PriorityAPI\API
                 return $response;
             }
         }
-           
         return $response;
 
     }
@@ -3402,6 +3403,21 @@ class WooAPI extends \PriorityAPI\API
                 $card_type = $order->get_meta('card_type');
                 $payment_type = $order->get_meta('cc_paymenttype_tranzila');
                 break;
+
+            case 'tranzila2';
+                $payaccount = $order->get_meta('last4');
+                $validmonth = !empty(get_post_meta($order->get_id(), 'cc_expdate ', true)) ? get_post_meta($order->get_id(), 'cc_expdate ', true): '';
+                $formatted = '';
+                if ( preg_match('/^\d{4}$/', $validmonth) ) {
+                    $month = substr($validmonth, 0, 2);
+                    $year  = substr($validmonth, 2, 2);
+                    $validmonth = $month . '/' . $year;
+                };
+                $numpay = $order->get_meta('tranzila_payments_amount');
+                $firstpay = floatval($order->get_meta('w2t_fpay'));
+                $confnum = $order->get_meta('cc_company_approval_num');
+                $ccuid = $order->get_meta('cc_order_token');
+                break;
             // gobit
             case 'gobit';
                 //$paymentcode = $order->get_meta('cc_Mutag');
@@ -3521,33 +3537,35 @@ class WooAPI extends \PriorityAPI\API
                 $response['code'] == '200';
                 return $response;
             }
-        }
 
-                
-        if (!null == $this->option('post_prospect') ) {                            
-            if ('prospect_email' == $this->option('prospect_field')) {
-                $priority_customer_number = $order->get_billing_email();
-            } elseif ('prospect_cellphone' == $this->option('prospect_field')) {
-                $priority_customer_number = $order->get_billing_phone();
-            }
-            $priority_customer_number = apply_filters('simply_syncProspect_custname', $priority_customer_number, $order );
-
-             //check whether the customer already exists in Priority
-            $request = $this->makeRequest('GET', 
-            'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
-            $this->option('log_customers', true));
-
-            if ($request['status']) {
-                if ($request['code'] == '200') {
-                    $is_customer = json_decode($request['body']);
-                    $priority_cust_from_priority = $priority_customer_number;
-                }
-            }
         }
         else{
-            return;
+            if ($this->option('post_prospect') ) {                            
+               if ('prospect_email' == $this->option('prospect_field')) {
+                   $priority_customer_number = $order->get_billing_email();
+               } elseif ('prospect_cellphone' == $this->option('prospect_field')) {
+                   $priority_customer_number = $order->get_billing_phone();
+               }
+               $priority_customer_number = apply_filters('simply_syncProspect_custname', $priority_customer_number, $order );
+              
+           }
+           else{
+               return;
+           }
         }
 
+        //check whether the customer already exists in Priority
+        $request = $this->makeRequest('GET', 
+        'CUSTOMERS(\''.$priority_customer_number.' \')', [], 
+        $this->option('log_customers', true));
+
+        if ($request['status']) {
+            if ($request['code'] == '200') {
+                $is_customer = json_decode($request['body']);
+                $priority_cust_from_priority = $priority_customer_number;
+            }
+        }
+       
         $custdes = !empty($order->get_billing_company()) ? $order->get_billing_company() : $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         $custdes = apply_filters('simply_syncProspect_custdes', $custdes, $order );
         $json_request = [
