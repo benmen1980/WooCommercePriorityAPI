@@ -159,10 +159,17 @@ function create_product_variable($data)
 
     if ($data['tags'] && is_array($data['tags'])){
         $data = apply_filters('simply_set_tags', $data);
-        wp_set_object_terms($product_id, $data['tags'], 'product_tag', true);
+        $append = apply_filters('simply_product_tags_append', true );
+        wp_set_object_terms($product_id, $data['tags'], 'product_tag', $append);
+    }
+
+    ## ---------------------- VARIATION BRANDS ---------------------- ##
+
+    if ($data['brands'] && !empty($data['brands'])){
+        $br_tex = apply_filters( 'simplyct_brand_tax', 'product_brand' );
+        wp_set_object_terms($product_id, $data['brands'], $br_tex );
     }
        
-
     ## ---------------------- VARIATION ATTRIBUTES ---------------------- ##
 
     $product_attributes = [];
@@ -401,12 +408,8 @@ function create_product_variation($product_id, $variation_data)
 
 
     update_post_meta($variation_id, 'product_code', $variation_data['product_code']);
-    if (!empty($variation_data['image_id']) && !empty($variation_data['image_file'])) {
-        $file = $variation_data['image_file'];
+    if (!empty($variation_data['image_id']) ) {
         $attach_id = $variation_data['image_id'];
-        include $file;
-        $attach_data = wp_generate_attachment_metadata($attach_id, $file);
-        wp_update_attachment_metadata($attach_id, $attach_data);
         set_post_thumbnail($variation_id, $attach_id);
     }
     $variation->set_weight(''); // weight (reseting)
