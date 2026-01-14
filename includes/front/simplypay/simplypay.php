@@ -301,12 +301,19 @@ class simplypay extends \PriorityAPI\API{
 // Redirect to page 404 from all other pages of the site
 add_action( 'template_redirect', 'redirect_all_except_checkout' );
 function redirect_all_except_checkout() {
-    if ( ! is_checkout() && ! is_order_received_page()  && ! is_page('privacy-policy') ) {
-        global $wp_query;
-        $wp_query->set_404();
-        status_header(404);
-        nocache_headers();
-        include( get_query_template( '404' ) );
-        exit;
+
+    $allow = apply_filters( 'allowed_pages_redirect', false );
+    if ( $allow ) {
+        return;
     }
+
+    if ( is_checkout() || is_order_received_page() || is_page('privacy-policy') ) {
+        return;
+    }
+
+    global $wp_query;
+    $wp_query->set_404();
+    status_header(404);
+    nocache_headers();
+    include( get_query_template( '404' ) );    
 }

@@ -1277,7 +1277,7 @@ class WooAPI extends \PriorityAPI\API
             try {
 	            foreach ( $response_data['value'] as $item ) {
 
-                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus == true){
+                    if ( $item[ $show_in_web ] == 'Y' && $sync_inventory_by_skus === true){
                         $skus[] = $item[$search_field];
                     }
                         
@@ -3494,7 +3494,19 @@ class WooAPI extends \PriorityAPI\API
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_num', true);
                 $payplus_identification_number = get_post_meta($order->get_id(), 'payplus_identification_number', true);
                 break;
-
+            // payplus3
+            case 'payplus3';
+                /* there is another plugin for payplus in PrimeMotion 12.01.2026 margalit */
+                $firstpay = !empty(get_post_meta($order->get_id(), 'payplus_first_payment_amount', true)) ? get_post_meta($order->get_id(), 'payplus_first_payment_amount', true) : '';
+                $ccuid = get_post_meta($order->get_id(), 'payplus_identification_number', true);
+                $payaccount = get_post_meta($order->get_id(), 'payplus_four_digits', true);
+                $validmonth = !empty(get_post_meta($order->get_id(), 'payplus_expiry_month', true)) ?
+                    get_post_meta($order->get_id(),
+                        'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(),
+                        'payplus_expiry_year', true) : '';
+                $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
+                $confnum = get_post_meta($order->get_id(), 'payplus_voucher_num', true);
+                break;
             case 'z-credit';
                 $data = $order->get_meta('zc_response');
                 $data = base64_decode($data);
@@ -3811,7 +3823,7 @@ class WooAPI extends \PriorityAPI\API
                             'price_list_price' => (wc_prices_include_tax() || $set_tax == 'no') ? $product['VATPRICE'] : (float)$product['PRICE'],
                             'price_list_quant' => $product['QUANT'],
                             'price_list_percent' => $product['PERCENT'],
-                            'price_list_disprice' => wc_prices_include_tax() ? (float)$product['DVATPRICE'] : (float)$product['DPRICE'],
+                            'price_list_disprice' => (wc_prices_include_tax() || $set_tax == 'no') ? (float)$product['DVATPRICE'] : (float)$product['DPRICE'],
                             'blog_id' => $blog_id
                         ]);
 
@@ -6236,6 +6248,8 @@ class WooAPI extends \PriorityAPI\API
                     $wpdb->print_error(); 
                 }
             }
+            // add timestamp
+            $this->updateOption('productfamily_priority_update', time());
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_productfamily_priority'),
