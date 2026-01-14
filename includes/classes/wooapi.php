@@ -2990,7 +2990,7 @@ class WooAPI extends \PriorityAPI\API
                 return $response;
             }
         }
-        else{
+        else {
             if ($this->option('post_customers')) {
                 $priority_customer_number = 'WEB-' . (string)$user->data->ID;
                 /* you can post the user by email or phone. this code executed before WP assign email or phone to user, and sometimes no phone on registration */
@@ -3445,24 +3445,9 @@ class WooAPI extends \PriorityAPI\API
                 $validmonth = get_post_meta($order->get_id(), 'payplus_exp_date', true) ?? '';
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_id', true);
-
                 break;
             // payplus2
             case 'payplus2';
-                /* there is another plugin for payplus in Munier 27.6.2021 roy */
-                $firstpay = floatval(get_post_meta($order->get_id(), 'payplus_payments_firstAmount', true)) / 100;
-                $ccuid = get_post_meta($order->get_id(), 'payplus_token_uid', true);
-                $payaccount = get_post_meta($order->get_id(), 'payplus_four_digits', true);
-                $validmonth = !empty(get_post_meta($order->get_id(), 'payplus_expiry_month', true)) ?
-                    get_post_meta($order->get_id(),
-                        'payplus_expiry_month', true) . '/' . get_post_meta($order->get_id(),
-                        'payplus_expiry_year', true) : '';
-                $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
-                $confnum = get_post_meta($order->get_id(), 'payplus_voucher_num', true);
-                $payplus_identification_number = get_post_meta($order->get_id(), 'payplus_identification_number', true);
-                break;
-            // payplus3
-            case 'payplus3';
                 /* there is another plugin for payplus in PrimeMotion 12.01.2026 margalit */
                 $firstpay = !empty(get_post_meta($order->get_id(), 'payplus_first_payment_amount', true)) ? get_post_meta($order->get_id(), 'payplus_first_payment_amount', true) : '';
                 $ccuid = get_post_meta($order->get_id(), 'payplus_identification_number', true);
@@ -3474,10 +3459,11 @@ class WooAPI extends \PriorityAPI\API
                 $numpay = get_post_meta($order->get_id(), 'payplus_number_of_payments', true);
                 $confnum = get_post_meta($order->get_id(), 'payplus_voucher_num', true);
                 break;
+            // z-credit
             case 'z-credit';
                 $data = $order->get_meta('zc_response');
                 $data = base64_decode($data);
-                $payaccount = $this->getStringBetween($data, '"CardNum":"', '"');;
+                $payaccount = $this->getStringBetween($data, '"CardNum":"', '"');
                 $ccuid = $this->getStringBetween($data, '"Token":"', '"');
                 $validmonth = $this->getStringBetween($data, '"ExpDate_MMYY":"', '"');
                 $confnum = $this->getStringBetween($data, '"ApprovalNumber":"', '"');
