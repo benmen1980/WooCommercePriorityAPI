@@ -3799,27 +3799,54 @@ class WooAPI extends \PriorityAPI\API
                         //update regular price for WooCommerce product from base price list
                         if ($list['PLNAME'] == 'בסיס') {
                             $sku =  $product['PARTNAME'];
-                            $items = get_posts(array(
-                                        'post_type'      => 'product',
-                                        'post_status'    => 'publish',
-                                        'meta_query' => array(
-                                            array(
-                                                'key' => '_sku',
-                                                'value' => $sku
-                                            )
-                                        )
-                                    ));
-                            if($items){
-                                foreach ($items as $item) {
-                                    $item_id = $item->ID;
-                                    $my_product = new \WC_Product( $item_id );                              
-                                    $price = (wc_prices_include_tax() == true || $set_tax == 'no') ? (float)$product['VATPRICE'] : (float)$product['PRICE'];                                   
-                                    $my_product->set_regular_price( $price );
-                                    $my_product->set_price( $price );
-                                    $my_product->save();
+
+                            $items = get_posts([
+                                'post_type'      => 'product',
+                                'post_status'    => 'publish',
+                                'meta_query' => [
+                                    [
+                                        'key' => '_sku',
+                                        'value' => $sku
+                                    ]
+                                ]
+                            ]);
+
+                            if (!$items) return;
+
+                            foreach ($items as $item) {
+                                $product_id = $item->ID;
+                                $_product = wc_get_product($product_id);
+
+                                if (!$_product) continue;
+
+                                $price = (wc_prices_include_tax() == true || $set_tax == 'no') 
+                                    ? (float)$product['VATPRICE'] 
+                                    : (float)$product['PRICE'];     
+                                    
+                                if ($_product->is_type('simple')) {
+
+                                    $_product->set_regular_price($price);
+                                    $_product->set_price($price);
+                                    $_product->save();
 
                                 }
+                                elseif ($_product->is_type('variable')) {
+
+                                    $variation_ids = $_product->get_children();
+
+                                    foreach ($variation_ids as $variation_id) {
+
+                                        $variation = wc_get_product($variation_id);
+                                        if (!$variation) continue;
+
+                                        $variation->set_regular_price($price);
+                                        $variation->set_price($price);
+                                        $variation->save();
+                                    }
+                                }
+
                             }
+                            
                         }
 
                     }
