@@ -218,7 +218,8 @@ class WooAPI extends \PriorityAPI\API
                 $exclude = [];
                 $meta = get_user_meta($user_id, '_priority_price_list', true);
                 if ($meta !== 'no-selected') {
-                    $list = empty($meta) ? $this->basePriceCode : $meta;
+                    $basePriceCode = apply_filters('simply_modify_basePriceCode', $this->basePriceCode);
+                    $list = empty($meta) ? $basePriceCode : $meta;
                     $products = $GLOBALS['wpdb']->get_results('
                     SELECT product_sku
                     FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -3734,7 +3735,7 @@ class WooAPI extends \PriorityAPI\API
             $table_temp = $GLOBALS['wpdb']->prefix . 'p18a_pricelists_temp';
             /* open temp table - price lists */
             $sql = "CREATE TEMPORARY TABLE $table_temp (
-                id  INT AUTO_INCREMENT,
+                id  INT UNSIGNED AUTO_INCREMENT,
                 blog_id INT,
                 product_sku VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                 price_list_code VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -3797,7 +3798,8 @@ class WooAPI extends \PriorityAPI\API
 
 
                         //update regular price for WooCommerce product from base price list
-                        if ($list['PLNAME'] == 'בסיס') {
+                        $basePriceCode = apply_filters( 'simply_modify_basePriceCode', 'בסיס' );
+                        if ( $list['PLNAME'] == $basePriceCode ) {
                             $sku =  $product['PARTNAME'];
 
                             $items = get_posts([
@@ -3811,7 +3813,9 @@ class WooAPI extends \PriorityAPI\API
                                 ]
                             ]);
 
-                            if (!$items) return;
+                            if ( ! $items ) {
+                                continue;
+                            }
 
                             foreach ($items as $item) {
                                 $product_id = $item->ID;
@@ -5352,7 +5356,8 @@ class WooAPI extends \PriorityAPI\API
         if ($user_id = get_current_user_id()) {
             $meta = get_user_meta($user_id, 'custpricelists', true);
             if ($meta[0]["PLNAME"] === 'no-selected') return $ids;
-            $list = empty($meta) ? $this->basePriceCode : $meta[0]["PLNAME"];
+            $basePriceCode = apply_filters('simply_modify_basePriceCode', $this->basePriceCode);
+            $list = empty($meta) ? $basePriceCode : $meta[0]["PLNAME"];
             $products = $GLOBALS['wpdb']->get_results('
                 SELECT product_sku
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -5410,7 +5415,8 @@ class WooAPI extends \PriorityAPI\API
         if ($user_id = get_current_user_id()) {
             $meta = get_user_meta($user_id, '_priority_price_list', true);
             if ($meta === 'no-selected') return 'no-selected';
-            $list = empty($meta) ? $this->basePriceCode : $meta[0]; // use base price list if there is no list assigned
+            $basePriceCode = apply_filters('simply_modify_basePriceCode', $this->basePriceCode);
+            $list = empty($meta) ? $basePriceCode : $meta[0]; // use base price list if there is no list assigned
             $data = $GLOBALS['wpdb']->get_row('
                 SELECT price_list_price, price_list_currency,price_list_quant
                 FROM ' . $GLOBALS['wpdb']->prefix . 'p18a_pricelists
@@ -5834,7 +5840,8 @@ class WooAPI extends \PriorityAPI\API
                 unset($user['user_id']);
                 update_user_meta($user_id, 'priority_customer_number', $user['CUSTNAME']);
 	            if(empty($user['CUSTPLIST_SUBFORM'])){
-		            $user['CUSTPLIST_SUBFORM'][0] = ['PLNAME' => 'בסיס'];
+                    $basePriceCode = apply_filters( 'simply_modify_customer_basePriceCode', 'בסיס' );
+		            $user['CUSTPLIST_SUBFORM'][0] = ['PLNAME' => $basePriceCode];
 	            }
                 update_user_meta($user_id, 'custpricelists', $user['CUSTPLIST_SUBFORM']);
                 update_user_meta($user_id, 'priority_mcustomer_number', $user['MCUSTNAME']);
@@ -6245,8 +6252,12 @@ class WooAPI extends \PriorityAPI\API
         foreach ($percentages as $item) {
             $percentage =+ is_numeric($item['PERCENT']) ? $item['PERCENT'] : 0.0;
         }
-        //check if price display with tax
 
+        if( empty( $percentage ) ) {
+            return;
+        }
+
+        //check if price display with tax
         $priceDisplay = get_option('woocommerce_tax_display_cart');
         //check if WooCommerce Tax Settings are set
         $set_tax = get_option('woocommerce_calc_taxes');

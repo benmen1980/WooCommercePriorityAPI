@@ -21,8 +21,9 @@ function simply_pricelist_variation_qty_table()
 	if(!empty(get_user_meta($id, 'custpricelists', true))){
 		$price_list =   get_user_meta($id, 'custpricelists', true);
 	}else{
-		$locale = get_locale();
-		$price_list[0] = ['PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base'];
+		$locale 		= get_locale();
+		$basePriceCode 	= apply_filters( 'simply_modify_basePriceCode', $locale == 'he_IL' ? 'בסיס' : 'Base' );
+		$price_list[0] 	= ['PLNAME' => $basePriceCode];
 	};
 	$price_list = $price_list[0]["PLNAME"];
 	$variations = $product->get_children();

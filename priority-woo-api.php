@@ -8,7 +8,7 @@
  * Plugin Name: Priority Woocommerce API
  * Plugin URI: http://simplyCT.co.il
  * Description: Priority Woocommerce API extension
- * Version: 2.7.22
+ * Version: 2.7.23
  * Author: SimplyCT
  * Author URI: http://www.simplyCT.co.il
  * Licence: GPLv2
@@ -46,7 +46,7 @@ register_activation_hook(P18AW_SELF, function () {
     $table = $GLOBALS['wpdb']->prefix . 'p18a_pricelists';
 
     $sql = "CREATE TABLE $table (
-        id  INT AUTO_INCREMENT,
+        id  INT UNSIGNED AUTO_INCREMENT,
         blog_id INT,
         product_sku VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price_list_code VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -56,7 +56,9 @@ register_activation_hook(P18AW_SELF, function () {
         price_list_disprice DECIMAL(12,2),
         price_list_percent DECIMAL(12,2),
         price_list_quant INT,
-        PRIMARY KEY  (id)
+        PRIMARY KEY  (id),
+        INDEX `product_sku` (`product_sku`),
+        INDEX `price_list_code` (`price_list_code`)
     )";
 
     /* This is used add the endpoint and menu item in woocommerce account menu. */

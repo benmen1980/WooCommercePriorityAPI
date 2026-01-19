@@ -50,8 +50,9 @@ function modify_cart_item_price( $cart ) {
 		if ( ! empty( get_user_meta( $id, 'custpricelists', true ) ) ) {
 			$price_lists = get_user_meta( $id, 'custpricelists', true );
 		} else {
-			$locale        = get_locale();
-			$price_lists[0] = [ 'PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base' ];
+			$locale         = get_locale();
+            $basePriceCode 	= apply_filters( 'simply_modify_basePriceCode', $locale == 'he_IL' ? 'בסיס' : 'Base' );
+			$price_lists[0] = ['PLNAME' => $basePriceCode];
 		};
 
 		if ( ! empty( $price_lists ) ) {
@@ -96,8 +97,9 @@ function simply_modify_product_price( $passed, $product_id, $quantity, $variatio
         if(!empty(get_user_meta($id, 'custpricelists', true))){
 	        $price_list =   get_user_meta($id, 'custpricelists', true);
         }else{
-	    $locale = get_locale();
-	    $price_list[0] = ['PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base'];
+	        $locale         = get_locale();
+            $basePriceCode 	= apply_filters( 'simply_modify_basePriceCode', $locale == 'he_IL' ? 'בסיס' : 'Base' );
+	        $price_list[0]  = ['PLNAME' => $basePriceCode];
         };
 
         if (!empty($price_list)) {
@@ -130,8 +132,9 @@ function simply_pricelist_qty_table()
     if(!empty(get_user_meta($id, 'custpricelists', true))){
 	    $price_lists =   get_user_meta($id, 'custpricelists', true);
     } else{
-	    $locale = get_locale();
-        $price_lists[0] = ['PLNAME' => $locale == 'he_IL' ? 'בסיס' : 'Base'];
+	    $locale         = get_locale();
+        $basePriceCode 	= apply_filters( 'simply_modify_basePriceCode', $locale == 'he_IL' ? 'בסיס' : 'Base' );
+        $price_lists[0] = ['PLNAME' => $basePriceCode];
     };
 
     if (!empty($price_lists)) {
