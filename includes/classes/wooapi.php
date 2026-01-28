@@ -5870,7 +5870,7 @@ class WooAPI extends \PriorityAPI\API
         if ($this->option('customer_Mcustname') == true) {
             $this->syncCastnameToMcustname();
         }
-
+        $this->updateOption('auto_sync_customer_to_wp_user_update', time());
     }
     function sync_priority_personnel_customers_to_wp()
     {
