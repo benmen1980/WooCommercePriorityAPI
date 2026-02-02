@@ -3009,7 +3009,7 @@ class WooAPI extends \PriorityAPI\API
                         return;
                     }
                 }
-                $priority_customer_number = apply_filters('simply_syncCustname', $priority_customer_number, $meta );
+                $priority_customer_number = apply_filters('simply_syncCustname', $priority_customer_number, $order );
             }
             else{
                 return;
@@ -3407,7 +3407,7 @@ class WooAPI extends \PriorityAPI\API
 
             case 'tranzila2';
                 $payaccount = $order->get_meta('last4');
-                $validmonth = !empty(get_post_meta($order->get_id(), 'cc_expdate ', true)) ? get_post_meta($order->get_id(), 'cc_expdate ', true): '';
+                $validmonth = !empty(get_post_meta($order->get_id(), 'cc_expdate', true)) ? get_post_meta($order->get_id(), 'cc_expdate', true): '';
                 $formatted = '';
                 if ( preg_match('/^\d{4}$/', $validmonth) ) {
                     $month = substr($validmonth, 0, 2);
