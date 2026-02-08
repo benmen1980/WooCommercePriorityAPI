@@ -1237,7 +1237,7 @@ class WooAPI extends \PriorityAPI\API
 	    $brands              = ( ! empty( $config->brands ) ? $config->brands : false );
 	    $is_update_products  = ( ! empty( $config->is_update_products ) ? $config->is_update_products : false );
 	    $show_in_web         = ( ! empty( $config->show_in_web ) ? $config->show_in_web : 'SHOWINWEB' );
-	    $variation_field     = $this->option( 'variation_field' ) == 'true' ? $this->option( 'variation_field' ) : 'MPARTNAME';
+	    $variation_field       = !empty($this->option('variation_field')) ? $this->option('variation_field') : 'MPARTNAME';
 	    $sync_inventory_by_skus = ( isset( $config->sync_inventory_by_skus ) ? $config->sync_inventory_by_skus : true );
         // get the items simply by time stamp of today
 	    $product_price_list = ( ! empty( $config->product_price_list ) ? $config->product_price_list : null );
