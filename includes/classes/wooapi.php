@@ -2082,6 +2082,9 @@ class WooAPI extends \PriorityAPI\API
             //update_post_meta($product_id, '_product_image_gallery',$image_id_array); not correct can not pass array
             update_post_meta($product_id, '_product_image_gallery', implode(',', $image_id_array));
         }
+
+        $this->updateOption('attachments_priority_update', time());
+
         $output_string = ob_get_contents();
         ob_end_clean();
         return $output_string;
@@ -2469,7 +2472,7 @@ class WooAPI extends \PriorityAPI\API
 
                 }
 
-                $this->updateOption('pricelist_priority_update', time());
+                $this->updateOption('c_products_priority_update', time());
 
             }
 
@@ -2967,6 +2970,7 @@ class WooAPI extends \PriorityAPI\API
 
                 update_post_meta($id, 'pri_packs', $p);
             }
+            $this->updateOption('packs_priority_update', time());
         }
     }
 
@@ -6231,7 +6235,7 @@ class WooAPI extends \PriorityAPI\API
                 }
             }
             // add timestamp
-            $this->updateOption('productfamily_priority_update', time());
+            $this->updateOption('auto_sync_productfamily_priority_update', time());
         } else {
             $this->sendEmailError(
                 $this->option('email_error_sync_productfamily_priority'),
