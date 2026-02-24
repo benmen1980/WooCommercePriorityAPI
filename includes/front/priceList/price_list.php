@@ -45,7 +45,7 @@ function modify_cart_item_price( $cart ) {
 		$product = $cart_item['data'];
 // Get the quantity of the cart item
 		$quantity  = $cart_item['quantity'];
-		$new_price = $product->get_regular_price();
+		$new_price = $product->get_price();
 		$id        = get_current_user_id();
 		if ( ! empty( get_user_meta( $id, 'custpricelists', true ) ) ) {
 			$price_lists = get_user_meta( $id, 'custpricelists', true );
@@ -92,7 +92,7 @@ function simply_modify_product_price( $passed, $product_id, $quantity, $variatio
 
 		// Set the new price for the product
 		$product = wc_get_product( $product_id );
-        $new_price = $product->get_regular_price();
+        $new_price = $product->get_price();
         $id = get_current_user_id();
         if(!empty(get_user_meta($id, 'custpricelists', true))){
 	        $price_list =   get_user_meta($id, 'custpricelists', true);
@@ -127,7 +127,7 @@ add_filter('woocommerce_after_add_to_cart_form', 'simply_pricelist_qty_table');
 function simply_pricelist_qty_table()
 {
     global $product;
-    $price = $product->get_regular_price();
+    $price = $product->get_price();
     $id = get_current_user_id();
     if(!empty(get_user_meta($id, 'custpricelists', true))){
 	    $price_lists =   get_user_meta($id, 'custpricelists', true);
