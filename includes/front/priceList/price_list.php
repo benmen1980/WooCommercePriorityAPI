@@ -41,12 +41,26 @@ function modify_cart_item_price( $cart ) {
 	}
 // Loop through the cart items
 	foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
-// Get the product object
+        // Get the product object
 		$product = $cart_item['data'];
-// Get the quantity of the cart item
+        // Get the quantity of the cart item
 		$quantity  = $cart_item['quantity'];
 		$new_price = $product->get_price();
 		$id        = get_current_user_id();
+
+        // config
+        $config = json_decode(stripslashes($this->option('setting-config')));
+        $use_sale_price = ! empty($config->use_sale_price_from_wc) && $config->use_sale_price_from_wc === 'true';
+
+        $user_price_lists = get_user_meta( $id, 'custpricelists', true );
+
+        if ( empty($user_price_lists) ) {   
+            if ( method_exists( $cart_item['data'], 'set_price' ) ) {
+                $cart_item['data']->set_price( (float) $new_price );
+            }
+            continue; 
+        }
+
 		if ( ! empty( get_user_meta( $id, 'custpricelists', true ) ) ) {
 			$price_lists = get_user_meta( $id, 'custpricelists', true );
 		} else {
@@ -70,11 +84,14 @@ function modify_cart_item_price( $cart ) {
                     if ( $quantity >= $item['price_list_quant'] ) {
                         $new_price = (float)$item['price_list_disprice'];
                     }
+                    if ($use_sale_price) {
+                        $new_price = $new_price;
+                    }
                 }
             }
 		}
 
-// Set the new price for the cart item
+        // Set the new price for the cart item
 		if ( method_exists( $cart_item['data'], 'set_price' ) ) {
 			// Set the new price for the cart item
 			$cart_item['data']->set_price( $new_price );

@@ -3833,7 +3833,7 @@ class WooAPI extends \PriorityAPI\API
                                     
                                 if ($_product->is_type('simple')) {
 
-                                    $_product->set_regular_price($price);
+                                    // $_product->set_regular_price($price);
                                     $_product->set_price($price);
                                     $_product->save();
 
@@ -3847,7 +3847,7 @@ class WooAPI extends \PriorityAPI\API
                                         $variation = wc_get_product($variation_id);
                                         if (!$variation) continue;
 
-                                        $variation->set_regular_price($price);
+                                        // $variation->set_regular_price($price);
                                         $variation->set_price($price);
                                         $variation->save();
                                     }
