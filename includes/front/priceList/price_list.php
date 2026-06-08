@@ -1,4 +1,5 @@
 <?php
+use PriorityWoocommerceAPI\WooAPI;
 
 add_action('wp_enqueue_scripts', 'my_theme_scripts_price_list');
 function my_theme_scripts_price_list()
@@ -49,7 +50,7 @@ function modify_cart_item_price( $cart ) {
 		$id        = get_current_user_id();
 
         // config
-        $config = json_decode(stripslashes($this->option('setting-config')));
+        $config = json_decode(stripslashes(WooAPI::instance()->option('setting-config')));
         $use_sale_price = ! empty($config->use_sale_price_from_wc) && $config->use_sale_price_from_wc === 'true';
 
         $user_price_lists = get_user_meta( $id, 'custpricelists', true );
@@ -168,7 +169,7 @@ function simply_pricelist_qty_table()
             if ($data && (count($data) > 1 || (count($data) == 1 && $data[0]['price_list_quant'] >= 1))) {
                 // $product->set_regular_price($data[0]['price_list_price'])
                 ?>
-                <input type="hidden" name="price_regular" id="price_regular" value="<?= $price ?>">
+                <input type="hidden" name="price_regular" id="price_regular" value="<?php echo esc_attr($price); ?>">
                 
                 <?php       
                 if (has_filter('change_design_pricelist_qty_table') ) {
@@ -193,8 +194,8 @@ function simply_pricelist_qty_table()
                             $quantity = $arr['quantity'];
                             ?>
                             <tr class="price_list_tr">
-                                <td class="simply-tire-quantity"><?= $quantity ?></td>
-                                <td class="simply-tire-price"><span class="simply-tire-price-number"> <?= $price ?></span><span hidden class="simply-tire-price-float"><?= $float_price ?></span></td>
+                                <td class="simply-tire-quantity"><?php echo esc_html($quantity); ?></td>
+                                <td class="simply-tire-price"><span class="simply-tire-price-number"><?php echo esc_html($price); ?></span><span hidden class="simply-tire-price-float"><?php echo esc_html($float_price); ?></span></td>
                             </tr>
                         <?php
                         }
